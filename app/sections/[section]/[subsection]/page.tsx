@@ -1,25 +1,32 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { ChevronRight } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import Timeline from "@/components/timeline"
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ChevronRight } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import Timeline from "@/components/timeline";
 
 // Helper function to get promise data
 async function getPromiseData() {
   // In a real app, this would fetch from an API or database
-  const promises = await import("@/data/promises.json").then((module) => module.default.promises)
-  return promises
+  const promises = await import("@/data/promises.json").then(
+    (module) => module.default.promises,
+  );
+  return promises;
 }
 
 // Generate mock timeline events for a promise
 function generateMockTimelineEvents(promise) {
-  const events = []
-  const statuses = ["Not Started", "In Progress", "Partially Complete", "Complete"]
-  const currentStatus = statuses[Math.floor(Math.random() * statuses.length)]
+  const events = [];
+  const statuses = [
+    "Not Started",
+    "In Progress",
+    "Partially Complete",
+    "Complete",
+  ];
+  const currentStatus = statuses[Math.floor(Math.random() * statuses.length)];
 
   // Generate 0-4 random events based on the current status
-  const eventCount = Math.floor(Math.random() * 5)
+  const eventCount = Math.floor(Math.random() * 5);
 
   const eventTypes = [
     "Legislation tabled",
@@ -33,54 +40,63 @@ function generateMockTimelineEvents(promise) {
     "Program launched",
     "Implementation begun",
     "Progress report published",
-  ]
+  ];
 
-  const startDate = new Date(2023, 0, 1)
-  const endDate = new Date()
+  const startDate = new Date(2023, 0, 1);
+  const endDate = new Date();
 
   for (let i = 0; i < eventCount; i++) {
-    const randomEventType = eventTypes[Math.floor(Math.random() * eventTypes.length)]
-    const randomDate = new Date(startDate.getTime() + Math.random() * (endDate.getTime() - startDate.getTime()))
+    const randomEventType =
+      eventTypes[Math.floor(Math.random() * eventTypes.length)];
+    const randomDate = new Date(
+      startDate.getTime() +
+        Math.random() * (endDate.getTime() - startDate.getTime()),
+    );
 
     events.push({
       id: i,
       title: randomEventType,
-      description: `Action taken related to: "${promise.promise_text.substring(0, 100)}..."`,
+      description: `Action taken related to: "${promise.promise_headline.substring(0, 100)}..."`,
       date: randomDate.toISOString().split("T")[0],
       status: i === eventCount - 1 ? currentStatus : "Completed",
-    })
+    });
   }
 
   // Sort events by date
-  return events.sort((a, b) => new Date(a.date) - new Date(b.date))
+  return events.sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
 export default async function SubsectionPage({ params }) {
-  const { section, subsection } = params
-  const sectionName = section.charAt(0).toUpperCase() + section.slice(1)
+  const { section, subsection } = params;
+  const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
   const subsectionName = decodeURIComponent(subsection)
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
+    .join(" ");
 
-  const promises = await getPromiseData()
+  const promises = await getPromiseData();
   const subsectionPromises = promises.filter(
     (promise) =>
       promise.section.toLowerCase() === section.toLowerCase() &&
-      promise.subsection.toLowerCase() === decodeURIComponent(subsection).toLowerCase(),
-  )
+      promise.subsection.toLowerCase() ===
+        decodeURIComponent(subsection).toLowerCase(),
+  );
 
   if (subsectionPromises.length === 0) {
-    notFound()
+    notFound();
   }
 
   // Status badges with appropriate colors
   const statusBadges = {
     "Not Started": <Badge variant="outline">Not Started</Badge>,
-    "In Progress": <Badge className="bg-status-inProgress text-white">In Progress</Badge>,
-    "Partially Complete": <Badge className="bg-status-partial text-white">Partially Complete</Badge>,
+    "In Progress": (
+      <Badge className="bg-status-inProgress text-white">In Progress</Badge>
+    ),
+    "Partially Complete": (
+      <Badge className="bg-status-partial text-white">Partially Complete</Badge>
+    ),
     Complete: <Badge className="bg-status-complete text-white">Complete</Badge>,
-  }
+  };
 
   return (
     <main className="container mx-auto py-8 px-4">
@@ -90,7 +106,10 @@ export default async function SubsectionPage({ params }) {
             Home
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <Link href={`/sections/${section}`} className="hover:underline text-canada-red">
+          <Link
+            href={`/sections/${section}`}
+            className="hover:underline text-canada-red"
+          >
             {sectionName}
           </Link>
           <ChevronRight className="h-4 w-4" />
@@ -105,21 +124,30 @@ export default async function SubsectionPage({ params }) {
       <div className="space-y-12">
         {subsectionPromises.map((promise) => {
           // Generate mock timeline events
-          const timelineEvents = generateMockTimelineEvents(promise)
+          const timelineEvents = generateMockTimelineEvents(promise);
 
           // Determine current status based on the last event
           const currentStatus =
-            timelineEvents.length > 0 ? timelineEvents[timelineEvents.length - 1].status : "Not Started"
+            timelineEvents.length > 0
+              ? timelineEvents[timelineEvents.length - 1].status
+              : "Not Started";
 
           return (
             <div key={promise.source_ref} className="space-y-4">
               <Card className="overflow-hidden border-canada-red">
                 <CardHeader className="bg-canada-cream border-b border-canada-red">
                   <div className="flex justify-between items-start">
-                    <CardTitle className="text-xl text-canada-red">{promise.promise_text}</CardTitle>
+                    <CardTitle className="text-xl text-canada-red">
+                      {promise.promise_headline}
+                    </CardTitle>
                     <div className="ml-4">{statusBadges[currentStatus]}</div>
                   </div>
-                  <div className="text-sm text-muted-foreground mt-2">
+                  <div className="flex flex-col gap-2 text-sm">
+                    {promise.promise_details.map((d: str) => {
+                      return <p className="text">{d}</p>;
+                    })}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2 gap-2">
                     Source: Page {promise.source_page}, Ref {promise.source_ref}
                   </div>
                 </CardHeader>
@@ -128,9 +156,9 @@ export default async function SubsectionPage({ params }) {
                 </CardContent>
               </Card>
             </div>
-          )
+          );
         })}
       </div>
     </main>
-  )
+  );
 }
