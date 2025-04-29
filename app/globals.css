@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 97%;
+    --foreground: 0 0% 20%;
+
+    --card: 36 33% 97%;
+    --card-foreground: 0 0% 20%;
+
+    --popover: 36 33% 97%;
+    --popover-foreground: 0 0% 20%;
+
+    --primary: 350 60% 35%;
+    --primary-foreground: 36 33% 97%;
+
+    --secondary: 220 36% 20%;
+    --secondary-foreground: 36 33% 97%;
+
+    --muted: 36 20% 90%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 36 20% 90%;
+    --accent-foreground: 350 60% 35%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 36 33% 97%;
+
+    --border: 36 20% 85%;
+    --input: 36 20% 85%;
+    --ring: 350 60% 35%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-canada-cream text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-canada-red;
+  }
+}
+
+.section-header {
+  @apply bg-canada-red text-white;
+}
+
+.subsection-header {
+  @apply bg-canada-navy text-white;
+}
+
+.progress-bar-container {
+  @apply h-2 relative rounded-full overflow-hidden bg-gray-200;
+}
+
+.progress-bar-complete {
+  @apply h-full bg-status-complete;
+}
+
+.progress-bar-partial {
+  @apply h-full bg-status-partial absolute top-0;
+}
+
+.progress-bar-inProgress {
+  @apply h-full bg-status-inProgress absolute top-0;
+}
+
+.status-indicator {
+  @apply w-3 h-3 rounded-full;
+}
+
+.status-complete {
+  @apply bg-status-complete;
+}
+
+.status-partial {
+  @apply bg-status-partial;
+}
+
+.status-inProgress {
+  @apply bg-status-inProgress;
+}
+
+.status-notStarted {
+  @apply bg-status-notStarted;
+}
