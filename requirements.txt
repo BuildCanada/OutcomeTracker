@@ -1,3 +1,6 @@
 pandas
 numpy
 firebase-admin
+google-cloud-firestore
+yt_dlp
+python-dotenv
