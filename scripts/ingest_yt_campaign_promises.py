@@ -6,53 +6,108 @@ import re # Added import for regular expressions
 import logging # Added import for logging
 import firebase_admin
 from firebase_admin import credentials, firestore
+from dotenv import load_dotenv # Import load_dotenv
+import argparse # Import argparse
+import webvtt 
+from io import StringIO # Import StringIO
+
+load_dotenv() # Load environment variables from .env file
 
 # --- Firebase Configuration ---
 if not firebase_admin._apps:
     if os.getenv('FIRESTORE_EMULATOR_HOST'):
-        # Connect to the Firestore Emulator
-        options = {'projectId': 'promisetrackerapp'} # Use your desired project ID for the emulator
+        # Use logging for this information as well, consistency is good.
+        logger = logging.getLogger(__name__) # Ensure logger is available here if not already global
+        logger.info(f"Python (YT Ingest): Attempting to connect to Firestore Emulator at {os.getenv('FIRESTORE_EMULATOR_HOST')}")
+        options = {'projectId': 'promisetrackerapp'} 
         firebase_admin.initialize_app(options=options)
-        print(f"Python (YT Ingest): Connected to Firestore Emulator at {os.getenv('FIRESTORE_EMULATOR_HOST')} using project ID '{options['projectId']}'")
+        logger.info(f"Python (YT Ingest): Connected to Firestore Emulator at {os.getenv('FIRESTORE_EMULATOR_HOST')} using project ID '{options['projectId']}'")
     else:
-        # Use logging for errors as well
-        logging.error("FIRESTORE_EMULATOR_HOST environment variable not set for YT Ingest script.")
-        logging.error("Please set it to connect to the local Firestore emulator (e.g., 'localhost:8080').")
+        # logging is set up later, so this initial print is okay, or we can try basicConfig earlier.
+        # For now, let's ensure the logger is configured before any error logging if possible.
+        logging.basicConfig(level=logging.INFO, 
+                            format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S')
+        logger = logging.getLogger(__name__) # Define logger here for the error case too
+        logger.error("FIRESTORE_EMULATOR_HOST environment variable not set (and not found in .env).")
+        logger.error("Please set it or ensure .env file is present and configured.")
         exit("Exiting YT Ingest: Firestore emulator not configured.")
       
 db = firestore.client()
 # --- End Firebase Configuration ---
 
-# --- Logger Setup ---
-logging.basicConfig(level=logging.INFO, 
-                    format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__)
+# --- Logger Setup --- 
+# Moved basicConfig to be available earlier if needed, but it's fine if it runs again with same params.
+# However, best practice is to configure root logger once.
+# The logger instance retrieval (getLogger) is fine to call multiple times.
+if not logging.getLogger().hasHandlers(): # Configure only if no handlers are set yet
+    logging.basicConfig(level=logging.INFO, 
+                        format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger(__name__) # This gets the logger instance, safe to call multiple times
 # --- End Logger Setup ---
 
 # Or provide the full path to the executable
 YT_DLP_PATH = "yt-dlp" 
 
+def _parse_and_normalize_cues_from_file(file_path, lang_code_from_filename, video_id):
+    """Parses VTT/SRT file using webvtt-py and normalize cues to {'start', 'end', 'text'} with float seconds."""
+    normalized_cues = []
+    html_tag_pattern = re.compile(r'<[^>]+>') # Keep basic tag cleaning for text
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        captions = webvtt.read_buffer(StringIO(content))
+        for caption in captions:
+            # Clean text: remove tags, normalize whitespace
+            cleaned_text = html_tag_pattern.sub('', caption.text).strip()
+            cleaned_text = " ".join(cleaned_text.split()) # Normalize whitespace
+            
+            if cleaned_text: # Only add cues with actual text content
+                normalized_cues.append({
+                    'start': convert_timestamp_to_seconds(caption.start),
+                    'end': convert_timestamp_to_seconds(caption.end),
+                    'text': cleaned_text
+                })
+            # else: logger.debug(f"Skipping cue with empty text after cleaning from {file_path} for {video_id}")
+
+        if normalized_cues:
+            logger.info(f"Successfully parsed and normalized cues using webvtt-py from file {file_path} for {video_id}")
+            # webvtt-py might not always preserve the original lang hint, so we trust the one passed in
+            return normalized_cues, lang_code_from_filename if lang_code_from_filename != 'unknown' else None
+        else:
+             logger.warning(f"webvtt-py parsed file {file_path} but yielded no valid cues for {video_id}.")
+             return None, None # No cues found even if parsing succeeded
+             
+    except webvtt.errors.MalformedCaptionError as e_parse:
+        logger.error(f"webvtt-py MalformedCaptionError parsing file {file_path} for {video_id}: {e_parse}")
+    except Exception as e:
+        logger.error(f"Error parsing/normalizing file {file_path} with webvtt-py for {video_id}: {e}", exc_info=True)
+        
+    return None, None # Return None if any error occurs
+
+
 def fetch_video_metadata_and_transcript(video_id):
     """
     Fetches metadata and transcript for a single video using yt-dlp.
-    Attempts to get English or French auto-captions or subtitles.
-    Prioritizes English; translates French using a placeholder.
+    Uses a multi-attempt strategy focusing on getting subtitle files downloaded.
+    Returns: (metadata_json, list_of_cue_maps, language_code)
+             Cue maps are {'start': float_seconds, 'end': float_seconds, 'text': str}
     """
     video_url = f"https://www.youtube.com/watch?v={video_id}"
     logger.info(f"Processing video: {video_url}")
     
-    temp_dir = f"temp_subtitles_{video_id}" # Make temp_dir unique per video to avoid conflicts if run in parallel
+    temp_dir = f"temp_subtitles_{video_id}" 
     video_data_json = None
-    transcript_content = None
-    transcript_language = None
+    found_cues = None
+    found_lang = None
 
-    # Define party leaders for filtering (consider moving to config or env var)
+    # Party leader filter is applied later, after metadata is fetched.
     LEADER_NAMES = [
-        "justin trudeau", "trudeau",
-        "erin o'toole", "o'toole",
-        "jagmeet singh", "singh",
-        "yves-francois blanchet", "yves francois blanchet", "blanchet",
+        "justin trudeau", "trudeau", "erin o'toole", "o'toole",
+        "jagmeet singh", "singh", "yves-francois blanchet", "yves francois blanchet", "blanchet",
         "annamie paul", "paul"
     ]
 
@@ -60,382 +115,274 @@ def fetch_video_metadata_and_transcript(video_id):
         os.makedirs(temp_dir, exist_ok=True)
         logger.debug(f"Created temporary directory: {temp_dir} for video {video_id}")
 
-        # Attempt 1: Fetch metadata and standard subtitles
-        # This command also fetches metadata with --dump-json
+        # --- Attempt 1: Standard download, dump JSON, check files --- 
         cmd_attempt1 = [
             YT_DLP_PATH,
             '--skip-download',
-            '--write-auto-sub',
-            '--write-sub',
+            '--write-auto-sub', '--write-sub',
             '--sub-langs', 'en.*,fr.*',
-            '--sub-format', 'vtt', # Prefer VTT
-            '-o', os.path.join(temp_dir, '%(id)s.%(ext)s'),
-            '--verbose', # Keep verbose for now, can be reduced later
-            '--dump-json',
+            '--sub-format', 'vtt/srt/best', # Use flexible format
+            '-o', os.path.join(temp_dir, 'att1_%(id)s.%(language)s.%(ext)s'), # Prefixed filename
+            '--dump-json', # Get metadata JSON
             video_url
         ]
-        logger.info(f"Attempting to fetch metadata and subtitles for {video_id}")
-        logger.debug(f"Command (Metadata & Attempt 1): {' '.join(cmd_attempt1)}")
+        logger.info(f"Attempt 1 for {video_id}: Fetch metadata and try downloading subs.")
+        logger.debug(f"Command (Attempt 1): {' '.join(cmd_attempt1)}")
         
-        process = subprocess.run(cmd_attempt1, capture_output=True, text=True, check=False, encoding='utf-8') # check=False to handle errors manually
+        process1 = subprocess.run(cmd_attempt1, capture_output=True, text=True, check=False, encoding='utf-8')
 
-        if process.returncode != 0:
-            logger.error(f"yt-dlp process for metadata/subs (Attempt 1) for {video_id} failed with code {process.returncode}")
-            if process.stderr:
-                bar = '-' * 20
-                stderr_content = process.stderr.strip()
-                logger.error(f"yt-dlp stderr (Attempt 1) for {video_id}:\n{bar}\n{stderr_content}\n{bar}")
-            # No specific return here, will proceed to see if any files were partially downloaded or if metadata was output despite error
-
-        # Process stdout for JSON metadata (even if subtitle part failed, metadata might be there)
-        if process.stdout:
+        if process1.returncode != 0:
+            logger.warning(f"yt-dlp process (Attempt 1) for {video_id} failed with code {process1.returncode}. Will still check for partial output/files.")
+            if process1.stderr:
+                bar = '-' * 20; stderr_content = process1.stderr.strip()
+                logger.warning(f"yt-dlp stderr (Attempt 1) for {video_id}:\n{bar}\n{stderr_content}\n{bar}")
+        
+        # Process metadata JSON from attempt 1 (even if file download part failed)
+        if process1.stdout:
             try:
-                video_data_json = json.loads(process.stdout)
+                video_data_json = json.loads(process1.stdout)
             except json.JSONDecodeError as je:
-                logger.error(f"JSONDecodeError for video {video_id} during metadata fetch: {je}")
-                stdout_head = "\n".join(process.stdout.splitlines()[:20])
-                bar = '-' * 20
-                logger.error(f"First 20 lines of stdout causing JSON error for {video_id}:\n{bar}\n{stdout_head}\n{bar}")
+                logger.error(f"JSONDecodeError parsing metadata from Attempt 1 for {video_id}: {je}. Cannot proceed.")
+                # No point continuing without metadata for filtering etc.
+                return None, None, None
         else:
-            logger.warning(f"No stdout from yt-dlp for metadata fetch for {video_id}.")
+            logger.error(f"No stdout (JSON metadata) from yt-dlp (Attempt 1) for {video_id}. Cannot proceed.")
+            return None, None, None
 
-        # --- Filter based on party leader in description --- (Needs video_data_json)
+        # --- Apply party leader filter --- 
         if video_data_json:
-            description = video_data_json.get('description')
-            if description:
-                description_lower = description.lower()
-                found_leader = any(name in description_lower for name in LEADER_NAMES)
-                if not found_leader:
-                    logger.info(f"Skipping video {video_id} - no party leader mentioned in the description.")
-                    return None, None, None # Skip processing this video (temp_dir cleaned in finally)
-                else:
-                    logger.info(f"Party leader found in description for {video_id}. Processing video.")
+            description = video_data_json.get('description', '').lower()
+            title = video_data_json.get('title', '').lower()
+            search_text = title + " " + description 
+            if not any(name in search_text for name in LEADER_NAMES):
+                logger.info(f"Skipping video {video_id} - no party leader mentioned (checked after metadata fetch). Filter applied.")
+                # Return metadata even if skipped, maybe useful later?
+                # Or return None, None, None? For now, return Nones as transcript won't be processed.
+                return None, None, None 
             else:
-                logger.warning(f"Video description not available in metadata for {video_id}. Proceeding with transcript attempts.")
-        else:
-            logger.warning(f"Could not parse video metadata for {video_id} to check description. Proceeding with transcript attempts. This might mean the video is unavailable or restricted.")
-            # Decide if we should return or continue if metadata is critical
-            # For now, we continue to try and get transcripts, but this video might be unlistable later if metadata is strictly required
-
-        # --- Attempt to process downloaded subtitles --- 
-        subtitle_files = []
-        if os.path.exists(temp_dir):
-            for file_name in os.listdir(temp_dir):
-                if file_name.endswith(('.vtt', '.srt')) and video_id in file_name:
-                    subtitle_files.append(os.path.join(temp_dir, file_name))
-        
-        logger.debug(f"Found subtitle files after initial attempt for {video_id}: {subtitle_files}")
-
-        for s_file_path in subtitle_files:
-            try:
-                with open(s_file_path, 'r', encoding='utf-8') as f:
-                    file_content = f.read()
-                
-                if s_file_path.endswith('.vtt'):
-                    parsed_cues = parse_vtt(file_content)
-                elif s_file_path.endswith('.srt'):
-                    parsed_cues = parse_srt(file_content) # Assuming parse_srt will be updated
-                else:
-                    continue
-
-                if parsed_cues:
-                    transcript_content = parsed_cues
-                    # Determine language from filename (basic check)
-                    fn_lower = os.path.basename(s_file_path).lower()
-                    if any(f'.{lang_code}.' in fn_lower for lang_code in ['en', 'eng', 'english']):
-                        transcript_language = 'en'
-                    elif any(f'.{lang_code}.' in fn_lower for lang_code in ['fr', 'fra', 'french']):
-                        transcript_language = 'fr'
-                    else: # Fallback: check if yt-dlp included lang in requested_subtitles
-                        if video_data_json and video_data_json.get('requested_subtitles'):
-                            req_subs = video_data_json['requested_subtitles']
-                            for lang_key, sub_info in req_subs.items():
-                                if sub_info.get('ext') in s_file_path:
-                                    transcript_language = lang_key.split('-')[0] # e.g. en-US -> en
-                                    break
-                        if not transcript_language: transcript_language = 'unknown'
-                    
-                    logger.info(f"Successfully read and parsed transcript from {s_file_path} for {video_id} (lang: {transcript_language})")
-                    break # Found a transcript
-            except Exception as read_err:
-                logger.error(f"Error reading or parsing subtitle file {s_file_path} for {video_id}: {read_err}")
-
-        # --- Subsequent attempts if no transcript found yet --- 
-        # This section can be refactored into a loop or helper function if attempts become more complex
-        # For now, keeping a simplified structure for clarity given the original three attempts
-
-        if not transcript_content:
-            logger.info(f"No transcript from initial attempt for {video_id}. Trying alternative methods.")
-            # Simplified additional attempt (example: trying --write-auto-sub only if not already tried effectively)
-            # The original script had complex, somewhat overlapping attempts. 
-            # A more robust approach might involve checking yt-dlp's reported available subs first (--list-subs)
-            # and then specifically requesting them.
+                logger.info(f"Party leader found for {video_id}. Continuing to process transcript files.")
+        else: # Should be caught above, but safety first
+            logger.error(f"Metadata missing after fetch for {video_id}, cannot apply filter or proceed.")
+            return None, None, None
             
-            # Example: A single, more focused second attempt targeting auto-subs specifically if not primary
-            cmd_attempt_auto_subs = [
-                YT_DLP_PATH,
-                '--skip-download',
+        # --- Check files from Attempt 1 --- 
+        logger.info(f"Checking files in {temp_dir} after Attempt 1 for {video_id}")
+        att1_files = []
+        if os.path.exists(temp_dir):
+             att1_files = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if f.startswith('att1_') and f.endswith(('.vtt', '.srt'))]
+             logger.info(f"Files found from Attempt 1: {att1_files}")
+
+        file_preference = [('.en.vtt', 'en'), ('.fr.vtt', 'fr'), ('.en.srt', 'en'), ('.fr.srt', 'fr'),
+                           ('.vtt', None), ('.srt', None)] # Generic fallback
+
+        for suffix, specific_lang_code in file_preference:
+            for f_path in att1_files:
+                matches_specific_lang = (specific_lang_code and f'.{specific_lang_code}.' in os.path.basename(f_path).lower() and f_path.endswith(suffix))
+                matches_generic_ext = (not specific_lang_code and f_path.endswith(suffix))
+                
+                if video_id in f_path and (matches_specific_lang or matches_generic_ext):
+                    lang_to_pass = specific_lang_code
+                    if not lang_to_pass: # Infer from filename
+                        fn_lower = os.path.basename(f_path).lower()
+                        if '.en.' in fn_lower: lang_to_pass = 'en'
+                        elif '.fr.' in fn_lower: lang_to_pass = 'fr'
+                    
+                    logger.info(f"Attempt 1: Parsing file {f_path} (lang hint: {lang_to_pass}) for {video_id}")
+                    parsed_cues, lang_from_file = _parse_and_normalize_cues_from_file(f_path, lang_to_pass or 'unknown', video_id)
+                    if parsed_cues:
+                        found_cues = parsed_cues
+                        found_lang = lang_from_file if lang_from_file != 'unknown' else (specific_lang_code or 'unknown')
+                        if found_lang == 'unknown' and specific_lang_code: found_lang = specific_lang_code
+                        logger.info(f"Attempt 1: Success from file {f_path} (lang: {found_lang}). Cues: {len(found_cues)}. Snippet: {found_cues[0]['text'][:100] if found_cues else 'N/A'}")
+                        break
+            if found_cues: break
+
+        # --- Attempt 2: Compatibility Mode (Files Only) --- 
+        if not found_cues:
+            logger.info(f"Attempt 2 for {video_id}: Using youtube-dl compatibility mode with targeted VTT download.")
+            
+            # Try English auto VTT first
+            logger.info(f"Attempt 2a for {video_id}: Explicitly fetching 'en' auto VTT.")
+            cmd_attempt2_en = [
+                YT_DLP_PATH, '--skip-download',
                 '--write-auto-sub', # Focus on auto-subs
-                '--sub-langs', 'en.*,fr.*',
-                '--sub-format', 'vtt', # Stick to VTT for auto if possible
-                '-o', os.path.join(temp_dir, 'auto_%(id)s.%(ext)s'),
+                '--sub-lang', 'en',
+                '--sub-format', 'vtt',
+                '--compat-options', 'youtube-dl',
+                '-o', os.path.join(temp_dir, 'att2_%(id)s.en.%(ext)s'), # Specific lang in filename
+                '--verbose',
                 video_url
             ]
-            logger.info(f"Attempting to fetch auto-subtitles specifically for {video_id}")
-            logger.debug(f"Command (Auto-Subs Attempt): {' '.join(cmd_attempt_auto_subs)}")
+            logger.debug(f"Command (Attempt 2a - en): {' '.join(cmd_attempt2_en)}")
+            process2_en = subprocess.run(cmd_attempt2_en, capture_output=True, text=True, check=False, encoding='utf-8')
+
+            if process2_en.returncode != 0:
+                logger.warning(f"yt-dlp process (Attempt 2a - en) for {video_id} failed with code {process2_en.returncode}.")
+                if process2_en.stderr: logger.warning(f"yt-dlp stderr (Attempt 2a - en) for {video_id}:\\n{'-'*20}\\n{process2_en.stderr.strip()}\\n{'-'*20}")
+            else:
+                logger.info(f"yt-dlp process (Attempt 2a - en) for {video_id} completed (exit code 0).")
+
+            # Check if English VTT was downloaded
+            # We will check specific filenames later, this subprocess run is just to trigger download.
+            # The file checking logic below will pick up 'att2_*.en.vtt'
+
+            # If English didn't result in a file (or we want to try French anyway if EN is not primary)
+            # For now, let's assume we just want one, and the file checking logic will find what was downloaded.
+            # Let's try French only if the English command failed or we specifically need French (not implemented here)
+            # The current file preference logic handles picking the best file.
+            # The main change is to be more specific in the download command.
+            # We might still need a broader attempt if these specific ones fail.
+            # For now, let's stick to the an explicit 'en' and an explicit 'fr' if 'en' failed to run or no files found yet.
+
+            # Let's re-evaluate: the original Attempt 2 was a single command.
+            # If the issue is the broadness of sub-langs, let's try two specific commands.
             
-            try:
-                process_auto = subprocess.run(cmd_attempt_auto_subs, capture_output=True, text=True, check=False, encoding='utf-8')
-                if process_auto.returncode != 0:
-                    logger.warning(f"yt-dlp auto-subs attempt for {video_id} failed or produced no new files. Code: {process_auto.returncode}")
-                    if process_auto.stderr:
-                        bar = '-' * 20
-                        stderr_content = process_auto.stderr.strip()
-                        logger.warning(f"yt-dlp stderr (Auto-Subs Attempt) for {video_id}:\n{bar}\n{stderr_content}\n{bar}")
+            # Check files from Attempt 2a (English)
+            logger.info(f"Checking files in {temp_dir} after Attempt 2a (en) for {video_id} using targeted logic.")
+            files_after_att2a = []
+            if os.path.exists(temp_dir):
+                files_after_att2a = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if f.startswith('att2_') and f.endswith('.en.vtt')]
+            
+            if not files_after_att2a: # If no English VTT found, try French
+                logger.info(f"Attempt 2b for {video_id}: No English VTT found from 2a, explicitly fetching 'fr' auto VTT.")
+                cmd_attempt2_fr = [
+                    YT_DLP_PATH, '--skip-download',
+                    '--write-auto-sub',
+                    '--sub-lang', 'fr',
+                    '--sub-format', 'vtt',
+                    '--compat-options', 'youtube-dl',
+                    '-o', os.path.join(temp_dir, 'att2_%(id)s.fr.%(ext)s'), # Specific lang in filename
+                    '--verbose',
+                    video_url
+                ]
+                logger.debug(f"Command (Attempt 2b - fr): {' '.join(cmd_attempt2_fr)}")
+                process2_fr = subprocess.run(cmd_attempt2_fr, capture_output=True, text=True, check=False, encoding='utf-8')
 
-                # Check for newly downloaded auto-sub files
-                auto_subtitle_files = []
-                if os.path.exists(temp_dir):
-                    for file_name in os.listdir(temp_dir):
-                        if file_name.startswith('auto_') and file_name.endswith(('.vtt', '.srt')) and video_id in file_name:
-                            auto_subtitle_files.append(os.path.join(temp_dir, file_name))
-                
-                logger.debug(f"Found auto-subtitle files for {video_id}: {auto_subtitle_files}")
+                if process2_fr.returncode != 0:
+                    logger.warning(f"yt-dlp process (Attempt 2b - fr) for {video_id} failed with code {process2_fr.returncode}.")
+                    if process2_fr.stderr: logger.warning(f"yt-dlp stderr (Attempt 2b - fr) for {video_id}:\\n{'-'*20}\\n{process2_fr.stderr.strip()}\\n{'-'*20}")
+                else:
+                    logger.info(f"yt-dlp process (Attempt 2b - fr) for {video_id} completed (exit code 0).")
+            
+            # The rest of the file checking logic remains the same, it will pick up whatever was downloaded.
+            # The key is that we've tried to be more specific with the download commands.
 
-                for s_file_path in auto_subtitle_files:
-                    # Avoid reprocessing files already checked if names overlap, though 'auto_' prefix helps
-                    try:
-                        with open(s_file_path, 'r', encoding='utf-8') as f:
-                            file_content = f.read()
-                        
-                        if s_file_path.endswith('.vtt'): parsed_cues = parse_vtt(file_content)
-                        elif s_file_path.endswith('.srt'): parsed_cues = parse_srt(file_content)
-                        else: continue
+            # Check files from Attempt 2 using targeted pattern matching
+            logger.info(f"Checking files in {temp_dir} after Attempt 2 (a/b) for {video_id} using targeted logic.")
+            att2_files = []
+            if os.path.exists(temp_dir):
+                att2_files = [os.path.join(temp_dir, f) for f in os.listdir(temp_dir) if f.startswith('att2_') and f.endswith(('.vtt'))] # Focus on VTT from Attempt 2
+                logger.info(f"Files found from Attempt 2 (VTT): {att2_files}")
 
+            # Define target filename patterns (more specific)
+            target_patterns = [
+                (('.en.en.vtt', '.en.en-orig.vtt'), 'en'),      # Priority 1: English original/ASR
+                (('.fr.en.vtt',), 'en'),                       # Priority 2: French translated to English
+                (('.fr.fr.vtt', '.fr.fr-orig.vtt'), 'fr')       # Priority 3: French original/ASR
+            ]
+
+            for suffixes, target_lang in target_patterns:
+                if found_cues: break # Stop if we found one in a previous priority level
+                for f_path in att2_files:
+                    # Check if filename ends with any of the suffixes for the current priority
+                    if any(f_path.endswith(suffix) for suffix in suffixes):
+                        logger.info(f"Attempt 2: Found matching file pattern {suffixes} for target lang '{target_lang}'. Parsing file {f_path} for {video_id}")
+                        parsed_cues, _ = _parse_and_normalize_cues_from_file(f_path, target_lang, video_id) # Use target_lang directly
                         if parsed_cues:
-                            transcript_content = parsed_cues
-                            # Language determination similar to above, can be a helper
-                            fn_lower = os.path.basename(s_file_path).lower()
-                            if any(f'.{lang_code}.' in fn_lower for lang_code in ['en', 'eng', 'english']):
-                                transcript_language = 'en'
-                            elif any(f'.{lang_code}.' in fn_lower for lang_code in ['fr', 'fra', 'french']):
-                                transcript_language = 'fr'
-                            else: transcript_language = 'unknown' # Simpler fallback for auto-subs
+                            found_cues = parsed_cues
+                            found_lang = target_lang # Assign language based on the pattern matched
+                            logger.info(f"Attempt 2: Success from file {f_path} (lang: {found_lang}). Cues: {len(found_cues)}. Snippet: {found_cues[0]['text'][:100] if found_cues else 'N/A'}")
+                            break # Found the best match for this priority, move to next video
+            # End of priority loop
 
-                            logger.info(f"Successfully read and parsed transcript from auto-sub attempt: {s_file_path} for {video_id} (lang: {transcript_language})")
-                            break # Found a transcript
-                    except Exception as read_err:
-                        logger.error(f"Error reading or parsing auto-subtitle file {s_file_path} for {video_id}: {read_err}")
-            except Exception as e_auto:
-                 logger.error(f"Error during dedicated auto-subtitle fetch for {video_id}: {e_auto}")
-
-        if not transcript_content:
-            logger.warning(f"No transcript could be obtained for {video_id} after all attempts.")
-
-        # video_data_json might be None if initial yt-dlp call failed badly for metadata
-        return video_data_json, transcript_content, transcript_language
+        # --- Final Result --- 
+        if not found_cues:
+            logger.warning(f"No transcript (cues) could be obtained for {video_id} after all attempts.")
+            # Return metadata, but None for cues and lang
+            return video_data_json, None, None 
+        else:
+            # Log before returning success
+            logger.info(f"Successfully obtained transcript for {video_id}. Returning lang='{found_lang}', cues found={len(found_cues)}")
+            return video_data_json, found_cues, found_lang
     
-    except subprocess.CalledProcessError as e: # Should be less frequent with check=False
-        logger.error(f"A subprocess.CalledProcessError occurred unexpectedly for {video_id}: {e}")
-        if e.stderr:
-            bar = '-' * 20
-            stderr_content = e.stderr.strip()
-            logger.error(f"Associated stderr for {video_id}:\n{bar}\n{stderr_content}\n{bar}")
-        return None, None, None # Ensure this path also cleans up
     except Exception as e:
-        logger.error(f"An unexpected error in fetch_video_metadata_and_transcript for {video_id}: {e}", exc_info=True)
-        return None, None, None # Ensure this path also cleans up
-    finally:
+        logger.error(f"Major unexpected error in fetch_video_metadata_and_transcript for {video_id}: {e}", exc_info=True)
+        return None, None, None 
+    finally: # Keep commented out to inspect temp folders
         if os.path.exists(temp_dir):
             try:
                 for file_to_remove in os.listdir(temp_dir):
-                    try:
-                        os.remove(os.path.join(temp_dir, file_to_remove))
-                    except OSError as e_remove:
-                        logger.warning(f"Could not remove file {file_to_remove} in {temp_dir} for {video_id}: {e_remove}")
+                    try: os.remove(os.path.join(temp_dir, file_to_remove))
+                    except OSError as e_remove: logger.warning(f"Could not remove file {file_to_remove} in {temp_dir} for {video_id}: {e_remove}")
                 os.rmdir(temp_dir)
                 logger.debug(f"Successfully cleaned up temporary directory: {temp_dir} for {video_id}")
             except OSError as e_rmdir:
                 logger.warning(f"Could not remove directory {temp_dir} for {video_id}: {e_rmdir} (it might not be empty or access denied)")
 
+def convert_timestamp_to_seconds(timestamp_str):
+    """Converts HH:MM:SS.mmm or HH:MM:SS,mmm to float seconds."""
+    if not timestamp_str or not isinstance(timestamp_str, str):
+        return 0.0 # Or raise an error, or return None
 
-def parse_srt(srt_content):
-    """Parse SRT format subtitles into a list of cue dictionaries.
-       Each cue: {"start_time": "HH:MM:SS,mmm", "end_time": "HH:MM:SS,mmm", "text": "cue text"}
-       Note: SRT uses comma for millisecond separator, VTT uses dot. We keep SRT's format here.
-    """
-    cues = []
-    lines = srt_content.splitlines()
-    idx = 0
+    # Normalize separator for milliseconds
+    timestamp_str = timestamp_str.replace(',', '.')
     
-    # SRT timestamp pattern: HH:MM:SS,mmm --> HH:MM:SS,mmm
-    # We also capture optional styling that might appear on the timestamp line in some SRT variants, though it's rare.
-    timestamp_pattern = re.compile(r'(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})(.*)')
-    # Basic HTML-like tag removal, common in SRT for formatting
-    html_tag_pattern = re.compile(r'<[^>]+>')
+    parts = timestamp_str.split(':')
+    seconds_str = parts[-1]
+    try:
+        if len(parts) == 3: # HH:MM:SS.mmm
+            h, m = int(parts[0]), int(parts[1])
+            s_ms = float(seconds_str)
+            return h * 3600 + m * 60 + s_ms
+        elif len(parts) == 2: # MM:SS.mmm
+            m = int(parts[0])
+            s_ms = float(seconds_str)
+            return m * 60 + s_ms
+        elif len(parts) == 1: # SS.mmm
+            return float(seconds_str)
+        else:
+            logger.warning(f"Unexpected timestamp format: {timestamp_str}")
+            return 0.0
+    except ValueError as e:
+        logger.error(f"ValueError converting timestamp '{timestamp_str}': {e}")
+        return 0.0
 
-    while idx < len(lines):
-        line = lines[idx].strip()
-        idx += 1
+def deduplicate_cues(raw_cues):
+    """Deduplicates cues based on case-insensitive comparison of consecutive text content."""
+    if not raw_cues:
+        return []
 
-        if not line: # Skip empty lines between cues
+    cleaned_cues = []
+    if not isinstance(raw_cues, list) or len(raw_cues) == 0:
+        return []
+
+    # Filter out cues that are not dicts or don't have text
+    # We process the original list
+    process_list = [cue for cue in raw_cues if isinstance(cue, dict) and 'text' in cue]
+    
+    if not process_list: return [] 
+
+    for i, current_cue in enumerate(process_list):
+        current_text_stripped = current_cue.get('text', '').strip()
+        if not current_text_stripped: # Skip cues that become empty after stripping
             continue
 
-        # Try to parse as a sequence number, then expect timestamp, then text
-        if line.isdigit():
-            current_sequence_number = line
-            if idx < len(lines):
-                timestamp_line = lines[idx].strip()
-                idx += 1
-                timestamp_match = timestamp_pattern.match(timestamp_line)
-                
-                if timestamp_match:
-                    start_time = timestamp_match.group(1)
-                    end_time = timestamp_match.group(2)
-                    # Trailing content on timestamp line is rare in SRT but handle if present
-                    # For SRT, typically text starts on the next line.
-                    # styling_info_on_ts_line = timestamp_match.group(3).strip()
-                    
-                    text_lines = []
-                    while idx < len(lines) and lines[idx].strip():
-                        text_lines.append(lines[idx].strip())
-                        idx += 1
-                    
-                    if text_lines:
-                        full_text = " ".join(text_lines)
-                        # Clean common HTML-like tags (e.g., <i>, <b>, <font>)
-                        cleaned_text = html_tag_pattern.sub('', full_text).strip()
-                        cleaned_text = " ".join(cleaned_text.split()) # Normalize whitespace
-                        if cleaned_text:
-                            cues.append({
-                                "start_time": start_time, 
-                                "end_time": end_time, 
-                                "text": cleaned_text
-                            })
-                else:
-                    # This wasn't a valid timestamp line after a number, log or handle as malformed
-                    logger.debug(f"Malformed SRT? Expected timestamp after number '{current_sequence_number}', got: {timestamp_line}")
-                    # Continue to try and find next cue block
-            # else: sequence number at EOF
-        # else: line is not a number, so not start of a typical SRT block, skip to find next potential block.
-        # This makes the parser more robust to malformed SRTs or text files that are not SRTs.
-
-    if not cues and srt_content: # Fallback for very simple SRTs or plain text mistaken for SRT
-        # This is a very basic fallback if no structured cues were parsed, 
-        # treat the whole content as a single block of text with unknown timing.
-        # The original parse_srt was even simpler, just joining lines. This is slightly better.
-        logger.warning("Could not parse SRT into structured cues. Falling back to joining non-empty lines.")
-        text_only_lines = [html_tag_pattern.sub('', l.strip()) for l in srt_content.splitlines() if l.strip() and not l.strip().isdigit() and '-->' not in l]
-        joined_text = " ".join(text_only_lines).strip()
-        if joined_text:
-            cues.append({"start_time": "00:00:00,000", "end_time": "00:00:00,000", "text": joined_text, "is_fallback": True})
-
-    return cues
-
-
-def parse_vtt(vtt_content):
-    """Parse VTT format subtitles into a list of cue dictionaries.
-       Each cue: {"start_time": "HH:MM:SS.mmm", "end_time": "HH:MM:SS.mmm", "text": "cue text"}
-    """
-    cues = []
-    lines = vtt_content.splitlines()
-    idx = 0
-    current_cue_lines = []
-    current_start_time = None
-    current_end_time = None
-
-    # Regex to capture VTT timestamp and optional settings on the same line
-    # Corrected regex: removed trailing single quote
-    timestamp_pattern = re.compile(r'(\d{2}:\d{2}:\d{2}\.\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}\.\d{3})(.*)')
-    # Regex to clean common VTT styling from text lines (basic)
-    style_pattern = re.compile(r'(align|line|position|size|vertical):[\w\-%#]+(\s|$)', flags=re.IGNORECASE)
-
-    while idx < len(lines):
-        line = lines[idx].strip()
-        idx += 1
-
-        if line.startswith('WEBVTT') or line.startswith('NOTE') or not line:
-            # For empty lines, if it signifies end of a current cue, process it
-            if not line and current_start_time and current_cue_lines:
-                full_text = " ".join(current_cue_lines)
-                cleaned_text = re.sub(r'<[^>]+>', '', full_text).strip() # Remove HTML-like tags
-                cleaned_text = style_pattern.sub('', cleaned_text).strip() # Remove VTT settings
-                cleaned_text = " ".join(cleaned_text.split()) # Normalize whitespace
-                if cleaned_text:
-                    cues.append({
-                        "start_time": current_start_time,
-                        "end_time": current_end_time,
-                        "text": cleaned_text
-                    })
-                current_start_time = None # Reset for next cue block
-                current_end_time = None
-                current_cue_lines = []
+        # Add first valid cue unconditionally
+        if not cleaned_cues:
+            cleaned_cues.append(current_cue)
             continue
 
-        timestamp_match = timestamp_pattern.match(line)
+        # Get the text of the last cue added to cleaned_cues
+        last_added_text_stripped = cleaned_cues[-1].get('text', '').strip()
 
-        if timestamp_match:
-            # If there was a previous cue, finalize it
-            if current_start_time and current_cue_lines:
-                full_text = " ".join(current_cue_lines)
-                cleaned_text = re.sub(r'<[^>]+>', '', full_text).strip() # Remove HTML-like tags
-                cleaned_text = style_pattern.sub('', cleaned_text).strip() # Remove VTT settings
-                cleaned_text = " ".join(cleaned_text.split()) # Normalize whitespace
-                if cleaned_text:
-                    cues.append({
-                        "start_time": current_start_time,
-                        "end_time": current_end_time,
-                        "text": cleaned_text
-                    })
-            # Start new cue
-            current_start_time = timestamp_match.group(1)
-            current_end_time = timestamp_match.group(2)
-            current_cue_lines = []
-
-            # Check for text on the same line as the timestamp (after styling info)
-            trailing_text_on_timestamp_line = timestamp_match.group(3).strip()
-            if trailing_text_on_timestamp_line:
-                # Remove common VTT settings from this trailing text to isolate actual speech
-                # This is a basic removal; more sophisticated parsing of settings could be added if needed
-                cleaned_trailing_text = style_pattern.sub('', trailing_text_on_timestamp_line).strip()
-                if cleaned_trailing_text:
-                    # Further clean HTML-like tags from this line
-                    current_cue_lines.append(re.sub(r'<[^>]+>', '', cleaned_trailing_text).strip())
-        elif not line and current_start_time: # Empty line signifies end of current cue text
-            if current_cue_lines:
-                full_text = " ".join(current_cue_lines)
-                cleaned_text = re.sub(r'<[^>]+>', '', full_text).strip()
-                cleaned_text = style_pattern.sub('', cleaned_text).strip() # Remove VTT settings
-                cleaned_text = " ".join(cleaned_text.split()) # Normalize whitespace
-                if cleaned_text:
-                    cues.append({
-                        "start_time": current_start_time,
-                        "end_time": current_end_time,
-                        "text": cleaned_text
-                    })
-            current_start_time = None # Reset for next cue block
-            current_end_time = None
-            current_cue_lines = []
-
-        elif current_start_time: # This is a text line for the current active cue
-             # Avoid adding cue numbers as text if they appear on their own line
-            if not (line.isdigit() and not current_cue_lines and (idx > 1 and '-->' not in lines[idx-2].strip())):
-                current_cue_lines.append(line)
-
-    # Add the last cue if it exists and hasn't been added yet
-    if current_start_time and current_cue_lines:
-        full_text = " ".join(current_cue_lines)
-        cleaned_text = re.sub(r'<[^>]+>', '', full_text).strip()
-        cleaned_text = style_pattern.sub('', cleaned_text).strip() # Remove VTT settings
-        cleaned_text = " ".join(cleaned_text.split()) # Normalize whitespace
-        if cleaned_text:
-            cues.append({
-                "start_time": current_start_time,
-                "end_time": current_end_time,
-                "text": cleaned_text
-            })
-
-    return cues
+        # Compare lowercased stripped text
+        if current_text_stripped.lower() != last_added_text_stripped.lower():
+            cleaned_cues.append(current_cue)
+        # else: 
+            # Optional: Log skipped duplicate cues if needed for debugging
+            # logger.debug(f"Skipping duplicate cue (case-insensitive): '{current_text_stripped[:50]}...' vs '{last_added_text_stripped[:50]}...'")
+            
+    return cleaned_cues
 
 
 def translate_to_english(text, source_lang="fr"):
@@ -448,11 +395,9 @@ def translate_to_english(text, source_lang="fr"):
     return None # Explicitly return None if not used
 
 
-def save_video_data_to_firestore(video_id, metadata, transcript_text_original, transcript_language_original):
+def save_video_data_to_firestore(video_id, metadata, raw_cue_list, transcript_language_original):
     """
-    Saves the extracted video metadata and original transcript to Firestore.
-    `transcript_text_original` is the transcript in its original detected language.
-    `transcript_language_original` is the language code ('en', 'fr', or None).
+    Saves the extracted video metadata, cleaned transcript cues, and generated text to Firestore.
     """
     if not metadata:
         logger.warning(f"No metadata to save for {video_id}, skipping Firestore save.")
@@ -460,10 +405,21 @@ def save_video_data_to_firestore(video_id, metadata, transcript_text_original, t
 
     doc_ref = db.collection('youtube_video_data').document(video_id)
     
-    # Prepare transcript text for storage: join cue texts if it's a list of cues
-    final_transcript_text_original = transcript_text_original
-    if isinstance(transcript_text_original, list): # It will be a list of cues
-        final_transcript_text_original = "\n".join([cue['text'] for cue in transcript_text_original if 'text' in cue])
+    logger.info(f"SAVE_VIDEO_DATA for {video_id}: Received lang='{transcript_language_original}', raw cues count={len(raw_cue_list) if isinstance(raw_cue_list, list) else 'N/A'}.")
+
+    # Deduplicate cues and generate text
+    cleaned_cues = []
+    transcript_text_generated = ""
+    if raw_cue_list and isinstance(raw_cue_list, list):
+        cleaned_cues = deduplicate_cues(raw_cue_list)
+        logger.info(f"SAVE_VIDEO_DATA for {video_id}: Cues after deduplication: {len(cleaned_cues)}.")
+        # Generate text only from non-empty, stripped cue texts
+        transcript_text_generated = "\n".join([cue.get('text', '').strip() for cue in cleaned_cues if cue.get('text', '').strip()])
+        logger.info(f"SAVE_VIDEO_DATA for {video_id}: Length of generated transcript text: {len(transcript_text_generated)}.")
+    elif raw_cue_list: 
+        logger.warning(f"SAVE_VIDEO_DATA for {video_id}: Received non-list raw_cue_list type: {type(raw_cue_list)}. Storing as empty transcript.")
+    else: # raw_cue_list is None or empty
+        logger.info(f"SAVE_VIDEO_DATA for {video_id}: No raw cues provided or raw_cue_list is empty. Transcript will be empty.")
 
     data_to_store = {
         'video_id': video_id,
@@ -474,7 +430,7 @@ def save_video_data_to_firestore(video_id, metadata, transcript_text_original, t
         'uploader_id': metadata.get('uploader_id'),
         'channel_id': metadata.get('channel_id'),
         'channel_url': metadata.get('channel_url'),
-        'duration': metadata.get('duration'),
+        'duration': metadata.get('duration'), # This is usually in seconds from yt-dlp JSON
         'duration_string': metadata.get('duration_string'),
         'view_count': metadata.get('view_count'),
         'like_count': metadata.get('like_count'),
@@ -485,17 +441,16 @@ def save_video_data_to_firestore(video_id, metadata, transcript_text_original, t
         'webpage_url': metadata.get('webpage_url', f"https://www.youtube.com/watch?v={video_id}"),
         'original_url': metadata.get('original_url'),
         
-        'transcript_text_original': final_transcript_text_original, # Use the processed text
-        'transcript_language_original': transcript_language_original,
-        # Store structured cues as well, if available
-        'transcript_cues_original': transcript_text_original if isinstance(transcript_text_original, list) else None,
+        # New transcript fields
+        'transcript_cues_cleaned': cleaned_cues, # Store the list of cleaned cue maps
+        'transcript_text_generated': transcript_text_generated, # Store the flat text from cleaned cues
+        'transcript_language_original': transcript_language_original, # 'en', 'fr', or None/unknown
         
         'raw_yt_dlp_json_snippet': json.dumps(metadata, indent=2)[:2000], 
         'ingested_at': firestore.SERVER_TIMESTAMP,
-        # Flag to indicate if translation might be needed by a downstream process
-        'needs_translation': bool(transcript_language_original and transcript_language_original != 'en')
+        'needs_translation': transcript_language_original == 'fr' 
     }
-    # Removed old fields: transcript_en, translation_needed_review, raw_french_transcript_for_storage
+    # Removed old fields: transcript_text_original, transcript_cues_original (effectively replaced)
 
     try:
         doc_ref.set(data_to_store, merge=True) 
@@ -504,6 +459,11 @@ def save_video_data_to_firestore(video_id, metadata, transcript_text_original, t
         logger.error(f"Error saving video {video_id} to Firestore: {e}")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Ingest YouTube campaign promise videos.")
+    parser.add_argument("-n", "--limit", type=int, default=None, 
+                        help="Limit the number of videos to process from the input file. Processes all if not set.")
+    args = parser.parse_args()
+
     video_ids_file_path = os.path.join(os.path.dirname(__file__), '..', 'raw-data', '2021-yt-playlist-ids.md')
     processed_video_ids = []
 
@@ -527,18 +487,12 @@ if __name__ == "__main__":
         logger.error(f"An error occurred while reading video IDs from {video_ids_file_path}: {e}")
         exit()
 
-    # Original test_video_ids for reference, now replaced by file input
-    # test_video_ids = [
-    #     "d3N0ZDXKsgM", 
-    #     "CzFuP6m_Kds",
-    #     "ZbK2Ep6SJUk",
-    #     "tRP0E9D7O4A",
-    #     "i7YwmbT-r4E",
-    #     "NqWC7V6ZiOE",
-    #     "CB4hv9yetnI",
-    #     "ELr2-P1SmhM",
-    #     "0c-2oLTO6hI" 
-    # ]
+    # Apply the limit if provided
+    if args.limit is not None and args.limit > 0:
+        logger.info(f"Processing a limited number of videos: {args.limit} of {len(processed_video_ids)} total.")
+        processed_video_ids = processed_video_ids[:args.limit]
+    elif args.limit is not None and args.limit <= 0:
+        logger.warning(f"Invalid limit {args.limit} specified. Processing all videos.")
 
     logger.info(f"Starting processing for {len(processed_video_ids)} videos.")
 

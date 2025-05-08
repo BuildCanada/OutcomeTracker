@@ -3,6 +3,9 @@ from firebase_admin import credentials, firestore
 import os
 import json # For pretty printing dicts
 from collections import Counter
+from dotenv import load_dotenv # Import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
 
 # --- Firebase Configuration ---
 if not firebase_admin._apps:
@@ -12,9 +15,8 @@ if not firebase_admin._apps:
         print(f"Analysis Script: Connected to Firestore Emulator at {os.getenv('FIRESTORE_EMULATOR_HOST')} using project ID '{options['projectId']}'")
     else:
         # TODO: Add configuration for connecting to a live Firestore instance if needed
-        print("ERROR: FIRESTORE_EMULATOR_HOST environment variable not set.")
-        print("Please set it to connect to the local Firestore emulator (e.g., 'localhost:8080').")
-        print("If you intend to connect to a live instance, this script needs to be configured for it.")
+        print("ERROR: FIRESTORE_EMULATOR_HOST environment variable not set (and not found in .env).")
+        print("Please set it or ensure .env file is present and configured (e.g., 'localhost:8080').")
         exit("Exiting Analysis Script: Firestore not configured.")
       
 db = firestore.client()
