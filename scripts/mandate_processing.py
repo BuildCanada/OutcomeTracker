@@ -10,18 +10,31 @@ import os
 # Import the new common utility for department standardization
 from common_utils import standardize_department_name
 
+# --- Firebase Configuration ---
+db = None # Initialize db to None
 if not firebase_admin._apps: # Check if app is already initialized
-    if os.getenv('FIRESTORE_EMULATOR_HOST'):
-        # Connect to the Firestore Emulator
-        options = {'projectId': 'promisetrackerapp'} # Use your desired project ID for the emulator
-        firebase_admin.initialize_app(options=options)
-        print(f"Python (Mandate Processing): Connected to Firestore Emulator at {os.getenv('FIRESTORE_EMULATOR_HOST')} using project ID '{options['projectId']}'")
-    else:
-        print("ERROR: FIRESTORE_EMULATOR_HOST environment variable not set.")
-        print("Please set it to connect to the local Firestore emulator (e.g., 'localhost:8080').")
-        exit("Exiting: Firestore emulator not configured.")
+    # Cloud Firestore initialization
+    # GOOGLE_APPLICATION_CREDENTIALS environment variable must be set
+    if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
+        print("CRITICAL: GOOGLE_APPLICATION_CREDENTIALS environment variable not set.")
+        print("CRITICAL: This is required for authentication with Google Cloud Firestore.")
+        exit("Exiting: GOOGLE_APPLICATION_CREDENTIALS not set.")
+    try:
+        firebase_admin.initialize_app() # Default initialization for cloud
+        print("Python (Mandate Processing): Successfully connected to Google Cloud Firestore.")
+        db = firestore.client()
+    except Exception as e:
+        print(f"CRITICAL: Python (Mandate Processing): Firebase initialization failed for Google Cloud Firestore: {e}")
+        # Consider adding traceback.print_exc() here for more detail if using print
+        exit("Exiting: Firebase connection failed.")
+else:
+    print("Python (Mandate Processing): Firebase app already initialized. Getting client for Google Cloud Firestore.")
+    db = firestore.client()
 
-db = firestore.client()
+# Final check if db is assigned
+if db is None:
+    print("CRITICAL: Python (Mandate Processing): Failed to obtain Firestore client. Exiting.")
+    exit("Exiting: Firestore client not available.")
 # --- End Firestore Configuration ---
 
 def process_mlc_csv(file_path):

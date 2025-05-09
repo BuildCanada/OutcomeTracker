@@ -1,215 +1,261 @@
-import Link from "next/link"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight } from "lucide-react"
+"use client"
+import { useState, useEffect } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import PrimeMinisterSection from "@/components/prime-minister-section"
+import MinisterSection from "@/components/minister-section"
+import DepartmentsDropdown from "@/components/departments-dropdown"
+import {
+  fetchDepartmentConfigs,
+  fetchMinisterDetails,
+  fetchPromisesForDepartment,
+} from "@/lib/data"
+import type {
+  DepartmentConfig,
+  DepartmentPageData,
+  MinisterDetails,
+  PromiseData,
+  Metric,
+  PrimeMinister,
+} from "@/lib/types"
 
-// Helper function to get promise data
-async function getPromiseData() {
-  // In a real app, this would fetch from an API or database
-  // For this demo, we'll use the mock data
-  const promises = await import("@/data/promises.json").then((module) => module.default.promises)
-  return promises
+const DEFAULT_PLACEHOLDER_AVATAR = "/placeholder.svg?height=100&width=100"
+
+// Static data for the Prime Minister section
+const staticPrimeMinisterData: PrimeMinister = {
+  name: "Mark Carney", // Example Name
+  title: "Prime Minister",
+  avatarUrl: "/placeholder.svg?height=200&width=200", // Example avatar
+  guidingMetrics: [
+    {
+      title: "GDP Per Capita",
+      data: [45000, 44800, 45200, 45600, 45400, 45800, 46000],
+      goal: 48000,
+    },
+  ],
 }
 
-// Helper to group promises by section and subsection
-function groupPromisesBySection(promises) {
-  return promises.reduce((acc, promise) => {
-    if (!acc[promise.section]) {
-      acc[promise.section] = {
-        promises: [],
-        subsections: {},
+// Define the desired order and names for the main tabs
+// Ensure these shortNames exactly match what's in your Firestore 'department_config' collection
+const DESIRED_MAIN_TAB_SHORT_NAMES_ORDER: string[] = [
+  "Infrastructure", // Assuming this covers Housing based on common_utils.py mapping
+  "Defence",
+  "Health",
+  "Finance",
+  "Immigration",
+  "Employment",
+]
+
+export default function Home() {
+  const [departmentConfigs, setDepartmentConfigs] = useState<DepartmentConfig[]>([])
+  const [mainTabConfigs, setMainTabConfigs] = useState<DepartmentConfig[]>([])
+  const [dropdownTabConfigs, setDropdownTabConfigs] = useState<DepartmentConfig[]>([])
+  
+  const [activeTabId, setActiveTabId] = useState<string>("")
+  const [activeDepartmentData, setActiveDepartmentData] = useState<DepartmentPageData | null>(null)
+
+  const [isLoadingConfigs, setIsLoadingConfigs] = useState<boolean>(true)
+  const [isLoadingContent, setIsLoadingContent] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch initial department configurations for tabs
+  useEffect(() => {
+    const loadConfigs = async () => {
+      setIsLoadingConfigs(true)
+      setError(null)
+      try {
+        const configs = await fetchDepartmentConfigs()
+        if (configs && configs.length > 0) {
+          setDepartmentConfigs(configs)
+
+          const orderedMainTabs: DepartmentConfig[] = []
+          const remainingForDropdown: DepartmentConfig[] = []
+
+          // Create a map for quick lookup of desired main tabs
+          const desiredMainSet = new Set(DESIRED_MAIN_TAB_SHORT_NAMES_ORDER)
+
+          // Populate orderedMainTabs based on DESIRED_MAIN_TAB_SHORT_NAMES_ORDER
+          for (const shortName of DESIRED_MAIN_TAB_SHORT_NAMES_ORDER) {
+            const foundConfig = configs.find(c => c.shortName === shortName)
+            if (foundConfig) {
+              orderedMainTabs.push(foundConfig)
+            }
+          }
+
+          // Populate remainingForDropdown with configs not in orderedMainTabs
+          for (const config of configs) {
+            if (!orderedMainTabs.find(mt => mt.id === config.id)) {
+              remainingForDropdown.push(config)
+            }
+          }
+          // remainingForDropdown is already sorted alphabetically from fetchDepartmentConfigs
+
+          setMainTabConfigs(orderedMainTabs)
+          setDropdownTabConfigs(remainingForDropdown)
+          
+          // Set initial active tab to the first of the *ordered* main tabs, or first available config
+          setActiveTabId(orderedMainTabs[0]?.id || configs[0]?.id || "")
+        } else {
+          setError("No department configurations found.")
+        }
+      } catch (err) {
+        console.error("Failed to load department configs:", err)
+        setError("Failed to load department configurations.")
       }
+      setIsLoadingConfigs(false)
+    }
+    loadConfigs()
+  }, [])
+
+  // Fetch content for the active tab when activeTabId changes
+  useEffect(() => {
+    if (!activeTabId || departmentConfigs.length === 0) {
+      // If no active tab or configs not loaded, clear content and don't fetch
+      setActiveDepartmentData(null)
+      return
     }
 
-    acc[promise.section].promises.push(promise)
+    const selectedConfig = departmentConfigs.find(c => c.id === activeTabId)
 
-    if (!acc[promise.section].subsections[promise.subsection]) {
-      acc[promise.section].subsections[promise.subsection] = []
+    if (!selectedConfig) {
+      // Should not happen if activeTabId is derived from departmentConfigs
+      console.warn(`No config found for activeTabId: ${activeTabId}`)
+      setActiveDepartmentData(null)
+      setError("Could not find configuration for the selected department.")
+      return
     }
 
-    acc[promise.section].subsections[promise.subsection].push(promise)
+    const loadDepartmentContent = async () => {
+      setIsLoadingContent(true)
+      setError(null)
+      try {
+        const ministerDetailsData = await fetchMinisterDetails(selectedConfig.fullName)
+        const promisesData = await fetchPromisesForDepartment(selectedConfig.fullName)
 
-    return acc
-  }, {})
-}
+        // Placeholder for guiding metrics - to be replaced with actual data later
+        const guidingMetricsPlaceholder: Metric[] = [
+          {
+            title: "Placeholder Metric (e.g., Emissions Reduction Mt CO2e)",
+            data: [730, 720, 710, 700, 690, 680, 670],
+            goal: 500,
+          },
+        ]
 
-// Helper to calculate progress for promises
-function calculateProgress(promises) {
-  // In a real app, this would come from a database
-  // For this demo, we'll generate random statuses
-  const statuses = ["Not Started", "In Progress", "Partially Complete", "Complete"]
-  const statusCounts = {
-    "Not Started": 0,
-    "In Progress": 0,
-    "Partially Complete": 0,
-    Complete: 0,
+        setActiveDepartmentData({
+          id: selectedConfig.id,
+          shortName: selectedConfig.shortName,
+          fullName: selectedConfig.fullName,
+          ministerDetails: ministerDetailsData ? 
+            { ...ministerDetailsData, avatarUrl: ministerDetailsData.avatarUrl || DEFAULT_PLACEHOLDER_AVATAR } : 
+            { avatarUrl: DEFAULT_PLACEHOLDER_AVATAR } as MinisterDetails,
+          promises: promisesData,
+          guidingMetrics: guidingMetricsPlaceholder, // Use placeholder for now
+        })
+
+      } catch (err) {
+        console.error(`Failed to load content for ${selectedConfig.shortName}:`, err)
+        setError(`Failed to load content for ${selectedConfig.shortName}.`)
+        setActiveDepartmentData(null) // Clear data on error
+      }
+      setIsLoadingContent(false)
+    }
+
+    loadDepartmentContent()
+  }, [activeTabId, departmentConfigs])
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTabId(tabId)
+  }
+  
+  // The handleDepartmentSelect for the dropdown will now directly set the activeTabId
+  const handleDropdownSelect = (departmentId: string) => {
+    setActiveTabId(departmentId)
   }
 
-  promises.forEach((promise) => {
-    // Assign a random status for demo purposes
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)]
-    statusCounts[randomStatus]++
-  })
-
-  return statusCounts
-}
-
-export default async function Home() {
-  const promises = await getPromiseData()
-  const sectionGroups = groupPromisesBySection(promises)
+  if (isLoadingConfigs) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f8f2ea]">Loading configurations...</div>
+  }
 
   return (
-    <main className="container mx-auto py-8 px-4">
-      <div className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-2">Canada's Promise Tracker</h1>
-        <p className="text-xl text-muted-foreground">
-          Tracking the progress of the Canadian federal government's promises
-        </p>
-      </div>
+    <main className="min-h-screen bg-[#f8f2ea] font-sans">
+      <header className="border-b border-[#d3c7b9] bg-white">
+        <div className="mx-auto flex max-w-7xl items-center">
+          <div className="bg-[#8b2332] p-4 text-white">
+            <h1 className="text-xl font-bold">Build Canada</h1>
+          </div>
+          <nav className="flex flex-1 justify-around border-l border-[#d3c7b9]">
+            <a href="#" className="border-r border-[#d3c7b9] px-8 py-4 text-sm font-medium uppercase tracking-wider">
+              Memos
+            </a>
+            <a
+              href="#"
+              className="border-r border-[#d3c7b9] px-8 py-4 text-sm font-medium uppercase tracking-wider text-[#8b2332]"
+            >
+              Platform Tracker
+            </a>
+            <a href="#" className="border-r border-[#d3c7b9] px-8 py-4 text-sm font-medium uppercase tracking-wider">
+              About
+            </a>
+            <a href="#" className="px-8 py-4 text-sm font-medium uppercase tracking-wider">
+              Contact
+            </a>
+          </nav>
+        </div>
+      </header>
 
-      <div className="space-y-12">
-        {Object.entries(sectionGroups).map(([section, data]) => {
-          const { promises, subsections } = data
-          const sectionProgress = calculateProgress(promises)
-          const totalPromises = promises.length
-          const completePercentage = Math.round((sectionProgress["Complete"] / totalPromises) * 100)
+      <div className="container mx-auto max-w-5xl px-4 py-12">
+        <h1 className="mb-12 text-center text-5xl font-bold text-[#222222]">Outcomes Tracker</h1>
 
-          return (
-            <div key={section} className="space-y-6">
-              <Card className="overflow-hidden border-canada-red">
-                <CardHeader className="section-header">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-2xl">{section}</CardTitle>
-                      <CardDescription className="text-white opacity-90">
-                        {Object.keys(subsections).length} subsections, {totalPromises} promises
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold">{completePercentage}% Complete</div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="progress-bar-container">
-                      <div className="progress-bar-complete" style={{ width: `${completePercentage}%` }} />
-                      <div
-                        className="progress-bar-partial"
-                        style={{
-                          width: `${Math.round((sectionProgress["Partially Complete"] / totalPromises) * 100)}%`,
-                          left: `${completePercentage}%`,
-                        }}
-                      />
-                      <div
-                        className="progress-bar-inProgress"
-                        style={{
-                          width: `${Math.round((sectionProgress["In Progress"] / totalPromises) * 100)}%`,
-                          left: `${completePercentage + Math.round((sectionProgress["Partially Complete"] / totalPromises) * 100)}%`,
-                        }}
-                      />
-                    </div>
+        <PrimeMinisterSection primeMinister={staticPrimeMinisterData} />
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="status-indicator status-complete"></div>
-                        <span>Complete: {sectionProgress["Complete"]}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="status-indicator status-partial"></div>
-                        <span>Partial: {sectionProgress["Partially Complete"]}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="status-indicator status-inProgress"></div>
-                        <span>In Progress: {sectionProgress["In Progress"]}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="status-indicator status-notStarted"></div>
-                        <span>Not Started: {sectionProgress["Not Started"]}</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        {error && <div className="text-red-500 text-center my-4">Error: {error}</div>}
 
-              {/* Subsections */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Object.entries(subsections).map(([subsection, subsectionPromises]) => {
-                  const subsectionProgress = calculateProgress(subsectionPromises)
-                  const totalSubsectionPromises = subsectionPromises.length
-                  const subsectionCompletePercentage = Math.round(
-                    (subsectionProgress["Complete"] / totalSubsectionPromises) * 100,
-                  )
+        {departmentConfigs.length > 0 && (
+          <Tabs value={activeTabId} onValueChange={handleTabChange} className="mt-16">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 bg-transparent p-0">
+              {mainTabConfigs.map((config) => (
+                <TabsTrigger
+                  key={config.id}
+                  value={config.id}
+                  className="border border-[#d3c7b9] bg-white px-3 py-3 text-sm uppercase whitespace-normal data-[state=active]:bg-[#8b2332] data-[state=active]:text-white h-full flex items-center justify-center text-center"
+                >
+                  {config.shortName}
+                </TabsTrigger>
+              ))}
+              {dropdownTabConfigs.length > 0 && (
+                <div
+                   className={`border border-[#d3c7b9] ${!mainTabConfigs.find(mc => mc.id === activeTabId) && activeTabId ? "bg-[#8b2332] text-white" : "bg-white"}`}
+                >
+                  <DepartmentsDropdown 
+                    departments={dropdownTabConfigs} 
+                    onSelectDepartment={handleDropdownSelect} 
+                    isActive={!mainTabConfigs.find(mc => mc.id === activeTabId) && !!activeTabId} 
+                  />
+                </div>
+              )}
+            </TabsList>
 
-                  return (
-                    <Card key={`${section}-${subsection}`} className="overflow-hidden border-canada-navy">
-                      <CardHeader className="subsection-header">
-                        <CardTitle className="text-lg">{subsection}</CardTitle>
-                        <CardDescription className="text-white opacity-90">
-                          {totalSubsectionPromises} promises
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="pt-4">
-                        <div className="space-y-3">
-                          <div className="flex justify-between text-sm">
-                            <span>Progress</span>
-                            <span>{subsectionCompletePercentage}% Complete</span>
-                          </div>
-                          <div className="progress-bar-container">
-                            <div
-                              className="progress-bar-complete"
-                              style={{ width: `${subsectionCompletePercentage}%` }}
-                            />
-                            <div
-                              className="progress-bar-partial"
-                              style={{
-                                width: `${Math.round((subsectionProgress["Partially Complete"] / totalSubsectionPromises) * 100)}%`,
-                                left: `${subsectionCompletePercentage}%`,
-                              }}
-                            />
-                            <div
-                              className="progress-bar-inProgress"
-                              style={{
-                                width: `${Math.round((subsectionProgress["In Progress"] / totalSubsectionPromises) * 100)}%`,
-                                left: `${subsectionCompletePercentage + Math.round((subsectionProgress["Partially Complete"] / totalSubsectionPromises) * 100)}%`,
-                              }}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-1 text-xs">
-                            <div className="flex items-center gap-1">
-                              <div className="status-indicator status-complete w-2 h-2"></div>
-                              <span>Complete: {subsectionProgress["Complete"]}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="status-indicator status-partial w-2 h-2"></div>
-                              <span>Partial: {subsectionProgress["Partially Complete"]}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="status-indicator status-inProgress w-2 h-2"></div>
-                              <span>In Progress: {subsectionProgress["In Progress"]}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="status-indicator status-notStarted w-2 h-2"></div>
-                              <span>Not Started: {subsectionProgress["Not Started"]}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="bg-muted flex justify-end py-2">
-                        <Link
-                          href={`/sections/${section.toLowerCase()}/${encodeURIComponent(subsection.toLowerCase())}`}
-                          className="text-sm font-medium text-canada-red hover:underline flex items-center"
-                        >
-                          View Timeline <ArrowRight className="ml-1 h-4 w-4" />
-                        </Link>
-                      </CardFooter>
-                    </Card>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })}
+            {/* Single TabsContent area that updates based on activeTabId and activeDepartmentData */} 
+            {activeTabId && (
+                <TabsContent
+                    key={activeTabId} // Ensures re-render on tab change
+                    value={activeTabId} 
+                    className="border border-t-0 border-[#d3c7b9] bg-white p-6"
+                >
+                    {isLoadingContent && <div>Loading department details...</div>}
+                    {!isLoadingContent && activeDepartmentData && (
+                        <MinisterSection departmentPageData={activeDepartmentData} />
+                    )}
+                    {!isLoadingContent && !activeDepartmentData && !error && (
+                        <div>Select a department to see details.</div>
+                    )}
+                     {/* Error specific to content loading could be displayed here too */} 
+                </TabsContent>
+            )}
+          </Tabs>
+        )}
+        {!isLoadingConfigs && departmentConfigs.length === 0 && !error && (
+           <div className="text-center my-4">No departments to display.</div>
+        )}
       </div>
     </main>
   )

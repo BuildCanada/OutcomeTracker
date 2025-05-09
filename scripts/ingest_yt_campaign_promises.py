@@ -13,42 +13,45 @@ from io import StringIO # Import StringIO
 
 load_dotenv() # Load environment variables from .env file
 
-# --- Firebase Configuration ---
-if not firebase_admin._apps:
-    if os.getenv('FIRESTORE_EMULATOR_HOST'):
-        # Use logging for this information as well, consistency is good.
-        logger = logging.getLogger(__name__) # Ensure logger is available here if not already global
-        logger.info(f"Python (YT Ingest): Attempting to connect to Firestore Emulator at {os.getenv('FIRESTORE_EMULATOR_HOST')}")
-        options = {'projectId': 'promisetrackerapp'} 
-        firebase_admin.initialize_app(options=options)
-        logger.info(f"Python (YT Ingest): Connected to Firestore Emulator at {os.getenv('FIRESTORE_EMULATOR_HOST')} using project ID '{options['projectId']}'")
-    else:
-        # logging is set up later, so this initial print is okay, or we can try basicConfig earlier.
-        # For now, let's ensure the logger is configured before any error logging if possible.
-        logging.basicConfig(level=logging.INFO, 
-                            format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S')
-        logger = logging.getLogger(__name__) # Define logger here for the error case too
-        logger.error("FIRESTORE_EMULATOR_HOST environment variable not set (and not found in .env).")
-        logger.error("Please set it or ensure .env file is present and configured.")
-        exit("Exiting YT Ingest: Firestore emulator not configured.")
-      
-db = firestore.client()
-# --- End Firebase Configuration ---
-
 # --- Logger Setup --- 
-# Moved basicConfig to be available earlier if needed, but it's fine if it runs again with same params.
-# However, best practice is to configure root logger once.
-# The logger instance retrieval (getLogger) is fine to call multiple times.
-if not logging.getLogger().hasHandlers(): # Configure only if no handlers are set yet
-    logging.basicConfig(level=logging.INFO, 
-                        format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__) # This gets the logger instance, safe to call multiple times
+# Configure root logger once at the beginning.
+logging.basicConfig(level=logging.INFO, 
+                    format='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    force=True) # Use force=True to allow re-configuration if necessary, or ensure this is the only call.
+logger = logging.getLogger(__name__)
 # --- End Logger Setup ---
 
+# --- Firebase Configuration ---
+db = None # Initialize db to None
+if not firebase_admin._apps:
+    # Cloud Firestore initialization
+    # GOOGLE_APPLICATION_CREDENTIALS environment variable must be set
+    if not os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
+        logger.critical("GOOGLE_APPLICATION_CREDENTIALS environment variable not set.")
+        logger.critical("This is required for authentication with Google Cloud Firestore.")
+        exit("Exiting YT Ingest: GOOGLE_APPLICATION_CREDENTIALS not set.")
+    try:
+        firebase_admin.initialize_app() # Default initialization for cloud
+        logger.info("Python (YT Ingest): Successfully connected to Google Cloud Firestore.")
+        db = firestore.client() # Assign the client to db
+    except Exception as e:
+        logger.critical(f"Python (YT Ingest): Firebase initialization failed for Google Cloud Firestore: {e}", exc_info=True)
+        exit("Exiting YT Ingest: Firebase connection failed.")
+else:
+    logger.info("Python (YT Ingest): Firebase app already initialized. Getting client for Google Cloud Firestore.")
+    db = firestore.client() # Get client if already initialized
+
+# Final check if db is assigned
+if db is None:
+     logger.critical("Python (YT Ingest): Failed to obtain Firestore client after attempting cloud connection. Exiting.")
+     exit("Exiting YT Ingest: Firestore client not available.")
+# --- End Firebase Configuration ---
+
+# --- YT-DLP Path (confirm if this is still needed or should be from config/env) ---
 # Or provide the full path to the executable
 YT_DLP_PATH = "yt-dlp" 
+# --- End YT-DLP Path ---
 
 def _parse_and_normalize_cues_from_file(file_path, lang_code_from_filename, video_id):
     """Parses VTT/SRT file using webvtt-py and normalize cues to {'start', 'end', 'text'} with float seconds."""
@@ -374,13 +377,27 @@ def deduplicate_cues(raw_cues):
 
         # Get the text of the last cue added to cleaned_cues
         last_added_text_stripped = cleaned_cues[-1].get('text', '').strip()
+        
+        current_text_lower = current_text_stripped.lower() # current_text_stripped is defined in the loop
+        last_added_text_lower = last_added_text_stripped.lower()
 
-        # Compare lowercased stripped text
-        if current_text_stripped.lower() != last_added_text_stripped.lower():
-            cleaned_cues.append(current_cue)
-        # else: 
-            # Optional: Log skipped duplicate cues if needed for debugging
-            # logger.debug(f"Skipping duplicate cue (case-insensitive): '{current_text_stripped[:50]}...' vs '{last_added_text_stripped[:50]}...'")
+        # Rule 1: Current cue expands on (or is identical to) the last added cue.
+        if last_added_text_lower in current_text_lower:
+            # Handles progressive reveals (e.g., last="A", current="A B") -> replaces A with A B.
+            # Also handles exact duplicates (e.g., last="A", current="A") -> replaces A with A.
+            cleaned_cues[-1] = current_cue
+            # logger.debug(f"DEDUPE Rule 1: Replaced last '{last_added_text_lower[:30]}...' with current '{current_text_lower[:30]}...'")
+            continue 
+
+        # Rule 2: Last added cue already contains the current cue's text (and is longer).
+        # This means current_cue is a shorter, redundant part of what's already captured.
+        if current_text_lower in last_added_text_lower: 
+            # logger.debug(f"DEDUPE Rule 2: Skipped current '{current_text_lower[:30]}...' as it's part of last '{last_added_text_lower[:30]}...'")
+            continue
+            
+        # If neither of the above, it's a new, different cue.
+        cleaned_cues.append(current_cue)
+        # logger.debug(f"DEDUPE Rule 3: Appended new cue '{current_text_lower[:30]}...'")
             
     return cleaned_cues
 
