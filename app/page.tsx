@@ -45,6 +45,12 @@ const DESIRED_MAIN_TAB_SHORT_NAMES_ORDER: string[] = [
   "Employment",
 ]
 
+// Define a darker border color, e.g., a dark gray from Tailwind's palette or black
+const DARK_BORDER_COLOR = "border-neutral-700"; // Or use 'border-black'
+const HEADER_BOTTOM_BORDER_COLOR = "border-neutral-400"; // Slightly less prominent for the overall bottom
+const NAV_LINK_TEXT_COLOR = "text-neutral-800";
+const NAV_LINK_ACTIVE_TEXT_COLOR = "text-[#8b2332]"; // Your brand red
+
 export default function Home() {
   const [departmentConfigs, setDepartmentConfigs] = useState<DepartmentConfig[]>([])
   const [mainTabConfigs, setMainTabConfigs] = useState<DepartmentConfig[]>([])
@@ -177,25 +183,34 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f8f2ea] font-sans">
-      <header className="border-b border-[#d3c7b9] bg-white">
-        <div className="mx-auto flex max-w-7xl items-center">
-          <div className="bg-[#8b2332] p-4 text-white">
-            <h1 className="text-xl font-bold">Build Canada</h1>
+      <header className={`sticky top-0 z-50 bg-white shadow-sm ${HEADER_BOTTOM_BORDER_COLOR} border-b`}>
+        <div className={`mx-auto flex max-w-7xl items-stretch`}>
+          <div className={`bg-[#8b2332] p-4 flex items-center ${DARK_BORDER_COLOR} border-r`}> 
+            <h1 className="text-xl font-bold text-white">Build Canada</h1>
           </div>
-          <nav className="flex flex-1 justify-around border-l border-[#d3c7b9]">
-            <a href="#" className="border-r border-[#d3c7b9] px-8 py-4 text-sm font-medium uppercase tracking-wider">
+          <nav className="flex flex-1 items-stretch">
+            <a 
+              href="#"
+              className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium uppercase tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
+            >
               Memos
             </a>
             <a
               href="#"
-              className="border-r border-[#d3c7b9] px-8 py-4 text-sm font-medium uppercase tracking-wider text-[#8b2332]"
+              className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium uppercase tracking-wider ${NAV_LINK_ACTIVE_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
             >
               Platform Tracker
             </a>
-            <a href="#" className="border-r border-[#d3c7b9] px-8 py-4 text-sm font-medium uppercase tracking-wider">
+            <a 
+              href="/about"
+              className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium uppercase tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
+            >
               About
             </a>
-            <a href="#" className="px-8 py-4 text-sm font-medium uppercase tracking-wider">
+            <a 
+              href="/contact"
+              className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium uppercase tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
+            >
               Contact
             </a>
           </nav>
