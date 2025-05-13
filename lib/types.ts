@@ -1,5 +1,7 @@
 // lib/types.ts
 
+import { Timestamp } from "firebase/firestore";
+
 // --- Data structures from Firestore ---
 
 export interface DepartmentConfig {
@@ -21,16 +23,14 @@ export interface MinisterDetails {
 }
 
 export interface PromiseData {
-  promise_id: string;
+  id: string; // Firestore document ID - ALIGNED with fetching logic
   text: string;
-  responsible_department_lead?: string | null; // Full department name
-  relevant_departments?: string[];
-  source_type?: string; // Should be "Mandate Letter Commitment (Structured)"
-  // Add any other fields from promises_2021_mandate you might want to display
-  // status, impact, lastUpdate, timeline, relatedBills could be added later if needed
-  // For now, focusing on the core promise text as requested.
-  status?: { id: string; label: string }; // Example, if you add status later
-  lastUpdate?: string; // Example
+  responsible_department_lead: string;
+  source_type: string;
+  commitment_history_rationale?: RationaleEvent[]; // Added optional field
+  date_issued?: string; // Optional
+  candidate_or_government?: string; // Optional
+  // Add other relevant fields as needed
 }
 
 // --- UI-specific data structures ---
@@ -43,12 +43,9 @@ export interface Metric {
 
 // This will represent the combined data needed to render a department's page/tab content
 export interface DepartmentPageData {
-  id: string; // from DepartmentConfig.id (e.g., "environment")
-  shortName: string; // from DepartmentConfig.shortName (e.g., "Environment")
-  fullName: string; // from DepartmentConfig.fullName (e.g., "Environment and Climate Change Canada")
   ministerDetails: MinisterDetails | null;
   promises: PromiseData[];
-  guidingMetrics: Metric[]; // Keeping as is for now
+  evidenceItems: EvidenceItem[]; // Added field for evidence
 }
 
 // --- Old types that might be phased out or adapted --- 
@@ -113,3 +110,26 @@ export interface PrimeMinister {
 //   guidingMetrics: Metric[];
 //   tasks: Task[]; // old Task type
 // }
+
+// Define the structure for the rationale events
+export interface RationaleEvent {
+  date: string; // "YYYY-MM-DD"
+  action: string;
+  source_url: string;
+}
+
+// Define the structure for Evidence Items
+export interface EvidenceItem {
+  evidence_id: string; // Document ID
+  promise_ids: string[];
+  evidence_source_type: string;
+  evidence_date: Timestamp | string; // Firestore Timestamp or ISO string
+  title_or_summary: string;
+  description_or_details?: string;
+  source_url?: string;
+  source_document_raw_id?: string;
+  linked_departments?: string[];
+  status_impact_on_promise?: string;
+  ingested_at: Timestamp; // Firestore Timestamp
+  additional_metadata?: Record<string, any>;
+}

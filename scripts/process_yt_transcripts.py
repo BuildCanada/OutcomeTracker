@@ -12,7 +12,7 @@ import logging
 import traceback
 from dotenv import load_dotenv
 import argparse # Added for CLI arguments
-from .common_utils import PROMISE_CATEGORIES # Added import
+from common_utils import PROMISE_CATEGORIES # <<< CHANGED: Removed leading dot for direct import
 
 # --- Load Environment Variables ---
 load_dotenv() 
@@ -72,7 +72,7 @@ GENERATION_CONFIG = {
     "temperature": 0.6, # Slightly lower temp for more deterministic extraction
     "top_p": 0.95,
     "top_k": 64,
-    "max_output_tokens": 8192, 
+    "max_output_tokens": 65536, 
     "response_mime_type": "application/json", # Request JSON output
 }
 
@@ -96,7 +96,7 @@ except Exception as e:
 #     "Indigenous Relations", "Foreign Affairs", "Infrastructure", "Other" 
 # ]
 # Firestore collection to write promises to
-PROMISES_COLLECTION = 'promises_2021_mandate' # Target collection for all 2021 promises
+PROMISES_COLLECTION = 'promises' # <<< CHANGED collection name
 # Field to check/update in youtube_video_data to track processing
 PROCESSING_FLAG_FIELD = 'llm_promise_extraction_processed_at' 
 # PROCESSING_LIMIT = 5 # Set to None to process all unprocessed # Replaced by CLI arg
@@ -248,77 +248,101 @@ async def process_single_video_transcript(video_doc_snapshot):
         return 0 # Return 0 promises processed
 
     # 5. Save extracted promises to Firestore
-    promises_saved_count = 0
-    if extracted_promises: # Only proceed if promises were found
-        promise_batch = db.batch()
-        
-        for i, promise_data in enumerate(extracted_promises):
-             # Basic validation of the received promise object
-             if not isinstance(promise_data, dict) or not promise_data.get('promise_summary') or not promise_data.get('category') or not promise_data.get('key_points'):
-                 logger.warning(f"  Skipping malformed promise object received from LLM for {video_id}: {promise_data}")
+    promises_added_count = 0
+    batch = db.batch()
+    promises_collection_ref = db.collection(PROMISES_COLLECTION)
+    video_doc_ref = db.collection('youtube_video_data').document(video_id)
+
+    for promise in extracted_promises:
+        try:
+            # Validate essential fields from LLM
+            summary = promise.get('promise_summary')
+            details = promise.get('promise_details_extracted')
+            category = promise.get('category')
+            key_points = promise.get('key_points')
+
+            if not all([summary, details, category, key_points]):
+                 logger.warning(f"  Skipping promise due to missing required fields from LLM for {video_id}. Data: {promise}")
+                 continue
+            
+            # Validate category against known list
+            if category not in PROMISE_CATEGORIES:
+                 logger.warning(f"  Invalid category '{category}' from LLM for promise in {video_id}. Setting to 'Other'. Summary: {summary}")
+                 category = "Other" # Assign to 'Other' if invalid
+            
+             # Ensure key_points is a list of strings
+            if not isinstance(key_points, list) or not all(isinstance(item, str) for item in key_points):
+                 logger.warning(f"  Invalid 'key_points' format from LLM for promise in {video_id}. Skipping this promise. Data: {promise}")
                  continue
 
-             # Generate a unique ID for the promise document
-             unique_promise_id = str(uuid.uuid4()) 
-            
-             firestore_promise_doc = {
-                'promise_id': unique_promise_id, # Use UUID
-                'text': promise_data.get('promise_summary', 'N/A').strip(), # Use summary as main text
-                'key_points': promise_data.get('key_points', []),
-                'raw_details_from_source': promise_data.get('promise_details_extracted'), # Store extracted details
-                'source_document_url': video_data.get('webpage_url'),
-                'source_type': 'Campaign Video (2021)',
+            # Generate a unique ID for the promise
+            promise_uuid = str(uuid.uuid4())
+
+            # Prepare promise data for Firestore
+            promise_data = {
+                'promise_id': promise_uuid,
+                'text': summary, # Using summary as the primary text
+                'key_points': key_points, # Using LLM extracted key points
+                'source_document_url': video_data.get('webpage_url'), # Link back to YT video
+                'source_type': 'Video Transcript (YouTube)',
                 'date_issued': upload_date_str, # Use formatted date
-                'candidate_or_government': candidate_info, 
-                'party': party_name, 
-                'category': promise_data.get('category'),
-                'video_timestamp_cue': promise_data.get('timestamp_cue_raw'), # Store cue/context
-                'original_video_id': video_id, # Link back to raw data
-                'responsible_department_lead': None, 
-                'relevant_departments': [],       
-                'llm_processed_at': firestore.SERVER_TIMESTAMP, # Mark when LLM processed this promise
-                'llm_model_used': MODEL_NAME
-             }
-             # Add validation or default values for key_points if needed
-             if not isinstance(firestore_promise_doc['key_points'], list):
-                  firestore_promise_doc['key_points'] = []
-             
-             # Add promise to the batch
-             promise_ref = db.collection(PROMISES_COLLECTION).document(unique_promise_id)
-             promise_batch.set(promise_ref, firestore_promise_doc)
-             promises_saved_count += 1
+                'candidate_or_government': candidate_name,
+                'party': party_name,
+                'category': category,
+                'responsible_department_lead': None, # Cannot determine from video
+                'relevant_departments': [], # Cannot determine from video
+                'video_source_id': video_id, # Link back to the video doc
+                'video_timestamp_cue_raw': promise.get('timestamp_cue_raw'), # Raw cue from LLM
+                'video_source_title': video_data.get('title'),
+                'video_upload_date': video_data.get('upload_date'), # Store original YYYYMMDD
 
-        # Commit the batch if promises were added
-        if promises_saved_count > 0:
-            try:
-                logger.info(f"  Committing batch of {promises_saved_count} promises extracted from {video_id}...")
-                promise_batch.commit()
-                logger.info(f"  Successfully saved {promises_saved_count} promises from video {video_id} to collection '{PROMISES_COLLECTION}'.")
-            except Exception as e:
-                logger.error(f"  Error committing promise batch for {video_id}: {e}", exc_info=True)
-                # If batch commit fails, we need to decide if we still mark the video as processed
-                # For safety, maybe don't mark it as fully processed if saving fails.
-                # Set a specific error status instead.
-                doc_ref = db.collection('youtube_video_data').document(video_id)
-                doc_ref.update({PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP, 'promise_extraction_status': f'error_firestore_commit: {str(e)[:100]}'})
-                return 0 # Indicate 0 promises successfully processed and saved
+                 # --- New Fields ---
+                'commitment_history_rationale': None, # Placeholder for future LLM enrichment
+                'linked_evidence_ids': [], # Placeholder for linking to evidence items
 
-    # 6. Update source video document status
-    final_status = f'success_found_{promises_saved_count}_promises' if promises_saved_count >= 0 else 'success_no_promises_found'
-    doc_ref = db.collection('youtube_video_data').document(video_id)
-    doc_ref.update({PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP, 'promise_extraction_status': final_status})
-    logger.info(f"  Updated processing status for video {video_id} to '{final_status}'.")
-    
-    return promises_saved_count
+                # --- Metadata ---
+                'ingested_at': firestore.SERVER_TIMESTAMP,
+                'last_updated_at': firestore.SERVER_TIMESTAMP,
+            }
+
+            # Add promise document creation to the batch
+            new_promise_ref = promises_collection_ref.document(promise_uuid)
+            batch.set(new_promise_ref, promise_data)
+            promises_added_count += 1
+        
+        except Exception as e:
+             logger.error(f"  Error preparing promise data from LLM output for {video_id}: {e}\nPromise data: {promise}", exc_info=True)
+             # Continue to next promise if one fails
+
+
+    # 6. Update video document status and commit batch
+    try:
+        batch.update(video_doc_ref, {
+             PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP,
+             'promise_extraction_status': 'success',
+             'extracted_promise_count': promises_added_count
+        })
+        batch.commit() # <<< REMOVED await
+        logger.info(f"  Successfully saved {promises_added_count} promises and updated status for {video_id}.")
+        return promises_added_count
+    except Exception as e:
+         logger.error(f"  Error committing Firestore batch for {video_id}: {e}", exc_info=True)
+         # Attempt to update status anyway, but mark as batch commit error
+         try:
+              video_doc_ref.update({
+                   PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP,
+                   'promise_extraction_status': f'error_batch_commit: {str(e)[:100]}'
+              })
+         except Exception as update_err:
+              logger.error(f"  Failed to even update error status for {video_id}: {update_err}")
+         return 0 # Return 0 promises successfully processed due to commit failure
 
 
 async def main_async_promises(limit_arg: int | None):
-    """Main async function to fetch and process video transcripts, focusing on Liberal Party."""
-    logger.info(f"--- Starting YouTube Transcript Processing for Liberal Party Videos ---")
-    if limit_arg is not None:
-        logger.info(f"CLI Limit: Will process up to {limit_arg} Liberal Party videos.")
-    else:
-        logger.info("CLI Limit: No limit set. Will process all eligible Liberal Party videos.")
+    """Main async function to fetch unprocessed videos and process them."""
+    logger.info(f"Starting LLM promise extraction process... Processing limit: {limit_arg if limit_arg is not None else 'All'}")
+    processed_videos_count = 0
+    total_promises_extracted = 0
 
     # Fetch all documents. When re-enabling filtering for unprocessed videos (currently bypassed for testing),
     # the commented-out .where() clause below shows the updated syntax.

@@ -10,6 +10,7 @@ import re
 import traceback
 from urllib.parse import urljoin
 import logging
+import csv # Added for CSV reading
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -52,112 +53,47 @@ if db is None:
 # --- End Firebase Configuration ---
 
 # --- Constants ---
-BLOG_URL = "https://librarianship.ca/blog/ministerial-mandate-letters-2021-2/"
-TARGET_DOMAIN = "pm.gc.ca"
-TARGET_PATH_CONTAINS = "/en/mandate-letters/"
-TARGET_YEAR_IN_PATH = "/2021/"
+# Path to the CSV file, making it relative to this script's location
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+# The CSV is in 'raw-data', which is a sibling to the 'scripts' directory's parent.
+# So we go up one level from 'scripts' to 'PromiseTracker', then into 'raw-data'.
+MANDATE_LETTERS_CSV_PATH = os.path.join(SCRIPT_DIR, '..', 'raw-data', 'MandateLetters.csv')
 HEADERS = {'User-Agent': 'BuildCanadaPromiseTrackerBot/1.0 (+https://buildcanada.com/tracker-info)'}
 FIRESTORE_COLLECTION = 'mandate_letters_fulltext'
 # --- End Constants ---
 
-def get_mandate_letters_data_from_blog(blog_url):
+def get_mandate_letters_data_from_csv(csv_file_path):
     """
-    Fetches the blog page and extracts mandate letter URLs, minister full names,
-    and their titles as listed on the blog.
+    Reads mandate letter data from a CSV file.
+    The CSV should have columns: 'Department', 'Responsible Minister', 'Mandate Letter URL'.
     """
     minister_data_list = []
-    logger.info(f"Fetching mandate letter data from blog: {blog_url}")
+    logger.info(f"Fetching mandate letter data from CSV: {csv_file_path}")
     try:
-        response = requests.get(blog_url, headers=HEADERS, timeout=30)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
+        with open(csv_file_path, mode='r', encoding='utf-8') as infile:
+            reader = csv.DictReader(infile)
+            for row in reader:
+                department = row.get('Department')
+                responsible_minister = row.get('Responsible Minister')
+                mandate_url = row.get('Mandate Letter URL')
 
-        # The names and titles are in <h3> tags like:
-        # <h3><a href="...">TITLE (FULL NAME) Mandate Letter</a></h3>
-        # Or sometimes the H3 text is directly "TITLE (FULL NAME)"
-        h3_tags = soup.find_all('h3')
-        logger.debug(f"Found {len(h3_tags)} total <h3> tags on blog page.")
-
-        # Regex to capture "TITLE (FULL NAME)"
-        # It accounts for titles that might already contain parentheses.
-        # Group 1: Title, Group 2: Full Name
-        name_title_pattern = re.compile(r"^(.*?)\s*\(([^)]+)\)$", re.IGNORECASE)
-        processed_urls = set()
-
-        for h3 in h3_tags:
-            link_tag = h3.find('a', href=True)
-            if not link_tag:
-                continue
-
-            href = link_tag['href']
-            # Apply filters for relevant mandate letter links
-            if not (TARGET_DOMAIN in href and TARGET_PATH_CONTAINS in href and TARGET_YEAR_IN_PATH in href):
-                continue
-
-            absolute_url = urljoin(blog_url, href)
-            if absolute_url in processed_urls:
-                logger.debug(f"Skipping already processed URL: {absolute_url}")
-                continue
-            processed_urls.add(absolute_url)
-
-            # The text containing the title and name is usually the H3's full text,
-            # needing cleanup of " Mandate Letter" or similar trailing text from the link.
-            h3_full_text = h3.get_text(strip=True) # e.g. "Deputy Prime Minister and Minister of Finance (Chrystia Freeland)"
-                                                  # or "Minister... (Name) Mandate Letter"
-            
-            # Attempt to clean up " Mandate Letter" if it's part of the h3 text but not part of the Name/Title
-            # This might need refinement based on observed patterns.
-            # Let's assume the relevant part for name/title extraction is before " Mandate Letter" if present directly in h3.
-            text_to_parse_for_name_title = h3_full_text
-            if link_tag.get_text(strip=True).lower() == "mandate letter" and "mandate letter" in h3_full_text.lower():
-                 # If <a> text is "Mandate Letter", remove it from end of h3_full_text
-                 text_to_parse_for_name_title = re.sub(r'\s*Mandate Letter$', '', h3_full_text, flags=re.IGNORECASE).strip()
-            elif h3_full_text.endswith(link_tag.get_text(strip=True)): # Handle cases where link text is at the end of H3
-                 text_to_parse_for_name_title = h3_full_text[:-len(link_tag.get_text(strip=True))].strip()
-
-
-            match = name_title_pattern.search(text_to_parse_for_name_title) # Use search to find pattern anywhere initially
-
-            minister_full_name = None
-            title_from_blog = None
-
-            if match:
-                title_from_blog = match.group(1).strip()
-                minister_full_name = match.group(2).strip()
-                # Further clean up if title itself ended up in full_name or vice versa due to multiple parentheses
-                # This regex is greedy, so if title was "Minister of X (Portfolio Y) (First Last)"
-                # title_from_blog = "Minister of X (Portfolio Y)"
-                # minister_full_name = "First Last"
-                logger.info(f"  SUCCESS: Extracted from blog: Name='{minister_full_name}', Title='{title_from_blog}', URL='{absolute_url}'")
-            else:
-                # Fallback or alternative if the main H3 text doesn't match directly,
-                # perhaps the link text itself is "Title (Name)".
-                link_text_content = link_tag.get_text(strip=True)
-                match_link = name_title_pattern.search(link_text_content)
-                if match_link:
-                    title_from_blog = match_link.group(1).strip()
-                    minister_full_name = match_link.group(2).strip()
-                    logger.info(f"  SUCCESS (from link text): Name='{minister_full_name}', Title='{title_from_blog}', URL='{absolute_url}'")
-                else:
-                    logger.warning(f"  PARSE_FAIL: Could not parse name/title from: '{h3_full_text}' or link '{link_text_content}' for URL {absolute_url}. Name/Title will be None.")
-
-            minister_data_list.append({
-                "url": absolute_url,
-                "full_name_from_blog": minister_full_name, # Will be None if not found
-                "title_from_blog": title_from_blog,       # Will be None if not found
-            })
-
-        logger.info(f"Found {len(minister_data_list)} potential minister entries from blog.")
+                if not all([department, responsible_minister, mandate_url]):
+                    logger.warning(f"Skipping row due to missing data: {row}")
+                    continue
+                
+                # Use new generic key names for consistency with what scrape_single_letter will expect
+                minister_data_list.append({
+                    "url": mandate_url,
+                    "minister_full_name_input": responsible_minister.strip(),
+                    "minister_title_input": department.strip(),
+                })
+        logger.info(f"Found {len(minister_data_list)} minister entries from CSV.")
         return minister_data_list
-
-    except requests.exceptions.Timeout:
-        logger.error(f"Timeout occurred while fetching blog page {blog_url}")
-        return []
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to fetch or read blog page {blog_url}: {e}")
+    except FileNotFoundError:
+        logger.error(f"CSV file not found: {csv_file_path}")
         return []
     except Exception as e:
-        logger.error(f"Unexpected error getting data from blog: {e}", exc_info=True)
+        logger.error(f"Error reading or processing CSV file {csv_file_path}: {e}", exc_info=True)
         return []
 
 def split_full_name(full_name_str):
@@ -174,18 +110,18 @@ def split_full_name(full_name_str):
     first_name = " ".join(parts[:-1])
     return first_name, last_name
 
-def scrape_single_letter(letter_url, full_name_from_blog=None, title_from_blog=None):
+def scrape_single_letter(letter_url, minister_full_name_input=None, minister_title_input=None):
     """
     Scrapes the Minister's title (from pm.gc.ca) and full text from a single mandate letter page.
-    Uses pre-fetched full_name_from_blog and title_from_blog.
+    Uses pre-fetched minister_full_name_input and minister_title_input from the CSV.
     """
     logger.info(f"Scraping: {letter_url}")
-    if full_name_from_blog:
-        logger.info(f"  Using Full Name from blog: '{full_name_from_blog}'")
-    if title_from_blog:
-        logger.info(f"  Using Title from blog: '{title_from_blog}'")
+    if minister_full_name_input:
+        logger.info(f"  Using Full Name from input: '{minister_full_name_input}'")
+    if minister_title_input:
+        logger.info(f"  Using Title from input: '{minister_title_input}'")
 
-    minister_first_name, minister_last_name = split_full_name(full_name_from_blog)
+    minister_first_name, minister_last_name = split_full_name(minister_full_name_input)
 
     try:
         response = requests.get(letter_url, headers=HEADERS, timeout=30)
@@ -219,8 +155,8 @@ def scrape_single_letter(letter_url, full_name_from_blog=None, title_from_blog=N
                     logger.warning(f"    Could not parse expected title format from <title> tag (Fallback): '{page_title_text}'")
 
         # Use the pm.gc.ca scraped title as the primary `minister_title_raw` for consistency
-        # title_from_blog can be stored for reference.
-        final_minister_title_raw = minister_title_scraped if minister_title_scraped else title_from_blog
+        # minister_title_input can be stored for reference.
+        final_minister_title_raw = minister_title_scraped if minister_title_scraped else minister_title_input
         if not final_minister_title_raw:
             logger.error(f"    CRITICAL: No minister title could be determined for {letter_url}. Cannot create valid record.")
             return None # Cannot create a meaningful record without any title
@@ -235,12 +171,12 @@ def scrape_single_letter(letter_url, full_name_from_blog=None, title_from_blog=N
                 if name_match:
                     minister_greeting_lastname = name_match.group(1).strip()
                     logger.info(f"    Extracted Last Name from pm.gc.ca Greeting: '{minister_greeting_lastname}'")
-                    # If blog didn't provide a last name, use this.
+                    # If input didn't provide a last name, use this.
                     if not minister_last_name and minister_greeting_lastname:
                         minister_last_name = minister_greeting_lastname
                         logger.info(f"    Using greeting last name '{minister_greeting_lastname}' as primary last name.")
                     elif minister_last_name and minister_greeting_lastname and minister_last_name.lower() != minister_greeting_lastname.lower():
-                        logger.warning(f"    Last name mismatch: Blog='{minister_last_name}', Greeting='{minister_greeting_lastname}'. Prioritizing name from blog.")
+                        logger.warning(f"    Last name mismatch: Input='{minister_last_name}', Greeting='{minister_greeting_lastname}'. Prioritizing name from input.")
             else:
                  logger.warning(f"    Could not find first paragraph in content div for greeting on {letter_url}.")
 
@@ -270,7 +206,7 @@ def scrape_single_letter(letter_url, full_name_from_blog=None, title_from_blog=N
         # --- Standardize Title/Department ---
         standardized_department_or_title = None
         # Prefer standardizing the title scraped directly from pm.gc.ca if available
-        title_to_standardize = minister_title_scraped if minister_title_scraped else title_from_blog
+        title_to_standardize = minister_title_scraped if minister_title_scraped else minister_title_input
         
         if title_to_standardize:
             standardized_department_or_title = standardize_department_name(title_to_standardize)
@@ -315,10 +251,10 @@ def scrape_single_letter(letter_url, full_name_from_blog=None, title_from_blog=N
 
         return {
             "doc_id": doc_id,
-            "minister_first_name": minister_first_name, # From blog via full_name_from_blog
-            "minister_last_name": minister_last_name,   # From blog or pm.gc.ca greeting
-            "minister_full_name_from_blog": full_name_from_blog,
-            "minister_title_from_blog": title_from_blog, # Title as listed on the blog
+            "minister_first_name": minister_first_name, # From input via minister_full_name_input
+            "minister_last_name": minister_last_name,   # From input or pm.gc.ca greeting
+            "minister_full_name_input": minister_full_name_input, # Full name from CSV
+            "minister_title_input": minister_title_input,       # Title as listed in the CSV
             "minister_title_scraped_pm_gc_ca": minister_title_scraped, # Title scraped from pm.gc.ca
             "standardized_department_or_title": standardized_department_or_title,
             "letter_url": letter_url,
@@ -351,7 +287,7 @@ def save_letter_to_firestore(letter_data):
     try:
         doc_ref = db.collection(FIRESTORE_COLLECTION).document(doc_id)
         doc_ref.set(letter_data) # Use set() to overwrite or create
-        logger.info(f"  SUCCESS: Saved letter for '{letter_data.get('standardized_department_or_title', doc_id)}' to Firestore (ID: {doc_id}). Minister: {letter_data.get('minister_full_name_from_blog')}")
+        logger.info(f"  SUCCESS: Saved letter for '{letter_data.get('standardized_department_or_title', doc_id)}' to Firestore (ID: {doc_id}). Minister: {letter_data.get('minister_full_name_input')}") # Updated key here
         return True
     except Exception as e:
         logger.error(f"  ERROR: Failed to save letter '{doc_id}' to Firestore: {e}", exc_info=True)
@@ -359,34 +295,35 @@ def save_letter_to_firestore(letter_data):
 
 # --- Main Execution ---
 if __name__ == "__main__":
-    logger.info("Starting 2021 Mandate Letter Scraper...")
-    # Get URLs, minister names, and blog titles from the blog page
-    minister_items = get_mandate_letters_data_from_blog(BLOG_URL)
+    logger.info("Starting Mandate Letter Scraper (CSV Input)...")
+    # Get URLs, minister names, and titles from the CSV file
+    minister_items = get_mandate_letters_data_from_csv(MANDATE_LETTERS_CSV_PATH)
 
     if not minister_items:
-        logger.warning("No mandate letter items found from blog or error fetching blog page. Exiting.")
+        logger.warning("No mandate letter items found from CSV or error fetching CSV file. Exiting.")
         exit()
 
-    logger.info(f"Found {len(minister_items)} minister items from blog. Starting scraping process...")
+    logger.info(f"Found {len(minister_items)} minister items from CSV. Starting scraping process...")
     success_count = 0
     fail_count = 0
 
     for item in minister_items:
         url = item.get("url")
-        full_name = item.get("full_name_from_blog")
-        title_blog = item.get("title_from_blog")
+        full_name = item.get("minister_full_name_input") # Use new key
+        title_input = item.get("minister_title_input")   # Use new key
 
         if not url:
             logger.warning(f"Skipping item with no URL: {item}")
             fail_count += 1
             continue
         
-        # It's crucial to have the name for this augmented script's purpose.
-        # If name extraction from blog failed, we might still proceed but log it prominently.
         if not full_name:
-            logger.warning(f"Processing URL {url} without a full name from blog. Name fields will be sparse.")
+            logger.warning(f"Processing URL {url} without a full name from CSV. Name fields might be sparse.")
+        if not title_input:
+            logger.warning(f"Processing URL {url} without a title from CSV. Title fields might be sparse.")
 
-        scraped_data = scrape_single_letter(url, full_name_from_blog=full_name, title_from_blog=title_blog)
+
+        scraped_data = scrape_single_letter(url, minister_full_name_input=full_name, minister_title_input=title_input)
 
         if scraped_data:
             if save_letter_to_firestore(scraped_data):

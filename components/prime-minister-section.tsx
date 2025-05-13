@@ -31,13 +31,13 @@ export default function PrimeMinisterSection({ primeMinister }: PrimeMinisterSec
       </div>
 
       {primeMinister.guidingMetrics && primeMinister.guidingMetrics.length > 0 && (
-        <div className="mt-10 w-full max-w-md border border-[#d3c7b9] p-4">
-          <MetricChart
-            title={primeMinister.guidingMetrics[0].title}
-            data={primeMinister.guidingMetrics[0].data}
-            goal={primeMinister.guidingMetrics[0].goal}
-          />
-        </div>
+      <div className="mt-10 w-full max-w-md border border-[#d3c7b9] p-4">
+        <MetricChart
+          title={primeMinister.guidingMetrics[0].title}
+          data={primeMinister.guidingMetrics[0].data}
+          goal={primeMinister.guidingMetrics[0].goal}
+        />
+      </div>
       )}
     </div>
   )

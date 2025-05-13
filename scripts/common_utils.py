@@ -60,23 +60,40 @@ DEPARTMENT_MAP = {
     "minister of crown-indigenous relations": {"full": "Crown-Indigenous Relations and Northern Affairs Canada", "short": "Crown-Indigenous Relations"}, 
     "minister of canadian heritage": {"full": "Canadian Heritage", "short": "Heritage"}, 
 
+    # --- Mappings for Department Names (from commitments file) ---
+    "natural resources canada": {"full": "Natural Resources Canada", "short": "Natural Resources"}, # Added
+    "public services and procurement canada": {"full": "Public Services and Procurement Canada", "short": "Procurement"}, # Added
+    
+    # --- Mappings for 2023 Titles (from MandateLetters.csv) ---
+    "minister of sport and physical activity": {"full": "Canadian Heritage", "short": "Heritage"}, # Added (Maps to Heritage)
+    "minister of citizens' services": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"}, # Added (Maps to TBS)
+    
     # Malformed Variants (Handle special case)
     "president of the queen's privy council for canada and minister of emergency preparedness president of the treasury board": {"full": "Multiple Departments - Needs Review", "short": "Multiple"}, 
     "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario and minister responsible for the federal economic development agency for northern ontario": {"full": "Indigenous Services Canada", "short": "Indigenous Services"}, 
     "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario canada": {"full": "Indigenous Services Canada", "short": "Indigenous Services"} ,
     
     # Typo from original map
-    "ministre of foreign affairs": {"full": "Global Affairs Canada", "short": "Foreign Affairs"} 
+    "ministre of foreign affairs": {"full": "Global Affairs Canada", "short": "Foreign Affairs"}, 
+
+    # New mappings
+    "public safety canada": {"full": "Public Safety Canada", "short": "Public Safety"},
+    "transport canada": {"full": "Transport Canada", "short": "Transport"},
+    "treasury board of canada secretariat": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"},
+    "veterans affairs canada": {"full": "Veterans Affairs Canada", "short": "Veterans Affairs"},
+    "women and gender equality canada": {"full": "Women and Gender Equality Canada", "short": "WAGE"},
+
+    # --- Mappings for specific/long Minister titles from MandateLetters.csv ---
+    "president of the king's privy council for canada and minister of emergency preparedness": {"full": "Emergency Preparedness Canada", "short": "Emergency Preparedness"}, # Added for long title
+    "minister of northern affairs, minister responsible for prairies economic development canada and minister responsible for the canadian northern economic development agency": {"full": "Crown-Indigenous Relations and Northern Affairs Canada", "short": "Northern Affairs"}, # Added for long title, maps to existing CIRNAC
+
 }
 
 # --- standardize_department_name function remains the same ---
 # It still returns the FULL name string or None
-def standardize_department_name(name_str):
-    """
-    Standardizes a raw department/ministerial title string to the official FULL department name.
-    Returns the full name string or None if no mapping is found.
-    """
-    original_name_str = str(name_str).strip()
+def standardize_department_name(name_variant):
+    """Standardizes a department or minister name to a common format."""
+    original_name_str = str(name_variant).strip()
     
     # Normalize apostrophes and spaces, and convert to lowercase
     normalized_name = (original_name_str.lower()

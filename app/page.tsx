@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import PrimeMinisterSection from "@/components/prime-minister-section"
 import MinisterSection from "@/components/minister-section"
@@ -8,15 +8,18 @@ import {
   fetchDepartmentConfigs,
   fetchMinisterDetails,
   fetchPromisesForDepartment,
+  fetchEvidenceItemsForPromises
 } from "@/lib/data"
 import type {
   DepartmentConfig,
   DepartmentPageData,
   MinisterDetails,
   PromiseData,
+  EvidenceItem,
   Metric,
   PrimeMinister,
 } from "@/lib/types"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const DEFAULT_PLACEHOLDER_AVATAR = "/placeholder.svg?height=100&width=100"
 
@@ -34,15 +37,17 @@ const staticPrimeMinisterData: PrimeMinister = {
   ],
 }
 
-// Define the desired order and names for the main tabs
-// Ensure these shortNames exactly match what's in your Firestore 'department_config' collection
-const DESIRED_MAIN_TAB_SHORT_NAMES_ORDER: string[] = [
-  "Infrastructure", // Assuming this covers Housing based on common_utils.py mapping
-  "Defence",
-  "Health",
-  "Finance",
-  "Immigration",
-  "Employment",
+// Define the preferred order for main tabs
+// IMPORTANT: These strings MUST exactly match the 'fullName' field 
+// in your Firestore 'department_config' collection documents.
+// Double-check casing, spacing, and exact wording (e.g., 'and' vs '&').
+const MAIN_TAB_ORDER: string[] = [
+  "Infrastructure Canada", // CORRECTED - Assuming this is the name in Firestore
+  "National Defence",
+  "Health Canada",         // CORRECTED - Based on user screenshot
+  "Finance Canada",
+  "Immigration, Refugees and Citizenship Canada",
+  "Employment and Social Development Canada",
 ]
 
 // Define a darker border color, e.g., a dark gray from Tailwind's palette or black
@@ -52,132 +57,111 @@ const NAV_LINK_TEXT_COLOR = "text-neutral-800";
 const NAV_LINK_ACTIVE_TEXT_COLOR = "text-[#8b2332]"; // Your brand red
 
 export default function Home() {
-  const [departmentConfigs, setDepartmentConfigs] = useState<DepartmentConfig[]>([])
+  const [allDepartmentConfigs, setAllDepartmentConfigs] = useState<DepartmentConfig[]>([])
   const [mainTabConfigs, setMainTabConfigs] = useState<DepartmentConfig[]>([])
   const [dropdownTabConfigs, setDropdownTabConfigs] = useState<DepartmentConfig[]>([])
   
   const [activeTabId, setActiveTabId] = useState<string>("")
   const [activeDepartmentData, setActiveDepartmentData] = useState<DepartmentPageData | null>(null)
 
-  const [isLoadingConfigs, setIsLoadingConfigs] = useState<boolean>(true)
-  const [isLoadingContent, setIsLoadingContent] = useState<boolean>(false)
+  const [isLoadingConfig, setIsLoadingConfig] = useState<boolean>(true)
+  const [isLoadingTabData, setIsLoadingTabData] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch initial department configurations for tabs
+  // Fetch all department configs on initial mount
   useEffect(() => {
     const loadConfigs = async () => {
-      setIsLoadingConfigs(true)
+      setIsLoadingConfig(true)
       setError(null)
       try {
         const configs = await fetchDepartmentConfigs()
-        if (configs && configs.length > 0) {
-          setDepartmentConfigs(configs)
+        setAllDepartmentConfigs(configs)
 
-          const orderedMainTabs: DepartmentConfig[] = []
-          const remainingForDropdown: DepartmentConfig[] = []
+        // Separate configs based on MAIN_TAB_ORDER
+        const mainTabs = MAIN_TAB_ORDER.map(fullName => 
+          configs.find(c => c.fullName === fullName)
+        ).filter((c): c is DepartmentConfig => c !== undefined)
 
-          // Create a map for quick lookup of desired main tabs
-          const desiredMainSet = new Set(DESIRED_MAIN_TAB_SHORT_NAMES_ORDER)
+        const mainTabIds = new Set(mainTabs.map(c => c.id))
+        const dropdownTabs = configs.filter(c => !mainTabIds.has(c.id))
 
-          // Populate orderedMainTabs based on DESIRED_MAIN_TAB_SHORT_NAMES_ORDER
-          for (const shortName of DESIRED_MAIN_TAB_SHORT_NAMES_ORDER) {
-            const foundConfig = configs.find(c => c.shortName === shortName)
-            if (foundConfig) {
-              orderedMainTabs.push(foundConfig)
-            }
-          }
-
-          // Populate remainingForDropdown with configs not in orderedMainTabs
-          for (const config of configs) {
-            if (!orderedMainTabs.find(mt => mt.id === config.id)) {
-              remainingForDropdown.push(config)
-            }
-          }
-          // remainingForDropdown is already sorted alphabetically from fetchDepartmentConfigs
-
-          setMainTabConfigs(orderedMainTabs)
-          setDropdownTabConfigs(remainingForDropdown)
-          
-          // Set initial active tab to the first of the *ordered* main tabs, or first available config
-          setActiveTabId(orderedMainTabs[0]?.id || configs[0]?.id || "")
-        } else {
-          setError("No department configurations found.")
+        setMainTabConfigs(mainTabs)
+        setDropdownTabConfigs(dropdownTabs)
+        
+        // Set the first main tab as active by default if available
+        if (mainTabs.length > 0) {
+          setActiveTabId(mainTabs[0].id)
+        } else if (configs.length > 0) {
+          // Fallback to the first config if no main tabs match
+          setActiveTabId(configs[0].id)
         }
       } catch (err) {
-        console.error("Failed to load department configs:", err)
+        console.error("Error fetching department configs:", err)
         setError("Failed to load department configurations.")
+      } finally {
+        setIsLoadingConfig(false)
       }
-      setIsLoadingConfigs(false)
     }
     loadConfigs()
   }, [])
 
-  // Fetch content for the active tab when activeTabId changes
+  // Fetch data for the active tab whenever activeTabId changes
   useEffect(() => {
-    if (!activeTabId || departmentConfigs.length === 0) {
-      // If no active tab or configs not loaded, clear content and don't fetch
-      setActiveDepartmentData(null)
-      return
-    }
+    if (!activeTabId) return // Don't fetch if no tab is selected
 
-    const selectedConfig = departmentConfigs.find(c => c.id === activeTabId)
-
-    if (!selectedConfig) {
-      // Should not happen if activeTabId is derived from departmentConfigs
-      console.warn(`No config found for activeTabId: ${activeTabId}`)
-      setActiveDepartmentData(null)
-      setError("Could not find configuration for the selected department.")
-      return
-    }
-
-    const loadDepartmentContent = async () => {
-      setIsLoadingContent(true)
+    const loadTabData = async () => {
+      setIsLoadingTabData(true)
       setError(null)
-      try {
-        const ministerDetailsData = await fetchMinisterDetails(selectedConfig.fullName)
-        const promisesData = await fetchPromisesForDepartment(selectedConfig.fullName)
+      setActiveDepartmentData(null) // Clear previous data
+      
+      const selectedConfig = allDepartmentConfigs.find(c => c.id === activeTabId)
+      if (!selectedConfig) {
+        setError("Could not find configuration for the selected department.")
+        setIsLoadingTabData(false)
+        return
+      }
 
-        // Placeholder for guiding metrics - to be replaced with actual data later
-        const guidingMetricsPlaceholder: Metric[] = [
-          {
-            title: "Placeholder Metric (e.g., Emissions Reduction Mt CO2e)",
-            data: [730, 720, 710, 700, 690, 680, 670],
-            goal: 500,
-          },
-        ]
+      const departmentFullName = selectedConfig.fullName
+
+      try {
+        // Fetch minister details and promises in parallel
+        const [ministerDetails, promises] = await Promise.all([
+          fetchMinisterDetails(departmentFullName),
+          fetchPromisesForDepartment(departmentFullName)
+        ])
+
+        let evidenceItems: EvidenceItem[] = []
+        if (promises.length > 0) {
+          const promiseIds = promises.map(p => p.id)
+          evidenceItems = await fetchEvidenceItemsForPromises(promiseIds)
+        }
 
         setActiveDepartmentData({
-          id: selectedConfig.id,
-          shortName: selectedConfig.shortName,
-          fullName: selectedConfig.fullName,
-          ministerDetails: ministerDetailsData ? 
-            { ...ministerDetailsData, avatarUrl: ministerDetailsData.avatarUrl || DEFAULT_PLACEHOLDER_AVATAR } : 
-            { avatarUrl: DEFAULT_PLACEHOLDER_AVATAR } as MinisterDetails,
-          promises: promisesData,
-          guidingMetrics: guidingMetricsPlaceholder, // Use placeholder for now
+          ministerDetails,
+          promises,
+          evidenceItems
         })
 
       } catch (err) {
-        console.error(`Failed to load content for ${selectedConfig.shortName}:`, err)
-        setError(`Failed to load content for ${selectedConfig.shortName}.`)
-        setActiveDepartmentData(null) // Clear data on error
+        console.error(`Error fetching data for department ${departmentFullName}:`, err)
+        setError(`Failed to load data for ${departmentFullName}.`)
+        // Keep activeDepartmentData as null or set to an error state if needed
+      } finally {
+        setIsLoadingTabData(false)
       }
-      setIsLoadingContent(false)
     }
 
-    loadDepartmentContent()
-  }, [activeTabId, departmentConfigs])
+    loadTabData()
+  }, [activeTabId, allDepartmentConfigs])
 
-  const handleTabChange = (tabId: string) => {
-    setActiveTabId(tabId)
-  }
-  
-  // The handleDepartmentSelect for the dropdown will now directly set the activeTabId
-  const handleDropdownSelect = (departmentId: string) => {
+  // Handler for dropdown selection
+  const handleDropdownSelect = useCallback((departmentId: string) => {
     setActiveTabId(departmentId)
-  }
+    // Optional: Scroll to tabs section if needed
+    // document.getElementById('department-tabs')?.scrollIntoView({ behavior: 'smooth' });
+  }, [])
 
-  if (isLoadingConfigs) {
+  if (isLoadingConfig) {
     return <div className="min-h-screen flex items-center justify-center bg-[#f8f2ea]">Loading configurations...</div>
   }
 
@@ -224,51 +208,65 @@ export default function Home() {
 
         {error && <div className="text-red-500 text-center my-4">Error: {error}</div>}
 
-        {departmentConfigs.length > 0 && (
-          <Tabs value={activeTabId} onValueChange={handleTabChange} className="mt-16">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 bg-transparent p-0">
-              {mainTabConfigs.map((config) => (
-                <TabsTrigger
-                  key={config.id}
-                  value={config.id}
-                  className="border border-[#d3c7b9] bg-white px-3 py-3 text-sm uppercase whitespace-normal data-[state=active]:bg-[#8b2332] data-[state=active]:text-white h-full flex items-center justify-center text-center"
-                >
-                  {config.shortName}
-                </TabsTrigger>
-              ))}
+        {allDepartmentConfigs.length > 0 && (
+          <Tabs value={activeTabId} onValueChange={setActiveTabId} className="mt-16">
+            <div className="flex justify-between items-end border-b border-[#d3c7b9] mb-[-1px]">
+              <TabsList className="inline-flex items-stretch bg-transparent p-0 h-auto flex-grow">
+                {mainTabConfigs.map((dept) => (
+                  <TabsTrigger
+                    key={dept.id}
+                    value={dept.id}
+                    className="flex-grow whitespace-normal h-auto flex items-center justify-center text-center border border-b-0 border-l-0 first:border-l border-[#d3c7b9] bg-white px-3 py-3 text-xs sm:text-sm uppercase tracking-wider data-[state=active]:bg-[#8b2332] data-[state=active]:text-white data-[state=active]:border-[#8b2332] data-[state=active]:border-b-transparent data-[state=active]:relative data-[state=active]:-mb-[1px] rounded-none rounded-t-md focus-visible:ring-offset-0 focus-visible:ring-2 focus-visible:ring-[#8b2332] focus:z-10 hover:bg-gray-50"
+                  >
+                    {dept.shortName}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
               {dropdownTabConfigs.length > 0 && (
-                <div
-                   className={`border border-[#d3c7b9] ${!mainTabConfigs.find(mc => mc.id === activeTabId) && activeTabId ? "bg-[#8b2332] text-white" : "bg-white"}`}
-                >
+                <div className="relative flex-shrink-0 border border-b-0 border-[#d3c7b9] rounded-t-md overflow-hidden self-stretch">
                   <DepartmentsDropdown 
                     departments={dropdownTabConfigs} 
-                    onSelectDepartment={handleDropdownSelect} 
-                    isActive={!mainTabConfigs.find(mc => mc.id === activeTabId) && !!activeTabId} 
+                    onSelectDepartment={handleDropdownSelect}
+                    isActive={!!activeTabId && !mainTabConfigs.some(mt => mt.id === activeTabId)}
+                    className="h-full"
                   />
                 </div>
               )}
-            </TabsList>
-
-            {/* Single TabsContent area that updates based on activeTabId and activeDepartmentData */} 
-            {activeTabId && (
-                <TabsContent
-                    key={activeTabId} // Ensures re-render on tab change
-                    value={activeTabId} 
-                    className="border border-t-0 border-[#d3c7b9] bg-white p-6"
-                >
-                    {isLoadingContent && <div>Loading department details...</div>}
-                    {!isLoadingContent && activeDepartmentData && (
-                        <MinisterSection departmentPageData={activeDepartmentData} />
-                    )}
-                    {!isLoadingContent && !activeDepartmentData && !error && (
-                        <div>Select a department to see details.</div>
-                    )}
-                     {/* Error specific to content loading could be displayed here too */} 
-                </TabsContent>
-            )}
+            </div>
+            
+            {allDepartmentConfigs.map((dept) => (
+              <TabsContent
+                key={dept.id}
+                value={dept.id}
+                className="border border-t-0 border-[#d3c7b9] bg-white p-6 data-[state=inactive]:hidden mt-0 rounded-b-md shadow-sm"
+                forceMount
+              >
+                {activeTabId === dept.id ? (
+                  isLoadingTabData ? (
+                    <div className="space-y-4">
+                      <Skeleton className="h-20 w-1/2 bg-gray-200" /> 
+                      <Skeleton className="h-8 w-1/3 bg-gray-200" />
+                      <Skeleton className="h-40 w-full bg-gray-200" />
+                      <Skeleton className="h-40 w-full bg-gray-200" />
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-10 text-red-600 bg-red-100 border border-red-400 p-4">
+                      {error} 
+                    </div>
+                  ) : activeDepartmentData ? (
+                    <MinisterSection 
+                      departmentPageData={activeDepartmentData} 
+                      departmentFullName={dept.fullName}
+                    />
+                  ) : (
+                    <div className="text-center py-10 text-gray-500">Select a department.</div>
+                  )
+                ) : null}
+              </TabsContent>
+            ))}
           </Tabs>
         )}
-        {!isLoadingConfigs && departmentConfigs.length === 0 && !error && (
+        {!isLoadingConfig && allDepartmentConfigs.length === 0 && !error && (
            <div className="text-center my-4">No departments to display.</div>
         )}
       </div>

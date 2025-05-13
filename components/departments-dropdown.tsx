@@ -4,14 +4,16 @@ import { ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { DepartmentConfig } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 interface DepartmentsDropdownProps {
   departments: DepartmentConfig[]
   onSelectDepartment: (departmentId: string) => void
   isActive?: boolean
+  className?: string
 }
 
-export default function DepartmentsDropdown({ departments, onSelectDepartment, isActive = false }: DepartmentsDropdownProps) {
+export default function DepartmentsDropdown({ departments, onSelectDepartment, isActive = false, className }: DepartmentsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
@@ -19,9 +21,11 @@ export default function DepartmentsDropdown({ departments, onSelectDepartment, i
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className={`border-none px-4 py-3 text-sm uppercase tracking-wider w-full h-full ${
-            isActive ? "bg-[#8b2332] text-white" : "bg-white text-black"
-          }`}
+          className={cn(
+            "border-none px-4 py-3 text-sm uppercase tracking-wider w-full",
+            isActive ? "bg-[#8b2332] text-white" : "bg-white text-black",
+            className
+          )}
         >
           More {isOpen ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />}
         </Button>

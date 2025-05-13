@@ -6,12 +6,17 @@ import {
   query,
   where,
   FirestoreError,
+  limit,
+  orderBy,
+  Timestamp,
+  getCountFromServer
 } from "firebase/firestore";
 import { db } from "./firebase"; // Your Firebase instance
 import type {
   DepartmentConfig,
   MinisterDetails,
   PromiseData,
+  EvidenceItem,
   // Metric, // Keep if guidingMetrics are still needed for fallback
 } from "./types";
 
@@ -111,44 +116,129 @@ export const fetchMinisterDetails = async (
  * @param departmentFullName The full name of the department (e.g., "Finance Canada").
  * @returns An array of PromiseData objects.
  */
-export const fetchPromisesForDepartment = async (
-  departmentFullName: string
-): Promise<PromiseData[]> => {
+export async function fetchPromisesForDepartment(departmentFullName: string): Promise<PromiseData[]> {
+  // Check if db is initialized
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchPromisesForDepartment.");
     return [];
   }
-  if (!departmentFullName) {
-    console.error("departmentFullName is required for fetchPromisesForDepartment");
-    return [];
-  }
-
-  console.log(`Fetching promises for department: "${departmentFullName}"`);
-
+  console.log(`Fetching promises for department: ${departmentFullName}`);
   try {
-    const promisesCollectionRef = collection(db, "promises_2021_mandate");
+    const promisesCol = collection(db, 'promises'); // db is now guaranteed to be non-null here
     const q = query(
-      promisesCollectionRef,
-      where("responsible_department_lead", "==", departmentFullName),
-      where("source_type", "==", "Mandate Letter Commitment (Structured)")
+      promisesCol,
+      where('responsible_department_lead', '==', departmentFullName),
+      where('source_type', '==', 'Mandate Letter Commitment (Structured)')
     );
 
-    const snapshot = await getDocs(q);
-    const promises: PromiseData[] = snapshot.docs.map((doc) => ({
-      promise_id: doc.id, // Use Firestore document ID as promise_id
-      ...(doc.data() as Omit<PromiseData, "promise_id">),
-    }));
-    console.log(`Fetched ${promises.length} promises for "${departmentFullName}":`, promises);
+    const querySnapshot = await getDocs(q);
+    const promises = querySnapshot.docs.map(docSnapshot => {
+        const data = docSnapshot.data();
+        return {
+            id: docSnapshot.id,
+            text: data.text || '', // Provide default or handle potential missing field
+            responsible_department_lead: data.responsible_department_lead || '', // Provide default
+            source_type: data.source_type || '', // Provide default
+            commitment_history_rationale: data.commitment_history_rationale || undefined,
+            date_issued: data.date_issued || undefined, // Include optional fields
+            candidate_or_government: data.candidate_or_government || undefined, // Include optional fields
+            // Ensure all required fields from PromiseData are present or handled
+        } as PromiseData; // Correctly assert the type
+    });
+
+    console.log(`Fetched ${promises.length} promises for ${departmentFullName}`);
     return promises;
   } catch (error) {
-    console.error(`Error fetching promises for "${departmentFullName}":`, error);
-    if (error instanceof FirestoreError) {
-      console.error("Firestore error details:", error.code, error.message);
-    }
+    console.error(`Error fetching promises for ${departmentFullName}:`, error);
     return [];
   }
-};
+}
 
-// Note: The old hardcoded `primeMinister` and `categories` data and their exports
-// have been removed as per the plan to fetch data dynamically.
-// Guiding metrics are also intended to be dynamic or associated with fetched minister/department data.
+// Updated function to fetch evidence items with batching for promise IDs
+export async function fetchEvidenceItemsForPromises(promiseIds: string[]): Promise<EvidenceItem[]> {
+  if (!db) {
+    console.error("Firestore instance (db) is not available in fetchEvidenceItemsForPromises.");
+    return [];
+  }
+  if (!promiseIds || promiseIds.length === 0) {
+    console.log('No promise IDs provided, skipping evidence fetch.');
+    return [];
+  }
+  console.log(`Fetching evidence items for ${promiseIds.length} promise IDs.`);
+
+  const MAX_IDS_PER_QUERY = 30;
+  const allEvidenceItems: EvidenceItem[] = [];
+  const idChunks: string[][] = [];
+
+  // Split promiseIds into chunks of MAX_IDS_PER_QUERY
+  for (let i = 0; i < promiseIds.length; i += MAX_IDS_PER_QUERY) {
+    idChunks.push(promiseIds.slice(i, i + MAX_IDS_PER_QUERY));
+  }
+
+  console.log(`Split into ${idChunks.length} chunks for fetching evidence.`);
+
+  try {
+    const evidenceCol = collection(db, 'evidence_items');
+    
+    // Create an array of query promises
+    const queryPromises = idChunks.map(chunk => {
+      const q = query(
+          evidenceCol,
+          where('promise_ids', 'array-contains-any', chunk),
+          orderBy('evidence_date', 'desc') // Keep ordering if needed, requires index
+      );
+      return getDocs(q);
+    });
+
+    // Execute all queries in parallel
+    const querySnapshots = await Promise.all(queryPromises);
+
+    // Process results from all snapshots
+    querySnapshots.forEach(snapshot => {
+      snapshot.docs.forEach(docSnapshot => {
+        const data = docSnapshot.data();
+        // Avoid adding duplicates if an evidence item links multiple promises across chunks
+        if (!allEvidenceItems.some(item => item.evidence_id === docSnapshot.id)) {
+            allEvidenceItems.push({
+                evidence_id: docSnapshot.id,
+                promise_ids: data.promise_ids || [],
+                evidence_source_type: data.evidence_source_type || '',
+                evidence_date: data.evidence_date, 
+                title_or_summary: data.title_or_summary || '',
+                description_or_details: data.description_or_details || undefined,
+                source_url: data.source_url || undefined,
+                source_document_raw_id: data.source_document_raw_id || undefined,
+                linked_departments: data.linked_departments || undefined,
+                status_impact_on_promise: data.status_impact_on_promise || undefined,
+                ingested_at: data.ingested_at,
+                additional_metadata: data.additional_metadata || undefined,
+            } as EvidenceItem);
+        }
+      });
+    });
+
+    // Optional: Re-sort all items combined if consistent order is critical
+    allEvidenceItems.sort((a, b) => {
+        const dateA = a.evidence_date instanceof Timestamp ? a.evidence_date.toMillis() : new Date(a.evidence_date).getTime();
+        const dateB = b.evidence_date instanceof Timestamp ? b.evidence_date.toMillis() : new Date(b.evidence_date).getTime();
+        if (isNaN(dateA) && isNaN(dateB)) return 0;
+        if (isNaN(dateA)) return 1;
+        if (isNaN(dateB)) return -1;
+        return dateB - dateA; // Descending
+    });
+
+    console.log(`Fetched ${allEvidenceItems.length} unique evidence items across ${idChunks.length} chunks.`);
+    return allEvidenceItems;
+
+  } catch (error) {
+    console.error('Error fetching evidence items in chunks:', error);
+    // Provide more context if it's an index error
+    if (error instanceof FirestoreError && error.code === 'failed-precondition') {
+        console.error('Firestore Index Error: This query likely requires a composite index. Please check the Firebase console.');
+        // Potentially re-throw or return a specific error indicator
+    }
+    return []; // Return empty on error
+  }
+}
+
+// Note: The old hardcoded `

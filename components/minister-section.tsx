@@ -1,29 +1,40 @@
+'use client'
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import MetricChart from "@/components/metric-chart"
 // TaskCard is for the old Task type, we'll display promises differently for now
 // import TaskCard from "@/components/task-card"
-import type { DepartmentPageData, PromiseData, MinisterDetails } from "@/lib/types"
+import type { DepartmentPageData, PromiseData, MinisterDetails, EvidenceItem } from "@/lib/types"
+import Image from 'next/image'
+import PromiseCard from "./promise-card"
 
 interface MinisterSectionProps {
-  departmentPageData: DepartmentPageData
+  departmentPageData: DepartmentPageData | null
+  departmentFullName: string
 }
 
 const DEFAULT_MINISTER_NAME = "Minister Information Not Available"
 const DEFAULT_MINISTER_TITLE = "Title Not Available"
 const DEFAULT_AVATAR_FALLBACK_INITIALS = "N/A"
 
-export default function MinisterSection({ departmentPageData }: MinisterSectionProps) {
-  // Destructure with fallbacks for ministerDetails
-  const minister = departmentPageData.ministerDetails || {}
-  const ministerName = 
-    minister.minister_full_name_from_blog || 
-    (minister.minister_first_name && minister.minister_last_name ? `${minister.minister_first_name} ${minister.minister_last_name}` : null) || 
-    DEFAULT_MINISTER_NAME
-  const ministerTitle = minister.minister_title_scraped_pm_gc_ca || minister.minister_title_from_blog || DEFAULT_MINISTER_TITLE
-  const avatarUrl = minister.avatarUrl // Already has a default from page.tsx if originally null/undefined
-  
-  const { guidingMetrics, promises } = departmentPageData
+export default function MinisterSection({ departmentPageData, departmentFullName }: MinisterSectionProps) {
+  if (!departmentPageData) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-500">Loading details for {departmentFullName}...</p>
+        {/* You could add a spinner here */}
+      </div>
+    )
+  }
 
+  const { ministerDetails, promises, evidenceItems } = departmentPageData
+  const ministerName = 
+    ministerDetails?.minister_full_name_from_blog || 
+    (ministerDetails?.minister_first_name && ministerDetails?.minister_last_name ? `${ministerDetails.minister_first_name} ${ministerDetails.minister_last_name}` : null) || 
+    DEFAULT_MINISTER_NAME
+  const ministerTitle = ministerDetails?.minister_title_scraped_pm_gc_ca || ministerDetails?.minister_title_from_blog || DEFAULT_MINISTER_TITLE
+  const avatarUrl = ministerDetails?.avatarUrl // Already has a default from page.tsx if originally null/undefined
+  
   const getFallbackInitials = (name: string) => {
     if (name === DEFAULT_MINISTER_NAME) return DEFAULT_AVATAR_FALLBACK_INITIALS
     return name
@@ -34,48 +45,41 @@ export default function MinisterSection({ departmentPageData }: MinisterSectionP
   }
 
   return (
-    <div>
-      <div className="flex items-center gap-6">
-        <Avatar className="h-20 w-20 rounded-full border-4 border-[#a9d0f5]">
-          <AvatarImage src={avatarUrl} alt={ministerName} />
-          <AvatarFallback className="bg-[#a9d0f5] text-[#2332a9]">
-            {getFallbackInitials(ministerName)}
-          </AvatarFallback>
-        </Avatar>
-
-        <div>
-          <h2 className="text-2xl font-bold text-[#222222]">{ministerName}</h2>
-          <p className="text-[#555555]">{ministerTitle}</p>
+    <div className="bg-white">
+      {/* Minister Info Header */}
+      <div className="mb-8 p-6 border border-[#d3c7b9] bg-[#fdfaf6]">
+        <div className="flex items-center">
+          {/* Placeholder for minister image - can be added later */}
+          {/* <Image src={minister.avatarUrl || "/placeholder-avatar.png"} alt={`Portrait of ${ministerName}`} width={80} height={80} className="rounded-full mr-6" /> */}
+          <div>
+            <h2 className="text-3xl font-bold text-[#222222]">{ministerName}</h2>
+            <p className="text-lg text-[#555555]">{ministerTitle}</p>
+            <p className="text-sm text-[#8b2332]">{departmentFullName}</p>
+          </div>
         </div>
       </div>
 
-      {/* Guiding Metrics section - kept as is for now */}
-      {guidingMetrics && guidingMetrics.length > 0 && (
-        <>
-          <h3 className="mt-12 text-xl font-bold text-[#222222]">Guiding Metrics</h3>
-          <div className="mt-4 w-full max-w-md border border-[#d3c7b9] p-4">
-            {guidingMetrics.map((metric, index) => (
-              <MetricChart key={index} title={metric.title} data={metric.data} goal={metric.goal} />
+      {/* Promises Section */}
+      <div className="mb-8 px-2">
+        <h3 className="text-2xl font-semibold text-[#222222] mb-6">Mandate Letter Commitments:</h3>
+        {promises && promises.length > 0 ? (
+          <div>
+            {promises.map((promise: PromiseData) => (
+              <PromiseCard key={promise.id} promise={promise} evidenceItems={evidenceItems} />
             ))}
           </div>
-        </>
-      )}
-
-      <h3 className="mt-12 text-xl font-bold text-[#222222]">Promises</h3>
-      <div className="mt-4 space-y-4">
-        {promises && promises.length > 0 ? (
-          promises.map((promise: PromiseData) => (
-            // Replace with a proper PromiseCard component later
-            <div key={promise.promise_id} className="rounded-lg border border-[#d3c7b9] bg-white p-4 shadow">
-              <p className="text-base text-gray-700">{promise.text}</p>
-              {/* You can add more details from promise object here if needed */}
-              {/* e.g., <p className="text-sm text-gray-500 mt-2">Source: {promise.source_type}</p> */}
-            </div>
-          ))
         ) : (
-          <p>No promises found for this department.</p>
+          <p className="text-gray-600 italic">No specific mandate letter commitments found for this department.</p>
         )}
       </div>
+
+      {/* Guiding Metrics Section (Placeholder) */}
+      {/* 
+      <div className="border-t border-[#d3c7b9] pt-8 mt-8 px-2">
+        <h3 className="text-2xl font-semibold text-[#222222] mb-4">Key Performance Indicators & Metrics</h3>
+        <p className="text-gray-500 italic">[Guiding metrics and performance indicators related to this department's portfolio will be displayed here.]</p>
+      </div> 
+      */}
     </div>
   )
 }
