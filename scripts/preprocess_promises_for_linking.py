@@ -246,9 +246,9 @@ def preprocess_promises(collection_name, batch_size=50, force_reprocessing=False
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Preprocess promise documents in Firestore for linking.")
     parser.add_argument("collection_name", 
-                        default="promises_dev", 
-                        nargs='?', # Makes it optional with a default
-                        help="Name of the Firestore collection to preprocess (default: promises_dev).")
+                        default="promises",
+                        type=str,
+                        help="Name of the Firestore collection to preprocess (default: promises).")
     parser.add_argument("--force",
                         action="store_true",
                         help="Force reprocessing of all documents, even if 'linking_preprocessing_done_at' is set.")

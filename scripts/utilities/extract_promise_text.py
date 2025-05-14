@@ -49,10 +49,11 @@ if db is None:
 # --- End Firebase Configuration ---
 
 def extract_and_export_promise_text(limit=None, output_filename="extracted_promise_texts.csv"):
-    promises_dev_ref = db.collection("promises_dev")
+    # Get a reference to the promises_dev collection
+    promises_ref = db.collection("promises")
 
-    # Base query
-    query = promises_dev_ref.where("source_type", "==", "Mandate Letter Commitment (Structured)").select(["text"])
+    # Define the query
+    query = promises_ref.where("source_type", "==", "Mandate Letter Commitment (Structured)").select(["text"])
 
     # Apply limit if provided
     if limit is not None and limit > 0:
@@ -97,8 +98,9 @@ def extract_and_export_promise_text(limit=None, output_filename="extracted_promi
     logger.info(f"\nQuery execution and export finished. Found and exported {count} texts.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Extract 'text' field from 'promises_dev' collection for specific source_type and export to CSV.")
-    parser.add_argument("--limit", type=int, help="Number of records to process.")
+    # --- Argument Parser Setup ---
+    parser = argparse.ArgumentParser(description="Extract 'text' field from 'promises' collection for specific source_type and export to CSV.")
+    parser.add_argument("--limit", type=int, help="Limit the number of documents to process.")
     parser.add_argument("--output_file", type=str, default="extracted_promise_texts.csv", help="Name of the output CSV file (e.g., texts.csv).")
     
     args = parser.parse_args()

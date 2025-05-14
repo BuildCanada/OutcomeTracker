@@ -266,19 +266,30 @@ def process_and_save_bill_data(xml_content, bill_parl_id_str, parliament_num_str
     sponsor_name = bill_node.findtext('SponsorPersonName', default=None)
     sponsor_title = bill_node.findtext('SponsorAffiliationTitleEn', default=None)
     
-    sponsoring_department = None # Default to None
-    if sponsor_name:
-        # Check if sponsor is a Senator
-        is_senator = False
-        if sponsor_name.lower().startswith("sen."):
-            is_senator = True
-        elif sponsor_title and "senator" in sponsor_title.lower():
-            is_senator = True
-        
-        if not is_senator:
-            sponsoring_department = standardize_department_name(sponsor_name)
-        # If is_senator, sponsoring_department remains None as initialized
+    sponsoring_department = None 
+    if sponsor_title:
+        # Check if it's a Senator's title first, or if name indicates senator
+        is_senator_by_title = "senator" in sponsor_title.lower()
+        is_senator_by_name = sponsor_name and sponsor_name.lower().startswith("sen.")
+
+        if is_senator_by_title or is_senator_by_name:
+            sponsoring_department = None 
+        else:
+            # Attempt to standardize based on the title (e.g., "Minister of Health")
+            sponsoring_department = standardize_department_name(sponsor_title)
+            
+            # Fallback: if title didn't yield a department, and we have a non-senator sponsor_name
+            if not sponsoring_department and sponsor_name and not (is_senator_by_name or is_senator_by_title):
+                logger.info(f"Attempting department standardization by sponsor_name ('{sponsor_name}') as fallback for bill {bill_number_code_from_detail_xml} because title '{sponsor_title}' did not yield a department.")
+                sponsoring_department_from_name = standardize_department_name(sponsor_name)
+                if sponsoring_department_from_name:
+                    sponsoring_department = sponsoring_department_from_name
     
+    elif sponsor_name: # Fallback if no sponsor_title, but have sponsor_name
+        if not sponsor_name.lower().startswith("sen."):
+            # This path is less likely to yield a good department name if standardize_department_name primarily expects titles.
+            logger.info(f"Attempting department standardization by sponsor_name ('{sponsor_name}') for bill {bill_number_code_from_detail_xml} as no sponsor title was present.")
+            sponsoring_department = standardize_department_name(sponsor_name)
 
     # Short Legislative Summary
     short_legislative_summary_html = bill_node.findtext('ShortLegislativeSummaryEn', default="")
