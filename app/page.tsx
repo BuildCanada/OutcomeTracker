@@ -23,10 +23,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 const DEFAULT_PLACEHOLDER_AVATAR = "/placeholder.svg?height=100&width=100"
 
-// Static data for the Prime Minister section
+// Static data for the Prime Minister section, to be made dynamic based on session of parliament
 const staticPrimeMinisterData: PrimeMinister = {
-  name: "Mark Carney", // Example Name
-  title: "Prime Minister",
+  name: "Justin Trudeau", // Example Name
+  title: "Prime Minister, 44th Parliament of Canada",
   avatarUrl: "/placeholder.svg?height=200&width=200", // Example avatar
   guidingMetrics: [
     {
@@ -202,7 +202,7 @@ export default function Home() {
       </header>
 
       <div className="container mx-auto max-w-5xl px-4 py-12">
-        <h1 className="mb-12 text-center text-5xl font-bold text-[#222222]">Outcomes Tracker</h1>
+        <h1 className="mb-12 text-center text-5xl font-bold text-[#222222]">Outcomes Tracker - 44th Parliament of Canada</h1>
 
         <PrimeMinisterSection primeMinister={staticPrimeMinisterData} />
 
