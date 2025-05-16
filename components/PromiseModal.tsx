@@ -1,6 +1,7 @@
-'use client'
+"use client";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import type { PromiseData, RationaleEvent } from "@/lib/types"
+import type { PromiseData, RationaleEvent, EvidenceItem } from "@/lib/types"
 import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon } from "lucide-react"
 import { Timestamp } from 'firebase/firestore';
 import PromiseProgressTimeline from './PromiseProgressTimeline';
@@ -38,6 +39,13 @@ const formatSimpleDate = (dateString: string | undefined): string => {
 
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
   const { text, commitment_history_rationale, date_issued } = promise;
+
+  // Ensure promise object and its nested evidence array are available
+  if (!promise) {
+    // This case should ideally be handled before calling PromiseModal
+    // or by ensuring isOpen is false if promise is null/undefined.
+    return null; 
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -86,9 +94,10 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
             <p className="text-[#333333] leading-relaxed">[Details on the expected or observed impact of this promise will be added here.]</p>
           </section>
 
-          {/* Timeline Section - Replaced with PromiseProgressTimeline */}
+          {/* Timeline Section - Uses PromiseProgressTimeline */}
           <section className="border-t border-[#d3c7b9] pt-8">
-            <PromiseProgressTimeline promise={promise} />
+            {/* Pass the whole promise object, which should include its 'evidence' array */}
+            <PromiseProgressTimeline promise={promise} /> 
           </section>
         </div>
       </DialogContent>

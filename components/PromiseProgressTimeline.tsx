@@ -51,7 +51,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
     // 1. Add the mandate commitment as the first event
     if (promise.source_type === 'Mandate Letter Commitment (Structured)' && promise.date_issued) {
       events.push({
-        id: promise.id,
+        id: `mandate-${promise.id}`,
         type: 'mandate',
         date: promise.date_issued,
         title: promise.text.substring(0, 70) + (promise.text.length > 70 ? '...' : ''), // Shorter snippet for node
@@ -61,20 +61,26 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
     }
 
     // 2. Add evidence items
+    // This component will use promise.evidence directly, which should be populated by the data fetching logic
     if (promise.evidence) {
-      const evidenceEvents: TimelineDisplayEvent[] = promise.evidence.map((item: EvidenceItem) => ({
-        id: item.id,
-        type: 'evidence',
-        date: item.evidence_date,
-        title: item.title_or_summary.substring(0, 70) + (item.title_or_summary.length > 70 ? '...' : ''),
-        fullText: item.description_or_details || 'No further details provided.',
-        sourceUrl: item.source_url,
-      }));
+      const evidenceEvents: TimelineDisplayEvent[] = promise.evidence.map((item: EvidenceItem, index: number) => {
+        const evidenceId = item.id ? item.id : `generated-evidence-${index}`;
+        if (!item.id) {
+          console.warn(`Evidence item at index ${index} for promise ${promise.id} has a missing ID. Using generated ID for key: ${evidenceId}`);
+        }
+        return {
+          id: `evidence-${evidenceId}`, // Use the potentially generated ID
+          type: 'evidence',
+          date: item.evidence_date,
+          title: item.title_or_summary.substring(0, 70) + (item.title_or_summary.length > 70 ? '...' : ''),
+          fullText: item.description_or_details || 'No further details provided.',
+          sourceUrl: item.source_url,
+        };
+      });
       events.push(...evidenceEvents);
     }
 
     // Sort events by date (ascending for timeline)
-    // Handle mixed types of dates (Timestamp and string)
     events.sort((a, b) => {
       const dateA = a.date instanceof Timestamp ? a.date.toMillis() : new Date(a.date as string).getTime();
       const dateB = b.date instanceof Timestamp ? b.date.toMillis() : new Date(b.date as string).getTime();
@@ -85,7 +91,6 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
     });
 
     setTimelineEvents(events);
-    // Automatically select the first event (mandate commitment if available) to display its details
     if (events.length > 0) {
       setSelectedEvent(events[0]);
     } else {
@@ -102,7 +107,6 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
     return <p>No promise data available.</p>;
   }
   
-  // TEMP: Basic rendering to verify data flow
   if (timelineEvents.length === 0 && !(promise.source_type === 'Mandate Letter Commitment (Structured)' && promise.date_issued)) {
     return <p className="text-sm text-gray-500 italic p-4">No timeline events to display for this promise.</p>;
   }
@@ -121,16 +125,10 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
               
               let liClass = "";
               if (isFirstEvent) {
-                liClass = "first-occurrence"; // Special class for first
+                liClass = "first-occurrence";
               } else if (isLastEvent) {
-                liClass = "last-occurrence"; // Special class for last
+                liClass = "last-occurrence";
               }
-
-              // Determine timeline-start or timeline-end based on index for alternating effect
-              // The HTML snippet showed first as start, last as end, and alternating in between.
-              // Let's try: first is start, second is end, third is start...
-              // The provided HTML snippet has first=start, then alternates end, start, end, start, end, start, end, start, end, start, end, start, last=end.
-              // This means odd indices (1, 3, 5...) are timeline-end, and even (0, 2, 4...) are timeline-start.
               
               const positionClass = index % 2 === 0 ? "md:timeline-start" : "md:timeline-end";
 
@@ -149,7 +147,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
                       isLast={isLastEvent}
                     />
                   </div>
-                  {!isLastEvent && <hr className="bg-red-600 opacity-75" />}
+                  {!isLastEvent && <hr className="bg-red-600 opacity-75" />} 
                 </li>
               );
             })}

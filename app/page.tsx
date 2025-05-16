@@ -1,9 +1,9 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import PrimeMinisterSection from "@/components/prime-minister-section"
-import MinisterSection from "@/components/minister-section"
-import DepartmentsDropdown from "@/components/departments-dropdown"
+import PrimeMinisterSection from "@/components/PrimeMinisterSection"
+import MinisterSection from "@/components/MinisterSection"
+import DepartmentsDropdown from "@/components/DepartmentsDropdown"
 import {
   fetchDepartmentConfigs,
   fetchMinisterDetails,
@@ -124,23 +124,34 @@ export default function Home() {
       const departmentFullName = selectedConfig.fullName
 
       try {
-        // Fetch minister details and promises in parallel
-        const [ministerDetails, promises] = await Promise.all([
+        // Fetch minister details and all promises for the department
+        const [ministerDetailsData, allPromisesForDept] = await Promise.all([
           fetchMinisterDetails(departmentFullName),
           fetchPromisesForDepartment(departmentFullName)
-        ])
+        ]);
 
-        let evidenceItems: EvidenceItem[] = []
-        if (promises.length > 0) {
-          const promiseIds = promises.map(p => p.id)
-          evidenceItems = await fetchEvidenceItemsForPromises(promiseIds)
+        let allEvidenceForDept: EvidenceItem[] = [];
+        if (allPromisesForDept.length > 0) {
+          const promiseIds = allPromisesForDept.map(p => p.id);
+          allEvidenceForDept = await fetchEvidenceItemsForPromises(promiseIds);
         }
 
+        // Now, map through allPromisesForDept and attach relevant evidence to each promise
+        const promisesWithEvidence = allPromisesForDept.map(promise => {
+          const relevantEvidence = allEvidenceForDept.filter(evidence => 
+            evidence.promise_ids && evidence.promise_ids.includes(promise.id)
+          );
+          return {
+            ...promise,
+            evidence: relevantEvidence // Populate the promise.evidence field
+          };
+        });
+
         setActiveDepartmentData({
-          ministerDetails,
-          promises,
-          evidenceItems
-        })
+          ministerDetails: ministerDetailsData,
+          promises: promisesWithEvidence, // Use promises that now have their .evidence field populated
+          evidenceItems: allEvidenceForDept // Keep all evidence for the department if needed elsewhere, though modal now uses promise.evidence
+        });
 
       } catch (err) {
         console.error(`Error fetching data for department ${departmentFullName}:`, err)
@@ -257,6 +268,7 @@ export default function Home() {
                     <MinisterSection 
                       departmentPageData={activeDepartmentData} 
                       departmentFullName={dept.fullName}
+                      departmentShortName={dept.shortName}
                     />
                   ) : (
                     <div className="text-center py-10 text-gray-500">Select a department.</div>

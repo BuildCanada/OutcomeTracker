@@ -1,24 +1,25 @@
 'use client'
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import MetricChart from "@/components/metric-chart"
+// import MetricChart from "./MetricChart" // CORRECTED IMPORT PATH and assuming it will be in the same dir
 // TaskCard is for the old Task type, we'll display promises differently for now
 // import TaskCard from "@/components/task-card"
 import type { DepartmentPageData, PromiseData, MinisterDetails, EvidenceItem } from "@/lib/types"
 import Image from 'next/image'
-import PromiseCard from "./promise-card"
+import PromiseCard from "./PromiseCard" // CORRECTED IMPORT PATH
 // import PromiseProgressTimeline from './PromiseProgressTimeline'; // Removed this import
 
 interface MinisterSectionProps {
   departmentPageData: DepartmentPageData | null
   departmentFullName: string
+  departmentShortName?: string
 }
 
 const DEFAULT_MINISTER_NAME = "Minister Information Not Available"
 const DEFAULT_MINISTER_TITLE = "Title Not Available"
 const DEFAULT_AVATAR_FALLBACK_INITIALS = "N/A"
 
-export default function MinisterSection({ departmentPageData, departmentFullName }: MinisterSectionProps) {
+export default function MinisterSection({ departmentPageData, departmentFullName, departmentShortName }: MinisterSectionProps) {
   if (!departmentPageData) {
     return (
       <div className="text-center py-10">
@@ -64,10 +65,18 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       <div className="mb-8 px-2">
         <h3 className="text-2xl font-semibold text-[#222222] mb-6">Mandate Letter Commitments:</h3>
         {promises && promises.length > 0 ? (
-          <div>
-            {promises.map((promise: PromiseData) => (
-              // Use PromiseCard again, passing the promise and the department-level evidenceItems
-              <PromiseCard key={promise.id} promise={promise} evidenceItems={evidenceItems} />
+          <div className="grid grid-cols-1 gap-6">
+            {[...promises].sort((a, b) => {
+              const countA = a.linked_evidence_ids?.length || 0;
+              const countB = b.linked_evidence_ids?.length || 0;
+              return countB - countA; // Sort in descending order
+            }).map((promise: PromiseData) => (
+              <PromiseCard 
+                key={promise.id} 
+                promise={promise} 
+                evidenceItems={evidenceItems || []}
+                departmentShortName={departmentShortName ? departmentShortName : undefined}
+              />
             ))}
           </div>
         ) : (
@@ -84,4 +93,4 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       */}
     </div>
   )
-}
+} 
