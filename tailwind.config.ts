@@ -64,10 +64,12 @@ const config: Config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        border: "#d3c7b9",
-        background: "#f8f2ea",
-        primary: "#8b2332",
-        muted: "#f8f2ea",
+        'canada-red': '#FF0000',
+        'canada-cream': '#FFF8DC',
+        'status-inProgress': '#007bff',
+        'status-partial': '#ffc107',
+        'status-complete': '#28a745',
+        'status-notStarted': '#6c757d',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -98,6 +100,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    require("daisyui")
+  ],
 }
 export default config

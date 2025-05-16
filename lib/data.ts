@@ -9,7 +9,8 @@ import {
   limit,
   orderBy,
   Timestamp,
-  getCountFromServer
+  getCountFromServer,
+  documentId
 } from "firebase/firestore";
 import { db } from "./firebase"; // Your Firebase instance
 import type {
@@ -112,19 +113,84 @@ export const fetchMinisterDetails = async (
 };
 
 /**
+ * Fetches specific evidence items from Firestore by their document IDs.
+ * Handles batching for queries with more than 30 document IDs.
+ * @param evidenceDocIds An array of evidence document IDs.
+ * @returns An array of EvidenceItem objects.
+ */
+export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise<EvidenceItem[]> => {
+  if (!db) {
+    console.error("Firestore instance (db) is not available in fetchEvidenceItemsByIds.");
+    return [];
+  }
+  if (!evidenceDocIds || evidenceDocIds.length === 0) {
+    return [];
+  }
+
+  const allEvidenceItems: EvidenceItem[] = [];
+  const idChunks: string[][] = [];
+  const MAX_IDS_PER_QUERY = 30; // Firestore 'in' query limit
+
+  for (let i = 0; i < evidenceDocIds.length; i += MAX_IDS_PER_QUERY) {
+    idChunks.push(evidenceDocIds.slice(i, i + MAX_IDS_PER_QUERY));
+  }
+
+  try {
+    const evidenceCol = collection(db, 'evidence_items');
+    for (const chunk of idChunks) {
+      if (chunk.length === 0) continue;
+      const q = query(evidenceCol, where(documentId(), 'in', chunk));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.docs.forEach(docSnapshot => {
+        if (docSnapshot.exists()) {
+          const data = docSnapshot.data();
+          // Ensure Timestamps are correctly handled, provide defaults for missing fields
+          const evidenceDate = data.evidence_date instanceof Timestamp ? data.evidence_date : Timestamp.now();
+          const ingestedAt = data.ingested_at instanceof Timestamp ? data.ingested_at : Timestamp.now();
+
+          allEvidenceItems.push({
+            id: docSnapshot.id,
+            evidence_id: data.evidence_id || docSnapshot.id, // Fallback if specific field is missing
+            title_or_summary: data.title_or_summary || '',
+            evidence_date: evidenceDate,
+            source_url: data.source_url || '',
+            description_or_details: data.description_or_details || '',
+            promise_ids: data.promise_ids || [],
+            evidence_source_type: data.evidence_source_type || '',
+            source_document_raw_id: data.source_document_raw_id || undefined,
+            linked_departments: data.linked_departments || [],
+            status_impact_on_promise: data.status_impact_on_promise || undefined,
+            ingested_at: ingestedAt,
+            additional_metadata: data.additional_metadata || {},
+          } as EvidenceItem);
+        }
+      });
+    }
+    console.log(`Fetched ${allEvidenceItems.length} evidence items for ${evidenceDocIds.length} IDs.`);
+    return allEvidenceItems;
+  } catch (error) {
+    console.error('Error fetching evidence items by IDs:', error);
+    if (error instanceof FirestoreError) {
+      console.error("Firestore error details:", error.code, error.message);
+    }
+    return [];
+  }
+};
+
+/**
  * Fetches promises for a specific department that are from mandate letters.
+ * Also fetches linked evidence items for each promise.
  * @param departmentFullName The full name of the department (e.g., "Finance Canada").
- * @returns An array of PromiseData objects.
+ * @returns An array of PromiseData objects, with linked evidence included.
  */
 export async function fetchPromisesForDepartment(departmentFullName: string): Promise<PromiseData[]> {
-  // Check if db is initialized
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchPromisesForDepartment.");
     return [];
   }
   console.log(`Fetching promises for department: ${departmentFullName}`);
   try {
-    const promisesCol = collection(db, 'promises'); // db is now guaranteed to be non-null here
+    const promisesCol = collection(db, 'promises');
     const q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentFullName),
@@ -132,24 +198,36 @@ export async function fetchPromisesForDepartment(departmentFullName: string): Pr
     );
 
     const querySnapshot = await getDocs(q);
-    const promises = querySnapshot.docs.map(docSnapshot => {
-        const data = docSnapshot.data();
-        return {
-            id: docSnapshot.id,
-            text: data.text || '', // Provide default or handle potential missing field
-            responsible_department_lead: data.responsible_department_lead || '', // Provide default
-            source_type: data.source_type || '', // Provide default
-            commitment_history_rationale: data.commitment_history_rationale || undefined,
-            date_issued: data.date_issued || undefined, // Include optional fields
-            candidate_or_government: data.candidate_or_government || undefined, // Include optional fields
-            // Ensure all required fields from PromiseData are present or handled
-        } as PromiseData; // Correctly assert the type
-    });
+    const promisesWithEvidence: PromiseData[] = [];
 
-    console.log(`Fetched ${promises.length} promises for ${departmentFullName}`);
-    return promises;
+    for (const docSnapshot of querySnapshot.docs) {
+      const data = docSnapshot.data();
+      const promise: PromiseData = {
+        id: docSnapshot.id,
+        text: data.text || '',
+        responsible_department_lead: data.responsible_department_lead || '',
+        source_type: data.source_type || '',
+        date_issued: data.date_issued || undefined,
+        linked_evidence_ids: data.linked_evidence_ids || [], // Ensure this field is present
+        evidence: [], // Initialize evidence array
+        // Map other fields from PromiseData as necessary
+      };
+
+      if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
+        console.log(`Fetching evidence for promise ID ${promise.id} with ${promise.linked_evidence_ids.length} linked IDs.`);
+        promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids);
+        console.log(`Fetched ${promise.evidence.length} evidence items for promise ID ${promise.id}.`);
+      }
+      promisesWithEvidence.push(promise);
+    }
+
+    console.log(`Fetched ${promisesWithEvidence.length} promises with their evidence for ${departmentFullName}`);
+    return promisesWithEvidence;
   } catch (error) {
     console.error(`Error fetching promises for ${departmentFullName}:`, error);
+    if (error instanceof FirestoreError) {
+      console.error("Firestore error details:", error.code, error.message);
+    }
     return [];
   }
 }

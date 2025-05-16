@@ -50,7 +50,7 @@ export default function Timeline({ events }: TimelineProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-canada-red">{event.title}</h3>
-                {statusBadges[event.status]}
+                {statusBadges[event.status as keyof typeof statusBadges]}
               </div>
               <p className="text-sm text-muted-foreground">{formatDate(event.date)}</p>
               <p className="text-sm">{event.description}</p>

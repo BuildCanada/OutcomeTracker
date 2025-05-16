@@ -1,16 +1,45 @@
 "use client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import type { Task } from "@/lib/types"
-import { CalendarIcon, FileTextIcon, UsersIcon } from "lucide-react"
+// import type { Task } from "@/lib/types" // Removed this import
+import { CalendarIcon, FileTextIcon, UsersIcon, HistoryIcon } from "lucide-react"
+import type { PromiseData } from "../lib/types"
+import PromiseProgressTimeline from "./PromiseProgressTimeline"
 
-interface TaskModalProps {
-  task: Task
-  isOpen: boolean
-  onClose: () => void
+// Local Task type definition based on usage
+interface Task {
+  title: string;
+  description: string;
+  impact: {
+    level: "high" | "medium" | "low";
+    label: string;
+    description: string; 
+  };
+  status: {
+    id: "in-progress" | "kept" | "not-started";
+    label: string;
+  };
+  lastUpdate: string;
+  timeline: Array<{
+    date: string;
+    title: string;
+    description: string;
+  }>;
+  relatedBills?: Array<{
+    name: string;
+    status: string;
+    description: string;
+  }>;
 }
 
-export default function TaskModal({ task, isOpen, onClose }: TaskModalProps) {
+interface TaskModalProps {
+  task: Task // Now uses the local Task type
+  isOpen: boolean
+  onClose: () => void
+  promiseForTimeline?: PromiseData
+}
+
+export default function TaskModal({ task, isOpen, onClose, promiseForTimeline }: TaskModalProps) {
   const { title, description, impact, status, lastUpdate, timeline, relatedBills } = task
 
   const statusColors = {
@@ -93,6 +122,19 @@ export default function TaskModal({ task, isOpen, onClose }: TaskModalProps) {
               ))}
             </div>
           </section>
+
+          {/* Promise Progress Timeline Section */}
+          {promiseForTimeline && (
+            <section className="border-t border-[#d3c7b9] pt-8">
+              <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
+                <HistoryIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                Promise Progress Timeline
+              </h3>
+              <div className="w-full overflow-x-auto py-2 bg-slate-50 rounded">
+                <PromiseProgressTimeline promise={promiseForTimeline} />
+              </div>
+            </section>
+          )}
         </div>
       </DialogContent>
     </Dialog>

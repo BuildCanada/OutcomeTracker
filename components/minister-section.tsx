@@ -7,6 +7,7 @@ import MetricChart from "@/components/metric-chart"
 import type { DepartmentPageData, PromiseData, MinisterDetails, EvidenceItem } from "@/lib/types"
 import Image from 'next/image'
 import PromiseCard from "./promise-card"
+// import PromiseProgressTimeline from './PromiseProgressTimeline'; // Removed this import
 
 interface MinisterSectionProps {
   departmentPageData: DepartmentPageData | null
@@ -51,7 +52,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
         <div className="flex items-center">
           {/* Placeholder for minister image - can be added later */}
           {/* <Image src={minister.avatarUrl || "/placeholder-avatar.png"} alt={`Portrait of ${ministerName}`} width={80} height={80} className="rounded-full mr-6" /> */}
-          <div>
+    <div>
             <h2 className="text-3xl font-bold text-[#222222]">{ministerName}</h2>
             <p className="text-lg text-[#555555]">{ministerTitle}</p>
             <p className="text-sm text-[#8b2332]">{departmentFullName}</p>
@@ -65,6 +66,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
         {promises && promises.length > 0 ? (
           <div>
             {promises.map((promise: PromiseData) => (
+              // Use PromiseCard again, passing the promise and the department-level evidenceItems
               <PromiseCard key={promise.id} promise={promise} evidenceItems={evidenceItems} />
             ))}
           </div>
@@ -78,7 +80,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       <div className="border-t border-[#d3c7b9] pt-8 mt-8 px-2">
         <h3 className="text-2xl font-semibold text-[#222222] mb-4">Key Performance Indicators & Metrics</h3>
         <p className="text-gray-500 italic">[Guiding metrics and performance indicators related to this department's portfolio will be displayed here.]</p>
-      </div> 
+      </div>
       */}
     </div>
   )
