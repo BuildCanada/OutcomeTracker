@@ -46,4 +46,4 @@ export default function DepartmentsDropdown({ departments, onSelectDepartment, i
       </DropdownMenuContent>
     </DropdownMenu>
   )
-}
+} 

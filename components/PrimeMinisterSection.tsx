@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import MetricChart from "@/components/metric-chart"
+import MetricChart from "./MetricChart"
 import type { PrimeMinister } from "@/lib/types"
 
 interface PrimeMinisterSectionProps {
@@ -41,4 +41,4 @@ export default function PrimeMinisterSection({ primeMinister }: PrimeMinisterSec
       )}
     </div>
   )
-}
+} 

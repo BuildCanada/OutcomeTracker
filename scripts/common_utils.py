@@ -49,6 +49,7 @@ DEPARTMENT_MAP = {
     "minister of veteran\'s affairs": {"full": "Veterans Affairs Canada", "short": "Veterans Affairs"}, # Shorter variant
     "minister of sport and minister responsible for the economic development agency of canada for the regions of quebec": {"full": "Canadian Heritage", "short": "Heritage"}, # Also Heritage
     "minister of official languages and minister responsible for the atlantic canada opportunities agency": {"full": "Canadian Heritage", "short": "Heritage"}, # Also Heritage
+    "minister of official languages": {"full": "Canadian Heritage", "short": "Heritage"}, # Also Heritage
     "minister of seniors": {"full": "Employment and Social Development Canada", "short": "Employment"}, # Also Employment
     "minister responsible for the federal economic development agency for southern ontario": {"full": "Federal Economic Development Agency for Southern Ontario", "short": "FedDev Ontario"}, # Kept as is, fairly common
     "minister of tourism and associate minister of finance": {"full": "Innovation, Science and Economic Development Canada", "short": "Innovation"}, # Also Innovation
@@ -82,6 +83,8 @@ DEPARTMENT_MAP = {
     "treasury board of canada secretariat": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"},
     "veterans affairs canada": {"full": "Veterans Affairs Canada", "short": "Veterans Affairs"},
     "women and gender equality canada": {"full": "Women and Gender Equality Canada", "short": "WAGE"},
+    "minister of public safety, democratic institutions and intergovernmental affairs": {"full": "Public Safety Canada", "short": "Public Safety"},
+    "president of the treasury board": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"},
 
     # --- Mappings for specific/long Minister titles from MandateLetters.csv ---
     "president of the king's privy council for canada and minister of emergency preparedness": {"full": "Emergency Preparedness Canada", "short": "Emergency Preparedness"}, # Added for long title
@@ -97,8 +100,8 @@ def standardize_department_name(name_variant):
     
     # Normalize apostrophes and spaces, and convert to lowercase
     normalized_name = (original_name_str.lower()
-                       .replace("’", "'")  # U+2019
-                       .replace("‘", "'")  # U+2018
+                       .replace("' ", "'")  # U+2019
+                       .replace("' ", "'")  # U+2018
                        .replace("`", "'")  # U+0060
                        .replace("´", "'")  # U+00B4
                        .replace('\xa0', ' ')) # Non-breaking space
@@ -112,12 +115,27 @@ def standardize_department_name(name_variant):
         # Return ONLY the full name for backward compatibility
         return match_data.get('full') 
 
-    # --- Fallback Substring Search ---
+    # --- Fallback Substring Search (refined) ---
+    # This is to catch cases where the input might be longer than a mapped key,
+    # e.g., input is "The Minister of Health for Canada" and map has "minister of health"
+    # Prioritize more specific (longer) keys if multiple substring matches occur.
+    best_match_value = None
+    longest_key_matched_len = 0
+
     for key, value_dict in DEPARTMENT_MAP.items():
-        if key in normalized_name:
-            if "minister of" in normalized_name or "deputy prime minister" in normalized_name or "president of" in normalized_name or "leader of" in normalized_name:
-                 # Return ONLY the full name
-                 return value_dict.get('full')
+        if key in normalized_name: # Check if a known key is part of the normalized input name
+            # Ensure it looks like a ministerial title or a direct department name for this fallback
+            is_ministerial_phrase = "minister of" in key or "deputy prime minister" in key or "president of" in key or "leader of" in key
+            is_department_name_key = " canada" in key or " agency" in key or " board" in key or " service" in key # Heuristic for dept names
+            
+            if is_ministerial_phrase or is_department_name_key:
+                if len(key) > longest_key_matched_len:
+                    longest_key_matched_len = len(key)
+                    best_match_value = value_dict.get('full')
+    
+    if best_match_value:
+        logger.info(f"Used fallback substring match for '{original_name_str}' (Normalized: '{normalized_name}') with key '{key}', found department: {best_match_value}")
+        return best_match_value
 
     # If no match found after direct and fallback
     logger.warning(f"Could not standardize department: '{original_name_str}' (Normalized: '{normalized_name}')")
