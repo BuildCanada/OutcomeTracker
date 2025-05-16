@@ -1,20 +1,20 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import "./globals.css"
+import type React from "react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
+import "./globals.css";
+import Header from "@/components/header";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 // SVG for the emoji favicon: 🏗️🇨🇦 using separate text elements, further reduced font
 // and Unicode escape for the Canadian flag emoji.
 const canadianFlagEmoji = "\u{1F1E8}\u{1F1E6}"; // 🇨🇦
-const emojiFaviconSvg = 
-  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+const emojiFaviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
     <text x='5' y='65' font-size='45'>🏗️</text>
     <text x='50' y='65' font-size='45'>${canadianFlagEmoji}</text>
   </svg>`;
-// A bit of trial and error might be needed for x, y, and font-size 
+// A bit of trial and error might be needed for x, y, and font-size
 // to get them perfectly aligned and sized in the small favicon space.
 // The y='72' and font-size='60' are estimations to make them fit side-by-side.
 
@@ -29,20 +29,28 @@ export const metadata: Metadata = {
     // apple: faviconDataUrl, // For Apple touch icon
     // shortcut: faviconDataUrl, // For older browsers
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="border-2 border-black m-5">
+            <Header />
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

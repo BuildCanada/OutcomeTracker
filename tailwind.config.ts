@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   darkMode: ["class"],
@@ -12,6 +12,9 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        founders: ['"Founders Grotesk Mono"', "Arial", "sans-serif"],
+        financier: ['"Financier Text"', "serif"],
+        soehne: ['"Soehne Kraftig"', "sans-serif"],
       },
       colors: {
         background: "hsl(var(--background))",
@@ -65,9 +68,9 @@ const config: Config = {
           ring: "hsl(var(--sidebar-ring))",
         },
         border: "#d3c7b9",
-        background: "#f8f2ea",
+        background: "#f6ebe3",
         primary: "#8b2332",
-        muted: "#f8f2ea",
+        muted: "#f6ebe3",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -99,5 +102,5 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
-export default config
+};
+export default config;
