@@ -28,6 +28,14 @@ const nextConfig = {
         destination: "/tracker/:path*",
       },
       {
+        source: "/admin/:path*",
+        destination: "/admin/:path*",
+      },
+      {
+        source: "/api/:path*",
+        destination: "/api/:path*",
+      },
+      {
         source: "/:path*",
         destination: "https://www.buildcanada.com/:path*",
       },

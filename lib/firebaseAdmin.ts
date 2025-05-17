@@ -1,13 +1,10 @@
 import admin from "firebase-admin";
 
-console.log("ADMIN", admin.apps.length);
-
 if (!admin.apps.length) {
   // try {
   const serviceAccountEnv = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (serviceAccountEnv) {
     const serviceAccount = JSON.parse(serviceAccountEnv);
-    console.log("GOING!", admin.credential.cert(serviceAccount));
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       // Optionally, you can explicitly set projectId if needed, though cert() usually infers it.
