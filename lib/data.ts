@@ -63,6 +63,17 @@ export const fetchDepartmentConfigs = async (): Promise<DepartmentConfig[]> => {
       const nameA = (typeof valA === 'string') ? valA : "";
       const nameB = (typeof valB === 'string') ? valB : "";
 
+      console.log(`Sorting: nameA = '${nameA}' (type: ${typeof nameA}), nameB = '${nameB}' (type: ${typeof nameB})`);
+      if (typeof nameA !== 'string') {
+        console.error('CRITICAL: nameA is not a string just before localeCompare!', a);
+        // Fallback to prevent error, though this indicates a deeper issue
+        return 0; 
+      }
+      if (typeof nameB !== 'string') {
+        // Though nameB being non-string wouldn't cause 'nameA.localeCompare' to fail on nameA
+        console.warn('Warning: nameB is not a string in sort:', b);
+      }
+
       return nameA.localeCompare(nameB);
     });
   } catch (error) {
