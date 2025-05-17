@@ -260,7 +260,8 @@ def scrape_single_letter(letter_url, minister_full_name_input=None, minister_tit
             "letter_url": letter_url,
             "full_text": full_text,
             "date_scraped": firestore.SERVER_TIMESTAMP,
-            "minister_greeting_lastname_pm_gc_ca": minister_greeting_lastname # Last name from "Dear Minister X:"
+            "minister_greeting_lastname_pm_gc_ca": minister_greeting_lastname, # Last name from "Dear Minister X:"
+            "parliament_session_id": "44"
         }
 
     except requests.exceptions.Timeout:

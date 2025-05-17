@@ -13,6 +13,7 @@ import traceback
 from dotenv import load_dotenv
 import argparse # Added for CLI arguments
 from common_utils import PROMISE_CATEGORIES # <<< CHANGED: Removed leading dot for direct import
+from datetime import datetime, date # ADDED date
 
 # --- Load Environment Variables ---
 load_dotenv() 
@@ -177,6 +178,23 @@ async def process_single_video_transcript(video_doc_snapshot):
     video_data = video_doc_snapshot.to_dict()
     logger.info(f"Processing video transcript for ID: {video_id} (Title: {video_data.get('title', 'N/A')})")
 
+    # Determine Parliament Session ID from video upload date
+    determined_session_id = None
+    upload_date_str = video_data.get('upload_date') # Expected format YYYYMMDD
+    upload_date_obj = None
+    if upload_date_str:
+        try:
+            upload_date_obj = datetime.strptime(upload_date_str, "%Y%m%d").date()
+            # Call the synchronous helper function (db is globally available in this script)
+            determined_session_id = get_session_id_for_date(upload_date_obj, db) 
+            logger.info(f"Determined session ID '{determined_session_id}' for video {video_id} with upload date {upload_date_obj}")
+        except ValueError:
+            logger.warning(f"Invalid upload_date format for video {video_id}: {upload_date_str}. Cannot determine session ID by date. Will use default from helper.")
+            determined_session_id = get_session_id_for_date(None, db) # Get default session ID
+    else:
+        logger.warning(f"Missing upload_date for video {video_id}. Cannot determine session ID by date. Will use default from helper.")
+        determined_session_id = get_session_id_for_date(None, db) # Get default session ID
+
     # 1. Select English Transcript
     transcript_to_process = None
     if video_data.get('transcript_en_translated'): # Check for translation first
@@ -188,10 +206,15 @@ async def process_single_video_transcript(video_doc_snapshot):
     
     if not transcript_to_process or not transcript_to_process.strip():
         logger.warning(f"  No usable English transcript found for {video_id}. Skipping promise extraction.")
-        # Update status to reflect skipping
         doc_ref = db.collection('youtube_video_data').document(video_id)
-        doc_ref.update({PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP, 'promise_extraction_status': 'skipped_no_transcript'})
-        return 0 # Return 0 promises processed
+        update_data_yt_video = {
+            PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP, 
+            'promise_extraction_status': 'skipped_no_transcript'
+        }
+        if determined_session_id:
+            update_data_yt_video['parliament_session_id'] = determined_session_id
+        doc_ref.update(update_data_yt_video)
+        return 0 
 
     # 2. Infer Candidate/Party
     candidate_name, party_name = infer_candidate_party(video_data)
@@ -303,6 +326,7 @@ async def process_single_video_transcript(video_doc_snapshot):
                 # --- Metadata ---
                 'ingested_at': firestore.SERVER_TIMESTAMP,
                 'last_updated_at': firestore.SERVER_TIMESTAMP,
+                'parliament_session_id': determined_session_id, # NEW: Add determined session ID
             }
 
             # Add promise document creation to the batch
@@ -396,6 +420,89 @@ async def main_async_promises(limit_arg: int | None):
     logger.info(f"Finished LLM processing batch. Extracted a total of {total_promises_extracted} promises from {len(tasks)} Liberal Party videos.")
 
     logger.info(f"--- YouTube Transcript Processing Finished ---")
+
+
+# --- Helper function to get Parliament Session ID ---
+def get_session_id_for_date(target_date, db_client, default_session_id="44"):
+    """Queries Firestore to find the parliament_session_id for a given date."""
+    if not target_date or not db_client:
+        logger.warning("get_session_id_for_date: Missing target_date or db_client. Returning default.")
+        return default_session_id # Or None, depending on desired strictness
+
+    try:
+        sessions_ref = db_client.collection('parliament_session')
+        # Attempt to order by parliament_number descending to check more recent sessions first.
+        # Firestore requires a composite index for range (target_date) and order on different field.
+        # For simplicity with a small collection, fetch all and sort in Python, or rely on specific queries.
+        # We will fetch all for now as the collection is small.
+        sessions = sessions_ref.stream()
+
+        matching_session = None
+
+        for session_doc in sessions:
+            session_data = session_doc.to_dict()
+            parliament_number = session_data.get('parliament_number')
+            
+            start_date_str = session_data.get('election_called_date') # Use election_called_date as start
+            end_date_str = session_data.get('end_date')
+
+            if not parliament_number or not start_date_str or not end_date_str:
+                logger.debug(f"Session {session_doc.id} missing key date fields or parliament_number. Skipping.")
+                continue
+
+            try:
+                session_start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+                
+                # Handle flexible end_date (e.g., "current", or actual date)
+                session_end_date = None
+                if end_date_str.lower() == "current":
+                    # If current, treat it as open-ended (effectively a very far future date for comparison)
+                    # Or, if only one session is marked is_current_for_tracking, it could be prioritized.
+                    # For this logic, if 'current', assume it includes the target_date if target_date >= session_start_date
+                    # and no other session with a concrete end_date matches better.
+                    # A simpler approach for now: if it's current, and target_date is after its start, it's a candidate.
+                    pass # We will check is_current_for_tracking later if no date range matches
+                else:
+                    session_end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+                
+                if session_end_date: # Concrete end date
+                    if session_start_date <= target_date < session_end_date:
+                        logger.info(f"Date {target_date} matches session {parliament_number} ({start_date_str} to {end_date_str})")
+                        # Prioritize specific range matches
+                        return parliament_number 
+                else: # End date is "current" or not a concrete date
+                    # If end_date is effectively open, and target_date is on or after start_date,
+                    # this session is a candidate. We might find a more specific match later.
+                    if session_start_date <= target_date:
+                        if session_data.get('is_current_for_tracking', False):
+                            # If it's the designated 'current for tracking' and date is good, store it
+                            matching_session = parliament_number
+                        elif not matching_session: # Store if nothing else found yet
+                            matching_session = parliament_number
+                            
+            except ValueError as ve:
+                logger.warning(f"Could not parse dates for session {parliament_number} (ID: {session_doc.id}): {ve}. Skipping this session for date matching.")
+                continue
+        
+        if matching_session:
+            logger.info(f"Date {target_date} best matches session {matching_session} (possibly current or fallback).")
+            return matching_session
+
+        # Fallback if no session explicitly matched the date range (e.g. date is outside all defined ranges)
+        # Try to get the one marked as is_current_for_tracking as a last resort if not already chosen
+        logger.warning(f"No specific session range matched for date {target_date}. Looking for 'is_current_for_tracking'.")
+        sessions_again = db_client.collection('parliament_session').where('is_current_for_tracking', '==', True).limit(1).stream()
+        for sess_doc in sessions_again:
+            logger.info(f"Falling back to default tracking session: {sess_doc.to_dict().get('parliament_number')}")
+            return sess_doc.to_dict().get('parliament_number')
+
+        logger.error(f"No session found for date {target_date}, and no default 'is_current_for_tracking' session found. Returning provided default: {default_session_id}")
+        return default_session_id # Fallback to the hardcoded default or None
+
+    except Exception as e:
+        logger.error(f"Error querying parliament_session collection: {e}", exc_info=True)
+        return default_session_id # Or None, on error
+# --- End Helper function ---
 
 
 if __name__ == "__main__":

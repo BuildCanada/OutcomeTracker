@@ -55,7 +55,27 @@ export const fetchDepartmentConfigs = async (): Promise<DepartmentConfig[]> => {
       ...(doc.data() as Omit<DepartmentConfig, "id">),
     }));
     console.log("Fetched department configs:", departments);
-    return departments.sort((a, b) => a.shortName.localeCompare(b.shortName)); // Sort alphabetically by shortName
+    return departments.sort((a, b) => {
+      // Explicitly check properties and their types
+      const valA = a && a.display_short_name;
+      const valB = b && b.display_short_name;
+
+      const nameA = (typeof valA === 'string') ? valA : "";
+      const nameB = (typeof valB === 'string') ? valB : "";
+
+      console.log(`Sorting: nameA = '${nameA}' (type: ${typeof nameA}), nameB = '${nameB}' (type: ${typeof nameB})`);
+      if (typeof nameA !== 'string') {
+        console.error('CRITICAL: nameA is not a string just before localeCompare!', a);
+        // Fallback to prevent error, though this indicates a deeper issue
+        return 0; 
+      }
+      if (typeof nameB !== 'string') {
+        // Though nameB being non-string wouldn't cause 'nameA.localeCompare' to fail on nameA
+        console.warn('Warning: nameB is not a string in sort:', b);
+      }
+
+      return nameA.localeCompare(nameB);
+    });
   } catch (error) {
     console.error("Error fetching department configs:", error);
     if (error instanceof FirestoreError) {
@@ -183,17 +203,25 @@ export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise
  * @param departmentFullName The full name of the department (e.g., "Finance Canada").
  * @returns An array of PromiseData objects, with linked evidence included.
  */
-export async function fetchPromisesForDepartment(departmentFullName: string): Promise<PromiseData[]> {
+export async function fetchPromisesForDepartment(
+  departmentFullName: string,
+  parliamentSessionId: string | null
+): Promise<PromiseData[]> {
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchPromisesForDepartment.");
     return [];
   }
-  console.log(`Fetching promises for department: ${departmentFullName}`);
+  if (!parliamentSessionId) {
+    console.warn("parliamentSessionId not provided to fetchPromisesForDepartment. No promises will be fetched.");
+    return []; // Or fetch all if that's desired, but usually session filtering is key
+  }
+  console.log(`Fetching promises for department: ${departmentFullName} for session: ${parliamentSessionId}`);
   try {
     const promisesCol = collection(db, 'promises');
     const q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentFullName),
+      where('parliament_session_id', '==', parliamentSessionId),
       where('source_type', '==', 'Mandate Letter Commitment (Structured)')
     );
 

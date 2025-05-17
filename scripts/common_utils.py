@@ -1,174 +1,186 @@
 # common_utils.py
 import logging
+import os
+import firebase_admin
+from firebase_admin import credentials, firestore
+from dotenv import load_dotenv
+
+# --- Load Environment Variables (for Firestore init if needed) ---
+load_dotenv() # Loads .env file from current dir or parent dirs
+# --- End Load Environment Variables ---
 
 logger = logging.getLogger(__name__) 
 
 PROMISE_CATEGORIES = [
-    "Economy", "Healthcare", "Immigration", "Defence", "Housing", 
-    "Cost of Living", "Environment", "Social Programs", "Governance", 
-    "Indigenous Relations", "Foreign Affairs", "Infrastructure", "Other" 
+    "Finance", "Health", "Immigration", "Defence", "Housing", "Energy",  
+    "Innovation", "Government Transformation", "Environment",
+    "Indigenous Relations", "Foreign Affairs", "Other" 
 ]
 
-# --- Updated DEPARTMENT_MAP with 'full' and 'short' names (No Acronyms) ---
-DEPARTMENT_MAP = {
-    # Standard Titles
-    "deputy prime minister and minister of finance": {"full": "Finance Canada", "short": "Finance"},
-    "minister of environment and climate change": {"full": "Environment and Climate Change Canada", "short": "Environment"},
-    "president of the treasury board": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"},
-    "minister of natural resources": {"full": "Natural Resources Canada", "short": "Natural Resources"},
-    "minister of innovation, science and industry": {"full": "Innovation, Science and Economic Development Canada", "short": "Innovation"},
-    "minister of health": {"full": "Health Canada", "short": "Health"},
-    "minister of public safety": {"full": "Public Safety Canada", "short": "Public Safety"},
-    "minister of employment, workforce development and disability inclusion": {"full": "Employment and Social Development Canada", "short": "Employment"},
-    "minister of intergovernmental affairs, infrastructure and communities": {"full": "Infrastructure Canada", "short": "Infrastructure"},
-    "minister of national defence": {"full": "National Defence", "short": "Defence"},
-    "minister of housing and diversity and inclusion": {"full": "Infrastructure Canada", "short": "Infrastructure"}, # Note: Still mapped to Infrastructure full/short
-    "minister of foreign affairs": {"full": "Global Affairs Canada", "short": "Foreign Affairs"}, # Changed from GAC
-    "minister of international trade, export promotion, small business and economic development": {"full": "Global Affairs Canada", "short": "Foreign Affairs"}, # Also Foreign Affairs
-    "minister of canadian heritage and quebec lieutenant": {"full": "Canadian Heritage", "short": "Heritage"},
-    "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario": {"full": "Indigenous Services Canada", "short": "Indigenous Services"},
-    "minister of justice and attorney general of canada": {"full": "Justice Canada", "short": "Justice"},
-    "minister of crown-indigenous relations": {"full": "Crown-Indigenous Relations and Northern Affairs Canada", "short": "Crown-Indigenous Relations"}, # Changed from CIRNAC
-    "president of the queen's privy council for canada and minister of emergency preparedness": {"full": "Public Safety Canada", "short": "Public Safety"}, # Maps to Public Safety
-    "president of the queen\'s privy council and minister of emergency preparedness": {"full": "Public Safety Canada", "short": "Public Safety"}, # Shorter variant
-    "minister of transport": {"full": "Transport Canada", "short": "Transport"},
-    "minister of international development and minister responsible for the pacific economic development agency of canada": {"full": "Global Affairs Canada", "short": "Foreign Affairs"}, # Also Foreign Affairs
-    "minister of families, children and social development": {"full": "Employment and Social Development Canada", "short": "Employment"}, # Also Employment
-    "minister of fisheries, oceans and the canadian coast guard": {"full": "Fisheries and Oceans Canada", "short": "Fisheries"}, # Changed from DFO
-    "minister of fisheries, oceans and canadian coast guard": {"full": "Fisheries and Oceans Canada", "short": "Fisheries"}, # Variant without 'the'
-    "minister of labour": {"full": "Employment and Social Development Canada", "short": "Employment"}, # Also Employment
-    "minister of immigration, refugees and citizenship": {"full": "Immigration, Refugees and Citizenship Canada", "short": "Immigration"}, # Changed from IRCC
-    "minister of public services and procurement": {"full": "Public Services and Procurement Canada", "short": "Procurement"}, # Changed from PSPC
-    "minister for women and gender equality and youth": {"full": "Women and Gender Equality Canada", "short": "Gender Equality"}, # Changed from WAGE
-    "minister of national revenue": {"full": "Canada Revenue Agency", "short": "Revenue Agency"}, # Changed from CRA
-    "minister of mental health and addictions and associate minister of health": {"full": "Health Canada", "short": "Health"}, # Also Health
-    "minister of agriculture and agri-food": {"full": "Agriculture and Agri-Food Canada", "short": "Agriculture"}, # Changed from AAFC
-    "minister of northern affairs, minister responsible for prairies economic development canada, and minister responsible for the canadian northern economic development agency": {"full": "Crown-Indigenous Relations and Northern Affairs Canada", "short": "Crown-Indigenous Relations"}, # Also Crown-Indigenous Relations
-    "leader of the government in the house of commons": {"full": "Privy Council Office", "short": "Privy Council"}, # Changed from PCO
-    "minister of veterans affairs and associate minister of national defence": {"full": "Veterans Affairs Canada", "short": "Veterans Affairs"}, # Changed from VAC
-    "minister of veteran\'s affairs": {"full": "Veterans Affairs Canada", "short": "Veterans Affairs"}, # Shorter variant
-    "minister of sport and minister responsible for the economic development agency of canada for the regions of quebec": {"full": "Canadian Heritage", "short": "Heritage"}, # Also Heritage
-    "minister of official languages and minister responsible for the atlantic canada opportunities agency": {"full": "Canadian Heritage", "short": "Heritage"}, # Also Heritage
-    "minister of official languages": {"full": "Canadian Heritage", "short": "Heritage"}, # Also Heritage
-    "minister of seniors": {"full": "Employment and Social Development Canada", "short": "Employment"}, # Also Employment
-    "minister responsible for the federal economic development agency for southern ontario": {"full": "Federal Economic Development Agency for Southern Ontario", "short": "FedDev Ontario"}, # Kept as is, fairly common
-    "minister of tourism and associate minister of finance": {"full": "Innovation, Science and Economic Development Canada", "short": "Innovation"}, # Also Innovation
-    "minister of rural economic development": {"full": "Innovation, Science and Economic Development Canada", "short": "Innovation"}, # Also Innovation
+# --- Firestore Client Initialization ---
+# Global Firestore client instance for this module
+db = None
 
-    # Simple/Common Variants
-    "minister of finance": {"full": "Finance Canada", "short": "Finance"},
-    "minister of indigenous services": {"full": "Indigenous Services Canada", "short": "Indigenous Services"},
-    "minister of crown-indigenous relations": {"full": "Crown-Indigenous Relations and Northern Affairs Canada", "short": "Crown-Indigenous Relations"}, 
-    "minister of canadian heritage": {"full": "Canadian Heritage", "short": "Heritage"}, 
+def _initialize_firestore_client():
+    """Initializes the global Firestore client if not already done."""
+    global db
+    if db is None:
+        try:
+            if not firebase_admin._apps:
+                logger.info("Initializing Firebase Admin SDK for common_utils...")
+                # Attempt to initialize with application default credentials first
+                try:
+                    firebase_admin.initialize_app()
+                    project_id = os.getenv('FIREBASE_PROJECT_ID', '[Not Set - Using Default]')
+                    logger.info(f"common_utils: Connected to CLOUD Firestore (Project: {project_id}) using default credentials.")
+                except Exception as e_default:
+                    logger.warning(f"common_utils: Cloud Firestore init with default creds failed: {e_default}")
+                    cred_path = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY_PATH')
+                    if cred_path:
+                        try:
+                            logger.info(f"common_utils: Attempting Firebase init with service account key from env var: {cred_path}")
+                            cred = credentials.Certificate(cred_path)
+                            firebase_admin.initialize_app(cred)
+                            project_id_sa = os.getenv('FIREBASE_PROJECT_ID', '[Not Set - Using Service Account]')
+                            logger.info(f"common_utils: Connected to CLOUD Firestore (Project: {project_id_sa}) via service account.")
+                        except Exception as e_sa:
+                            logger.critical(f"common_utils: Firebase init with service account key from {cred_path} failed: {e_sa}", exc_info=True)
+                            raise  # Re-raise critical error
+                    else:
+                        logger.error("common_utils: FIREBASE_SERVICE_ACCOUNT_KEY_PATH env var not set and default creds failed. Firestore client not initialized.")
+                        raise ConnectionError("Failed to initialize Firestore: No credentials provided.")
+            else:
+                 logger.info("common_utils: Firebase Admin SDK already initialized elsewhere.")
+            db = firestore.client()
+        except Exception as e:
+            logger.critical(f"common_utils: CRITICAL - Failed to initialize Firestore client: {e}", exc_info=True)
+            db = None # Ensure db is None on failure
+            # Depending on application needs, this might need to be a fatal error.
+            # For now, functions will check if db is None.
 
-    # --- Mappings for Department Names (from commitments file) ---
-    "natural resources canada": {"full": "Natural Resources Canada", "short": "Natural Resources"}, # Added
-    "public services and procurement canada": {"full": "Public Services and Procurement Canada", "short": "Procurement"}, # Added
-    
-    # --- Mappings for 2023 Titles (from MandateLetters.csv) ---
-    "minister of sport and physical activity": {"full": "Canadian Heritage", "short": "Heritage"}, # Added (Maps to Heritage)
-    "minister of citizens' services": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"}, # Added (Maps to TBS)
-    
-    # Malformed Variants (Handle special case)
-    "president of the queen's privy council for canada and minister of emergency preparedness president of the treasury board": {"full": "Multiple Departments - Needs Review", "short": "Multiple"}, 
-    "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario and minister responsible for the federal economic development agency for northern ontario": {"full": "Indigenous Services Canada", "short": "Indigenous Services"}, 
-    "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario canada": {"full": "Indigenous Services Canada", "short": "Indigenous Services"} ,
-    
-    # Typo from original map
-    "ministre of foreign affairs": {"full": "Global Affairs Canada", "short": "Foreign Affairs"}, 
+# Call initialization once when the module is loaded, or rely on first function call.
+# _initialize_firestore_client() # Option 1: Initialize on module load
 
-    # New mappings
-    "public safety canada": {"full": "Public Safety Canada", "short": "Public Safety"},
-    "transport canada": {"full": "Transport Canada", "short": "Transport"},
-    "treasury board of canada secretariat": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"},
-    "veterans affairs canada": {"full": "Veterans Affairs Canada", "short": "Veterans Affairs"},
-    "women and gender equality canada": {"full": "Women and Gender Equality Canada", "short": "WAGE"},
-    "minister of public safety, democratic institutions and intergovernmental affairs": {"full": "Public Safety Canada", "short": "Public Safety"},
-    "president of the treasury board": {"full": "Treasury Board of Canada Secretariat", "short": "Treasury Board"},
+# --- Department Standardization Functions (Firestore-backed) ---
 
-    # --- Mappings for specific/long Minister titles from MandateLetters.csv ---
-    "president of the king's privy council for canada and minister of emergency preparedness": {"full": "Emergency Preparedness Canada", "short": "Emergency Preparedness"}, # Added for long title
-    "minister of northern affairs, minister responsible for prairies economic development canada and minister responsible for the canadian northern economic development agency": {"full": "Crown-Indigenous Relations and Northern Affairs Canada", "short": "Northern Affairs"}, # Added for long title, maps to existing CIRNAC
-
-}
-
-# --- standardize_department_name function remains the same ---
-# It still returns the FULL name string or None
 def standardize_department_name(name_variant):
-    """Standardizes a department or minister name to a common format."""
+    """Standardizes a department or minister name to its official full name using Firestore department_config."""
+    global db
+    if db is None: # Option 2: Initialize on first use if not done on module load
+        _initialize_firestore_client()
+        if db is None: # Check again after attempt
+            logger.error("standardize_department_name: Firestore client is not available. Cannot proceed.")
+            return None
+
     original_name_str = str(name_variant).strip()
     
     # Normalize apostrophes and spaces, and convert to lowercase
     normalized_name = (original_name_str.lower()
-                       .replace("' ", "'")  # U+2019
-                       .replace("' ", "'")  # U+2018
-                       .replace("`", "'")  # U+0060
-                       .replace("´", "'")  # U+00B4
-                       .replace('\xa0', ' ')) # Non-breaking space
+                       .replace("\' ", "\'")  # Handle various apostrophes + space combinations
+                       .replace("\' ", "\'")
+                       .replace("`", "\'")
+                       .replace("´", "\'")
+                       .replace('\xa0', ' ') # Non-breaking space
+                       .strip())
 
     if not normalized_name or normalized_name == 'nan':
-         return None # Return None for empty/NaN input
+         logger.debug(f"Input '{original_name_str}' normalized to empty or NaN, returning None.")
+         return None 
 
-    # --- Direct Lookup ---
-    match_data = DEPARTMENT_MAP.get(normalized_name)
-    if match_data:
-        # Return ONLY the full name for backward compatibility
-        return match_data.get('full') 
+    try:
+        dept_config_ref = db.collection('department_config')
+        # Query where the name_variants array contains the normalized input
+        query = dept_config_ref.where('name_variants', 'array_contains', normalized_name).limit(1)
+        results = list(query.stream()) # Using list() to execute and get results easily
 
-    # --- Fallback Substring Search (refined) ---
-    # This is to catch cases where the input might be longer than a mapped key,
-    # e.g., input is "The Minister of Health for Canada" and map has "minister of health"
-    # Prioritize more specific (longer) keys if multiple substring matches occur.
-    best_match_value = None
-    longest_key_matched_len = 0
+        if results:
+            department_doc = results[0].to_dict()
+            official_full_name = department_doc.get('official_full_name')
+            if official_full_name:
+                logger.debug(f"Standardized '{original_name_str}' (Normalized: '{normalized_name}') to '{official_full_name}' via Firestore.")
+                return official_full_name
+            else:
+                logger.warning(f"Found matching doc for '{normalized_name}' in Firestore but 'official_full_name' is missing. Doc ID: {results[0].id}")
+                return None
+        else:
+            logger.warning(f"Unmapped department variant: '{normalized_name}' (for input '{original_name_str}') in Firestore department_config.")
+            return None
+    except Exception as e:
+        logger.error(f"Error querying Firestore for department standardization of '{normalized_name}': {e}", exc_info=True)
+        return None
 
-    for key, value_dict in DEPARTMENT_MAP.items():
-        if key in normalized_name: # Check if a known key is part of the normalized input name
-            # Ensure it looks like a ministerial title or a direct department name for this fallback
-            is_ministerial_phrase = "minister of" in key or "deputy prime minister" in key or "president of" in key or "leader of" in key
-            is_department_name_key = " canada" in key or " agency" in key or " board" in key or " service" in key # Heuristic for dept names
-            
-            if is_ministerial_phrase or is_department_name_key:
-                if len(key) > longest_key_matched_len:
-                    longest_key_matched_len = len(key)
-                    best_match_value = value_dict.get('full')
-    
-    if best_match_value:
-        logger.info(f"Used fallback substring match for '{original_name_str}' (Normalized: '{normalized_name}') with key '{key}', found department: {best_match_value}")
-        return best_match_value
-
-    # If no match found after direct and fallback
-    logger.warning(f"Could not standardize department: '{original_name_str}' (Normalized: '{normalized_name}')")
-    # Return None if no mapping found
-    return None 
-
-# --- Updated map for easy lookup of short name FROM full name ---
-FULL_NAME_TO_SHORT_NAME_MAP = {}
-for mapping_value in DEPARTMENT_MAP.values():
-    if isinstance(mapping_value, dict) and 'full' in mapping_value and 'short' in mapping_value:
-        full_name = mapping_value['full']
-        short_name = mapping_value['short']
-        if full_name not in FULL_NAME_TO_SHORT_NAME_MAP:
-             FULL_NAME_TO_SHORT_NAME_MAP[full_name] = short_name
-
-# Add check for the special case
-if "Multiple Departments - Needs Review" not in FULL_NAME_TO_SHORT_NAME_MAP:
-    FULL_NAME_TO_SHORT_NAME_MAP["Multiple Departments - Needs Review"] = "Multiple"
-
-# --- New function to get the short name ---
 def get_department_short_name(standardized_full_name):
     """
-    Takes a standardized FULL department name and returns its common short name.
+    Takes a standardized FULL department name and returns its display_short_name from Firestore department_config.
     Returns the short name string, or the input full name if no short name is mapped.
     """
+    global db
+    if db is None: # Option 2: Initialize on first use
+        _initialize_firestore_client()
+        if db is None: # Check again after attempt
+            logger.error("get_department_short_name: Firestore client is not available. Cannot proceed.")
+            return standardized_full_name # Fallback as per original spec
+
     if not standardized_full_name:
+        logger.debug("Input standardized_full_name is empty, returning None.")
         return None 
         
-    short_name = FULL_NAME_TO_SHORT_NAME_MAP.get(standardized_full_name)
-    
-    if short_name:
-        return short_name
+    try:
+        dept_config_ref = db.collection('department_config')
+        query = dept_config_ref.where('official_full_name', '==', standardized_full_name).limit(1)
+        results = list(query.stream())
+
+        if results:
+            department_doc = results[0].to_dict()
+            display_short_name = department_doc.get('display_short_name')
+            if display_short_name:
+                logger.debug(f"Retrieved short name '{display_short_name}' for full name '{standardized_full_name}' from Firestore.")
+                return display_short_name
+            else:
+                logger.warning(f"Found doc for '{standardized_full_name}' but 'display_short_name' is missing. Doc ID: {results[0].id}. Returning full name.")
+                return standardized_full_name # Fallback
+        else:
+            logger.warning(f"No short name mapping found in Firestore department_config for full name: '{standardized_full_name}'. Returning full name.")
+            return standardized_full_name # Fallback as per original spec
+    except Exception as e:
+        logger.error(f"Error querying Firestore for department short name of '{standardized_full_name}': {e}", exc_info=True)
+        return standardized_full_name # Fallback
+
+# Ensure logger is configured for scripts that might import this utility early
+if __name__ == '__main__':
+    # Basic logging config for direct testing of this module
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s')
+    logger.info("common_utils.py executed directly for testing.")
+
+    # --- Test Cases (requires Firestore to be populated and accessible) ---
+    # Ensure your .env or GOOGLE_APPLICATION_CREDENTIALS is set up for these tests.
+    _initialize_firestore_client() # Explicitly initialize for testing if not done on module load
+    if db:
+        logger.info("--- Running Test Cases for Department Standardization ---")
+        
+        test_variants = [
+            "minister of finance",
+            "MINISTER OF HEALTH",
+            "Minister of natural resources",
+            "Natural Resources Canada", 
+            "treasury board of canada secretariat",
+            "non_existent_department_variant",
+            "MINISTRE OF FOREIGN AFFAIRS", # Typo from old map
+            None,
+            "  "
+        ]
+        
+        for variant in test_variants:
+            print(f"\nInput Variant: '{variant}'")
+            full_name = standardize_department_name(variant)
+            print(f"  -> Standardized Full Name: '{full_name}'")
+            if full_name:
+                short_name = get_department_short_name(full_name)
+                print(f"  -> Display Short Name: '{short_name}'")
+            else:
+                print(f"  -> No short name lookup due to None full name.")
+
+        logger.info("--- Test Cases Complete ---")
     else:
-        # Fallback if the full name isn't in our derived map
-        logger.warning(f"No short name mapping found for full name: '{standardized_full_name}'. Returning full name.")
-        return standardized_full_name # Return the full name as fallback
+        logger.error("Firestore client not initialized. Skipping test cases.")
