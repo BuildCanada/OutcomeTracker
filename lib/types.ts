@@ -4,10 +4,40 @@ import { Timestamp } from "firebase/firestore";
 
 // --- Data structures from Firestore ---
 
+export interface ParliamentSession {
+  id: string; // parliament_number as string, e.g., "44"
+  parliament_number: string; // e.g., "44"
+  session_label: string; // e.g., "44th Parliament (2021-Present)"
+  start_date: string; // ISO Date string e.g., "2021-11-22"
+  end_date?: string | null; // ISO Date string or null if ongoing
+  prime_minister_name?: string;
+  governing_party?: string;
+  election_date_preceding?: string | null; // ISO Date string
+  election_called_date?: string | null; // ISO Date string for the election that ENDS this session
+  is_current_for_tracking?: boolean;
+  notes?: string | null;
+}
+
 export interface DepartmentConfig {
-  id: string; // Document ID (sanitized shortName)
-  shortName: string; // e.g., "Environment"
-  fullName: string;  // e.g., "Environment and Climate Change Canada"
+  id: string; // Firestore document ID (e.g., "health-canada")
+  display_short_name: string; // New: e.g., "Health" (used for sorting and display)
+  official_full_name: string; // New: e.g., "Health Canada"
+  department_slug: string; // New: e.g., "health-canada" (often same as id)
+
+  // Optional fields from screenshot and common usage:
+  bc_priority?: number;
+  name_variants?: string[];
+  notes?: string | null;
+  last_updated_at?: Timestamp | string; // Can be Timestamp or serialized string
+  last_updated_by?: string;
+  
+  // Include other fields from your Firestore documents if needed by the application
+  // For example, if 'french_name', 'category_tags', 'priority_score', 
+  // 'alternative_names' from your earlier summary are indeed in Firestore and used:
+  french_name?: string | null;
+  category_tags?: string[] | null;
+  priority_score?: number; // This was in your Phase 2 summary for department_config
+  alternative_names?: string[]; // This was also in your Phase 2 summary
 }
 
 export interface MinisterDetails {

@@ -230,10 +230,17 @@ def process_and_save_bill_data(xml_content, bill_parl_id_str, parliament_num_str
 
     # --- 1. Extract and Save/Update Bill Details to `bills_data` ---
     bill_number_code_from_detail_xml = bill_node.findtext('NumberCode', default=bill_number_code_from_feed_str)
-    parl_num_text = bill_node.findtext('ParliamentNumber', default="0")
-    sess_num_text = bill_node.findtext('SessionNumber', default="0")
     
-    long_title_en = bill_node.findtext('LongTitleEn', default="N/A") # Path updated assuming direct child
+    # parliament_num_str and session_num_str are passed from the feed and are considered authoritative.
+    parl_num_from_detail_xml_check = bill_node.findtext('ParliamentNumber')
+    if parl_num_from_detail_xml_check and parl_num_from_detail_xml_check != parliament_num_str:
+        logger.warning(f"Parliament number mismatch for Bill {bill_parl_id_str}: Feed was {parliament_num_str}, Detail XML is {parl_num_from_detail_xml_check}. Using feed value: {parliament_num_str} for storage.")
+    
+    sess_num_from_detail_xml_check = bill_node.findtext('SessionNumber')
+    if sess_num_from_detail_xml_check and sess_num_from_detail_xml_check != session_num_str:
+        logger.warning(f"Session number mismatch for Bill {bill_parl_id_str}: Feed was {session_num_str}, Detail XML is {sess_num_from_detail_xml_check}. Using feed value: {session_num_str} for storage.")
+
+    long_title_en = bill_node.findtext('LongTitleEn', default="N/A") 
     short_title_en = bill_node.findtext('ShortTitleEn', default=None)
     bill_type = bill_node.findtext('BillDocumentTypeNameEn', default="N/A") # Path updated
     status_name = bill_node.findtext('StatusNameEn', default="N/A") # Path updated
@@ -370,8 +377,8 @@ def process_and_save_bill_data(xml_content, bill_parl_id_str, parliament_num_str
     bill_data_doc = {
         'parl_id': bill_parl_id_str,
         'bill_number_code': bill_number_code_from_detail_xml,
-        'parliament_number': int(parl_num_text) if parl_num_text.isdigit() else None,
-        'session_number': int(sess_num_text) if sess_num_text.isdigit() else None,
+        'session_number': session_num_str,
+        'parliament_session_id': parliament_num_str,
         'long_title_en': long_title_en,
         'short_title_en': short_title_en,
         'short_legislative_summary_en_html': short_legislative_summary_html,
@@ -517,6 +524,7 @@ def process_and_save_bill_data(xml_content, bill_parl_id_str, parliament_num_str
         evidence_item = {
             'evidence_id': evidence_id_str,
             'bill_parl_id': bill_parl_id_str, 
+            'parliament_session_id': parliament_num_str,
             'promise_ids': [], 
             'evidence_source_type': "Bill Event (LEGISinfo)",
             'evidence_date': event_date_dt,
@@ -570,6 +578,8 @@ if __name__ == "__main__":
         default=None, 
         help="Limit the number of bills to process. Processes all if not specified."
     )
+    parser.add_argument("--reprocess_events_without_evidence", action="store_true", help="During reprocessing, only process bill events if no evidence items for that bill currently exist AT ALL. Overrides --force_reprocess_events if no evidence found. Used to fill gaps without redoing all events.")
+    parser.add_argument("--force_reprocess_events", action="store_true", help="Force reprocessing of all events for selected bills, even if they were processed before (based on existence of evidence with parliament_session_id).")
     args = parser.parse_args()
 
     logger.info(f"--- Starting LEGISinfo Evidence Ingestion --- ") 
@@ -589,32 +599,71 @@ if __name__ == "__main__":
 
     processed_bills_count = 0
 
-    for bill_data_from_feed in bills_to_process: # Iterating over list of dicts
-        bill_parl_id = bill_data_from_feed['id']
-        parliament_num = bill_data_from_feed['parliament_number']
-        session_num = bill_data_from_feed['session_number']
-        bill_code = bill_data_from_feed['bill_code']
+    for bill_feed_data in bills_to_process:
+        bill_parl_id = bill_feed_data['id']
+        parliament_num = bill_feed_data['parliament_number'] # This is authoritative for this bill instance from feed
+        session_num = bill_feed_data['session_number']
+        bill_code_from_feed = bill_feed_data['bill_code']
 
-        logger.info(f"--- Checking Bill {bill_code} (Parl ID: {bill_parl_id}, Parl: {parliament_num}, Sess: {session_num}) ({processed_bills_count + 1} of {len(bills_to_process)}) ---")
+        logger.info(f"Processing Bill: {bill_code_from_feed} (Parl ID: {bill_parl_id}, Parliament: {parliament_num}, Session: {session_num})")
         
-        # Always fetch fresh XML to check for updates
-        xml_data = fetch_bill_details_xml(parliament_num, session_num, bill_code)
+        if not args.force_reprocess_keywords:
+            try:
+                bill_doc_ref = db.collection(FIRESTORE_BILLS_DATA_COLLECTION).document(bill_parl_id)
+                bill_doc = bill_doc_ref.get()
+                if bill_doc.exists:
+                    bill_data = bill_doc.to_dict()
+                    if bill_data.get('extracted_keywords_concepts') and bill_data.get('llm_keywords_extracted_at'):
+                        logger.info(f"  Bill {bill_code_from_feed} (Parl ID: {bill_parl_id}) already has keywords. Skipping detail fetch and keyword extraction unless --force_reprocess_keywords is used.")
+                        
+                        # Check if events need reprocessing only if we are not forcing keyword reprocessing (which implies event reprocessing too)
+                        if not args.force_reprocess_events and not args.reprocess_events_without_evidence: 
+                            evidence_query = db.collection(FIRESTORE_EVIDENCE_COLLECTION)\
+                                .where('bill_parl_id', '==', bill_parl_id)\
+                                .where('parliament_session_id', '==', parliament_num) # MODIFIED: Ensure this check is present
+                            
+                            existing_evidence_for_session = list(evidence_query.limit(1).stream())
+                            if existing_evidence_for_session:
+                                logger.info(f"  Bill {bill_code_from_feed} already has evidence items with parliament_session_id '{parliament_num}'. Skipping event processing.")
+                                processed_bills_count += 1
+                                continue 
+                            else:
+                                logger.info(f"  Bill {bill_code_from_feed} has no evidence items with parliament_session_id '{parliament_num}' yet. Will process events.")
+                        elif args.reprocess_events_without_evidence:
+                            any_evidence_query = db.collection(FIRESTORE_EVIDENCE_COLLECTION).where('bill_parl_id', '==', bill_parl_id)
+                            if not list(any_evidence_query.limit(1).stream()):
+                                logger.info(f"  Bill {bill_code_from_feed} has NO evidence items at all. Processing events due to --reprocess_events_without_evidence.")
+                            else:
+                                # If there IS some evidence, but --force_reprocess_events is false, AND we have processed this session before, then skip.
+                                evidence_query_specific_session = db.collection(FIRESTORE_EVIDENCE_COLLECTION)\
+                                    .where('bill_parl_id', '==', bill_parl_id)\
+                                    .where('parliament_session_id', '==', parliament_num)
+                                if list(evidence_query_specific_session.limit(1).stream()):
+                                     logger.info(f"  Bill {bill_code_from_feed} has evidence items for parliament_session_id '{parliament_num}'. Not reprocessing events due to --reprocess_events_without_evidence without --force_reprocess_events.")
+                                     processed_bills_count +=1
+                                     continue
+                                else:
+                                    logger.info(f"  Bill {bill_code_from_feed} has some evidence but not for session '{parliament_num}'. Processing events due to --reprocess_events_without_evidence.")
+            except Exception as e:
+                logger.error(f"Error checking existing bill/evidence data for {bill_parl_id}: {e}", exc_info=True)
 
-        if not xml_data:
-            logger.warning(f"Could not fetch XML for Bill {bill_code} (Parl ID {bill_parl_id}). Skipping.")
+        xml_bill_detail = fetch_bill_details_xml(parliament_num, session_num, bill_code_from_feed)
+
+        if not xml_bill_detail:
+            logger.warning(f"Could not fetch XML for Bill {bill_code_from_feed} (Parl ID {bill_parl_id}). Skipping.")
             time.sleep(1.2) # Keep sleep even on error to be polite
             continue
 
         try:
             # Parse key fields from fresh XML for comparison
-            fresh_root = ET.fromstring(xml_data)
+            fresh_root = ET.fromstring(xml_bill_detail)
             fresh_bill_node = fresh_root.find('.//Bill')
             if fresh_bill_node is None:
                 if fresh_root.tag == 'Bill': fresh_bill_node = fresh_root
                 else: fresh_bill_node = fresh_root.find('Bill')
             
             if fresh_bill_node is None:
-                logger.error(f"Could not find <Bill> node in freshly fetched XML for Bill {bill_code}. Skipping.")
+                logger.error(f"Could not find <Bill> node in freshly fetched XML for Bill {bill_code_from_feed}. Skipping.")
                 time.sleep(1.2)
                 continue
 
@@ -647,25 +696,25 @@ if __name__ == "__main__":
                 # Key comparison logic
                 if (fresh_latest_stage_datetime == stored_latest_stage_datetime and 
                     fresh_status_name == stored_status_name):
-                    logger.info(f"Bill {bill_code} (Parl ID {bill_parl_id}) appears current. Updating check time and skipping detailed processing.")
+                    logger.info(f"Bill {bill_code_from_feed} (Parl ID {bill_parl_id}) appears current. Updating check time and skipping detailed processing.")
                     bill_doc_ref.update({'last_checked_legisinfo_at': firestore.SERVER_TIMESTAMP})
                     processed_bills_count +=1 # Count as processed for the limit logic
                     time.sleep(0.5) # Shorter sleep if just updating timestamp
                     continue # Skip to the next bill
                 else:
-                    logger.info(f"Bill {bill_code} (Parl ID {bill_parl_id}) has changed or is new. Proceeding with full processing.")
+                    logger.info(f"Bill {bill_code_from_feed} (Parl ID {bill_parl_id}) has changed or is new. Proceeding with full processing.")
             else:
-                logger.info(f"Bill {bill_code} (Parl ID {bill_parl_id}) is new. Proceeding with full processing.")
+                logger.info(f"Bill {bill_code_from_feed} (Parl ID {bill_parl_id}) is new. Proceeding with full processing.")
 
         except ET.ParseError as e:
-            logger.error(f"Error parsing freshly fetched XML for currency check of Bill {bill_code}: {e}. Proceeding with full processing just in case.")
+            logger.error(f"Error parsing freshly fetched XML for currency check of Bill {bill_code_from_feed}: {e}. Proceeding with full processing just in case.")
         except Exception as e:
-            logger.error(f"Unexpected error during currency check for Bill {bill_code}: {e}. Proceeding with full processing.", exc_info=True)
+            logger.error(f"Unexpected error during currency check for Bill {bill_code_from_feed}: {e}. Proceeding with full processing.", exc_info=True)
             # Fall through to full processing if currency check has an issue
 
         # If we reach here, bill is new, changed, or currency check failed -> process fully
-        logger.info(f"--- Processing Bill {bill_code} (Parl ID: {bill_parl_id}, Parl: {parliament_num}, Sess: {session_num}) ({processed_bills_count + 1} of {len(bills_to_process)}) ---")
-        process_and_save_bill_data(xml_data, bill_parl_id, parliament_num, session_num, bill_code)
+        logger.info(f"--- Processing Bill {bill_code_from_feed} (Parl ID: {bill_parl_id}, Parl: {parliament_num}, Sess: {session_num}) ({processed_bills_count + 1} of {len(bills_to_process)}) ---")
+        process_and_save_bill_data(xml_bill_detail, bill_parl_id, parliament_num, session_num, bill_code_from_feed)
         processed_bills_count +=1
         
         time.sleep(1.2)

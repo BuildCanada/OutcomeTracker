@@ -10,6 +10,7 @@ from dotenv import load_dotenv # Import load_dotenv
 import argparse # Import argparse
 import webvtt 
 from io import StringIO # Import StringIO
+from datetime import datetime, date # ADDED date
 
 load_dotenv() # Load environment variables from .env file
 
@@ -52,6 +53,69 @@ if db is None:
 # Or provide the full path to the executable
 YT_DLP_PATH = "yt-dlp" 
 # --- End YT-DLP Path ---
+
+# --- Helper function to get Parliament Session ID (copied from process_yt_transcripts.py) ---
+def get_session_id_for_date(target_date, db_client, default_session_id="44"):
+    """Queries Firestore to find the parliament_session_id for a given date."""
+    if not target_date or not db_client:
+        logger.warning("get_session_id_for_date: Missing target_date or db_client. Returning default.")
+        return default_session_id
+
+    try:
+        sessions_ref = db_client.collection('parliament_session')
+        sessions = sessions_ref.stream()
+        matching_session = None
+
+        for session_doc in sessions:
+            session_data = session_doc.to_dict()
+            parliament_number = session_data.get('parliament_number')
+            start_date_str = session_data.get('election_called_date')
+            end_date_str = session_data.get('end_date')
+
+            if not parliament_number or not start_date_str or not end_date_str:
+                logger.debug(f"Session {session_doc.id} missing key date fields or parliament_number. Skipping.")
+                continue
+
+            try:
+                session_start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+                session_end_date = None
+                if end_date_str.lower() == "current":
+                    pass 
+                else:
+                    session_end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+                
+                if session_end_date:
+                    if session_start_date <= target_date < session_end_date:
+                        logger.info(f"Date {target_date} matches session {parliament_number} ({start_date_str} to {end_date_str})")
+                        return parliament_number 
+                else:
+                    if session_start_date <= target_date:
+                        if session_data.get('is_current_for_tracking', False):
+                            matching_session = parliament_number
+                        elif not matching_session:
+                            matching_session = parliament_number
+                            
+            except ValueError as ve:
+                logger.warning(f"Could not parse dates for session {parliament_number} (ID: {session_doc.id}): {ve}. Skipping this session.")
+                continue
+        
+        if matching_session:
+            logger.info(f"Date {target_date} best matches session {matching_session} (current or fallback).")
+            return matching_session
+
+        logger.warning(f"No specific session range matched for {target_date}. Looking for 'is_current_for_tracking'.")
+        sessions_again = db_client.collection('parliament_session').where('is_current_for_tracking', '==', True).limit(1).stream()
+        for sess_doc in sessions_again:
+            logger.info(f"Falling back to default tracking session: {sess_doc.to_dict().get('parliament_number')}")
+            return sess_doc.to_dict().get('parliament_number')
+
+        logger.error(f"No session for {target_date}, and no default 'is_current_for_tracking' found. Returning provided default: {default_session_id}")
+        return default_session_id
+
+    except Exception as e:
+        logger.error(f"Error querying parliament_session collection: {e}", exc_info=True)
+        return default_session_id
+# --- End Helper function ---
 
 def _parse_and_normalize_cues_from_file(file_path, lang_code_from_filename, video_id):
     """Parses VTT/SRT file using webvtt-py and normalize cues to {'start', 'end', 'text'} with float seconds."""
@@ -417,38 +481,41 @@ def save_video_data_to_firestore(video_id, metadata, raw_cue_list, transcript_la
     Saves the extracted video metadata, cleaned transcript cues, and generated text to Firestore.
     """
     if not metadata:
-        logger.warning(f"No metadata to save for {video_id}, skipping Firestore save.")
+        logger.error(f"No metadata provided for video ID {video_id}. Cannot save to Firestore.")
         return
 
-    doc_ref = db.collection('youtube_video_data').document(video_id)
-    
-    logger.info(f"SAVE_VIDEO_DATA for {video_id}: Received lang='{transcript_language_original}', raw cues count={len(raw_cue_list) if isinstance(raw_cue_list, list) else 'N/A'}.")
+    # Determine Parliament Session ID from video upload date
+    determined_session_id = None
+    upload_date_str = metadata.get('upload_date') # Expected format YYYYMMDD
+    upload_date_obj = None
+    if upload_date_str:
+        try:
+            upload_date_obj = datetime.strptime(upload_date_str, "%Y%m%d").date()
+            # Call the synchronous helper function (db is globally available in this script)
+            determined_session_id = get_session_id_for_date(upload_date_obj, db) 
+            logger.info(f"Determined session ID '{determined_session_id}' for video {video_id} with upload date {upload_date_obj}")
+        except ValueError:
+            logger.warning(f"Invalid upload_date format for video {video_id}: {upload_date_str}. Cannot determine session ID. Will use default.")
+            determined_session_id = get_session_id_for_date(None, db) # Get default
+    else:
+        logger.warning(f"Missing upload_date for video {video_id}. Cannot determine session ID by date. Will use default.")
+        determined_session_id = get_session_id_for_date(None, db) # Get default
 
-    # Deduplicate cues and generate text
-    cleaned_cues = []
-    transcript_text_generated = ""
-    if raw_cue_list and isinstance(raw_cue_list, list):
-        cleaned_cues = deduplicate_cues(raw_cue_list)
-        logger.info(f"SAVE_VIDEO_DATA for {video_id}: Cues after deduplication: {len(cleaned_cues)}.")
-        # Generate text only from non-empty, stripped cue texts
-        transcript_text_generated = "\n".join([cue.get('text', '').strip() for cue in cleaned_cues if cue.get('text', '').strip()])
-        logger.info(f"SAVE_VIDEO_DATA for {video_id}: Length of generated transcript text: {len(transcript_text_generated)}.")
-    elif raw_cue_list: 
-        logger.warning(f"SAVE_VIDEO_DATA for {video_id}: Received non-list raw_cue_list type: {type(raw_cue_list)}. Storing as empty transcript.")
-    else: # raw_cue_list is None or empty
-        logger.info(f"SAVE_VIDEO_DATA for {video_id}: No raw cues provided or raw_cue_list is empty. Transcript will be empty.")
-
-    data_to_store = {
+    video_doc_ref = db.collection('youtube_video_data').document(video_id)
+    video_doc_data = {
         'video_id': video_id,
-        'title': metadata.get('title'),
-        'description': metadata.get('description'),
+        'title': metadata.get('title', 'N/A'),
+        'description': metadata.get('description', 'N/A'),
+        'uploader': metadata.get('uploader', 'N/A'),
+        'upload_date': metadata.get('upload_date'), # YYYYMMDD format
+        'parliament_session_id': determined_session_id, # NEW: Add determined session ID
+        'duration': metadata.get('duration'),
+        'duration_string': metadata.get('duration_string'),
         'upload_date': metadata.get('upload_date'), 
         'uploader': metadata.get('uploader'),
         'uploader_id': metadata.get('uploader_id'),
         'channel_id': metadata.get('channel_id'),
         'channel_url': metadata.get('channel_url'),
-        'duration': metadata.get('duration'), # This is usually in seconds from yt-dlp JSON
-        'duration_string': metadata.get('duration_string'),
         'view_count': metadata.get('view_count'),
         'like_count': metadata.get('like_count'),
         'comment_count': metadata.get('comment_count'),
@@ -459,8 +526,8 @@ def save_video_data_to_firestore(video_id, metadata, raw_cue_list, transcript_la
         'original_url': metadata.get('original_url'),
         
         # New transcript fields
-        'transcript_cues_cleaned': cleaned_cues, # Store the list of cleaned cue maps
-        'transcript_text_generated': transcript_text_generated, # Store the flat text from cleaned cues
+        'transcript_cues_cleaned': raw_cue_list, # Store the list of cleaned cue maps
+        'transcript_text_generated': "\n".join([cue.get('text', '').strip() for cue in raw_cue_list if cue.get('text', '').strip()]), # Store the flat text from cleaned cues
         'transcript_language_original': transcript_language_original, # 'en', 'fr', or None/unknown
         
         'raw_yt_dlp_json_snippet': json.dumps(metadata, indent=2)[:2000], 
@@ -470,7 +537,7 @@ def save_video_data_to_firestore(video_id, metadata, raw_cue_list, transcript_la
     # Removed old fields: transcript_text_original, transcript_cues_original (effectively replaced)
 
     try:
-        doc_ref.set(data_to_store, merge=True) 
+        video_doc_ref.set(video_doc_data, merge=True) 
         logger.info(f"Successfully saved data for video {video_id} to Firestore.")
     except Exception as e:
         logger.error(f"Error saving video {video_id} to Firestore: {e}")
