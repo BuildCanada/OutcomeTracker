@@ -66,7 +66,7 @@ if db is None:
 # --- Helper Function to Load Mandate Letter URLs ---
 def load_mandate_letter_urls(csv_file_path):
     """
-    Reads MandateLetters.csv and creates a map from standardized department name
+    Reads 2021MandateLetters.csv and creates a map from standardized department name
     to mandate letter URL. Uses the 'Department' column for standardization key.
     """
     url_map = {}
@@ -81,7 +81,7 @@ def load_mandate_letter_urls(csv_file_path):
                 mandate_url = row.get('Mandate Letter URL')
 
                 if not department_raw or not mandate_url:
-                    logger.warning(f"Skipping row in MandateLetters.csv due to missing Department or URL: {row}")
+                    logger.warning(f"Skipping row in 2021MandateLetters.csv due to missing Department or URL: {row}")
                     skipped_count += 1
                     continue
 
@@ -95,16 +95,16 @@ def load_mandate_letter_urls(csv_file_path):
                         url_map[standardized_dept] = mandate_url.strip()
                         processed_count += 1
                 else:
-                    logger.warning(f"Could not standardize department '{department_raw}' from MandateLetters.csv. Cannot map URL.")
+                    logger.warning(f"Could not standardize department '{department_raw}' from 2021MandateLetters.csv. Cannot map URL.")
                     skipped_count += 1
 
         logger.info(f"Successfully loaded {processed_count} mandate letter URLs. Skipped {skipped_count} rows.")
         return url_map
     except FileNotFoundError:
-        logger.error(f"MandateLetters.csv not found at: {csv_file_path}")
+        logger.error(f"2021MandateLetters.csv not found at: {csv_file_path}")
         return {}
     except Exception as e:
-        logger.error(f"Error reading or processing MandateLetters.csv: {e}", exc_info=True)
+        logger.error(f"Error reading or processing 2021MandateLetters.csv: {e}", exc_info=True)
         return {}
 # --- End Helper Function ---
 
@@ -173,6 +173,7 @@ def process_mlc_csv(file_path, mandate_url_map):
                 'source_document_url': source_url, # Use looked-up URL
                 'source_type': 'Mandate Letter Commitment (Structured)',
                 'date_issued': '2021-12-16', # Common date for 2021 letters
+                'parliament_session_id': "44", # NEW: Added parliament_session_id
                 'candidate_or_government': 'Government of Canada (2021 Mandate)',
                 'party': 'Liberal Party of Canada',
                 'category': None, # To be filled later
@@ -229,10 +230,10 @@ if __name__ == "__main__":
     base_dir = os.path.dirname(script_dir) # Moves up from 'scripts' to 'PromiseTracker'
 
     # --- Path to MandateLetters.csv ---
-    mandate_letters_csv_path = os.path.join(base_dir, 'raw-data', 'MandateLetters.csv')
+    mandate_letters_csv_path = os.path.join(base_dir, 'raw-data', '2021MandateLetters.csv')
     if not os.path.exists(mandate_letters_csv_path):
-        logger.error(f"ERROR: MandateLetters.csv not found at: {mandate_letters_csv_path}")
-        exit("Exiting: MandateLetters.csv file missing.")
+        logger.error(f"ERROR: 2021MandateLetters.csv not found at: {mandate_letters_csv_path}")
+        exit("Exiting: 2021MandateLetters.csv file missing.")
 
     # Load the URL map first
     mandate_url_map = load_mandate_letter_urls(mandate_letters_csv_path)

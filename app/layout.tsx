@@ -5,6 +5,10 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 import Header from "@/components/header";
 import clsx from "clsx";
+import { SessionProvider } from "@/context/SessionContext";
+import Link from "next/link";
+import Image from "next/image";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +26,7 @@ const emojiFaviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10
 const faviconDataUrl = `data:image/svg+xml,${encodeURIComponent(emojiFaviconSvg)}`;
 
 export const metadata: Metadata = {
-  title: `Build Canada 🏗️${canadianFlagEmoji}`,
+  title: `Outcome Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
   description: "Track the progress of Canada's government initiatives",
   icons: {
     icon: faviconDataUrl,
@@ -38,19 +42,56 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="!bg-backgroud">
-      <body className={clsx(inter.className, "bg-background")}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="border-2 border-black m-5">
-            <Header />
-            {children}
-          </div>
-        </ThemeProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.className} text-neutral-800 dark:text-neutral-200 bg-background`}
+      >
+        <div className="border-2 border-black m-5">
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <SessionProvider>
+              <Header />
+              <main className="container mx-auto p-4 bg-white dark:bg-neutral-900 site-main-content">
+                {children}
+              </main>
+
+              {/* Footer styled to mimic buildcanada.com */}
+              <footer
+                className="mt-16 py-12 text-neutral-300 dark:text-neutral-400"
+                style={{ backgroundColor: "#272727" }} // Directly using the dark footer color from example
+              >
+                <div className="container mx-auto text-center">
+                  <div className="mb-8">
+                    {/* The Build Canada logo can be used here too if desired, or just text */}
+                    <h1 className="text-3xl font-semibold text-white">
+                      Build Canada
+                    </h1>
+                  </div>
+                  <div className="footprint">
+                    <div className="copyright mb-6">
+                      <div className="text-sm">
+                        🏗️🇨🇦 ️Copyright Build Canada Inc. 2025
+                      </div>
+                    </div>
+                    <div className="quote text-sm italic max-w-2xl mx-auto">
+                      &quot;Whatever our errors are otherwise, we shall not err
+                      for want of boldness... Canada shall be the star towards
+                      which all men who love progress and freedom shall
+                      come.&quot;
+                      <div className="caption not-italic mt-2 text-xs">
+                        — Laurier
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </footer>
+            </SessionProvider>
+          </ThemeProvider>
+        </div>
       </body>
     </html>
   );
