@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Header() {
+export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
   return (
     <header className="border-b-2 border-black font-founders bg-background sticky top-0 z-50">
       <div className="mx-auto grid grid-cols-[160px_1fr] min-h-[72px]">
@@ -25,7 +25,7 @@ export default function Header() {
             href="/en/tracker"
             className="flex items-center justify-center text-sm tracking-wide uppercase hover:bg-[#eae0d8]"
           >
-            Outcome Tracker
+            Promise Tracker
           </Link>
           <Link
             href="/about"

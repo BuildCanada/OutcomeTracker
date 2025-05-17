@@ -71,6 +71,12 @@ const config: Config = {
         background: "#f6ebe3",
         primary: "#8b2332",
         muted: "#f6ebe3",
+        "canada-red": "#FF0000",
+        "canada-cream": "#FFF8DC",
+        "status-inProgress": "#007bff",
+        "status-partial": "#ffc107",
+        "status-complete": "#28a745",
+        "status-notStarted": "#6c757d",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -101,6 +107,6 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("daisyui")],
 };
 export default config;

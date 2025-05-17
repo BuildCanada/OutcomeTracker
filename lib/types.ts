@@ -30,6 +30,8 @@ export interface PromiseData {
   commitment_history_rationale?: RationaleEvent[]; // Added optional field
   date_issued?: string; // Optional
   candidate_or_government?: string; // Optional
+  linked_evidence_ids?: string[];
+  evidence?: EvidenceItem[]; // To hold resolved evidence items
   // Add other relevant fields as needed
 }
 
@@ -120,10 +122,11 @@ export interface RationaleEvent {
 
 // Define the structure for Evidence Items
 export interface EvidenceItem {
-  evidence_id: string; // Document ID
+  id: string; // Firestore document ID
+  evidence_id: string; // The specific 'evidence_id' field from the document data
   promise_ids: string[];
   evidence_source_type: string;
-  evidence_date: Timestamp | string; // Firestore Timestamp or ISO string
+  evidence_date: Timestamp; // Firestore Timestamp
   title_or_summary: string;
   description_or_details?: string;
   source_url?: string;

@@ -95,7 +95,7 @@ body {
 
 @layer base {
     body {
-        @apply bg-background;
+        @apply bg-[#f8f2ea];
     }
 
     h1,
@@ -106,48 +106,4 @@ body {
     h6 {
         @apply font-medium tracking-tight;
     }
-}
-@font-face {
-    font-family: "Founders Grotesk Mono";
-    src: url("https://cdn.prod.website-files.com/679d23fc682f2bf860558c9a/679d23fc682f2bf860558ce2_founders-grotesk-mono-regular.woff2")
-        format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Financier Text";
-    src: url("https://cdn.prod.website-files.com/679d23fc682f2bf860558c9a/679d23fc682f2bf860558ce8_financier-text-regular.woff2")
-        format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Financier Text";
-    src: url("https://cdn.prod.website-files.com/679d23fc682f2bf860558c9a/679d23fc682f2bf860558cf8_financier-text-regular-italic.woff2")
-        format("woff2");
-    font-weight: 400;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Financier Text";
-    src: url("https://cdn.prod.website-files.com/679d23fc682f2bf860558c9a/679d23fc682f2bf860558cee_financier-text-bold.woff2")
-        format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Soehne Kraftig";
-    src: url("https://cdn.prod.website-files.com/679d23fc682f2bf860558c9a/679d23fc682f2bf860558cf6_soehne-kraftig.woff2")
-        format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
 }

@@ -66,4 +66,4 @@ export default function MetricChart({ title, data, goal }: MetricChartProps) {
       <Line data={chartData} options={options} />
     </div>
   )
-}
+} 
