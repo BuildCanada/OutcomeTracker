@@ -3,6 +3,7 @@ import logging
 import os
 import firebase_admin
 from firebase_admin import credentials, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 from dotenv import load_dotenv
 
 # --- Load Environment Variables (for Firestore init if needed) ---
@@ -28,7 +29,7 @@ def _initialize_firestore_client():
         try:
             if not firebase_admin._apps:
                 logger.info("Initializing Firebase Admin SDK for common_utils...")
-                # Attempt to initialize with application default credentials first
+                # Attempt to initialize with application default credentials first 
                 try:
                     firebase_admin.initialize_app()
                     project_id = os.getenv('FIREBASE_PROJECT_ID', '[Not Set - Using Default]')
@@ -90,7 +91,7 @@ def standardize_department_name(name_variant):
     try:
         dept_config_ref = db.collection('department_config')
         # Query where the name_variants array contains the normalized input
-        query = dept_config_ref.where('name_variants', 'array_contains', normalized_name).limit(1)
+        query = dept_config_ref.where(filter=FieldFilter('name_variants', 'array_contains', normalized_name)).limit(1)
         results = list(query.stream()) # Using list() to execute and get results easily
 
         if results:
@@ -101,13 +102,71 @@ def standardize_department_name(name_variant):
                 return official_full_name
             else:
                 logger.warning(f"Found matching doc for '{normalized_name}' in Firestore but 'official_full_name' is missing. Doc ID: {results[0].id}")
+                # Log unmapped variant even if doc is found but official_full_name is missing
+                _log_unmapped_variant(original_name_str, normalized_name)
                 return None
         else:
             logger.warning(f"Unmapped department variant: '{normalized_name}' (for input '{original_name_str}') in Firestore department_config.")
+            _log_unmapped_variant(original_name_str, normalized_name)
             return None
     except Exception as e:
         logger.error(f"Error querying Firestore for department standardization of '{normalized_name}': {e}", exc_info=True)
+        # Log unmapped variant on error too, as it might be a persistent issue
+        _log_unmapped_variant(original_name_str, normalized_name)
         return None
+
+def _log_unmapped_variant(raw_variant, normalized_variant, source_promise_id=None):
+    """Logs an unmapped department variant to the 'unmapped_department_activity' collection."""
+    global db
+    if db is None:
+        logger.error("_log_unmapped_variant: Firestore client is not available. Cannot log unmapped variant.")
+        return
+
+    try:
+        # Use the normalized_variant as the document ID for easy lookup and aggregation
+        # Firestore IDs have limitations, so replace problematic characters if any (though unlikely for dept names)
+        doc_id = normalized_variant.replace('/', '_SLASH_') # Basic sanitization for document ID
+        
+        activity_ref = db.collection('unmapped_department_activity').document(doc_id)
+        
+        # Atomically increment count and update timestamps
+        # We use a transaction to safely read-modify-write.
+        @firestore.transactional
+        def update_in_transaction(transaction, doc_ref):
+            snapshot = doc_ref.get(transaction=transaction)
+            current_server_time = firestore.SERVER_TIMESTAMP
+
+            if snapshot.exists:
+                new_count = snapshot.get('count') + 1
+                example_ids = snapshot.get('example_source_identifiers') or []
+                if source_promise_id and source_promise_id not in example_ids and len(example_ids) < 10: # Limit array size
+                    example_ids.append(source_promise_id)
+                
+                transaction.update(doc_ref, {
+                    'count': new_count,
+                    'last_seen_at': current_server_time,
+                    'variant_text_raw': raw_variant, # Update raw text in case it differs slightly but normalizes the same
+                    'example_source_identifiers': example_ids
+                })
+            else:
+                example_ids = [source_promise_id] if source_promise_id else []
+                transaction.set(doc_ref, {
+                    'variant_text_raw': raw_variant,
+                    'variant_text_normalized': normalized_variant,
+                    'count': 1,
+                    'first_seen_at': current_server_time,
+                    'last_seen_at': current_server_time,
+                    'status': 'new', # Initial status
+                    'example_source_identifiers': example_ids,
+                    'notes': ''
+                })
+        
+        transaction = db.transaction()
+        update_in_transaction(transaction, activity_ref)
+        logger.info(f"Logged/updated unmapped variant activity for: '{normalized_variant}' (Raw: '{raw_variant}')")
+
+    except Exception as e:
+        logger.error(f"Error logging unmapped variant '{normalized_variant}': {e}", exc_info=True)
 
 def get_department_short_name(standardized_full_name):
     """
@@ -127,7 +186,7 @@ def get_department_short_name(standardized_full_name):
         
     try:
         dept_config_ref = db.collection('department_config')
-        query = dept_config_ref.where('official_full_name', '==', standardized_full_name).limit(1)
+        query = dept_config_ref.where(filter=FieldFilter('official_full_name', '==', standardized_full_name)).limit(1)
         results = list(query.stream())
 
         if results:
