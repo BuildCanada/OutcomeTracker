@@ -1,39 +1,46 @@
-import Link from "next/link"
-import { usePathname } from 'next/navigation'
+import Link from "next/link";
 
-export default function Header() {
-  const pathname = usePathname()
-
+export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
   return (
-    <header className="border-b border-canada-red sticky top-0 z-50 bg-white shadow-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="bg-canada-red text-white p-2 rounded">
-            <span className="text-xl font-bold">🍁</span>
-          </div>
-          <span className="text-xl font-bold text-canada-red">Canada\'s Promise Tracker</span>
-        </Link>
-        <nav className="flex items-stretch gap-1">
+    <header className="border-b-2 border-black font-founders bg-background sticky top-0 z-50">
+      <div className="mx-auto grid grid-cols-[160px_1fr] min-h-[72px]">
+        <div className="border-r border-black bg-[#932f2f] flex items-center justify-center px-4">
+          <Link href="/" className="block">
+            <img
+              src="https://cdn.prod.website-files.com/679d23fc682f2bf860558c9a/679d23fc682f2bf860558cc6_build_canada-wordmark.svg"
+              alt="Build Canada"
+              className="w-[110px] h-auto p-2"
+            />
+          </Link>
+        </div>
+        <nav className="grid grid-cols-4 divide-x-2 divide-black">
           <Link
-            href="/"
-            className={`flex items-center px-3 py-2 text-sm font-medium border rounded-md \
-              ${pathname === '/' 
-                ? 'text-gray-900 bg-gray-100 border-gray-700' 
-                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent hover:border-gray-300'}`}
+            href="/memos"
+            className="flex items-center justify-center text-sm tracking-wide uppercase hover:bg-[#eae0d8]"
           >
-            Platform Tracker
+            Memos
+          </Link>
+          <Link
+            // TODO: Make this dynamic based on language
+            href="/en/tracker"
+            className="flex items-center justify-center text-sm tracking-wide uppercase hover:bg-[#eae0d8]"
+          >
+            Promise Tracker
           </Link>
           <Link
             href="/about"
-            className={`flex items-center px-3 py-2 text-sm font-medium border rounded-md \
-              ${pathname === '/about' 
-                ? 'text-gray-900 bg-gray-100 border-gray-700' 
-                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent hover:border-gray-300'}`}
+            className="flex items-center justify-center text-sm tracking-wide uppercase hover:bg-[#eae0d8]"
           >
             About
+          </Link>
+          <Link
+            href="/contact"
+            className="flex items-center justify-center text-sm tracking-wide uppercase hover:bg-[#eae0d8]"
+          >
+            Contact
           </Link>
         </nav>
       </div>
     </header>
-  )
-} 
+  );
+}

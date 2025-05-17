@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "turbo": "next dev --turbo --port 4444",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

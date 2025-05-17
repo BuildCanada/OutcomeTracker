@@ -30,7 +30,7 @@ import type {
 } from "@/lib/types"
 // import { Skeleton } from "@/components/ui/skeleton" // MOVED to HomePageClient
 
-const DEFAULT_PLACEHOLDER_AVATAR = "/placeholder.svg?height=100&width=100"
+const DEFAULT_PLACEHOLDER_AVATAR = "/placeholder.svg?height=100&width=100";
 
 // Static data for the Prime Minister section, to be made dynamic based on session of parliament
 const staticPrimeMinisterData: PrimeMinister = {
@@ -44,10 +44,10 @@ const staticPrimeMinisterData: PrimeMinister = {
       goal: 48000,
     },
   ],
-}
+};
 
 // Define the preferred order for main tabs
-// IMPORTANT: These strings MUST exactly match the 'fullName' field 
+// IMPORTANT: These strings MUST exactly match the 'fullName' field
 // in your Firestore 'department_config' collection documents.
 // Double-check casing, spacing, and exact wording (e.g., 'and' vs '&').
 // This constant is not currently used in the logic to sort initialMainTabConfigs but kept for potential future use.
@@ -58,7 +58,7 @@ const MAIN_TAB_ORDER: string[] = [
   "Finance Canada",
   "Immigration, Refugees and Citizenship Canada",
   "Employment and Social Development Canada",
-]
+];
 
 // Define a darker border color, e.g., a dark gray from Tailwind's palette or black
 const DARK_BORDER_COLOR = "border-neutral-700"; 
