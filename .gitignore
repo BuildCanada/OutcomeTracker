@@ -30,3 +30,6 @@ next-env.d.ts
 
 # credentials
 promisetrackerapp-firebase-adminsdk-fbsvc-6a44bafc23.json
+
+__pycache__
+*.pyc
