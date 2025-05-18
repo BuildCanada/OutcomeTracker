@@ -123,18 +123,19 @@ export default async function Home() {
     const configsSnapshot = await firestoreAdmin.collection("department_config").get();
     initialAllDepartmentConfigs = configsSnapshot.docs.map(doc => {
         const data = doc.data();
-        let lastUpdatedAtStr: string | undefined = undefined;
-        if (data.last_updated_at) {
-            if (data.last_updated_at instanceof Timestamp) {
-                lastUpdatedAtStr = data.last_updated_at.toDate().toISOString();
-            } else if (typeof data.last_updated_at === 'string') {
-                lastUpdatedAtStr = data.last_updated_at;
-            }
+        const serializedData: { [key: string]: any } = {};
+
+        for (const key in data) {
+          if (data[key] instanceof Timestamp) {
+            serializedData[key] = (data[key] as Timestamp).toDate().toISOString();
+          } else {
+            serializedData[key] = data[key];
+          }
         }
+        
         return { 
             id: doc.id, 
-            ...data,
-            last_updated_at: lastUpdatedAtStr // Override with serialized version
+            ...serializedData 
         } as DepartmentConfig;
     })
     .sort((a, b) => (a.display_short_name || "").localeCompare(b.display_short_name || ""));
