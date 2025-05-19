@@ -9,8 +9,8 @@ import os
 import csv # Add csv import
 import logging # Add logging import
 
-# Import the new common utility for department standardization
-from common_utils import standardize_department_name
+# Import the new common utility for department standardization and promise path generation
+from common_utils import standardize_department_name, get_promise_document_path, SOURCE_TYPE_FIELD_UPDATE_MAPPING # Import the mapping too
 
 # --- Logger Setup ---
 logging.basicConfig(level=logging.INFO,
@@ -110,7 +110,7 @@ def load_mandate_letter_urls(csv_file_path):
 
 
 def process_mlc_csv(file_path, mandate_url_map):
-    """Processes the 2021-mandate-commitments.csv and adds/updates docs in Firestore."""
+    """Processes the 2021-mandate-commitments.csv and adds/updates docs in Firestore using the new structure."""
     df = pd.read_csv(file_path)
     promises_collection = db.collection('promises') # <<< CHANGED collection name
 
@@ -165,13 +165,19 @@ def process_mlc_csv(file_path, mandate_url_map):
                  skipped_count += 1
                  continue
 
+            # Define current source type for this script
+            current_source_type = 'Mandate Letter Commitment (Structured)'
+
+            # Apply source type field update rule if applicable (from common_utils or defined here)
+            # This ensures the stored source_type field is what we want after any transformations.
+            final_source_type_for_field = SOURCE_TYPE_FIELD_UPDATE_MAPPING.get(current_source_type, current_source_type)
 
             promise_doc = {
                 'promise_id': promise_id_str,
                 'text': commitment_text,
                 'key_points': [], # Kept empty list for future LLM summary
                 'source_document_url': source_url, # Use looked-up URL
-                'source_type': 'Mandate Letter Commitment (Structured)',
+                'source_type': final_source_type_for_field, # Use the potentially transformed source_type for the field
                 'date_issued': '2021-12-16', # Common date for 2021 letters
                 'parliament_session_id': "44", # NEW: Added parliament_session_id
                 'candidate_or_government': 'Government of Canada (2021 Mandate)',
@@ -198,9 +204,23 @@ def process_mlc_csv(file_path, mandate_url_map):
                 'last_updated_at': firestore.SERVER_TIMESTAMP, # Track updates
             }
 
-            # Use set with merge=True to update existing or create new
-            # This requires fetching first to check if it's an update or new creation for logging
-            doc_ref = promises_collection.document(promise_doc['promise_id'])
+            # Generate the new document path using common_utils
+            # For path generation, we use the *original* script-defined source_type if the ID code mapping depends on it,
+            # or the final_source_type_for_field if ID code mapping uses the transformed one.
+            # common_utils.SOURCE_TYPE_TO_ID_CODE_MAPPING handles 'Mandate Letter Commitment (Structured)'.
+            new_doc_full_path = get_promise_document_path(
+                party_name_str=promise_doc['party'],
+                date_issued_str=promise_doc['date_issued'],
+                source_type_str=current_source_type, # Use the original source type for consistent ID code lookup
+                promise_text=promise_doc['text']
+            )
+
+            if not new_doc_full_path:
+                logger.warning(f"Could not generate document path for MLC ID {promise_id_str}. Skipping.")
+                skipped_count += 1
+                continue
+
+            doc_ref = db.document(new_doc_full_path) # NEW WAY
             doc_snapshot = doc_ref.get()
 
             # Store merge_fields=True to only update specified fields if doc exists
@@ -208,10 +228,13 @@ def process_mlc_csv(file_path, mandate_url_map):
 
             if doc_snapshot.exists:
                  updated_count += 1
-                 logger.debug(f"Updated promise document for MLC ID: {promise_doc['promise_id']}")
+                 logger.debug(f"Updated promise document at path: {new_doc_full_path} (Old MLC ID: {promise_doc['promise_id']})")
             else:
-                 processed_count += 1
-                 logger.debug(f"Added new promise document for MLC ID: {promise_doc['promise_id']}")
+                 # This count was mislabeled in original script logic, should be for added, not processed_count directly here
+                 added_count = getattr(locals(), 'added_count', 0) + 1 # Ensure added_count is initialized
+                 logger.debug(f"Added new promise document at path: {new_doc_full_path} (Old MLC ID: {promise_doc['promise_id']})")
+            
+            processed_count +=1 # This counts rows attempted and not skipped before DB write
 
         except Exception as e:
             logger.error(f"Error processing row {index+2} (MLC ID: {row.get('MLC ID', 'N/A')}): {e}", exc_info=True)

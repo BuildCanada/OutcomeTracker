@@ -5,12 +5,37 @@ import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 from dotenv import load_dotenv
+import hashlib # For content hashing
+from datetime import datetime # For date parsing
 
 # --- Load Environment Variables (for Firestore init if needed) ---
 load_dotenv() # Loads .env file from current dir or parent dirs
 # --- End Load Environment Variables ---
 
 logger = logging.getLogger(__name__) 
+
+# --- Begin: Constants for Promise ID and Path Generation ---
+TARGET_PROMISES_COLLECTION_ROOT = os.getenv("TARGET_PROMISES_COLLECTION", "promises")
+DEFAULT_REGION_CODE = "Canada"
+
+PARTY_NAME_TO_CODE_MAPPING = {
+    "Liberal Party of Canada": "LPC",
+    "Liberal Party of Canada (2025 Platform)": "LPC", # Added variation
+    "Conservative Party of Canada": "CPC",
+    "New Democratic Party": "NDP",
+    "Bloc Québécois": "BQ",
+    # Add other variations as observed in your 'party' field
+}
+
+SOURCE_TYPE_TO_ID_CODE_MAPPING = {
+    "Video Transcript (YouTube)": "YTVID",
+    "Mandate Letter Commitment (Structured)": "MANDL",
+    "2021 LPC Mandate Letters": "MANDL",
+    "2025 LPC Platform": "PLTFM",
+    # Add more as needed
+    "DEFAULT_SOURCE_ID_CODE": "OTHER" # Fallback code
+}
+# --- End: Constants for Promise ID and Path Generation ---
 
 PROMISE_CATEGORIES = [
     "Finance", "Health", "Immigration", "Defence", "Housing", "Energy",  
@@ -205,6 +230,84 @@ def get_department_short_name(standardized_full_name):
         logger.error(f"Error querying Firestore for department short name of '{standardized_full_name}': {e}", exc_info=True)
         return standardized_full_name # Fallback
 
+# --- Begin: Helper Functions for Promise ID and Path Generation ---
+def generate_content_hash(text: str, length: int = 10) -> str:
+    """Generates a truncated SHA-256 hash of the input text."""
+    if not text:
+        logger.warning("generate_content_hash received empty text, returning unique 'nohash' placeholder.")
+        # Return a unique placeholder if text is empty to avoid collisions on empty strings
+        return "nohash" + datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[-length:] 
+        
+    normalized_text = text.lower().strip()
+    # Consider more aggressive normalization (e.g., remove punctuation, multiple spaces) 
+    # for better deduplication if strictly identical promises should have identical hashes.
+    # Example:
+    # import re
+    # normalized_text = re.sub(r'\s+', ' ', normalized_text) # Replace multiple spaces with one
+    # normalized_text = re.sub(r'[^a-z0-9\s-]', '', normalized_text) # Keep alphanumeric, spaces, hyphens
+
+    hasher = hashlib.sha256()
+    hasher.update(normalized_text.encode('utf-8'))
+    return hasher.hexdigest()[:length]
+
+def get_promise_document_path(
+    party_name_str: str,
+    date_issued_str: str, # Expected format YYYY-MM-DD
+    source_type_str: str,
+    promise_text: str,
+    target_collection_root: str = TARGET_PROMISES_COLLECTION_ROOT,
+    region_code: str = DEFAULT_REGION_CODE
+) -> str | None:
+    """
+    Constructs the full Firestore document path for a promise based on its attributes.
+    Returns the path string or None if critical information is missing or invalid.
+    """
+    # 1. Get Party Code
+    party_code = PARTY_NAME_TO_CODE_MAPPING.get(party_name_str)
+    if not party_code:
+        # Fallback for party if direct match fails (e.g. "Liberal Party of Canada (2025 Platform)")
+        for key, value in PARTY_NAME_TO_CODE_MAPPING.items():
+            if party_name_str and key in party_name_str:
+                party_code = value
+                logger.debug(f"get_promise_document_path: Found party code '{party_code}' using substring for '{party_name_str}'.")
+                break
+    if not party_code:
+        logger.warning(f"get_promise_document_path: No party code mapping for party '{party_name_str}'. Cannot generate path.")
+        return None
+
+    # 2. Format Date (YYYY-MM-DD -> YYYYMMDD)
+    yyyymmdd_str = ""
+    if not date_issued_str or not isinstance(date_issued_str, str):
+        logger.warning(f"get_promise_document_path: Invalid or missing date_issued_str ('{date_issued_str}'). Using 'nodate'.")
+        yyyymmdd_str = "nodate" + datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[-4:] # Unique placeholder
+    else:
+        try:
+            dt_obj = datetime.strptime(date_issued_str, "%Y-%m-%d")
+            yyyymmdd_str = dt_obj.strftime("%Y%m%d")
+        except ValueError:
+            logger.warning(f"get_promise_document_path: Malformed date_issued_str ('{date_issued_str}'), attempting direct replace. Using 'baddate'.")
+            yyyymmdd_str = date_issued_str.replace("-", "")
+            if len(yyyymmdd_str) != 8 or not yyyymmdd_str.isdigit():
+                yyyymmdd_str = "baddate" + datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[-4:] # Unique placeholder
+    
+    # 3. Get Source Type Code
+    source_id_code = SOURCE_TYPE_TO_ID_CODE_MAPPING.get(source_type_str, SOURCE_TYPE_TO_ID_CODE_MAPPING["DEFAULT_SOURCE_ID_CODE"])
+    if source_type_str not in SOURCE_TYPE_TO_ID_CODE_MAPPING:
+        logger.debug(f"get_promise_document_path: Source type '{source_type_str}' not in explicit map, used default '{source_id_code}'.")
+
+    # 4. Generate Content Hash
+    content_hash = generate_content_hash(promise_text)
+
+    # 5. Construct Leaf Document ID
+    doc_leaf_id = f"{yyyymmdd_str}_{source_id_code}_{content_hash}"
+
+    # 6. Construct Full Path
+    full_path = f"{target_collection_root}/{region_code}/{party_code}/{doc_leaf_id}"
+    logger.debug(f"get_promise_document_path: Generated path '{full_path}' for promise based on inputs.")
+    return full_path
+
+# --- End: Helper Functions for Promise ID and Path Generation ---
+
 # Ensure logger is configured for scripts that might import this utility early
 if __name__ == '__main__':
     # Basic logging config for direct testing of this module
@@ -241,5 +344,19 @@ if __name__ == '__main__':
                 print(f"  -> No short name lookup due to None full name.")
 
         logger.info("--- Test Cases Complete ---")
+        logger.info("--- Running Test Cases for Promise Path Generation ---")
+        test_promise_data = [
+            ("Liberal Party of Canada", "2025-04-19", "2025 LPC Platform", "Build 1 million new homes."),
+            ("Conservative Party of Canada", "2024-01-01", "Speech", "Lower taxes for families."),
+            ("NDP", "2023-11-15", "Press Release", "Invest in public healthcare."), # Example with unmapped party name if NDP not in mapping
+            ("Bloc Québécois", "bad-date-format", "Some Custom Source", "Represent Quebec."),
+            ("Liberal Party of Canada", "2025-05-20", "Video Transcript (YouTube)", "Another LPC promise text example."),
+            ("Unknown Party", "2025-06-01", "Unknown Source", "A test promise from an unknown party.")
+        ]
+        for party, date_str, source_str, text_str in test_promise_data:
+            print(f"\nInput: Party='{party}', Date='{date_str}', Source='{source_str}', Text=\"{text_str[:30]}...\"")
+            path = get_promise_document_path(party, date_str, source_str, text_str)
+            print(f"  -> Generated Path: '{path}'")
+        logger.info("--- Promise Path Generation Test Cases Complete ---")
     else:
         logger.error("Firestore client not initialized. Skipping test cases.")

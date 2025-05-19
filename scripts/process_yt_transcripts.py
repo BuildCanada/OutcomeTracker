@@ -12,7 +12,7 @@ import logging
 import traceback
 from dotenv import load_dotenv
 import argparse # Added for CLI arguments
-from common_utils import PROMISE_CATEGORIES # <<< CHANGED: Removed leading dot for direct import
+from common_utils import PROMISE_CATEGORIES, get_promise_document_path, TARGET_PROMISES_COLLECTION_ROOT, DEFAULT_REGION_CODE 
 from datetime import datetime, date # ADDED date
 
 # --- Load Environment Variables ---
@@ -97,7 +97,7 @@ except Exception as e:
 #     "Indigenous Relations", "Foreign Affairs", "Infrastructure", "Other" 
 # ]
 # Firestore collection to write promises to
-PROMISES_COLLECTION = 'promises' # <<< CHANGED collection name
+# PROMISES_COLLECTION = 'promises' # <<< OLD WAY: Commented out, will use TARGET_PROMISES_COLLECTION_ROOT
 # Field to check/update in youtube_video_data to track processing
 PROCESSING_FLAG_FIELD = 'llm_promise_extraction_processed_at' 
 # PROCESSING_LIMIT = 5 # Set to None to process all unprocessed # Replaced by CLI arg
@@ -173,34 +173,36 @@ JSON OUTPUT:
 
 
 async def process_single_video_transcript(video_doc_snapshot):
-    """Processes one video document: extracts promises via LLM and saves them."""
+    """Processes one video document: extracts promises via LLM and saves them to the new hierarchical structure."""
     video_id = video_doc_snapshot.id
     video_data = video_doc_snapshot.to_dict()
     logger.info(f"Processing video transcript for ID: {video_id} (Title: {video_data.get('title', 'N/A')})")
 
     # Determine Parliament Session ID from video upload date
     determined_session_id = None
-    upload_date_str = video_data.get('upload_date') # Expected format YYYYMMDD
+    upload_date_str_yyyymmdd = video_data.get('upload_date') # Expected format YYYYMMDD
     upload_date_obj = None
-    if upload_date_str:
+    formatted_upload_date_for_path = None # YYYY-MM-DD for path generation
+
+    if upload_date_str_yyyymmdd:
         try:
-            upload_date_obj = datetime.strptime(upload_date_str, "%Y%m%d").date()
-            # Call the synchronous helper function (db is globally available in this script)
+            upload_date_obj = datetime.strptime(upload_date_str_yyyymmdd, "%Y%m%d").date()
+            formatted_upload_date_for_path = upload_date_obj.strftime("%Y-%m-%d")
             determined_session_id = get_session_id_for_date(upload_date_obj, db) 
-            logger.info(f"Determined session ID '{determined_session_id}' for video {video_id} with upload date {upload_date_obj}")
+            logger.info(f"Determined session ID '{determined_session_id}' for video {video_id} with upload date {formatted_upload_date_for_path}")
         except ValueError:
-            logger.warning(f"Invalid upload_date format for video {video_id}: {upload_date_str}. Cannot determine session ID by date. Will use default from helper.")
-            determined_session_id = get_session_id_for_date(None, db) # Get default session ID
+            logger.warning(f"Invalid upload_date format for video {video_id}: {upload_date_str_yyyymmdd}. Cannot determine session ID by date or use for promise path. Will use default session ID.")
+            determined_session_id = get_session_id_for_date(None, db) 
     else:
-        logger.warning(f"Missing upload_date for video {video_id}. Cannot determine session ID by date. Will use default from helper.")
-        determined_session_id = get_session_id_for_date(None, db) # Get default session ID
+        logger.warning(f"Missing upload_date for video {video_id}. Cannot determine session ID by date or use for promise path. Will use default session ID.")
+        determined_session_id = get_session_id_for_date(None, db)
 
     # 1. Select English Transcript
     transcript_to_process = None
-    if video_data.get('transcript_en_translated'): # Check for translation first
+    if video_data.get('transcript_en_translated'):
         transcript_to_process = video_data['transcript_en_translated']
         logger.info(f"  Using translated English transcript for {video_id}.")
-    elif video_data.get('transcript_text_generated'): # Use generated original English text
+    elif video_data.get('transcript_text_generated'):
         transcript_to_process = video_data['transcript_text_generated']
         logger.info(f"  Using original generated English transcript for {video_id}.")
     
@@ -211,7 +213,7 @@ async def process_single_video_transcript(video_doc_snapshot):
             PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP, 
             'promise_extraction_status': 'skipped_no_transcript'
         }
-        if determined_session_id:
+        if determined_session_id: # Save session ID even if skipping promise extraction
             update_data_yt_video['parliament_session_id'] = determined_session_id
         doc_ref.update(update_data_yt_video)
         return 0 
@@ -221,14 +223,12 @@ async def process_single_video_transcript(video_doc_snapshot):
     candidate_info = f"{candidate_name} ({party_name})"
 
     # 3. Build Prompt
-    upload_date_str = video_data.get('upload_date', 'Unknown Date') # Format YYYYMMDD
-    if upload_date_str and len(upload_date_str) == 8:
-        upload_date_str = f"{upload_date_str[:4]}-{upload_date_str[4:6]}-{upload_date_str[6:8]}"
-    
+    prompt_upload_date_str = formatted_upload_date_for_path if formatted_upload_date_for_path else "Unknown Date"
+        
     prompt = build_gemini_prompt(
         transcript_to_process,
         video_data.get('title', 'N/A'),
-        upload_date_str,
+        prompt_upload_date_str, # Use YYYY-MM-DD formatted date
         candidate_info,
         PROMISE_CATEGORIES
     )
@@ -237,129 +237,136 @@ async def process_single_video_transcript(video_doc_snapshot):
     logger.debug(f"  Sending prompt to Gemini for {video_id}...")
     try:
         response = await model.generate_content_async(prompt)
-        # Accessing the JSON response correctly
         if not response.candidates or not response.candidates[0].content.parts:
              logger.warning(f"  Warning: No content parts in Gemini response for {video_id}")
              extracted_promises_json_str = "[]"
         else:
-            # response.text should contain the JSON string when response_mime_type is application/json
             extracted_promises_json_str = response.text 
         
         logger.debug(f"  Raw Gemini response text (first 500 chars): {extracted_promises_json_str[:500]}")
         
-        # Attempt to parse the JSON response
         extracted_promises = json.loads(extracted_promises_json_str)
-        
-        if not isinstance(extracted_promises, list):
-             logger.error(f"  Error: Gemini response was not a valid JSON list for {video_id}. Response: {extracted_promises_json_str}")
-             raise ValueError("LLM response not a list")
-             
-        logger.info(f"  Gemini identified {len(extracted_promises)} potential promises for {video_id}.")
-
-    except json.JSONDecodeError as json_err:
-        logger.error(f"  Error: Failed to decode JSON response from Gemini for {video_id}: {json_err}")
-        logger.error(f"  Problematic Gemini response text: {extracted_promises_json_str}")
-        # Update status to reflect error
-        doc_ref = db.collection('youtube_video_data').document(video_id)
-        doc_ref.update({PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP, 'promise_extraction_status': 'error_llm_json_decode'})
-        return 0 # Return 0 promises processed
-    except Exception as e:
-        logger.error(f"  Error during Gemini API call for {video_id}: {e}", exc_info=True)
-        # Update status to reflect error
-        doc_ref = db.collection('youtube_video_data').document(video_id)
-        doc_ref.update({PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP, 'promise_extraction_status': f'error_llm_api: {str(e)[:100]}'})
-        return 0 # Return 0 promises processed
-
-    # 5. Save extracted promises to Firestore
-    promises_added_count = 0
-    batch = db.batch()
-    promises_collection_ref = db.collection(PROMISES_COLLECTION)
-    video_doc_ref = db.collection('youtube_video_data').document(video_id)
-
-    for promise in extracted_promises:
-        try:
-            # Validate essential fields from LLM
-            summary = promise.get('promise_summary')
-            details = promise.get('promise_details_extracted')
-            category = promise.get('category')
-            key_points = promise.get('key_points')
-
-            if not all([summary, details, category, key_points]):
-                 logger.warning(f"  Skipping promise due to missing required fields from LLM for {video_id}. Data: {promise}")
-                 continue
-            
-            # Validate category against known list
-            if category not in PROMISE_CATEGORIES:
-                 logger.warning(f"  Invalid category '{category}' from LLM for promise in {video_id}. Setting to 'Other'. Summary: {summary}")
-                 category = "Other" # Assign to 'Other' if invalid
-            
-             # Ensure key_points is a list of strings
-            if not isinstance(key_points, list) or not all(isinstance(item, str) for item in key_points):
-                 logger.warning(f"  Invalid 'key_points' format from LLM for promise in {video_id}. Skipping this promise. Data: {promise}")
-                 continue
-
-            # Generate a unique ID for the promise
-            promise_uuid = str(uuid.uuid4())
-
-            # Prepare promise data for Firestore
-            promise_data = {
-                'promise_id': promise_uuid,
-                'text': summary, # Using summary as the primary text
-                'key_points': key_points, # Using LLM extracted key points
-                'source_document_url': video_data.get('webpage_url'), # Link back to YT video
-                'source_type': 'Video Transcript (YouTube)',
-                'date_issued': upload_date_str, # Use formatted date
-                'candidate_or_government': candidate_name,
-                'party': party_name,
-                'category': category,
-                'responsible_department_lead': None, # Cannot determine from video
-                'relevant_departments': [], # Cannot determine from video
-                'video_source_id': video_id, # Link back to the video doc
-                'video_timestamp_cue_raw': promise.get('timestamp_cue_raw'), # Raw cue from LLM
-                'video_source_title': video_data.get('title'),
-                'video_upload_date': video_data.get('upload_date'), # Store original YYYYMMDD
-
-                 # --- New Fields ---
-                'commitment_history_rationale': None, # Placeholder for future LLM enrichment
-                'linked_evidence_ids': [], # Placeholder for linking to evidence items
-
-                # --- Metadata ---
-                'ingested_at': firestore.SERVER_TIMESTAMP,
-                'last_updated_at': firestore.SERVER_TIMESTAMP,
-                'parliament_session_id': determined_session_id, # NEW: Add determined session ID
-            }
-
-            # Add promise document creation to the batch
-            new_promise_ref = promises_collection_ref.document(promise_uuid)
-            batch.set(new_promise_ref, promise_data)
-            promises_added_count += 1
-        
-        except Exception as e:
-             logger.error(f"  Error preparing promise data from LLM output for {video_id}: {e}\nPromise data: {promise}", exc_info=True)
-             # Continue to next promise if one fails
-
-
-    # 6. Update video document status and commit batch
-    try:
-        batch.update(video_doc_ref, {
-             PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP,
-             'promise_extraction_status': 'success',
-             'extracted_promise_count': promises_added_count
+    
+    except json.JSONDecodeError as e_json:
+        logger.error(f"  Error decoding JSON from Gemini for {video_id}: {e_json}")
+        logger.error(f"  Problematic JSON string (first 1000 chars): {extracted_promises_json_str[:1000]}")
+        # Update video status to reflect error
+        db.collection('youtube_video_data').document(video_id).update({
+            PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP,
+            'promise_extraction_status': f'error_json_decode: {str(e_json)[:100]}'
         })
-        batch.commit() # <<< REMOVED await
-        logger.info(f"  Successfully saved {promises_added_count} promises and updated status for {video_id}.")
+        return 0 
+    except Exception as e_gemini:
+        logger.error(f"  Error calling Gemini API for {video_id}: {e_gemini}", exc_info=True)
+        # Update video status
+        db.collection('youtube_video_data').document(video_id).update({
+            PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP,
+            'promise_extraction_status': f'error_gemini_api: {str(e_gemini)[:100]}'
+        })
+        return 0
+
+    # 5. Prepare and Save Promises to Firestore (NEW LOGIC for path and ID)
+    video_doc_ref = db.collection('youtube_video_data').document(video_id) # Ref to the video document for status update
+    batch = db.batch()
+    promises_added_count = 0
+    
+    source_type_for_promise = "Video Transcript (YouTube)" # Define source type for these promises
+
+    if not extracted_promises:
+        logger.info(f"  No promises extracted by LLM for {video_id}.")
+    else:
+        logger.info(f"  LLM extracted {len(extracted_promises)} potential promises for {video_id}. Preparing to save with new structure.")
+
+        for promise_detail_from_llm in extracted_promises:
+            try:
+                text_for_hash = promise_detail_from_llm.get('promise_summary', '').strip()
+                if not text_for_hash:
+                    logger.warning(f"    Skipping a promise for {video_id} due to empty 'promise_summary' from LLM.")
+                    continue
+                
+                if not party_name or party_name == "Unknown Party":
+                    logger.warning(f"    Skipping a promise for {video_id} (summary: '{text_for_hash[:50]}...') due to unknown party.")
+                    continue
+
+                if not formatted_upload_date_for_path:
+                    logger.warning(f"    Skipping a promise for {video_id} (summary: '{text_for_hash[:50]}...') due to missing formatted upload date for path generation.")
+                    continue
+
+                # Generate the new hierarchical document path
+                new_doc_full_path = get_promise_document_path(
+                    party_name_str=party_name,
+                    date_issued_str=formatted_upload_date_for_path,
+                    source_type_str=source_type_for_promise,
+                    promise_text=text_for_hash, # Use summary for hashing
+                    region_code=DEFAULT_REGION_CODE
+                )
+
+                if not new_doc_full_path:
+                    logger.error(f"    Failed to generate document path for a promise from {video_id} (summary: '{text_for_hash[:50]}...'). Skipping this promise.")
+                    continue
+                
+                leaf_id = new_doc_full_path.split("/")[-1]
+
+                # Construct promise data
+                promise_data = {
+                    'promise_id': leaf_id, # Store the deterministic leaf ID
+                    'text': promise_detail_from_llm.get('promise_summary', 'N/A'), # Main text/summary
+                    'promise_details_extracted': promise_detail_from_llm.get('promise_details_extracted'),
+                    'key_points': promise_detail_from_llm.get('key_points'),
+                    'category': promise_detail_from_llm.get('category'),
+                    'llm_raw_timestamp_cue': promise_detail_from_llm.get('timestamp_cue_raw'), # From LLM
+
+                    # Information from video_data
+                    'source_type': source_type_for_promise,
+                    'date_issued': formatted_upload_date_for_path, # Store YYYY-MM-DD
+                    'party': party_name,
+                    'candidate_or_government': candidate_name, # Specific candidate if known
+                    'region_code': DEFAULT_REGION_CODE,
+
+                    'video_source_id': video_id,
+                    'video_title': video_data.get('title', 'N/A'),
+                    'video_uploader': video_data.get('uploader', 'N/A'),
+                    'video_webpage_url': video_data.get('webpage_url'),
+                    'video_upload_date_yyyymmdd': upload_date_str_yyyymmdd, # Original YYYYMMDD format
+
+                    # Standard fields
+                    'commitment_history_rationale': None,
+                    'linked_evidence_ids': [],
+                    'ingested_at': firestore.SERVER_TIMESTAMP,
+                    'last_updated_at': firestore.SERVER_TIMESTAMP,
+                    'parliament_session_id': determined_session_id,
+                }
+
+                new_promise_ref = db.document(new_doc_full_path)
+                batch.set(new_promise_ref, promise_data, merge=True) # Use merge=True in case of re-processing same summary
+                promises_added_count += 1
+                logger.info(f"    Prepared promise for batch: {new_doc_full_path}")
+            
+            except Exception as e:
+                 logger.error(f"  Error preparing promise data from LLM output for {video_id}: {e}\nPromise data from LLM: {promise_detail_from_llm}", exc_info=True)
+                 # Continue to next promise if one fails
+
+    # 6. Update video document status and commit batch (existing logic for batch commit)
+    try:
+        batch.update(video_doc_ref, { # video_doc_ref was defined before the loop
+             PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP,
+             'promise_extraction_status': 'success' if promises_added_count > 0 or not extracted_promises else 'llm_extracted_none',
+             'extracted_promise_count': promises_added_count,
+             'processed_with_new_path_structure': True # Flag that this video was processed with new logic
+        })
+        batch.commit() 
+        logger.info(f"  Successfully saved {promises_added_count} promises (new structure) and updated status for {video_id}.")
         return promises_added_count
     except Exception as e:
          logger.error(f"  Error committing Firestore batch for {video_id}: {e}", exc_info=True)
-         # Attempt to update status anyway, but mark as batch commit error
          try:
               video_doc_ref.update({
                    PROCESSING_FLAG_FIELD: firestore.SERVER_TIMESTAMP,
-                   'promise_extraction_status': f'error_batch_commit: {str(e)[:100]}'
+                   'promise_extraction_status': f'error_batch_commit_new_path: {str(e)[:100]}'
               })
          except Exception as update_err:
               logger.error(f"  Failed to even update error status for {video_id}: {update_err}")
-         return 0 # Return 0 promises successfully processed due to commit failure
+         return 0
 
 
 async def main_async_promises(limit_arg: int | None):

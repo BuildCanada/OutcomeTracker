@@ -17,6 +17,7 @@ import argparse
 # --- Load Environment Variables ---
 from dotenv import load_dotenv
 load_dotenv()
+from common_utils import TARGET_PROMISES_COLLECTION_ROOT, DEFAULT_REGION_CODE, KNOWN_PARTY_CODES # Added imports
 # --- End Load Environment Variables ---
 
 # --- Logger Setup ---
@@ -73,7 +74,7 @@ except Exception as e:
 # --- End LLM Configuration ---
 
 # --- Constants ---
-PROMISES_COLLECTION = 'promises'
+# PROMISES_COLLECTION = 'promises' # OLD WAY
 BILLS_DATA_COLLECTION = 'bills_data'
 EVIDENCE_ITEMS_COLLECTION = 'evidence_items'
 POTENTIAL_LINKS_COLLECTION = 'promise_evidence_links'
@@ -249,162 +250,163 @@ def link_bills_to_promises(processing_limit=None, batch_size=50):
                     continue
 
                 bill_doc_ref = db.collection(BILLS_DATA_COLLECTION).document(bill_parl_id)
-                bill_doc = bill_doc_ref.get()
-
-                if not bill_doc.exists:
-                    logger.warning(f"Skipping evidence_item {evidence_id}: Bill data not found for bill_parl_id {bill_parl_id}.")
-                    evidence_item_updates['dev_linking_status'] = 'error_bill_not_found'
-                    evidence_item_updates['dev_linking_error_message'] = f"Bill data not found for bill_parl_id {bill_parl_id}"
-                    failed_updates[evidence_id] = f"Bill data not found for bill_parl_id {bill_parl_id}"
+                bill_doc_snapshot = bill_doc_ref.get()
+                if not bill_doc_snapshot.exists:
+                    logger.warning(f"Bill document {bill_parl_id} not found for evidence {evidence_id}. Skipping promise linking for this bill.")
+                    evidence_item_updates['dev_linking_status'] = 'error_bill_doc_not_found'
+                    evidence_item_updates['dev_linking_error_message'] = f"Bill {bill_parl_id} not found"
+                    failed_updates[evidence_id] = f"Bill {bill_parl_id} not found"
                     continue
                 
-                bill_data = bill_doc.to_dict()
-                bill_sponsoring_dept = bill_data.get('sponsoring_department')
+                bill_data = bill_doc_snapshot.to_dict()
                 bill_keywords = bill_data.get('extracted_keywords_concepts', [])
+                if not bill_keywords: # Only attempt to link if bill has keywords
+                    logger.info(f"Skipping bill {bill_parl_id} for evidence {evidence_id} as it has no extracted keywords.")
+                    evidence_item_updates['dev_linking_status'] = 'skipped_no_bill_keywords'
+                    failed_updates[evidence_id] = "Bill has no keywords"
+                    continue
 
-                if not bill_keywords:
-                     logger.info(f"Bill {bill_data.get('bill_number_code', bill_parl_id)} has no keywords. May limit matching.")
-
-
-                # Departmental Match
-                matched_promise_ids = set()
-                if bill_sponsoring_dept:
-                    logger.debug(f"Attempting department match for bill {bill_parl_id} with dept: {bill_sponsoring_dept}")
-                    # Query 1: responsible_department_lead
-                    promises_lead_dept_query = (db.collection(PROMISES_COLLECTION)
-                                               .where(filter=firestore.FieldFilter('responsible_department_lead', '==', bill_sponsoring_dept))
-                                               .stream())
-                    for prom_doc in promises_lead_dept_query:
-                        matched_promise_ids.add(prom_doc.id)
-                    
-                    # Query 2: relevant_departments (array-contains)
-                    promises_relevant_dept_query = (db.collection(PROMISES_COLLECTION)
-                                                   .where(filter=firestore.FieldFilter('relevant_departments', 'array_contains', bill_sponsoring_dept))
-                                                   .stream())
-                    for prom_doc in promises_relevant_dept_query:
-                        matched_promise_ids.add(prom_doc.id)
-                    logger.info(f"Found {len(matched_promise_ids)} promises via departmental match for bill {bill_parl_id} (Dept: {bill_sponsoring_dept}).")
-                else:
-                    logger.info(f"No sponsoring department for bill {bill_parl_id}. Proceeding to keyword search against all promises.")
-                    # If no sponsoring department, matched_promise_ids will be empty.
-                    # The logic below will handle fetching all promises if matched_promise_ids is empty.
-
-                promise_ids_to_check = list(matched_promise_ids)
-
-                if not promise_ids_to_check:
-                    logger.info(f"No promises found via departmental match for bill {bill_parl_id} (or no sponsoring dept). Fetching all promises for keyword comparison.")
-                    all_promises_query = db.collection(PROMISES_COLLECTION).select([]).stream() # select([]) fetches only IDs
-                    promise_ids_to_check = [p.id for p in all_promises_query]
-                    logger.info(f"Found {len(promise_ids_to_check)} total promises to check against bill {bill_parl_id}.")
-
-
-                # Keyword Overlap & LLM for departmentally matched promises (or all promises if no dept match and we decide to change logic)
-                # For now, only processes promises that came through departmental match:
-                for promise_id in promise_ids_to_check: # Iterate over the determined list
-                    promise_doc_snap = db.collection(PROMISES_COLLECTION).document(promise_id).get()
-                    if not promise_doc_snap.exists:
-                        logger.warning(f"Promise {promise_id} was matched by department but not found. Skipping.")
-                        continue
-                    
-                    promise_data = promise_doc_snap.to_dict()
-                    promise_data['id'] = promise_doc_snap.id # Add ID for logging
-                    promise_keywords = promise_data.get('extracted_keywords_concepts', [])
-
-                    if not promise_keywords:
-                        logger.debug(f"Promise {promise_id} has no keywords. Skipping overlap calculation for this promise.")
-                        continue
-
-                    overlap_scores = calculate_keyword_overlap(promise_keywords, bill_keywords)
-                    logger.info(f"P_ID:{promise_id} B_ID:{bill_parl_id} | P_KW:{json.dumps(promise_keywords)} | B_KW:{json.dumps(bill_keywords)} | Jaccard: {overlap_scores['jaccard']:.2f}, Common: {overlap_scores['common_count']}")
-
-                    if overlap_scores['jaccard'] > KEYWORD_JACCARD_THRESHOLD or overlap_scores['common_count'] > KEYWORD_COMMON_COUNT_THRESHOLD:
-                        logger.info(f"Keyword threshold met for P:{promise_id} & B:{bill_parl_id}. Sending to LLM.")
-                        
-                        llm_assessment = call_gemini_for_relevance(promise_data, bill_data, evidence_doc.to_dict())
-
-                        if llm_assessment and llm_assessment.get('likelihood_score') in ["High", "Medium"]:
-                            potential_link_id = str(uuid.uuid4())
-                            link_doc_ref = db.collection(POTENTIAL_LINKS_COLLECTION).document(potential_link_id)
-                            
-                            promise_text_snippet = promise_data.get('text', '')[:150]
-
-                            link_data = {
-                                'potential_link_id': potential_link_id,
-                                'promise_id': promise_id,
-                                'evidence_id': evidence_id,
-                                'bill_parl_id': bill_parl_id, # Adding for easier cross-reference
-                                'promise_text_snippet': promise_text_snippet,
-                                'evidence_title_or_summary': evidence_doc.to_dict().get('title_or_summary'),
-                                'bill_long_title_en': bill_data.get('long_title_en', ''), # Added Bill Long Title
-                                'evidence_source_url': evidence_doc.to_dict().get('source_url', ''), # Added Evidence Source URL
-                                'keyword_overlap_score': overlap_scores, # Store both jaccard and common_count
-                                'llm_likelihood_score': llm_assessment['likelihood_score'],
-                                'llm_explanation': llm_assessment['explanation'],
-                                'link_status': "pending_review",
-                                'created_at': firestore.SERVER_TIMESTAMP,
-                                'reviewed_at': None,
-                                'reviewer_notes': None,
-                                'reviewer_id': None
-                            }
-                            link_doc_ref.set(link_data)
-                            total_potential_links_created += 1
-                            logger.info(f"Potential link stored: {potential_link_id} (P:{promise_id} <> E:{evidence_id})")
-                        elif llm_assessment:
-                             logger.info(f"LLM assessment for P:{promise_id} & B:{bill_parl_id} was '{llm_assessment.get('likelihood_score', 'N/A')}'. Not storing link.")
-                        else:
-                            logger.warning(f"LLM assessment failed for P:{promise_id} & B:{bill_parl_id} after retries.")
+                # Fetch all promises (now from new structure)
+                all_promises_info = []
+                logger.debug(f"Fetching all promises to compare with bill {bill_parl_id} (evidence {evidence_id}).")
+                for party_code in KNOWN_PARTY_CODES:
+                    party_collection_path = f"{TARGET_PROMISES_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code}"
+                    try:
+                        party_promises_stream = db.collection(party_collection_path).stream()
+                        for p_snap in party_promises_stream:
+                            p_data = p_snap.to_dict()
+                            if 'id' not in p_data: # Ensure id (leaf) is present for internal logic
+                                p_data['id'] = p_snap.id
+                            all_promises_info.append({'data': p_data, 'path': p_snap.reference.path})
+                    except Exception as e_party_coll:
+                        logger.error(f"Error fetching promises from {party_collection_path} for bill {bill_parl_id}: {e_party_coll}")
                 
-                # Update status based on whether any promises were checked.
-                if not promise_ids_to_check: # Should not happen if all promises are fetched as fallback
-                    final_status = 'processed_no_promises_to_check'
-                elif total_potential_links_created > 0: # We need a local counter for this
-                    final_status = 'processed_links_created'
+                logger.debug(f"Fetched {len(all_promises_info)} total promises to check against bill {bill_parl_id}.")
+
+                if not all_promises_info:
+                    logger.warning("No promises found in the database to link against. Skipping bill linking for this batch.")
+                    # Update evidence item status to reflect no promises were available for linking at this time
+                    evidence_item_updates['dev_linking_status'] = 'skipped_no_promises_in_db'
+                    failed_updates[evidence_id] = "No promises in DB for linking"
+                    continue # Continue to next evidence item
+
+                found_at_least_one_potential_link_for_evidence = False
+
+                for promise_info in all_promises_info:
+                    promise_doc_data = promise_info['data']
+                    promise_full_path = promise_info['path'] # Full path to the promise
+                    promise_leaf_id = promise_doc_data.get('id') # Leaf ID from promise_data
+
+                    promise_keywords = promise_doc_data.get('extracted_keywords_concepts', [])
+                    if not promise_keywords: # Only link if promise has keywords
+                        continue
+
+                    # Keyword Overlap Check (existing logic)
+                    overlap_metrics = calculate_keyword_overlap(promise_keywords, bill_keywords)
+                    jaccard_score = overlap_metrics["jaccard"]
+                    common_keyword_count = overlap_metrics["common_count"]
+
+                    is_potential_match_by_keyword = (
+                        jaccard_score >= KEYWORD_JACCARD_THRESHOLD or \
+                        (jaccard_score > 0.05 and common_keyword_count >= KEYWORD_COMMON_COUNT_THRESHOLD +1) or \
+                        common_keyword_count >= KEYWORD_COMMON_COUNT_THRESHOLD + 2
+                    )
+                    
+                    llm_assessment = None
+                    if is_potential_match_by_keyword and gemini_model:
+                        # Only call LLM if keyword match and model is available
+                        if llm_calls_made_for_this_evidence < 10: # Limit LLM calls per evidence item
+                            llm_assessment = call_gemini_for_relevance(promise_doc_data, bill_data, evidence_doc.to_dict())
+                            llm_calls_made_for_this_evidence += 1
+                        else:
+                            logger.warning(f"Max LLM calls (10) reached for evidence {evidence_id}. Further keyword matches will not use LLM.")
+                    
+                    if llm_assessment and llm_assessment.get("likelihood_score") in ["High", "Medium"]:
+                        link_strength = llm_assessment.get("likelihood_score")
+                        explanation = llm_assessment.get("explanation")
+                        logger.info(f"  LLM Confirmed Link: Promise '{promise_leaf_id}' (Path: {promise_full_path}) to Bill {bill_parl_id} (Evidence: {evidence_id}). Strength: {link_strength}")
+                    elif is_potential_match_by_keyword and not gemini_model:
+                        link_strength = "Keyword Match (LLM N/A)"
+                        explanation = f"Jaccard: {jaccard_score:.2f}, Common: {common_keyword_count}. LLM not available."
+                        logger.info(f"  Keyword Match (LLM N/A): Promise '{promise_leaf_id}' (Path: {promise_full_path}) to Bill {bill_parl_id} (Evidence: {evidence_id})")
+                    elif is_potential_match_by_keyword and llm_assessment and llm_assessment.get("likelihood_score") in ["Low", "Not Related"]:
+                        logger.info(f"  LLM Rejected Keyword Match: Promise '{promise_leaf_id}' (Path: {promise_full_path}) to Bill {bill_parl_id} (Evidence: {evidence_id}). LLM said: {llm_assessment.get('likelihood_score')}")
+                        continue # Skip creating a link if LLM says low/not related despite keywords
+                    elif is_potential_match_by_keyword:
+                        logger.info(f"  Keyword Match (LLM Error/Format): Promise '{promise_leaf_id}' (Path: {promise_full_path}) to Bill {bill_parl_id} (Evidence: {evidence_id}). Fallback due to LLM issue.")
+                        link_strength = "Keyword Match (LLM Error)"
+                        explanation = f"Jaccard: {jaccard_score:.2f}, Common: {common_keyword_count}. LLM assessment failed or format issue."
+                    else:
+                        continue # No match
+
+                    # Create Potential Link Document
+                    potential_link_id = str(uuid.uuid4())
+                    potential_link_data = {
+                        'link_id': potential_link_id,
+                        'promise_id': promise_full_path,  # IMPORTANT: Store FULL PATH here
+                        'evidence_id': evidence_id, # This is evidence_item doc ID
+                        'link_type': 'bill_to_promise',
+                        'link_status': 'pending_review',
+                        'link_strength_or_type': link_strength, 
+                        'created_at': firestore.SERVER_TIMESTAMP,
+                        'created_by_script': 'link_bills_to_promises.py',
+                        'keyword_jaccard_score': jaccard_score,
+                        'keyword_common_count': common_keyword_count,
+                        'llm_assessment_score': llm_assessment.get("likelihood_score") if llm_assessment else None,
+                        'llm_assessment_explanation': llm_assessment.get("explanation") if llm_assessment else None,
+                        'parliament_session_id': bill_data.get('parliament_session_id'),
+                        'promise_text_snippet': promise_doc_data.get('text', '')[:200],
+                        'evidence_text_snippet': evidence_doc.to_dict().get('title_or_summary', '')[:200],
+                    }
+                    db.collection(POTENTIAL_LINKS_COLLECTION).document(potential_link_id).set(potential_link_data)
+                    total_potential_links_created += 1
+                    found_at_least_one_potential_link_for_evidence = True
+                    logger.info(f"    Created potential link: {potential_link_id} (Promise Path: {promise_full_path} <=> Evi: {evidence_id})")
+
+                if found_at_least_one_potential_link_for_evidence:
+                    evidence_item_updates['dev_linking_status'] = 'completed_links_created'
                 else:
-                     final_status = 'processed_no_kw_match'
-
-                evidence_item_updates['dev_linking_status'] = final_status
-                evidence_item_updates['dev_linking_error_message'] = None # Clear any previous error
-
-            except Exception as e:
-                logger.error(f"Error processing evidence_item {evidence_id}: {e}", exc_info=True)
-                evidence_item_updates['dev_linking_status'] = "error"
-                evidence_item_updates['dev_linking_error_message'] = str(e)
-                failed_updates[evidence_id] = str(e)
-            else: # No exception during processing of this evidence item
-                evidence_item_updates['dev_linking_status'] = "processed"
-                evidence_item_updates['dev_linking_error_message'] = None # Clear any previous error
-
-            # Update the evidence_item itself
-            try:
-                db.collection(EVIDENCE_ITEMS_COLLECTION).document(evidence_id).update(evidence_item_updates)
-                logger.debug(f"Updated evidence_item {evidence_id} with status: {evidence_item_updates['dev_linking_status']}")
-            except Exception as e:
-                logger.error(f"Failed to update evidence_item {evidence_id} status: {e}", exc_info=True)
-                failed_updates[evidence_id] = f"Status update failed: {str(e)}"
+                    evidence_item_updates['dev_linking_status'] = 'completed_no_links_found'
             
-            if processing_limit and actual_processed_count >= processing_limit:
-                logger.info(f"Reached processing limit of {actual_processed_count} actual items after client-side filtering.")
-                break # Break from inner loop (processing docs in current page)
-        
-        # After processing all items in the current_page_evidence_docs_list
-        last_processed_evidence_snapshot = current_page_evidence_docs_list[-1]
+            except Exception as e_inner:
+                logger.error(f"Error processing evidence_item {evidence_id} for bill linking: {e_inner}", exc_info=True)
+                failed_updates[evidence_id] = str(e_inner)
+                evidence_item_updates['dev_linking_status'] = 'error_processing_item'
+                evidence_item_updates['dev_linking_error_message'] = str(e_inner)[:500]
+            
+            finally:
+                # Update the evidence item's linking status
+                if evidence_item_updates:
+                    try:
+                        db.collection(EVIDENCE_ITEMS_COLLECTION).document(evidence_id).update(evidence_item_updates)
+                        logger.debug(f"Updated dev_linking_status for evidence {evidence_id} to: {evidence_item_updates.get('dev_linking_status')}")
+                    except Exception as e_update:
+                        logger.error(f"Failed to update dev_linking_status for evidence {evidence_id}: {e_update}")
+                        failed_updates[evidence_id] = f"Failed to update status: {e_update}"
+                
+                last_processed_evidence_snapshot = evidence_doc # For pagination
 
-        if processing_limit and actual_processed_count >= processing_limit:
-            logger.info(f"Overall processing_limit of {processing_limit} met. Stopping pagination.")
-            break # Break from outer while loop (fetching pages)
+            # Check overall processing limit
+            if processing_limit is not None and actual_processed_count >= processing_limit:
+                logger.info(f"Reached processing limit of {processing_limit} items. Stopping.")
+                break # Break from inner loop (processing evidence items in current page)
         
+        # After processing a page, check if outer processing limit was hit
+        if processing_limit is not None and actual_processed_count >= processing_limit:
+            logger.info("Overall processing limit met. Exiting pagination loop.")
+            break # Break from outer while loop (pagination)
+        
+        # If current page was smaller than limit, it means it was the last page
         if len(current_page_evidence_docs_list) < PAGINATION_LIMIT_EVIDENCE_ITEMS:
-            logger.info("Fetched fewer items than pagination limit, indicating end of available data.")
-            break # No more items to fetch
+            logger.info("Processed the last page of evidence items.")
+            break
 
-    logger.info("--- Bill to Promise Linking Process Finished ---")
-    logger.info(f"Total evidence items evaluated from DB (across all pages): {evaluated_from_db_count}")
-    logger.info(f"Total evidence items processed (passed client-side filter): {actual_processed_count}")
+    logger.info(f"--- Bill to Promise Linking Process Finished ---")
     logger.info(f"Total potential links created: {total_potential_links_created}")
     if failed_updates:
-        logger.error("The following evidence items encountered errors during processing:")
-        for evidence_id, error_message in failed_updates.items():
-            logger.error(f"- {evidence_id}: {error_message}")
+        logger.warning(f"Failed to process or update status for {len(failed_updates)} evidence items:")
+        for fid, err_msg in failed_updates.items():
+            logger.warning(f"  - {fid}: {err_msg}")
 
 
 if __name__ == "__main__":
