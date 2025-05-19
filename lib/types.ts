@@ -12,16 +12,50 @@ export interface ParliamentSession {
   end_date?: string | null; // ISO Date string or null if ongoing
   prime_minister_name?: string;
   governing_party?: string;
+  governing_party_code?: string | null;
   election_date_preceding?: string | null; // ISO Date string
   election_called_date?: string | null; // ISO Date string for the election that ENDS this session
   is_current_for_tracking?: boolean;
   notes?: string | null;
 }
 
+// --- NEW TYPES FOR MINISTER FETCHING ---
+export interface ParliamentaryPosition {
+  title: string;      
+  title_en?: string;
+  title_fr?: string;
+  from: string;
+  to?: string | null;
+}
+
+export interface Member {
+  id: string;                 
+  firstName?: string;
+  lastName?: string;
+  party?: string;
+  parliamentNumber?: number | string;
+  parliamentaryPositions?: ParliamentaryPosition[];
+  // avatarUrl?: string; // If you add this to your Member documents
+}
+
+export interface MinisterInfo {
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  party?: string;
+  title: string;       
+  avatarUrl?: string;  
+  positionStart?: string; // ISO date string
+  positionEnd?: string | null; // ISO date string or null if ongoing
+}
+// --- END NEW TYPES ---
+
 export interface DepartmentConfig {
   id: string; // Firestore document ID (e.g., "health-canada")
   display_short_name: string; // New: e.g., "Health" (used for sorting and display)
   official_full_name: string; // New: e.g., "Health Canada"
+  official_full_name_en?: string;
+  official_full_name_fr?: string;
   department_slug: string; // New: e.g., "health-canada" (often same as id)
 
   // Optional fields from screenshot and common usage:
@@ -54,6 +88,7 @@ export interface MinisterDetails {
 
 export interface PromiseData {
   id: string; // Firestore document ID - ALIGNED with fetching logic
+  fullPath?: string; // Full Firestore path for the promise document
   text: string;
   responsible_department_lead: string;
   source_type: string;
@@ -62,6 +97,7 @@ export interface PromiseData {
   candidate_or_government?: string; // Optional
   linked_evidence_ids?: string[];
   evidence?: EvidenceItem[]; // To hold resolved evidence items
+  parliament_session_id?: string; // Ensure this field exists on your promise docs if filtering by it
   // Add other relevant fields as needed
 }
 
@@ -75,7 +111,7 @@ export interface Metric {
 
 // This will represent the combined data needed to render a department's page/tab content
 export interface DepartmentPageData {
-  ministerDetails: MinisterDetails | null;
+  ministerInfo: MinisterInfo | null;
   promises: PromiseData[];
   evidenceItems: EvidenceItem[]; // Added field for evidence
 }
@@ -156,13 +192,13 @@ export interface EvidenceItem {
   evidence_id: string; // The specific 'evidence_id' field from the document data
   promise_ids: string[];
   evidence_source_type: string;
-  evidence_date: Timestamp; // Firestore Timestamp
+  evidence_date: Timestamp | string; // Allow string for flexibility if already serialized
   title_or_summary: string;
   description_or_details?: string;
   source_url?: string;
   source_document_raw_id?: string;
   linked_departments?: string[];
   status_impact_on_promise?: string;
-  ingested_at: Timestamp; // Firestore Timestamp
+  ingested_at: Timestamp | string; // Allow string for flexibility
   additional_metadata?: Record<string, any>;
 }

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const linkRef = firestoreAdmin.collection('promise_evidence_links').doc(potentialLinkId as string);
-  const promisesCollectionName = "promises";
+  // const promisesCollectionName = "promises"; // No longer needed if promise_id is a full path
   const evidenceItemsCollectionName = "evidence_items";
 
   try {
@@ -45,8 +45,9 @@ export async function POST(request: Request) {
         throw new Error("Potential link is missing promise_id or evidence_id.");
       }
 
-      const promiseRef = firestoreAdmin.collection(promisesCollectionName).doc(promiseId);
-      const evidenceRef = firestoreAdmin.collection(evidenceItemsCollectionName).doc(evidenceId);
+      // Assuming linkData.promise_id now stores the FULL PATH to the promise document
+      const promiseRef = firestoreAdmin.doc(promiseId as string);
+      const evidenceRef = firestoreAdmin.collection(evidenceItemsCollectionName).doc(evidenceId as string); // Ensure evidenceId is also treated as string for doc path
 
       transaction.update(linkRef, {
         link_status: "confirmed",

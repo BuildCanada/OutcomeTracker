@@ -56,24 +56,12 @@ export const fetchDepartmentConfigs = async (): Promise<DepartmentConfig[]> => {
     }));
     console.log("Fetched department configs:", departments);
     return departments.sort((a, b) => {
-      // Explicitly check properties and their types
-      const valA = a && a.display_short_name;
-      const valB = b && b.display_short_name;
+      // Ensure properties exist and are strings, providing a fallback.
+      const nameA = (a && typeof a.display_short_name === 'string') ? a.display_short_name : "";
+      const nameB = (b && typeof b.display_short_name === 'string') ? b.display_short_name : "";
 
-      const nameA = (typeof valA === 'string') ? valA : "";
-      const nameB = (typeof valB === 'string') ? valB : "";
-
-      console.log(`Sorting: nameA = '${nameA}' (type: ${typeof nameA}), nameB = '${nameB}' (type: ${typeof nameB})`);
-      if (typeof nameA !== 'string') {
-        console.error('CRITICAL: nameA is not a string just before localeCompare!', a);
-        // Fallback to prevent error, though this indicates a deeper issue
-        return 0; 
-      }
-      if (typeof nameB !== 'string') {
-        // Though nameB being non-string wouldn't cause 'nameA.localeCompare' to fail on nameA
-        console.warn('Warning: nameB is not a string in sort:', b);
-      }
-
+      // Removed console.log from here for performance
+      // Removed redundant type checks as nameA and nameB are guaranteed to be strings here
       return nameA.localeCompare(nameB);
     });
   } catch (error) {
@@ -205,7 +193,8 @@ export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise
  */
 export async function fetchPromisesForDepartment(
   departmentFullName: string,
-  parliamentSessionId: string | null
+  parliamentSessionId: string | null,
+  governingPartyCode: string | null
 ): Promise<PromiseData[]> {
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchPromisesForDepartment.");
@@ -213,16 +202,28 @@ export async function fetchPromisesForDepartment(
   }
   if (!parliamentSessionId) {
     console.warn("parliamentSessionId not provided to fetchPromisesForDepartment. No promises will be fetched.");
-    return []; // Or fetch all if that's desired, but usually session filtering is key
+    return [];
   }
-  console.log(`Fetching promises for department: ${departmentFullName} for session: ${parliamentSessionId}`);
+  if (!governingPartyCode) {
+    console.warn("governingPartyCode not provided to fetchPromisesForDepartment. No promises will be fetched.");
+    return [];
+  }
+
+  // Define constants for collection structure (ideally from env or shared config)
+  const TARGET_PROMISES_COLLECTION_ROOT = process.env.NEXT_PUBLIC_PROMISES_TARGET_COLLECTION || "promises";
+  const DEFAULT_REGION_CODE = "Canada";
+
+  console.log(`Fetching promises for department: ${departmentFullName}, session: ${parliamentSessionId}, party: ${governingPartyCode}`);
+  
   try {
-    const promisesCol = collection(db, 'promises');
+    const promisesColPath = `${TARGET_PROMISES_COLLECTION_ROOT}/${DEFAULT_REGION_CODE}/${governingPartyCode}`;
+    console.log(`Querying promises collection path: ${promisesColPath}`);
+
+    const promisesCol = collection(db, promisesColPath);
     const q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentFullName),
-      where('parliament_session_id', '==', parliamentSessionId),
-      where('source_type', '==', 'Mandate Letter Commitment (Structured)')
+      where('parliament_session_id', '==', parliamentSessionId)
     );
 
     const querySnapshot = await getDocs(q);
@@ -232,13 +233,14 @@ export async function fetchPromisesForDepartment(
       const data = docSnapshot.data();
       const promise: PromiseData = {
         id: docSnapshot.id,
+        fullPath: `${promisesColPath}/${docSnapshot.id}`,
         text: data.text || '',
         responsible_department_lead: data.responsible_department_lead || '',
         source_type: data.source_type || '',
         date_issued: data.date_issued || undefined,
-        linked_evidence_ids: data.linked_evidence_ids || [], // Ensure this field is present
-        evidence: [], // Initialize evidence array
-        // Map other fields from PromiseData as necessary
+        linked_evidence_ids: data.linked_evidence_ids || [],
+        evidence: [],
+        commitment_history_rationale: data.commitment_history_rationale || [],
       };
 
       if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {

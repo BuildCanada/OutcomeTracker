@@ -5,50 +5,48 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PrimeMinisterSection from "@/components/PrimeMinisterSection";
 import MinisterSection from "@/components/MinisterSection";
 import {
-  fetchMinisterDetails,
   fetchPromisesForDepartment,
   fetchEvidenceItemsForPromises
 } from "@/lib/data";
 import type {
   DepartmentConfig,
   DepartmentPageData,
-  MinisterDetails,
+  MinisterInfo,
   PromiseData,
   EvidenceItem,
   PrimeMinister
 } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Define a darker border color, e.g., a dark gray from Tailwind's palette or black
-// const DARK_BORDER_COLOR = "border-neutral-700"; // Or use 'border-black' - Retaining for context if needed by styles below
-// const HEADER_BOTTOM_BORDER_COLOR = "border-neutral-400"; // Slightly less prominent for the overall bottom
-// const NAV_LINK_TEXT_COLOR = "text-neutral-800";
-// const NAV_LINK_ACTIVE_TEXT_COLOR = "text-[#8b2332]"; // Your brand red - Retaining for context if needed by styles below
-
-
 // Client-side component to handle the dynamic parts that need state and effects
 export default function HomePageClient({ 
   initialAllDepartmentConfigs, 
   initialMainTabConfigs,
+  initialMinisterInfos,
   initialActiveTabId,
   initialError,
   currentSessionId, // Pass the fetched currentSessionId (string, e.g., "44")
+  currentGoverningPartyCode, // NEW: Add the party code prop
   dynamicPrimeMinisterData, // Pass the fetched PM data
   pageTitle // Pass the dynamic page title
 }: {
   initialAllDepartmentConfigs: DepartmentConfig[];
   initialMainTabConfigs: DepartmentConfig[];
+  initialMinisterInfos: Record<string, MinisterInfo | null>;
   initialActiveTabId: string;
   initialError?: string | null;
   currentSessionId: string | null; // session ID like "44"
+  currentGoverningPartyCode: string | null; // NEW: Add the party code prop
   dynamicPrimeMinisterData: PrimeMinister;
   pageTitle: string;
 }) {
   const [allDepartmentConfigs, setAllDepartmentConfigs] = useState<DepartmentConfig[]>(initialAllDepartmentConfigs);
   const [mainTabConfigs, setMainTabConfigs] = useState<DepartmentConfig[]>(initialMainTabConfigs);
+  const [ministerInfos, setMinisterInfos] = useState<Record<string, MinisterInfo | null>>(initialMinisterInfos);
   
   const [activeTabId, setActiveTabId] = useState<string>(initialActiveTabId);
   const [activeDepartmentData, setActiveDepartmentData] = useState<DepartmentPageData | null>(null);
+  const [currentMinisterInfo, setCurrentMinisterInfo] = useState<MinisterInfo | null | undefined>(undefined); // Allow undefined for pending state
 
   // isLoadingConfig is effectively handled by server component rendering or suspense
   const [isLoadingTabData, setIsLoadingTabData] = useState<boolean>(false);
@@ -57,21 +55,104 @@ export default function HomePageClient({
   useEffect(() => {
     setAllDepartmentConfigs(initialAllDepartmentConfigs);
     setMainTabConfigs(initialMainTabConfigs);
-    if(initialActiveTabId) setActiveTabId(initialActiveTabId);
-    else if (initialMainTabConfigs.length > 0) setActiveTabId(initialMainTabConfigs[0].id); // Fallback if initialActiveTabId was empty
-    else setActiveTabId(""); // No tabs, no active ID
-  }, [initialAllDepartmentConfigs, initialMainTabConfigs, initialActiveTabId]);
+    setMinisterInfos(initialMinisterInfos);
+    if(initialActiveTabId) {
+      setActiveTabId(initialActiveTabId);
+      // currentMinisterInfo will be set by the effect watching [activeTabId, ministerInfos]
+    } else if (initialMainTabConfigs.length > 0) {
+      const firstTabId = initialMainTabConfigs[0].id;
+      setActiveTabId(firstTabId);
+      // currentMinisterInfo will be set by the effect watching [activeTabId, ministerInfos]
+    } else {
+      setActiveTabId("");
+      setCurrentMinisterInfo(null); // No tabs, no minister
+    }
+  }, [initialAllDepartmentConfigs, initialMainTabConfigs, initialActiveTabId, initialMinisterInfos]);
+
+  // Effect to set currentMinisterInfo based on activeTabId and cached ministerInfos
+  useEffect(() => {
+    if (activeTabId) {
+      if (ministerInfos.hasOwnProperty(activeTabId)) {
+        setCurrentMinisterInfo(ministerInfos[activeTabId]);
+        // activeDepartmentData will be updated by loadPromiseDataForTab effect
+      } else {
+        // Data is not yet fetched/cached for this tab. Minister info is pending.
+        setCurrentMinisterInfo(undefined); 
+        setActiveDepartmentData(null); // Clear stale department data immediately
+      }
+    } else {
+      setCurrentMinisterInfo(null); // No active tab
+      setActiveDepartmentData(null); // Clear department data if no tab is active
+    }
+  }, [activeTabId, ministerInfos]);
+
+  // New useEffect for fetching minister info if not cached
+  useEffect(() => {
+    const fetchMinisterDataForTab = async () => {
+      if (!activeTabId || !currentSessionId) {
+        return;
+      }
+
+      // If minister info is already loaded and cached for this tab, don't refetch.
+      // The other useEffect [activeTabId, ministerInfos] will set currentMinisterInfo.
+      if (ministerInfos.hasOwnProperty(activeTabId)) {
+        return;
+      }
+
+      console.log(`[HomePageClient] Minister info for ${activeTabId} not cached. Fetching...`);
+      setIsLoadingTabData(true); // Indicate that tab data is now loading (covers minister part)
+      setError(null); // Clear previous general errors
+
+      try {
+        const response = await fetch(`/api/minister-info?departmentId=${activeTabId}&sessionId=${currentSessionId}`);
+        if (!response.ok) {
+          let errorMsg = `Error fetching minister: ${response.statusText}`;
+          try {
+              const errorData = await response.json();
+              errorMsg = errorData.error || errorMsg;
+          } catch (e) { /* ignore json parsing error for error object */ }
+          throw new Error(errorMsg);
+        }
+        const data: MinisterInfo | null = await response.json();
+        
+        setMinisterInfos(prevInfos => ({
+          ...prevInfos,
+          [activeTabId]: data,
+        }));
+        // currentMinisterInfo will be updated by the effect watching [activeTabId, ministerInfos]
+        // No need to set setIsLoadingTabData(false) here; loadPromiseDataForTab will handle it.
+      } catch (err: any) {
+        console.error(`[HomePageClient] Failed to fetch minister info for ${activeTabId}:`, err);
+        setError(err.message || "Failed to load minister information.");
+        setMinisterInfos(prevInfos => ({
+          ...prevInfos,
+          [activeTabId]: null, // Cache null on error to prevent retries and allow promise loading (if applicable)
+        }));
+        // setIsLoadingTabData(false) will be handled by loadPromiseDataForTab.
+      }
+    };
+
+    fetchMinisterDataForTab();
+  }, [activeTabId, currentSessionId]); // ministerInfos is intentionally not a dependency here
 
   useEffect(() => {
     if (!activeTabId || !currentSessionId) { 
         if(!currentSessionId && activeTabId && !error) setError("No active parliamentary session selected for data fetching.");
-        setActiveDepartmentData(null); // Clear data if no session or tab
+        setActiveDepartmentData(null);
         return;
     }
-    const loadTabData = async () => {
+
+    // If currentMinisterInfo is undefined, it means minister data is being fetched or hasn't been fetched yet.
+    // Wait for it to become defined (either MinisterInfo or null).
+    if (currentMinisterInfo === undefined) {
+      // Minister info is pending, don't load promises yet.
+      // setIsLoadingTabData(true) would have been set by the minister fetching effect if it started.
+      return;
+    }
+
+    const loadPromiseDataForTab = async () => {
       setIsLoadingTabData(true);
       setError(null);
-      setActiveDepartmentData(null); 
       
       const selectedConfig = allDepartmentConfigs.find(c => c.id === activeTabId);
       if (!selectedConfig) {
@@ -85,36 +166,42 @@ export default function HomePageClient({
         setIsLoadingTabData(false);
         return;
       }
+
       try {
-        const [ministerDetailsData, allPromisesForDept] = await Promise.all([
-          fetchMinisterDetails(departmentFullName), 
-          fetchPromisesForDepartment(departmentFullName, currentSessionId) 
-        ]);
-        let allEvidenceForDept: EvidenceItem[] = [];
-        if (allPromisesForDept.length > 0) {
-          const promiseIds = allPromisesForDept.map(p => p.id);
-          allEvidenceForDept = await fetchEvidenceItemsForPromises(promiseIds);
-        }
-        const promisesWithEvidence = allPromisesForDept.map(promise => {
-          const relevantEvidence = allEvidenceForDept.filter(evidence => 
-            evidence.promise_ids && evidence.promise_ids.includes(promise.id)
-          );
-          return { ...promise, evidence: relevantEvidence };
-        });
+        // Fetch promises; each promise will have its .fullPath and .evidence populated by this function call.
+        const promisesForDept = await fetchPromisesForDepartment(departmentFullName, currentSessionId, currentGoverningPartyCode);
+        
+        // Optionally, create a flat, unique list of all evidence items for the displayed promises 
+        // if this flat list is needed elsewhere (e.g., for a global evidence view or other components).
+        // PromiseCard will use its own promise.evidence for its modal timeline.
+        const allEvidenceItemsForDeptFlat = promisesForDept.reduce((acc, promise) => {
+          if (promise.evidence) {
+            // Add evidence items to the accumulator if they are not already present (based on evidence ID)
+            promise.evidence.forEach(ev => {
+              if (!acc.find(existingEv => existingEv.id === ev.id)) {
+                acc.push(ev);
+              }
+            });
+          }
+          return acc;
+        }, [] as EvidenceItem[]);
+
         setActiveDepartmentData({
-          ministerDetails: ministerDetailsData,
-          promises: promisesWithEvidence,
-          evidenceItems: allEvidenceForDept
+          ministerInfo: currentMinisterInfo,
+          promises: promisesForDept, // Each promise already has .fullPath and .evidence populated
+          evidenceItems: allEvidenceItemsForDeptFlat // A flat, unique list of evidence items for this department view
         });
+
       } catch (err) {
-        console.error(`Error fetching data for department ${departmentFullName} (Session: ${currentSessionId}):`, err);
-        setError(`Failed to load data for ${departmentFullName}.`);
+        console.error(`Error fetching promise data for department ${departmentFullName} (Session: ${currentSessionId}):`, err);
+        setError(`Failed to load promise data for ${departmentFullName}.`);
+        setActiveDepartmentData({ ministerInfo: currentMinisterInfo, promises: [], evidenceItems: []}); 
       } finally {
         setIsLoadingTabData(false);
       }
     };
-    loadTabData();
-  }, [activeTabId, allDepartmentConfigs, currentSessionId]);
+    loadPromiseDataForTab();
+  }, [activeTabId, allDepartmentConfigs, currentSessionId, currentGoverningPartyCode, currentMinisterInfo]);
 
   // const handleDropdownSelect = useCallback((departmentId: string) => { setActiveTabId(departmentId); }, []); // Removed
 
@@ -133,7 +220,7 @@ export default function HomePageClient({
               <TabsList className="inline-flex items-stretch bg-transparent p-0 h-auto flex-grow">
                 {mainTabConfigs.map((dept) => (
                   <TabsTrigger key={dept.id} value={dept.id} 
-                    className="flex-grow whitespace-normal h-auto flex items-center justify-center text-center border border-b-0 border-l-0 first:border-l border-[#d3c7b9] bg-white px-3 py-3 text-xs sm:text-sm uppercase tracking-wider data-[state=active]:bg-[#8b2332] data-[state=active]:text-white data-[state=active]:border-[#8b2332] data-[state=active]:border-b-transparent data-[state=active]:relative data-[state=active]:-mb-[1px] rounded-none rounded-t-md focus-visible:ring-offset-0 focus-visible:ring-2 focus-visible:ring-[#8b2332] focus:z-10 hover:bg-gray-50"
+                    className="flex-1 whitespace-normal h-auto flex items-center justify-center text-center border border-b-0 border-l-0 first:border-l border-[#d3c7b9] bg-white px-3 py-3 text-xs sm:text-sm uppercase tracking-wider data-[state=active]:bg-[#8b2332] data-[state=active]:text-white data-[state=active]:border-[#8b2332] data-[state=active]:border-b-transparent data-[state=active]:relative data-[state=active]:-mb-[1px] rounded-none rounded-t-md focus-visible:ring-offset-0 focus-visible:ring-2 focus-visible:ring-[#8b2332] focus:z-10 hover:bg-gray-50"
                   >
                     {dept.display_short_name}
                   </TabsTrigger>
@@ -144,7 +231,7 @@ export default function HomePageClient({
             {mainTabConfigs.map((dept) => (
               <TabsContent key={dept.id} value={dept.id} 
                 className="border border-t-0 border-[#d3c7b9] bg-white p-6 data-[state=inactive]:hidden mt-0 rounded-b-md shadow-sm"
-                forceMount // Keep content mounted for better UX if desired, or remove for perf.
+                forceMount
               >
                 {activeTabId === dept.id && (
                   isLoadingTabData ? (
@@ -153,13 +240,13 @@ export default function HomePageClient({
                       <Skeleton className="h-8 w-1/3 bg-gray-200" />
                       <Skeleton className="h-40 w-full bg-gray-200" />
                     </div>
-                  ) : error && !activeDepartmentData ? (
+                  ) : error && !activeDepartmentData?.promises.length ? (
                     <div className="text-center py-10 text-red-600 bg-red-100 border border-red-400 p-4">
                       {`Error loading data for ${dept.display_short_name}: ${error}`}
                     </div>
                   ) : activeDepartmentData ? (
                     <MinisterSection 
-                      departmentPageData={activeDepartmentData} 
+                      departmentPageData={activeDepartmentData}
                       departmentFullName={dept.official_full_name}
                       departmentShortName={dept.display_short_name}
                     />

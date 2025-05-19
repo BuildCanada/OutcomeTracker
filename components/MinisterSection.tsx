@@ -1,13 +1,9 @@
 'use client'
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-// import MetricChart from "./MetricChart" // CORRECTED IMPORT PATH and assuming it will be in the same dir
-// TaskCard is for the old Task type, we'll display promises differently for now
-// import TaskCard from "@/components/task-card"
-import type { DepartmentPageData, PromiseData, MinisterDetails, EvidenceItem } from "@/lib/types"
+import type { DepartmentPageData, PromiseData, MinisterInfo, EvidenceItem } from "@/lib/types"
 import Image from 'next/image'
-import PromiseCard from "./PromiseCard" // CORRECTED IMPORT PATH
-// import PromiseProgressTimeline from './PromiseProgressTimeline'; // Removed this import
+import PromiseCard from "./PromiseCard" 
 
 interface MinisterSectionProps {
   departmentPageData: DepartmentPageData | null
@@ -19,6 +15,14 @@ const DEFAULT_MINISTER_NAME = "Minister Information Not Available"
 const DEFAULT_MINISTER_TITLE = "Title Not Available"
 const DEFAULT_AVATAR_FALLBACK_INITIALS = "N/A"
 
+// Helper function to format dates, similar to PromiseCard
+const formatDate = (dateString: string | undefined | null): string | null => {
+  if (!dateString) return null;
+  const dateObj = new Date(dateString);
+  if (isNaN(dateObj.getTime())) return null;
+  return dateObj.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
 export default function MinisterSection({ departmentPageData, departmentFullName, departmentShortName }: MinisterSectionProps) {
   if (!departmentPageData) {
     return (
@@ -29,13 +33,22 @@ export default function MinisterSection({ departmentPageData, departmentFullName
     )
   }
 
-  const { ministerDetails, promises, evidenceItems } = departmentPageData
-  const ministerName = 
-    ministerDetails?.minister_full_name_from_blog || 
-    (ministerDetails?.minister_first_name && ministerDetails?.minister_last_name ? `${ministerDetails.minister_first_name} ${ministerDetails.minister_last_name}` : null) || 
-    DEFAULT_MINISTER_NAME
-  const ministerTitle = ministerDetails?.minister_title_scraped_pm_gc_ca || ministerDetails?.minister_title_from_blog || DEFAULT_MINISTER_TITLE
-  const avatarUrl = ministerDetails?.avatarUrl // Already has a default from page.tsx if originally null/undefined
+  const { ministerInfo, promises, evidenceItems } = departmentPageData!
+  const ministerName = ministerInfo?.name || DEFAULT_MINISTER_NAME
+  const ministerTitle = ministerInfo?.title || DEFAULT_MINISTER_TITLE
+  const avatarUrl = ministerInfo?.avatarUrl
+  const positionStart = ministerInfo?.positionStart;
+  const positionEnd = ministerInfo?.positionEnd;
+
+  let tenureString = "";
+  const formattedStartDate = formatDate(positionStart);
+  const formattedEndDate = formatDate(positionEnd);
+
+  if (formattedStartDate && formattedEndDate) {
+    tenureString = `Portfolio held: ${formattedStartDate} - ${formattedEndDate}`;
+  } else if (formattedStartDate) {
+    tenureString = `Portfolio held: Since ${formattedStartDate}`;
+  }
   
   const getFallbackInitials = (name: string) => {
     if (name === DEFAULT_MINISTER_NAME) return DEFAULT_AVATAR_FALLBACK_INITIALS
@@ -51,19 +64,34 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       {/* Minister Info Header */}
       <div className="mb-8 p-6 border border-[#d3c7b9] bg-[#fdfaf6]">
         <div className="flex items-center">
-          {/* Placeholder for minister image - can be added later */}
-          {/* <Image src={minister.avatarUrl || "/placeholder-avatar.png"} alt={`Portrait of ${ministerName}`} width={80} height={80} className="rounded-full mr-6" /> */}
-    <div>
+          {avatarUrl ? (
+             <Avatar className="h-20 w-20 mr-6 rounded-full bg-gray-100">
+               {/* <AvatarImage 
+                 src={avatarUrl} 
+                 alt={`Official portrait of ${ministerName}`} 
+                 className="object-contain w-full h-full"
+               /> */}
+               <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
+             </Avatar>
+          ) : (
+            <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200 rounded-full">
+              <span className="text-2xl text-gray-500">{getFallbackInitials(ministerName)}</span>
+            </div>
+          )}
+          <div>
             <h2 className="text-3xl font-bold text-[#222222]">{ministerName}</h2>
             <p className="text-lg text-[#555555]">{ministerTitle}</p>
             <p className="text-sm text-[#8b2332]">{departmentFullName}</p>
+            {tenureString && (
+              <p className="text-xs text-gray-500 mt-1">{tenureString}</p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Promises Section */}
       <div className="mb-8 px-2">
-        <h3 className="text-2xl font-semibold text-[#222222] mb-6">Mandate Letter Commitments:</h3>
+        <h3 className="text-2xl font-semibold text-[#222222] mb-6">Commitments:</h3>
         {promises && promises.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
             {[...promises].sort((a, b) => {

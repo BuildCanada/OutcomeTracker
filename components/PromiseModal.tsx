@@ -48,6 +48,15 @@ const formatSimpleDate = (dateString: string | undefined): string => {
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
   const { text, commitment_history_rationale, date_issued } = promise;
 
+  // ADDED: Log the received promise object, especially its evidence array
+  console.log("[PromiseModal Debug] Received promise:", promise);
+  if (promise && promise.evidence) {
+    console.log("[PromiseModal Debug] Promise evidence array:", promise.evidence);
+    console.log(`[PromiseModal Debug] Number of evidence items in modal: ${promise.evidence.length}`);
+  } else {
+    console.log("[PromiseModal Debug] Promise evidence array is missing or empty.");
+  }
+
   // Ensure promise object and its nested evidence array are available
   if (!promise) {
     // This case should ideally be handled before calling PromiseModal
