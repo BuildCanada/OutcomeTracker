@@ -14,13 +14,13 @@ if (!admin.apps.length) {
         console.log("Firebase Admin SDK initialized using GOOGLE_APPLICATION_CREDENTIALS as JSON string.");
       } catch (e) {
         // If JSON.parse fails, assume it's a file path
-        console.log("GOOGLE_APPLICATION_CREDENTIALS is not a JSON string, assuming it's a file path. Attempting to read file...");
+        //console.log("GOOGLE_APPLICATION_CREDENTIALS is not a JSON string, assuming it's a file path. Attempting to read file...");
         const serviceAccountFileContent = fs.readFileSync(credsEnvVar, 'utf8');
         const serviceAccount = JSON.parse(serviceAccountFileContent);
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
-        console.log("Firebase Admin SDK initialized by reading file from GOOGLE_APPLICATION_CREDENTIALS path.");
+        //console.log("Firebase Admin SDK initialized by reading file from GOOGLE_APPLICATION_CREDENTIALS path.");
       }
     } else {
       // GOOGLE_APPLICATION_CREDENTIALS is not set, try default ADC

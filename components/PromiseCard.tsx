@@ -35,10 +35,30 @@ const formatDate = (dateInput: Timestamp | string | undefined): string | null =>
 export default function PromiseCard({ promise, evidenceItems, departmentShortName }: PromiseCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // --- DEBUG LOGS ---
+  console.log(`[PromiseCard Debug] Promise ID: ${promise.id}, Promise FullPath: ${promise.fullPath}`);
+  if (evidenceItems && evidenceItems.length > 0) {
+    console.log(`[PromiseCard Debug] First few evidenceItems received by card (showing promise_ids):`, 
+      evidenceItems.slice(0, 3).map(ei => ({ id: ei.id, promise_ids: ei.promise_ids }))
+    );
+  } else {
+    console.log("[PromiseCard Debug] evidenceItems prop is empty or undefined.");
+  }
+  // --- END DEBUG LOGS ---
+
   // Filter evidenceItems for those relevant to the current promise
+  // Uses promise.fullPath (which should be the full Firestore path of the promise)
+  // to match against evidence_item.promise_ids (which stores an array of full promise paths)
   const relevantEvidenceForThisPromise = (evidenceItems || []).filter(e => 
-    e.promise_ids && e.promise_ids.includes(promise.id)
+    e.promise_ids && promise.fullPath && e.promise_ids.includes(promise.fullPath)
   );
+
+  // --- DEBUG LOGS ---
+  console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - relevantEvidenceForThisPromise count: ${relevantEvidenceForThisPromise.length}`);
+  if (relevantEvidenceForThisPromise.length > 0) {
+    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - First relevant evidence:`, relevantEvidenceForThisPromise[0]);
+  }
+  // --- END DEBUG LOGS ---
 
   // Use linked_evidence_ids for the count if available, otherwise fallback to filtered length
   // This assumes linked_evidence_ids is the source of truth from the promise document itself.
@@ -70,11 +90,22 @@ export default function PromiseCard({ promise, evidenceItems, departmentShortNam
     }
   }
 
+  // Prepare the promise data specifically for the modal, ensuring 'evidence' is correctly populated.
+  const promiseForModal: PromiseData = {
+    ...promise,
+    evidence: relevantEvidenceForThisPromise,
+  };
+
+  const handleCardClick = () => {
+    console.log("[PromiseCard Debug onClick] Opening modal for promise ID:", promiseForModal.id, "Text:", promiseForModal.text?.substring(0,30), "Evidence count in modal data:", promiseForModal.evidence?.length);
+    setIsModalOpen(true);
+  };
+
   return (
     <>
       <div 
         className="bg-white shadow-md rounded-lg p-5 border-l-4 border-canada-red flex flex-col gap-3 hover:shadow-lg transition-shadow cursor-pointer"
-        onClick={() => setIsModalOpen(true)}
+        onClick={handleCardClick}
       >
         <div className="flex justify-between items-center">
           {departmentShortName && (
@@ -103,8 +134,14 @@ export default function PromiseCard({ promise, evidenceItems, departmentShortNam
           </div>
         </div>
       </div>
-      <PromiseModal 
-        promise={promise}
+      {/* 
+        When PromiseModal is opened, it receives the `promise` object.
+        The data fetching layer MUST ensure that `promise.evidence` is populated correctly 
+        with EvidenceItem[] specific to THIS promise, typically by resolving `promise.linked_evidence_ids`.
+        If promise.evidence is not populated correctly, the timeline in the modal will be empty or wrong.
+      */}
+      <PromiseModal
+        promise={promiseForModal} // Pass the updated promise object
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />

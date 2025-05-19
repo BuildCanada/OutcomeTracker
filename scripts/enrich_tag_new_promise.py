@@ -113,7 +113,10 @@ except Exception as e:
 # --- End Gemini Configuration ---
 
 # --- Constants ---
-PROMISES_COLLECTION = 'promises'
+# PROMISES_COLLECTION = 'promises' # Old flat structure
+TARGET_COLLECTION_ROOT = os.getenv("TARGET_PROMISES_COLLECTION", "promises") # Target root collection
+DEFAULT_REGION_CODE = "Canada"
+KNOWN_PARTY_CODES = ["LPC", "CPC", "NDP", "BQ"] # Add more as needed
 
 # Fields for history/rationale
 HISTORY_RATIONALE_FIELD = 'commitment_history_rationale'
@@ -336,25 +339,22 @@ Ensure the output is ONLY the JSON object.
 
 
 # --- Core Processing Logic ---
-async def process_promise(promise_id: str, force_reprocessing: bool = False):
+async def process_promise(doc_ref: firestore.DocumentReference, promise_data_param: dict, force_reprocessing: bool = False):
     """
-    Processes a single promise document for history rationale and linking preprocessing.
+    Processes a single promise document (using its direct reference and data)
+    for history rationale and linking preprocessing.
     Returns True if updates were made, False otherwise.
     """
-    logger.info(f"Processing promise ID: {promise_id}. Force reprocessing: {force_reprocessing}")
-    doc_ref = db.collection(PROMISES_COLLECTION).document(promise_id)
+    promise_path = doc_ref.path
+    logger.info(f"Processing promise path: {promise_path}. Force reprocessing: {force_reprocessing}")
     
     try:
-        doc_snapshot = await asyncio.to_thread(doc_ref.get) # Async fetch
-        if not doc_snapshot.exists:
-            logger.warning(f"Promise document {promise_id} not found. Skipping.")
-            return False
+        promise_data = promise_data_param # Use the passed data
 
-        promise_data = doc_snapshot.to_dict()
         promise_text = promise_data.get('text')
 
         if not promise_text:
-            logger.warning(f"Promise {promise_id} has no 'text' field. Skipping.")
+            logger.warning(f"Promise at {promise_path} has no 'text' field. Skipping.")
             return False
 
         update_payload = {}
@@ -364,31 +364,28 @@ async def process_promise(promise_id: str, force_reprocessing: bool = False):
         # 1. Commitment History Rationale
         needs_history = HISTORY_RATIONALE_FIELD not in promise_data or promise_data.get(HISTORY_RATIONALE_FIELD) is None
         if force_reprocessing or needs_history:
-            logger.info(f"Generating commitment history for promise ID: {promise_id} (Force: {force_reprocessing}, Needs: {needs_history})")
-            # Ensure all required fields for history generation are present
+            logger.info(f"Generating commitment history for promise: {promise_path} (Force: {force_reprocessing}, Needs: {needs_history})")
             source_type = promise_data.get('source_type')
-            entity = promise_data.get('candidate_or_government')
+            # 'entity' for history generation was 'candidate_or_government'
+            entity = promise_data.get('candidate_or_government') 
             date_issued = promise_data.get('date_issued')
             
-            # Optional: Add a check here if these fields are strictly necessary for history generation
-            # For now, they are passed as-is (can be None)
-
-            if llm_calls_made_this_promise > 0: await asyncio.sleep(RATE_LIMIT_DELAY_SECONDS / 2) # Brief intra-promise delay
+            if llm_calls_made_this_promise > 0: await asyncio.sleep(RATE_LIMIT_DELAY_SECONDS / 2)
             history_rationale = await generate_commitment_history_llm(promise_text, source_type, entity, date_issued)
             llm_calls_made_this_promise+=1
 
-            if history_rationale is not None: # Empty list is a valid successful response (0 items)
+            if history_rationale is not None: 
                 update_payload[HISTORY_RATIONALE_FIELD] = history_rationale
-                logger.info(f"Successfully generated commitment history for promise ID: {promise_id}")
+                logger.info(f"Successfully generated commitment history for promise: {promise_path}")
             else:
-                logger.warning(f"Failed to generate or validate commitment history for promise ID: {promise_id}. Field will not be updated.")
+                logger.warning(f"Failed to generate or validate commitment history for promise: {promise_path}. Field will not be updated.")
         else:
-            logger.info(f"Skipping commitment history generation for {promise_id} (already exists or not forced).")
+            logger.info(f"Skipping commitment history generation for {promise_path} (already exists or not forced).")
 
         # 2. Linking Preprocessing (Keywords and Action Type)
-        needs_linking_preprocessing = LINKING_PREPROCESSING_DONE_FIELD not in promise_data
+        needs_linking_preprocessing = LINKING_PREPROCESSING_DONE_FIELD not in promise_data or promise_data.get(LINKING_PREPROCESSING_DONE_FIELD) is None
         if force_reprocessing or needs_linking_preprocessing:
-            logger.info(f"Performing linking preprocessing for promise ID: {promise_id} (Force: {force_reprocessing}, Needs: {needs_linking_preprocessing})")
+            logger.info(f"Performing linking preprocessing for promise: {promise_path} (Force: {force_reprocessing}, Needs: {needs_linking_preprocessing})")
             
             if llm_calls_made_this_promise > 0: await asyncio.sleep(RATE_LIMIT_DELAY_SECONDS / 2)
             extracted_keywords = await extract_keywords_llm(promise_text)
@@ -398,105 +395,176 @@ async def process_promise(promise_id: str, force_reprocessing: bool = False):
             implied_action_type = await infer_action_type_llm(promise_text)
             llm_calls_made_this_promise+=1
 
-            # Keywords: empty list is acceptable if LLM returns it.
             update_payload[LINKING_KEYWORDS_FIELD] = extracted_keywords 
-            # Action Type: defaults to "other" if issues.
             update_payload[LINKING_ACTION_TYPE_FIELD] = implied_action_type
             update_payload[LINKING_PREPROCESSING_DONE_FIELD] = firestore.SERVER_TIMESTAMP
-            logger.info(f"Successfully performed linking preprocessing for promise ID: {promise_id}. Keywords: {len(extracted_keywords)}, Action Type: {implied_action_type}")
+            logger.info(f"Successfully performed linking preprocessing for promise: {promise_path}. Keywords: {len(extracted_keywords)}, Action Type: {implied_action_type}")
         else:
-            logger.info(f"Skipping linking preprocessing for {promise_id} (already done or not forced).")
+            logger.info(f"Skipping linking preprocessing for {promise_path} (already done or not forced).")
 
 
         if update_payload:
             update_payload['last_updated_at'] = firestore.SERVER_TIMESTAMP
-            await asyncio.to_thread(doc_ref.update, update_payload)
-            logger.info(f"Firestore document updated for promise ID: {promise_id} with fields: {list(update_payload.keys())}")
+            await asyncio.to_thread(doc_ref.update, update_payload) # Use the passed doc_ref
+            logger.info(f"Firestore document updated for promise: {promise_path} with fields: {list(update_payload.keys())}")
             made_changes = True
         
         return made_changes
 
     except Exception as e:
-        logger.error(f"Error processing promise ID {promise_id}: {e}", exc_info=True)
+        logger.error(f"Error processing promise {promise_path}: {e}", exc_info=True)
         return False
 
 
 async def run_batch_processing(limit: int | None, force_reprocessing: bool):
-    """Queries for promises needing processing and handles them in batch."""
-    logger.info(f"Starting batch processing. Limit: {limit}, Force Reprocessing: {force_reprocessing}")
+    """Queries for promises needing processing and handles them in batch across the new structure."""
+    logger.info(f"Starting batch processing. Limit: {limit}, Force Reprocessing: {force_reprocessing}. Target root: {TARGET_COLLECTION_ROOT}")
     
-    promises_ref = db.collection(PROMISES_COLLECTION)
-    base_query = promises_ref
-
-    # Constructing a query to find documents that need *either* type of processing,
-    # or all if force_reprocessing. This is complex with OR conditions in Firestore.
-    # A simpler approach for batch is to fetch and then check conditions in code,
-    # or run two separate queries if strictness is needed.
-    # For now, let's fetch based on a general marker or just iterate if force_reprocessing.
-    # If not forcing, it's tricky. Let's fetch documents and decide in code.
-    # This means we might fetch more than needed if not force_reprocessing.
-    # A better way: query for docs missing field A, then query for docs missing field B.
-    # Or, have a single "needs_enrichment_v2" flag.
-
-    # Simpler: Iterate and let `process_promise` decide based on `force_reprocessing` and field existence.
-    # The query below just gets documents, optionally limited.
-    
-    query = base_query
-    if limit is not None:
-        query = query.limit(limit)
-        logger.info(f"Query limited to {limit} documents.")
-    else:
-        logger.info("No limit applied to document query (will process all found or up to internal Firestore limits per batch if not paginating).")
-
-
-    docs_snapshot = await asyncio.to_thread(query.stream) # stream() for iterator
-
     processed_count = 0
     updated_count = 0
     error_in_batch_flag = False
+    total_considered_overall = 0
 
-    doc_list = list(docs_snapshot) # Convert stream to list to know total
-    total_to_consider = len(doc_list)
-    logger.info(f"Found {total_to_consider} documents to consider based on query (limit: {limit}).")
+    # Calculate per-party limit if an overall limit is set
+    # This is a simple distribution; more sophisticated logic might be needed if data is very uneven
+    limit_per_party = None
+    if limit is not None and KNOWN_PARTY_CODES:
+        limit_per_party = (limit + len(KNOWN_PARTY_CODES) - 1) // len(KNOWN_PARTY_CODES) # Ceiling division
+        logger.info(f"Overall limit {limit} results in approx. {limit_per_party} per party.")
 
+    for party_code in KNOWN_PARTY_CODES:
+        if limit is not None and total_considered_overall >= limit:
+            logger.info(f"Overall processing limit ({limit}) reached. Halting batch processing.")
+            break
 
-    for i, doc_snapshot in enumerate(doc_list):
-        logger.info(f"--- Processing document {i+1} of {total_to_consider} (ID: {doc_snapshot.id}) ---")
-        try:
-            updated = await process_promise(doc_snapshot.id, force_reprocessing)
-            if updated:
-                updated_count += 1
-            processed_count += 1
-        except Exception as e:
-            logger.error(f"Critical error processing promise ID {doc_snapshot.id} in batch: {e}", exc_info=True)
-            error_in_batch_flag = True # Mark that an error occurred
+        party_collection_path = f"{TARGET_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code}"
+        logger.info(f"--- Querying Party Collection: {party_collection_path} ---")
         
-        # Rate limiting between processing of individual promises
-        if i < total_to_consider - 1: # Don't sleep after the last one
-            logger.debug(f"Waiting {RATE_LIMIT_DELAY_SECONDS}s before next promise...")
-            await asyncio.sleep(RATE_LIMIT_DELAY_SECONDS)
+        try:
+            party_collection_ref = db.collection(party_collection_path)
+            
+            doc_list_for_party = []
+            processed_ids_this_party = set() # To avoid processing a doc twice if it matches both queries
+
+            if force_reprocessing:
+                logger.info(f"Force reprocessing enabled. Querying all documents for party {party_code} (respecting limits).")
+                query = party_collection_ref
+                if limit_per_party is not None:
+                    # Apply per-party limit (adjusted for overall limit)
+                    current_party_limit = limit_per_party
+                    if limit is not None:
+                        remaining_overall_limit = limit - total_considered_overall
+                        if remaining_overall_limit <= 0: continue
+                        current_party_limit = min(limit_per_party, remaining_overall_limit)
+                    if current_party_limit <= 0: continue
+                    query = query.limit(current_party_limit)
+                
+                docs_snapshot_stream = query.stream()
+                def get_party_docs_sync_force(): return list(docs_snapshot_stream)
+                doc_list_for_party = await asyncio.to_thread(get_party_docs_sync_force)
+            else:
+                logger.info(f"Force reprocessing is OFF. Querying for documents needing history OR linking preprocessing for {party_code}.")
+                # Query 1: Needs commitment_history_rationale
+                query1 = party_collection_ref.where(filter=firestore.FieldFilter(HISTORY_RATIONALE_FIELD, "==", None))
+                # Query 2: Needs linking_preprocessing_done_at
+                query2 = party_collection_ref.where(filter=firestore.FieldFilter(LINKING_PREPROCESSING_DONE_FIELD, "==", None))
+
+                # Fetch all candidates from both queries first
+                logger.debug(f"Executing query for ALL docs needing history for {party_code}...")
+                docs_stream1 = query1.stream()
+                def get_docs1_sync(): return list(docs_stream1)
+                results1 = await asyncio.to_thread(get_docs1_sync)
+                logger.debug(f"Found {len(results1)} docs needing history for {party_code}.")
+
+                logger.debug(f"Executing query for ALL docs needing linking for {party_code}...")
+                docs_stream2 = query2.stream()
+                def get_docs2_sync(): return list(docs_stream2)
+                results2 = await asyncio.to_thread(get_docs2_sync)
+                logger.debug(f"Found {len(results2)} docs needing linking for {party_code}.")
+
+                # Combine and deduplicate
+                for doc_snap in results1:
+                    if doc_snap.id not in processed_ids_this_party:
+                        doc_list_for_party.append(doc_snap)
+                        processed_ids_this_party.add(doc_snap.id)
+                
+                for doc_snap in results2:
+                    if doc_snap.id not in processed_ids_this_party:
+                        doc_list_for_party.append(doc_snap)
+                        processed_ids_this_party.add(doc_snap.id)
+                logger.info(f"Combined list for {party_code} has {len(doc_list_for_party)} unique docs needing processing (before limits).")
+
+            # Apply per-party limit (derived from overall limit) to the combined list
+            if limit_per_party is not None and len(doc_list_for_party) > limit_per_party:
+                 logger.info(f"Applying per-party limit: Trimming doc list for party {party_code} from {len(doc_list_for_party)} to {limit_per_party}.")
+                 doc_list_for_party = doc_list_for_party[:limit_per_party]
+            
+            # If an overall limit is active, trim the combined list further if it exceeds the remaining allowance
+            if limit is not None:
+                remaining_allowance = limit - total_considered_overall
+                if remaining_allowance < 0 : remaining_allowance = 0 # Should not happen if outer checks work
+                if len(doc_list_for_party) > remaining_allowance:
+                    logger.info(f"Trimming doc list for party {party_code} from {len(doc_list_for_party)} to {remaining_allowance} due to overall limit.")
+                    doc_list_for_party = doc_list_for_party[:remaining_allowance]
+
+
+            if not doc_list_for_party:
+                logger.info(f"No documents found for party {party_code} matching criteria (or limit reached).")
+                continue
+            
+            total_found_for_party = len(doc_list_for_party)
+            logger.info(f"Found {total_found_for_party} documents for party {party_code} to consider.")
+
+            for i, doc_snapshot in enumerate(doc_list_for_party):
+                if limit is not None and total_considered_overall >= limit:
+                    logger.info("Overall processing limit reached mid-party. Breaking from party docs.")
+                    error_in_batch_flag = True # Mark to indicate not all party docs were processed
+                    break # Break from processing this party's documents
+                
+                total_considered_overall += 1
+                logger.info(f"--- Processing document {i+1} of {total_found_for_party} (Overall: {total_considered_overall}, Path: {doc_snapshot.reference.path}) ---")
+                try:
+                    # Pass the document reference and its data to the refactored process_promise
+                    updated = await process_promise(doc_snapshot.reference, doc_snapshot.to_dict(), force_reprocessing)
+                    if updated:
+                        updated_count += 1
+                    processed_count += 1 # Counts successfully initiated processing attempts
+                except Exception as e_process:
+                    logger.error(f"Critical error processing document {doc_snapshot.reference.path} in batch: {e_process}", exc_info=True)
+                    error_in_batch_flag = True
+                
+                if i < total_found_for_party - 1: # Don't sleep after the last one for this party
+                    if limit is None or total_considered_overall < limit: # Only sleep if not at overall limit
+                        logger.debug(f"Waiting {RATE_LIMIT_DELAY_SECONDS}s before next promise...")
+                        await asyncio.sleep(RATE_LIMIT_DELAY_SECONDS)
+        
+        except Exception as e_party_query:
+            logger.error(f"Error querying or processing documents for party {party_code} at path {party_collection_path}: {e_party_query}", exc_info=True)
+            error_in_batch_flag = True
+            continue # Move to the next party if one party fails at collection level
 
     logger.info("--- Batch Processing Summary ---")
-    logger.info(f"Documents considered for processing: {processed_count} (out of {total_to_consider} found by query)")
-    logger.info(f"Documents successfully updated/processed: {updated_count}")
+    logger.info(f"Documents considered for processing (overall attempts): {total_considered_overall}")
+    logger.info(f"Documents successfully initiated for processing: {processed_count}")
+    logger.info(f"Documents successfully updated by process_promise: {updated_count}")
     if error_in_batch_flag:
-        logger.warning("One or more errors occurred during batch processing. Check logs above.")
+        logger.warning("One or more errors occurred, or limit was hit during batch processing. Check logs above.")
     logger.info("--- Batch Processing Complete ---")
 
 
 async def main_async_entrypoint():
     parser = argparse.ArgumentParser(description='Enrich and preprocess Firestore promise documents.')
     parser.add_argument(
-        '--promise_id',
+        '--promise_full_path',
         type=str,
         default=None,
-        help='Specific promise ID to process. If not provided, runs in batch mode.'
+        help='Full path to a specific promise document to process (e.g., promises/Canada/LPC/20240101_PLTFM_abcdef1234).'
     )
     parser.add_argument(
         '--limit',
         type=int,
         default=None, # Default to no limit for batch mode, user can specify
-        help='Limit the number of documents to process in batch mode. No effect if --promise_id is set.'
+        help='Limit the number of documents to process in batch mode. No effect if --promise_full_path is set.'
     )
     parser.add_argument(
         '--force',
@@ -506,11 +574,19 @@ async def main_async_entrypoint():
     args = parser.parse_args()
 
     logger.info("--- Starting Promise Enrichment & Preprocessing Script ---")
-    if args.promise_id:
-        logger.info(f"Mode: Single Promise Processing for ID: {args.promise_id}")
-        await process_promise(args.promise_id, args.force)
+    if args.promise_full_path:
+        logger.info(f"Mode: Single Promise Processing for Path: {args.promise_full_path}")
+        doc_ref = db.document(args.promise_full_path)
+        try:
+            doc_snapshot = await asyncio.to_thread(doc_ref.get)
+            if not doc_snapshot.exists:
+                logger.error(f"Document not found at path: {args.promise_full_path}")
+            else:
+                await process_promise(doc_ref, doc_snapshot.to_dict(), args.force)
+        except Exception as e_single:
+            logger.error(f"Error fetching or processing single document {args.promise_full_path}: {e_single}", exc_info=True)
     else:
-        logger.info(f"Mode: Batch Processing. Limit: {args.limit}, Force: {args.force}")
+        logger.info(f"Mode: Batch Processing. Target Root: {TARGET_COLLECTION_ROOT}, Limit: {args.limit}, Force: {args.force}")
         await run_batch_processing(limit=args.limit, force_reprocessing=args.force)
     
     logger.info("--- Promise Enrichment & Preprocessing Script Finished ---")

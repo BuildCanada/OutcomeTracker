@@ -9,8 +9,8 @@ import os
 import csv
 import logging
 
-# Import the common utility for department standardization
-from common_utils import standardize_department_name # Assuming common_utils.py is in PYTHONPATH or same directory
+# Import the common utility for department standardization and NEW promise path generation
+from common_utils import standardize_department_name, get_promise_document_path 
 
 # --- Logger Setup ---
 logging.basicConfig(level=logging.INFO,
@@ -59,8 +59,8 @@ if db is None:
 # --- End Firestore Configuration ---
 
 def process_lpc_platform_csv(file_path):
-    """Processes the 2025-LPC-platform.csv and adds/updates docs in Firestore."""
-    promises_collection = db.collection('promises')
+    """Processes the 2025-LPC-platform.csv and adds/updates docs in Firestore using the new structure."""
+    # promises_collection = db.collection('promises') # OLD WAY
     
     processed_count = 0
     skipped_count = 0
@@ -89,6 +89,9 @@ def process_lpc_platform_csv(file_path):
                     # Standardize lead department
                     reporting_lead_raw = str(row.get('Reporting Lead', '')).strip()
                     reporting_lead_standardized = None
+                    # Corrected date for this specific platform, as per migration logic
+                    corrected_date_issued_for_platform = "2025-04-19"
+
                     if reporting_lead_raw and reporting_lead_raw.lower() != 'nan':
                         reporting_lead_standardized = standardize_department_name(reporting_lead_raw)
                         if not reporting_lead_standardized:
@@ -114,7 +117,7 @@ def process_lpc_platform_csv(file_path):
                         'text': commitment_text,
                         'source_type': '2025 LPC Platform',
                         'source_document_url': 'https://liberal.ca/wp-content/uploads/sites/292/2024/04/Canada-Strong.pdf',
-                        'date_issued': '2024-04-19', 
+                        'date_issued': corrected_date_issued_for_platform,
                         'parliament_session_id': "45", 
                         'candidate_or_government': 'Liberal Party of Canada (2025 Platform)',
                         'party': 'Liberal Party of Canada',
@@ -135,22 +138,35 @@ def process_lpc_platform_csv(file_path):
                         'last_updated_at': firestore.SERVER_TIMESTAMP,
                     }
 
-                    doc_ref = promises_collection.document(promise_doc_data['promise_id'])
+                    # Generate the new document path using common_utils
+                    new_doc_full_path = get_promise_document_path(
+                        party_name_str=promise_doc_data['party'],
+                        date_issued_str=promise_doc_data['date_issued'],
+                        source_type_str=promise_doc_data['source_type'],
+                        promise_text=promise_doc_data['text']
+                    )
+
+                    if not new_doc_full_path:
+                        logger.warning(f"Could not generate document path for row {index+2} (CSV ID: {promise_id_str}). Skipping.")
+                        skipped_count += 1
+                        continue
+
+                    doc_ref = db.document(new_doc_full_path) # NEW WAY: use full path
                     doc_snapshot = doc_ref.get()
 
                     doc_ref.set(promise_doc_data, merge=True) 
 
                     if doc_snapshot.exists:
                         updated_count += 1
-                        logger.debug(f"Updated promise document for ID: {promise_doc_data['promise_id']}")
+                        logger.debug(f"Updated promise document at path: {new_doc_full_path} (Old ID: {promise_id_str})")
                     else:
                         added_count += 1
-                        logger.debug(f"Added new promise document for ID: {promise_doc_data['promise_id']}")
+                        logger.debug(f"Added new promise document at path: {new_doc_full_path} (Old ID: {promise_id_str})")
                     
                     processed_count +=1
 
                 except Exception as e_row:
-                    logger.error(f"Error processing row {index+2} (ID: {row.get('ID', 'N/A')}): {e_row}", exc_info=True)
+                    logger.error(f"Error processing row {index+2} (CSV ID: {row.get('ID', 'N/A')}): {e_row}", exc_info=True)
                     skipped_count += 1
         
     except FileNotFoundError:

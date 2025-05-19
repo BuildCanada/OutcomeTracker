@@ -17,6 +17,7 @@ import { firestoreAdmin } from "@/lib/firebaseAdmin"; // Server-side Firestore
 
 import HomePageClient from "@/components/HomePageClient"; // NEW IMPORT
 import { Timestamp } from "firebase-admin/firestore"; // Import admin Timestamp
+import { fetchMinisterForDepartmentInSessionAdmin } from "@/lib/server-utils"; // MOVED FUNCTION
 
 import type {
   DepartmentConfig,
@@ -26,7 +27,10 @@ import type {
   // EvidenceItem, // Used by HomePageClient
   // Metric, // Not actively used in current server component logic
   PrimeMinister,
-  ParliamentSession // Added import for ParliamentSession type
+  ParliamentSession,
+  MinisterInfo, // NEW IMPORT
+  Member // NEW IMPORT (for internal use in fetchMinisterForDepartmentInSessionAdmin)
+  // ParliamentaryPosition // Not directly used in Home, but Member uses it
 } from "@/lib/types"
 // import { Skeleton } from "@/components/ui/skeleton" // MOVED to HomePageClient
 
@@ -71,6 +75,12 @@ const NAV_LINK_ACTIVE_TEXT_COLOR = "text-[#8b2332]";
 
 // --- Server-Side Data Fetching and Main Page Component ---
 
+// Function to fetch minister details (REVISED to use department_ministers)
+// MOVED to lib/server-utils.ts
+// async function fetchMinisterForDepartmentInSessionAdmin(
+// ... entire function removed ...
+// )
+
 async function getGlobalSessionData(): Promise<ParliamentSession | null> {
   try {
     const globalConfigDoc = await firestoreAdmin.doc('admin_settings/global_config').get();
@@ -78,34 +88,41 @@ async function getGlobalSessionData(): Promise<ParliamentSession | null> {
     if (globalConfigDoc.exists && globalConfigDoc.data()?.current_selected_parliament_session) {
       currentSessionNumberString = String(globalConfigDoc.data()?.current_selected_parliament_session);
     } else {
-      console.warn("Global config or current_selected_parliament_session not found, attempting to use 'is_current_for_tracking'.");
+      console.warn("[Server] Global config or current_selected_parliament_session not found, attempting to use 'is_current_for_tracking'.");
       const fallbackSessionQuery = await firestoreAdmin.collection('parliament_session').where('is_current_for_tracking', '==', true).limit(1).get();
       if (!fallbackSessionQuery.empty) {
         currentSessionNumberString = fallbackSessionQuery.docs[0].id;
       } else {
-        console.error("No default or fallback session found.");
+        console.error("[Server] No default or fallback session found.");
         return null;
       }
     }
     const sessionDoc = await firestoreAdmin.collection('parliament_session').doc(currentSessionNumberString).get();
     if (!sessionDoc.exists) {
-      console.error(`Parliament session document ${currentSessionNumberString} not found.`);
+      console.error(`[Server] Parliament session document ${currentSessionNumberString} not found.`);
       return null; 
     }
     const sessionData = sessionDoc.data();
     if (!sessionData) return null;
 
-    // Ensure date fields are serialized if they are Timestamps
     const serializedSessionData = { ...sessionData };
     for (const key of ['start_date', 'end_date', 'election_date_preceding', 'election_called_date']) {
       if (serializedSessionData[key] instanceof Timestamp) {
         serializedSessionData[key] = (serializedSessionData[key] as Timestamp).toDate().toISOString();
+      } else if (typeof serializedSessionData[key] === 'string' && !serializedSessionData[key].includes('T')) {
+        // If it's a date string without time, ensure it can be parsed by new Date()
+        // This might not be necessary if Firestore always gives ISO strings or Timestamps
       }
     }
     
+    if (typeof serializedSessionData.governing_party_code !== 'string') {
+        // console.warn(`[Server] governing_party_code is missing or not a string for session ${sessionDoc.id}.`);
+        //  serializedSessionData.governing_party_code = null; // Keep as is, or default if strictly needed elsewhere
+    }
+
     return { id: sessionDoc.id, ...serializedSessionData } as ParliamentSession;
   } catch (error) {
-    console.error("Error fetching global session data:", error);
+    console.error("[Server] Error fetching global session data:", error);
     return null;
   }
 }
@@ -113,18 +130,28 @@ async function getGlobalSessionData(): Promise<ParliamentSession | null> {
 export default async function Home() {
   const globalSession = await getGlobalSessionData();
   const currentSessionId = globalSession ? globalSession.id : null;
+  const currentGoverningPartyCode = globalSession ? (globalSession.governing_party_code || null) : null;
+
+  console.log("[Server LCP Debug] Global Session Data:", globalSession);
+  console.log("[Server LCP Debug] Current Session ID:", currentSessionId);
+  console.log("[Server LCP Debug] Current Governing Party Code:", currentGoverningPartyCode);
 
   let initialAllDepartmentConfigs: DepartmentConfig[] = [];
   let initialMainTabConfigs: DepartmentConfig[] = [];
+  let initialMinisterInfos: Record<string, MinisterInfo | null> = {};
   let initialActiveTabId: string = "";
+  let initialDepartmentPromises: Record<string, any[]> = {}; // Using any[] for now
+  let initialEvidenceItems: Record<string, any[]> = {}; // Using any[] for now
   let serverError: string | null = null;
+  let pageTitle = "Build Canada Promise Tracker"; // Default title
 
   try {
+    const t0 = Date.now();
     const configsSnapshot = await firestoreAdmin.collection("department_config").get();
+    console.log(`[Server LCP Timing] department_config fetch took ${Date.now() - t0} ms`);
     initialAllDepartmentConfigs = configsSnapshot.docs.map(doc => {
         const data = doc.data();
         const serializedData: { [key: string]: any } = {};
-
         for (const key in data) {
           if (data[key] instanceof Timestamp) {
             serializedData[key] = (data[key] as Timestamp).toDate().toISOString();
@@ -132,64 +159,102 @@ export default async function Home() {
             serializedData[key] = data[key];
           }
         }
-        
-        return { 
-            id: doc.id, 
-            ...serializedData 
-        } as DepartmentConfig;
+        return { id: doc.id, ...serializedData } as DepartmentConfig;
     })
     .sort((a, b) => (a.display_short_name || "").localeCompare(b.display_short_name || ""));
+    console.log(`[Server LCP Debug] Fetched ${initialAllDepartmentConfigs.length} total department configs.`);
 
     initialMainTabConfigs = initialAllDepartmentConfigs.filter(c => c.bc_priority === 1);
-    // If specific order for priority tabs is needed beyond alpha, sort initialMainTabConfigs here.
-    // Example using MAIN_TAB_ORDER (would need adjustment if display_short_name is used for tabs but MAIN_TAB_ORDER has official_full_name)
-    // initialMainTabConfigs.sort((a, b) => {
-    //   const indexA = MAIN_TAB_ORDER.indexOf(a.official_full_name);
-    //   const indexB = MAIN_TAB_ORDER.indexOf(b.official_full_name);
-    //   if (indexA === -1 && indexB === -1) return (a.display_short_name || "").localeCompare(b.display_short_name || ""); // both not in order, sort alpha
-    //   if (indexA === -1) return 1; // a not in order, b is; b comes first
-    //   if (indexB === -1) return -1; // b not in order, a is; a comes first
-    //   return indexA - indexB; // both in order, sort by order
-    // });
+    console.log(`[Server LCP Debug] Filtered to ${initialMainTabConfigs.length} main tab department configs.`);
 
-
-    if (initialMainTabConfigs.length > 0) {
+    if (globalSession && initialMainTabConfigs.length > 0) {
       initialActiveTabId = initialMainTabConfigs[0].id;
-    } else {
-      serverError = "No priority departments found."; // Set error if no priority tabs
-      // console.warn("No departments with bc_priority === 1 found. No default active tab.");
+      // const initialActiveTabConfig = initialMainTabConfigs.find(c => c.id === initialActiveTabId);
+      console.log(`[Server LCP Debug] Initial Active Tab ID: ${initialActiveTabId}`);
+
+      // Pre-fetch minister info for ALL main tabs
+      const ministerFetchPromises = initialMainTabConfigs.map(config => 
+        fetchMinisterForDepartmentInSessionAdmin(config, globalSession)
+          .then(info => ({ id: config.id, info }))
+      );
+
+      const t_minister_fetches_start = Date.now();
+      const settledMinisterInfos = await Promise.allSettled(ministerFetchPromises);
+      console.log(`[Server LCP Timing] Fetching all main tab ministers took ${Date.now() - t_minister_fetches_start} ms`);
+
+      settledMinisterInfos.forEach(result => {
+        if (result.status === 'fulfilled' && result.value && result.value.info) {
+          initialMinisterInfos[result.value.id] = result.value.info;
+          console.log(`[Server LCP Debug] Pre-fetched minister info for tab '${result.value.id}':`, result.value.info?.name);
+        } else if (result.status === 'rejected') {
+          // Log error for specific department if its minister fetch failed
+          // The key for initialMinisterInfos won't be set, or explicitly set to null
+          // We need to know which department failed. The original map had config.id.
+          // This part needs careful handling if map doesn't directly give failed id.
+          // For now, let's assume we can log a general error or find the id.
+          console.error(`[Server LCP Error] Failed to pre-fetch minister for a tab:`, result.reason);
+        }
+      });
+
+      // The code below that specifically fetched for initialActiveTabConfig is now covered by the loop above.
+      // if (initialActiveTabConfig) {
+      //   const t1 = Date.now();
+      //   const ministerInfoForActiveTab = await fetchMinisterForDepartmentInSessionAdmin(initialActiveTabConfig, globalSession);
+      //   console.log(`[Server LCP Timing] fetchMinisterForDepartmentInSessionAdmin took ${Date.now() - t1} ms`);
+      //   if (ministerInfoForActiveTab) {
+      //     initialMinisterInfos[initialActiveTabId] = ministerInfoForActiveTab;
+      //     console.log(`[Server LCP Debug] Fetched minister info for initial active tab '${initialActiveTabId}':`, ministerInfoForActiveTab);
+      //   }
+      //   // At this point, we have minister info. We can decide if we need to fetch promises/evidence server-side for the first tab.
+      //   // For now, let's just log the minister info.
+      // }
+    } else if (initialAllDepartmentConfigs.length > 0 && !initialMainTabConfigs.length) {
+      // This block executes if there are department configs, but none are marked as bc_priority === 1
+      // In this case, there's no initialActiveTabId or initialActiveTabConfig determined from priority tabs.
+      // We might want to set a default active tab from allDepartmentConfigs or handle appropriately.
+      console.warn("[Server LCP Debug] No priority tabs configured. initialActiveTabId may not be set here.");
+      serverError = serverError ? serverError + " No priority tabs configured." : "No priority tabs configured.";
+      // If initialActiveTabConfig was referenced here, it would be out of scope. 
+      // Ensure logic here doesn't depend on it, or it's derived differently.
+    } else if (!initialAllDepartmentConfigs.length) {
+      serverError = serverError ? serverError + " No department configurations found." : "No department configurations found.";
     }
   } catch (err: any) {
-    console.error("Error fetching initial department configs on server:", err);
-    serverError = "Failed to load department configurations.";
+    console.error("[Server] Error fetching initial department configs or ministers on server:", err);
+    serverError = "Failed to load department or minister configurations.";
   }
-
-  const pageTitle = globalSession ? 
-    `Outcomes Tracker - ${globalSession.session_label || `Parliament ${globalSession.parliament_number}`}` :
-    "Outcomes Tracker";
 
   const dynamicPrimeMinisterData: PrimeMinister = globalSession ? {
     name: globalSession.prime_minister_name || "N/A",
     title: globalSession.prime_minister_name ? 
            `Prime Minister, ${globalSession.session_label || `Parliament ${globalSession.parliament_number}`}` :
            (globalSession.session_label || `Parliament ${globalSession.parliament_number}`),
-    avatarUrl: "/placeholder.svg?height=200&width=200", // Consistent with staticPrimeMinisterData for PM section
-    guidingMetrics: staticPrimeMinisterData.guidingMetrics, // USE STATIC DATA FOR NOW
+    avatarUrl: "/placeholder.svg?height=200&width=200", 
+    guidingMetrics: staticPrimeMinisterData.guidingMetrics, 
   } : { 
     name: "N/A", 
     title: "Prime Minister data unavailable", 
-    avatarUrl: staticPrimeMinisterData.avatarUrl, // Fallback to static placeholder for PM
-    guidingMetrics: staticPrimeMinisterData.guidingMetrics // USE STATIC DATA FOR NOW
+    avatarUrl: staticPrimeMinisterData.avatarUrl, 
+    guidingMetrics: staticPrimeMinisterData.guidingMetrics 
   };
 
-  // Pass server-fetched data to the client component
   return <HomePageClient 
             initialAllDepartmentConfigs={initialAllDepartmentConfigs}
             initialMainTabConfigs={initialMainTabConfigs}
+            initialMinisterInfos={initialMinisterInfos} // Pass new minister data
             initialActiveTabId={initialActiveTabId}
             initialError={serverError}
             currentSessionId={currentSessionId}
+            currentGoverningPartyCode={currentGoverningPartyCode} 
             dynamicPrimeMinisterData={dynamicPrimeMinisterData}
             pageTitle={pageTitle}
         />;
 }
+
+// Make sure logger is defined if used directly in the module scope (it's used in fetchMinister...Admin)
+const logger = {
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+  debug: console.debug,
+}; // Basic console logger for server-side scope
