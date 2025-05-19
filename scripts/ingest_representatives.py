@@ -90,6 +90,7 @@ def load_parliament_sessions(db_client):
             try:
                 start_date_str = data.get('start_date')
                 end_date_str = data.get('end_date')
+                election_called_date_str = data.get('election_called_date') # Get election_called_date
                 parliament_num = data.get('parliament_number')
 
                 if not start_date_str or not parliament_num:
@@ -98,6 +99,14 @@ def load_parliament_sessions(db_client):
 
                 parsed_start_date = parse_date(start_date_str).date()
                 
+                parsed_election_called_date = None
+                if election_called_date_str:
+                    try:
+                        # Ensure it's a string before parsing, handle potential direct date objects if Firestore ever returns them
+                        parsed_election_called_date = parse_date(str(election_called_date_str)).date()
+                    except Exception as e_ec:
+                        logger.warning(f"Could not parse election_called_date '{election_called_date_str}' (type: {type(election_called_date_str)}) for session {doc.id}: {e_ec}")
+
                 # Handle 'current' for end_date_str
                 if end_date_str and isinstance(end_date_str, str) and end_date_str.lower() == 'current':
                     parsed_end_date = None
@@ -109,6 +118,7 @@ def load_parliament_sessions(db_client):
                     'parliament_number': str(parliament_num),
                     'start_date': parsed_start_date,
                     'end_date': parsed_end_date,
+                    'election_called_date': parsed_election_called_date, # Store parsed date
                     'is_current_for_tracking': data.get('is_current_for_tracking', False)
                 })
             except Exception as e:
@@ -159,20 +169,25 @@ def extract_parliament_number(position, sorted_parliament_sessions):
         return ""
 
     for sess in sorted_parliament_sessions:
-        sess_start_date = sess['start_date']
-        # If session end_date is None, treat it as ongoing (use date.max for comparison)
-        sess_end_date = sess['end_date'] if sess['end_date'] is not None else date.max
+        sess_start_for_calc = sess['start_date']
+        # Use election_called_date if it's available and earlier than the official start_date,
+        # making the session's effective window for matching positions start earlier.
+        if sess.get('election_called_date') and sess['election_called_date'] < sess['start_date']:
+            sess_start_for_calc = sess['election_called_date']
+            logger.debug(f"For session {sess['id']} (Parl {sess['parliament_number']}), using election_called_date {sess_start_for_calc} as effective start for matching (actual start: {sess['start_date']}).")
+
+        sess_end_for_calc = sess['end_date'] if sess['end_date'] is not None else date.max
         
         # Check for overlap: max(start1, start2) <= min(end1, end2)
-        overlap_start = max(pos_start_date, sess_start_date)
-        overlap_end = min(pos_end_date, sess_end_date)
+        overlap_start = max(pos_start_date, sess_start_for_calc)
+        overlap_end = min(pos_end_date, sess_end_for_calc)
 
         if overlap_start <= overlap_end:
-            # logger.debug(f"Position '{position.get('title')}' (active {pos_start_date} to {'Ongoing' if not pos_to_str else pos_end_date}) "
-            #              f"assigned parliament {sess['parliament_number']} from session '{sess['id']}' (active {sess_start_date} to {'Ongoing' if not sess['end_date'] else sess_end_date})")
+            logger.debug(f"Position '{position.get('title')}' (active {pos_start_date} to {'Ongoing' if not pos_to_str else pos_end_date}) "
+                         f"assigned parliament {sess['parliament_number']} from session '{sess['id']}' (effective range {sess_start_for_calc} to {'Ongoing' if not sess['end_date'] else sess_end_for_calc})")
             return sess['parliament_number']
 
-    #logger.debug(f"Position '{position.get('title')}' (active {pos_start_date} to {'Ongoing' if not pos_to_str else pos_end_date}) did not overlap with any loaded parliament sessions.")
+    logger.debug(f"Position '{position.get('title')}' (active {pos_start_date} to {'Ongoing' if not pos_to_str else pos_end_date}) did not overlap with any loaded parliament sessions.")
     return ""
 
 # --- API Fetch ---
@@ -356,13 +371,21 @@ def build_department_ministers(representatives_data, variant_to_dept, dept_id_to
             
             # Attempt department match (for data inclusion, not skipping)
             cleaned_title = title.strip().lower()
+            logger.debug(f"  Attempting to match title: '{title}' (cleaned: '{cleaned_title}') for member {full_name} (Parl: {parliament_number}) to a departmentId.")
             dept_id = variant_to_dept.get(cleaned_title)
-            dept_name_from_config = dept_id_to_name.get(dept_id, None)
-            # if dept_id:
-                # logger.debug(f"  Position '{title}' matched to departmentId: {dept_id}")
-            # else:
-                # logger.debug(f"  Position '{title}': No matching department variant found.")
-
+            dept_name_from_config = None # Initialize
+            
+            if dept_id:
+                dept_name_from_config = dept_id_to_name.get(dept_id, None)
+                logger.info(f"    MATCHED: Title '{title}' mapped to dept_id='{dept_id}', dept_name='{dept_name_from_config}' for member {full_name} (Parl: {parliament_number})")
+            else:
+                logger.warning(f"    NO MATCH: Title '{title}' (cleaned: '{cleaned_title}') did not map to any departmentId for member {full_name} (Parl: {parliament_number}). departmentId will be null.")
+                # Log some of the available variants for debugging if the dictionary is small
+                if len(variant_to_dept) < 30: # Increased limit slightly for more debug info
+                    logger.debug(f"    Available variant keys for matching (first {len(variant_to_dept)} of {len(variant_to_dept)}): {list(variant_to_dept.keys())}")
+                else:
+                    logger.debug(f"    Not logging all {len(variant_to_dept)} variant keys. Total variants: {len(variant_to_dept)}. Check department_config collection and script logs for load_department_config output.")
+            
             # Construct doc ID and data
             try:
                  # Sanitize characters that might be problematic in Firestore IDs
