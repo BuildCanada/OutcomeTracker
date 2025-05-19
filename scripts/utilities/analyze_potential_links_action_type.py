@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # --- Firebase Configuration ---
 db = None
 POTENTIAL_LINKS_COLLECTION = 'promise_evidence_links'
-PROMISES_COLLECTION = 'promises' # Assuming this is your promises collection
+# PROMISES_COLLECTION = 'promises' # OLD WAY: No longer needed as promise_id from links should be full path
 
 def initialize_firebase():
     global db
@@ -109,10 +109,11 @@ def analyze_links(limit=None, output_csv_path=None):
 
         for promise_id in unique_promise_ids_in_links:
             promises_checked_count += 1
-            promise_doc_ref = db.collection(PROMISES_COLLECTION).document(promise_id)
+            # promise_doc_ref = db.collection(PROMISES_COLLECTION).document(promise_id) # OLD WAY
+            promise_doc_ref = db.document(promise_id) # NEW WAY: promise_id is full path
             promise_doc = promise_doc_ref.get()
             
-            row_data = {'promise_id': promise_id}
+            row_data = {'promise_id': promise_id} # Store the full path as promise_id in CSV
             linked_bill_ids_for_csv = []
             link_scores_for_csv = []            
 
@@ -131,6 +132,10 @@ def analyze_links(limit=None, output_csv_path=None):
                 if is_legislative:
                     legislative_promise_count += 1
                 
+                # Get the leaf ID for cleaner CSV output if desired, or keep full path
+                # For now, csv_headers expect 'promise_id' which we set to full path.
+                # If a separate 'leaf_id' column were added to CSV, it would be: promise_id.split("/")[-1]
+                
                 row_data.update({
                     'promise_text_snippet': promise_data.get('text', '')[:250],
                     'responsible_department_lead': promise_data.get('responsible_department_lead', ''),
@@ -140,7 +145,7 @@ def analyze_links(limit=None, output_csv_path=None):
                     'is_legislative_type': is_legislative
                 })
             else:
-                logger.warning(f"Promise document {promise_id} (referenced in links) not found in '{PROMISES_COLLECTION}'.")
+                logger.warning(f"Promise document {promise_id} (referenced in links) not found. This is unexpected if links are correct.")
                 missing_promise_data_count +=1
                 row_data.update({
                     'promise_text_snippet': 'PROMISE DATA NOT FOUND',
