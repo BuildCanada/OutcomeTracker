@@ -1,38 +1,15 @@
 import { firestoreAdmin } from "@/lib/firebaseAdmin"; // Server-side Firestore
-// "use client" // REMOVE THIS - This page will now be a Server Component primarily
-
-// Client-side imports are now in HomePageClient.tsx
-// import { useState, useEffect, useCallback } from "react" // MOVED
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" // MOVED
-// import PrimeMinisterSection from "@/components/PrimeMinisterSection" // MOVED to HomePageClient
-// import MinisterSection from "@/components/MinisterSection" // MOVED to HomePageClient
-// import DepartmentsDropdown from "@/components/DepartmentsDropdown" // No longer needed
-
-// Data fetching functions are used by HomePageClient, but types might be needed here or there.
-// import {
-//   fetchMinisterDetails,
-//   fetchPromisesForDepartment,
-//   fetchEvidenceItemsForPromises
-// } from "@/lib/data" 
-
 import HomePageClient from "@/components/HomePageClient"; // NEW IMPORT
 import { Timestamp } from "firebase-admin/firestore"; // Import admin Timestamp
 import { fetchMinisterForDepartmentInSessionAdmin } from "@/lib/server-utils"; // MOVED FUNCTION
 
 import type {
   DepartmentConfig,
-  // DepartmentPageData, // Used by HomePageClient
-  // MinisterDetails, // Used by HomePageClient
-  // PromiseData, // Used by HomePageClient
-  // EvidenceItem, // Used by HomePageClient
-  // Metric, // Not actively used in current server component logic
   PrimeMinister,
   ParliamentSession,
   MinisterInfo, // NEW IMPORT
   Member // NEW IMPORT (for internal use in fetchMinisterForDepartmentInSessionAdmin)
-  // ParliamentaryPosition // Not directly used in Home, but Member uses it
 } from "@/lib/types"
-// import { Skeleton } from "@/components/ui/skeleton" // MOVED to HomePageClient
 
 const DEFAULT_PLACEHOLDER_AVATAR = "/placeholder.svg?height=100&width=100";
 
@@ -50,36 +27,13 @@ const staticPrimeMinisterData: PrimeMinister = {
   ],
 };
 
-// Define the preferred order for main tabs
-// IMPORTANT: These strings MUST exactly match the 'fullName' field
-// in your Firestore 'department_config' collection documents.
-// Double-check casing, spacing, and exact wording (e.g., 'and' vs '&').
-// This constant is not currently used in the logic to sort initialMainTabConfigs but kept for potential future use.
-const MAIN_TAB_ORDER: string[] = [
-  "Infrastructure Canada", 
-  "National Defence",
-  "Health Canada",        
-  "Finance Canada",
-  "Immigration, Refugees and Citizenship Canada",
-  "Employment and Social Development Canada",
-];
-
 // Define a darker border color, e.g., a dark gray from Tailwind's palette or black
 const DARK_BORDER_COLOR = "border-neutral-700"; 
 const HEADER_BOTTOM_BORDER_COLOR = "border-neutral-400"; 
 const NAV_LINK_TEXT_COLOR = "text-neutral-800";
 const NAV_LINK_ACTIVE_TEXT_COLOR = "text-[#8b2332]"; 
 
-// Client-side component to handle the dynamic parts that need state and effects
-// MOVED to PromiseTracker/components/HomePageClient.tsx
-
 // --- Server-Side Data Fetching and Main Page Component ---
-
-// Function to fetch minister details (REVISED to use department_ministers)
-// MOVED to lib/server-utils.ts
-// async function fetchMinisterForDepartmentInSessionAdmin(
-// ... entire function removed ...
-// )
 
 async function getGlobalSessionData(): Promise<ParliamentSession | null> {
   try {
@@ -185,28 +139,23 @@ export default async function Home() {
       settledMinisterInfos.forEach(result => {
         if (result.status === 'fulfilled' && result.value && result.value.info) {
           initialMinisterInfos[result.value.id] = result.value.info;
-          console.log(`[Server LCP Debug] Pre-fetched minister info for tab '${result.value.id}':`, result.value.info?.name);
+          console.log(`[Server LCP Debug] Pre-fetched minister info for tab '${result.value.id}': ${result.value.info?.name}`);
+          if (result.value.id === 'artificial-intelligence-and-digital-innovation') {
+            console.log(`[Server LCP DEBUG - AI & Innovation Tab MinisterInfo]: parliament_session_id: ${globalSession?.id}, minister_info_payload: ${JSON.stringify(result.value.info, null, 2)}`);
+          }
         } else if (result.status === 'rejected') {
           // Log error for specific department if its minister fetch failed
-          // The key for initialMinisterInfos won't be set, or explicitly set to null
-          // We need to know which department failed. The original map had config.id.
-          // This part needs careful handling if map doesn't directly give failed id.
-          // For now, let's assume we can log a general error or find the id.
-          console.error(`[Server LCP Error] Failed to pre-fetch minister for a tab:`, result.reason);
+          // We need to find which config.id corresponds to the failed promise.
+          // This requires a bit more effort if ministerFetchPromises doesn't directly carry the id upon rejection.
+          // For now, logging the reason.
+          console.error(`[Server LCP Error] Failed to pre-fetch minister for a tab. Reason:`, result.reason);
+        } else if (result.status === 'fulfilled' && result.value && !result.value.info) {
+           // Handle cases where the fetch was successful but no minister info was returned (logged by utility fn)
+           initialMinisterInfos[result.value.id] = null; // Explicitly set to null
+           console.log(`[Server LCP Debug] Pre-fetched minister for tab '${result.value.id}': No minister info returned (null).`);
         }
       });
 
-      // The code below that specifically fetched for initialActiveTabConfig is now covered by the loop above.
-      // if (initialActiveTabConfig) {
-      //   const t1 = Date.now();
-      //   const ministerInfoForActiveTab = await fetchMinisterForDepartmentInSessionAdmin(initialActiveTabConfig, globalSession);
-      //   console.log(`[Server LCP Timing] fetchMinisterForDepartmentInSessionAdmin took ${Date.now() - t1} ms`);
-      //   if (ministerInfoForActiveTab) {
-      //     initialMinisterInfos[initialActiveTabId] = ministerInfoForActiveTab;
-      //     console.log(`[Server LCP Debug] Fetched minister info for initial active tab '${initialActiveTabId}':`, ministerInfoForActiveTab);
-      //   }
-      //   // At this point, we have minister info. We can decide if we need to fetch promises/evidence server-side for the first tab.
-      //   // For now, let's just log the minister info.
       // }
     } else if (initialAllDepartmentConfigs.length > 0 && !initialMainTabConfigs.length) {
       // This block executes if there are department configs, but none are marked as bc_priority === 1

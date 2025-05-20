@@ -168,8 +168,28 @@ export default function HomePageClient({
       }
 
       try {
+        // Determine if an override for the department name is needed for fetching promises
+        let effectiveDepartmentFullNameOverride: string | undefined = undefined;
+        if (currentMinisterInfo && 
+            currentMinisterInfo.effectiveDepartmentOfficialFullName &&
+            selectedConfig && 
+            currentMinisterInfo.effectiveDepartmentId !== selectedConfig.id) {
+            effectiveDepartmentFullNameOverride = currentMinisterInfo.effectiveDepartmentOfficialFullName;
+            console.log(`[HomePageClient] Overriding department name for promise fetch. Original: ${departmentFullName}, Effective: ${effectiveDepartmentFullNameOverride} (for department ID: ${activeTabId}, session: ${currentSessionId})`);
+        } else if (currentMinisterInfo && currentMinisterInfo.effectiveDepartmentOfficialFullName && selectedConfig && currentMinisterInfo.effectiveDepartmentId === selectedConfig.id) {
+            // This case is for logging/debugging: an effective name exists but matches the current config, so no override is strictly necessary
+            // but we pass it anyway if fetchPromisesForDepartment is designed to use it consistently or if there's a subtle difference.
+            // For now, we will only override if the IDs differ.
+            // console.log(`[HomePageClient] Effective department name matches current config for ${activeTabId}. No override needed based on ID difference.`);
+        }
+        
         // Fetch promises; each promise will have its .fullPath and .evidence populated by this function call.
-        const promisesForDept = await fetchPromisesForDepartment(departmentFullName, currentSessionId, currentGoverningPartyCode);
+        const promisesForDept = await fetchPromisesForDepartment(
+          departmentFullName, 
+          currentSessionId, 
+          currentGoverningPartyCode,
+          effectiveDepartmentFullNameOverride // Pass the override
+        );
         
         // Optionally, create a flat, unique list of all evidence items for the displayed promises 
         // if this flat list is needed elsewhere (e.g., for a global evidence view or other components).

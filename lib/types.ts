@@ -47,6 +47,8 @@ export interface MinisterInfo {
   avatarUrl?: string;  
   positionStart?: string; // ISO date string
   positionEnd?: string | null; // ISO date string or null if ongoing
+  effectiveDepartmentOfficialFullName?: string; // Added for remapped department name
+  effectiveDepartmentId?: string; // Added for remapped department ID
 }
 // --- END NEW TYPES ---
 

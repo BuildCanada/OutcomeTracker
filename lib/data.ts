@@ -194,7 +194,8 @@ export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise
 export async function fetchPromisesForDepartment(
   departmentFullName: string,
   parliamentSessionId: string | null,
-  governingPartyCode: string | null
+  governingPartyCode: string | null,
+  effectiveDepartmentFullNameOverride?: string
 ): Promise<PromiseData[]> {
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchPromisesForDepartment.");
@@ -209,11 +210,13 @@ export async function fetchPromisesForDepartment(
     return [];
   }
 
+  const departmentNameToQuery = effectiveDepartmentFullNameOverride || departmentFullName;
+
   // Define constants for collection structure (ideally from env or shared config)
   const TARGET_PROMISES_COLLECTION_ROOT = process.env.NEXT_PUBLIC_PROMISES_TARGET_COLLECTION || "promises";
   const DEFAULT_REGION_CODE = "Canada";
 
-  console.log(`Fetching promises for department: ${departmentFullName}, session: ${parliamentSessionId}, party: ${governingPartyCode}`);
+  console.log(`Fetching promises for department (querying as): ${departmentNameToQuery}, original dept: ${departmentFullName}, session: ${parliamentSessionId}, party: ${governingPartyCode}`);
   
   try {
     const promisesColPath = `${TARGET_PROMISES_COLLECTION_ROOT}/${DEFAULT_REGION_CODE}/${governingPartyCode}`;
@@ -222,7 +225,7 @@ export async function fetchPromisesForDepartment(
     const promisesCol = collection(db, promisesColPath);
     const q = query(
       promisesCol,
-      where('responsible_department_lead', '==', departmentFullName),
+      where('responsible_department_lead', '==', departmentNameToQuery),
       where('parliament_session_id', '==', parliamentSessionId),
       where('bc_promise_rank', 'in', ["strong", "medium"])
     );
