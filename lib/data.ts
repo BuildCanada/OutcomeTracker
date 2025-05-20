@@ -223,7 +223,8 @@ export async function fetchPromisesForDepartment(
     const q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentFullName),
-      where('parliament_session_id', '==', parliamentSessionId)
+      where('parliament_session_id', '==', parliamentSessionId),
+      where('bc_promise_rank', 'in', ["strong", "medium"])
     );
 
     const querySnapshot = await getDocs(q);
