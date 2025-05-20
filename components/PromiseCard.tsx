@@ -37,34 +37,36 @@ export default function PromiseCard({ promise, evidenceItems, departmentShortNam
 
   // --- DEBUG LOGS ---
   console.log(`[PromiseCard Debug] Promise ID: ${promise.id}, Promise FullPath: ${promise.fullPath}`);
+  if (promise.evidence && promise.evidence.length > 0) {
+    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} has promise.evidence with ${promise.evidence.length} items. First item ID: ${promise.evidence[0]?.id}`);
+  } else {
+    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - promise.evidence is empty or undefined.`);
+  }
+  // Log the evidenceItems prop for comparison/diagostics if still needed, though we aim to rely less on it.
   if (evidenceItems && evidenceItems.length > 0) {
-    console.log(`[PromiseCard Debug] First few evidenceItems received by card (showing promise_ids):`, 
+    console.log(`[PromiseCard Debug] evidenceItems prop for promise ${promise.id} (showing promise_ids of first 3):`, 
       evidenceItems.slice(0, 3).map(ei => ({ id: ei.id, promise_ids: ei.promise_ids }))
     );
   } else {
-    console.log("[PromiseCard Debug] evidenceItems prop is empty or undefined.");
+    console.log(`[PromiseCard Debug] evidenceItems prop for promise ${promise.id} is empty or undefined.`);
   }
   // --- END DEBUG LOGS ---
 
-  // Filter evidenceItems for those relevant to the current promise
-  // Uses promise.fullPath (which should be the full Firestore path of the promise)
-  // to match against evidence_item.promise_ids (which stores an array of full promise paths)
-  const relevantEvidenceForThisPromise = (evidenceItems || []).filter(e => 
-    e.promise_ids && promise.fullPath && e.promise_ids.includes(promise.fullPath)
-  );
+  // Use promise.evidence directly, as it should be populated by the data fetching layer.
+  const relevantEvidenceForThisPromise = promise.evidence || [];
 
   // --- DEBUG LOGS ---
-  console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - relevantEvidenceForThisPromise count: ${relevantEvidenceForThisPromise.length}`);
+  console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - relevantEvidenceForThisPromise (from promise.evidence) count: ${relevantEvidenceForThisPromise.length}`);
   if (relevantEvidenceForThisPromise.length > 0) {
-    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - First relevant evidence:`, relevantEvidenceForThisPromise[0]);
+    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - First relevant evidence (from promise.evidence):`, relevantEvidenceForThisPromise[0]);
   }
   // --- END DEBUG LOGS ---
 
-  // Use linked_evidence_ids for the count if available, otherwise fallback to filtered length
-  // This assumes linked_evidence_ids is the source of truth from the promise document itself.
+  // Use linked_evidence_ids for the count if available, otherwise fallback to the length of promise.evidence.
   const evidenceCount = promise.linked_evidence_ids?.length ?? relevantEvidenceForThisPromise.length;
 
   let dateRangeString: string | null = null;
+  // Date range calculation now uses relevantEvidenceForThisPromise (which is promise.evidence)
   if (relevantEvidenceForThisPromise.length > 0) {
     // Sort relevant evidence by date to find the first and last dates
     const sortedEvidenceForDateRange = [...relevantEvidenceForThisPromise].sort((a, b) => {
@@ -90,10 +92,15 @@ export default function PromiseCard({ promise, evidenceItems, departmentShortNam
     }
   }
 
-  // Prepare the promise data specifically for the modal, ensuring 'evidence' is correctly populated.
+  // Prepare the promise data specifically for the modal.
+  // Since promise.evidence is already what we need, we can pass the promise object directly
+  // if PromiseModal is designed to use promise.evidence.
+  // For clarity, we ensure promiseForModal has the correct evidence array.
   const promiseForModal: PromiseData = {
-    ...promise,
-    evidence: relevantEvidenceForThisPromise,
+    ...promise, // This spread includes promise.evidence if it's populated
+    // If 'promise' object passed to modal already has 'evidence' populated correctly,
+    // this explicit setting might be redundant, but ensures clarity.
+    evidence: relevantEvidenceForThisPromise, 
   };
 
   const handleCardClick = () => {
