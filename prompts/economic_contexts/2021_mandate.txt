@@ -1,0 +1,17 @@
+ElectionContext heading into the September 2021 federal election:
+Canada entered the campaign with output finally back to (just) above its 2019 level, but GDP per capita, labour-productivity growth, and private investment were still below pre-pandemic peaks, underscoring widening gaps with the U.S. on most Build Canada tenets (productivity, investment, export scale). Inflation was heating, unemployment was falling but not yet back to 2019 lows, and the federal balance sheet remained deeply in deficit.
+
+Indicator | 2017–2021 Trend
+---|---
+Nominal GDP | ↑ from C$1.83 T (2017) → C$2.03 T (2021) despite a 2020 drop; Goods ~27%, Services ~73%
+Real GDP Growth | +3.2% (2017) → +1.9% (2019) → -5.2% (2020) → +4.6% (2021)
+GDP per Capita | Fell –2.6% below 2019 level by end-2021
+Labour Productivity | Grew –0.9% annually (2001–2021) vs ~2.0% in the U.S.; productivity gap widened
+Non-Residential Business Investment | –20% from 2014 peak; only half recovered by late 2021
+Merchandise Trade Balance | Deficits 2015–2020 → C$4.6 Bn surplus in 2021
+Top Export Products | Crude oil ~C$100 Bn, Autos 35 Bn, Gold 24 Bn, Refined petroleum 16 Bn, Wood 15 Bn
+Unemployment Rate | Peak 9.5% (2020) → 5.9% (Dec 2021); above Feb 2020 (5.7%)
+CPI Inflation | +3.4% avg in 2021 vs +0.7% in 2020 — fastest since 1991
+Federal Deficit | —C$90 Bn (FY 2021), ~3% of GDP; down from ~13% of GDP in 2020
+
+All figures sourced from Statistics Canada, Department of Finance Canada, or Bank of Canada releases available as of April 2025. Nominal values in Canadian dollars; real GDP chained to 2017 dollars where applicable. 
