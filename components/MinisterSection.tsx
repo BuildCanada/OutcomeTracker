@@ -40,6 +40,9 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   const positionStart = ministerInfo?.positionStart;
   const positionEnd = ministerInfo?.positionEnd;
 
+  // Use the effective department name if available, otherwise fall back to the prop
+  const displayDepartmentFullName = ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName;
+
   let tenureString = "";
   const formattedStartDate = formatDate(positionStart);
   const formattedEndDate = formatDate(positionEnd);
@@ -81,7 +84,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
           <div>
             <h2 className="text-3xl font-bold text-[#222222]">{ministerName}</h2>
             <p className="text-lg text-[#555555]">{ministerTitle}</p>
-            <p className="text-sm text-[#8b2332]">{departmentFullName}</p>
+            <p className="text-sm text-[#8b2332]">{displayDepartmentFullName}</p>
             {tenureString && (
               <p className="text-xs text-gray-500 mt-1">{tenureString}</p>
             )}

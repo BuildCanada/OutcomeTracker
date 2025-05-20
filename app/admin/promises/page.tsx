@@ -188,20 +188,46 @@ export default function ManagePromisesPage() {
   };
 
   const handleSaveEdit = async () => {
-    if (!editablePromiseData) return;
+    if (!editablePromiseData || !editablePromiseData.id) {
+      setError("No promise data to save or promise ID is missing.");
+      return;
+    }
     setIsLoading(true);
+    setError(null);
+
     try {
-      console.log('Saving promise:', editablePromiseData);
-      // TODO: Implement API call (e.g., PUT /api/admin/promises/[promiseId])
-      const updatedPromises = allFetchedPromises.map(p => p.id === editablePromiseData.id ? { ...editablePromiseData } : p);
-      setAllFetchedPromises(updatedPromises);
-            
+      // Exclude 'id' from the payload as it's part of the URL
+      const { id, ...updatePayload } = editablePromiseData;
+
+      const response = await fetch(`/api/admin/promises/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to save promise: ${response.statusText} (Status: ${response.status})`);
+      }
+
+      // Successfully saved to API
       setIsEditDialogOpen(false);
       setEditablePromiseData(null);
 
+      // Re-fetch promises to reflect changes and ensure data consistency
+      // Determine if we need the large limit based on current filters
+      const shouldUseLargeLimit = filters.source_type === 'all' && filters.bc_promise_rank === 'all';
+      await fetchAndSetPromises(filters, shouldUseLargeLimit ? 5000 : undefined);
+      
+      // Optionally, show a success message (e.g., using a toast notification library)
+      console.log("Promise updated successfully!");
+
     } catch (e: any) {
       console.error("Error saving promise:", e);
-      setError("Failed to save promise: " + e.message);
+      setError(`Failed to save promise: ${e.message}`);
+      // No need to revert optimistic update here as we're re-fetching on success or relying on error display
     }
     setIsLoading(false);
   };
@@ -343,7 +369,7 @@ export default function ManagePromisesPage() {
                 if (key === 'id') return null; 
                 const label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                 let value = editablePromiseData[key];
-                const displayValue = value === null || value === undefined ? '' : value;
+                const originalDisplayValue = value === null || value === undefined ? '' : value;
                 
                 if (key === 'text' || key === 'bc_promise_rank_rationale') {
                   return (
@@ -351,7 +377,7 @@ export default function ManagePromisesPage() {
                       <Label htmlFor={key} className="text-right col-span-1">{label}</Label>
                       <Textarea 
                         id={key} 
-                        value={displayValue as string}
+                        value={originalDisplayValue as string}
                         onChange={(e) => handleEditableFieldChange(key, e.target.value)} 
                         className="col-span-3"
                         rows={key === 'text' ? 4: 2}
@@ -360,16 +386,21 @@ export default function ManagePromisesPage() {
                     </div>
                   );
                 } else if (key === 'bc_promise_rank') {
+                  const selectValueForRank = value === null || value === undefined ? 'no_rank_selected' : value;
                   return (
                     <div className="grid grid-cols-4 items-center gap-4" key={key}>
                       <Label htmlFor={key} className="text-right col-span-1">{label}</Label>
-                      <Select value={displayValue as string} onValueChange={(val) => handleEditableFieldChange(key, val === '' ? null : val)} disabled={isLoading}>
+                      <Select 
+                        value={selectValueForRank as string} 
+                        onValueChange={(val) => handleEditableFieldChange(key, val === 'no_rank_selected' ? null : val)} 
+                        disabled={isLoading}
+                      >
                         <SelectTrigger className="col-span-3"><SelectValue placeholder={`Select ${label}`} /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="strong">Strong</SelectItem>
                           <SelectItem value="medium">Medium</SelectItem>
                           <SelectItem value="weak">Weak</SelectItem>
-                          <SelectItem value="">N/A (Not Ranked)</SelectItem>
+                          <SelectItem value="no_rank_selected">N/A (Not Ranked)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -380,10 +411,10 @@ export default function ManagePromisesPage() {
                     <Label htmlFor={key} className="text-right col-span-1">{label}</Label>
                     <Input 
                       id={key} 
-                      value={(typeof displayValue === 'string' || typeof displayValue === 'number') ? displayValue : JSON.stringify(displayValue)} 
+                      value={(typeof originalDisplayValue === 'string' || typeof originalDisplayValue === 'number') ? originalDisplayValue : JSON.stringify(originalDisplayValue)} 
                       onChange={(e) => handleEditableFieldChange(key, e.target.value)} 
                       className="col-span-3" 
-                      disabled={isLoading || (typeof displayValue === 'object' && displayValue !== '' && !Array.isArray(displayValue))}
+                      disabled={isLoading || (typeof originalDisplayValue === 'object' && originalDisplayValue !== '' && !Array.isArray(originalDisplayValue))}
                     />
                   </div>
                 );
