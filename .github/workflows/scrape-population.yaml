@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 env:
-  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl\!downloadDbLoadingData-nonTraduit.action\?pid\=1710000901\&latestN\=0\&startDate\=19000101\&endDate\=20251001\&csvLocale\=en\&selectedMembers\=%5B%5B1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10%2C11%2C12%2C14%2C15%5D%5D\&checkedLevels\=
+  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl\!downloadDbLoadingData-nonTraduit.action\?pid\=1710000901\&latestN\=0\&startDate\=19000101\&endDate\=\&csvLocale\=en\&selectedMembers\=%5B%5B1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10%2C11%2C12%2C14%2C15%5D%5D\&checkedLevels\=
   COMMIT_MSG: Update Population Data
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run the scraper
         run: |
-          python scrape.py ${{ env.STATS_CAN_URL }} metrics/statscan/population.json
+          python scrape.py '${{ env.STATS_CAN_URL }}' metrics/statscan/population.json
       # Commit as brendan so vercel will deploy it
       - name: Commit and push
         run: |-

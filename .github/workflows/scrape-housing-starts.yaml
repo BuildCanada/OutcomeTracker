@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 env:
-  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData.action?pid=3410015101&latestN=0&startDate=19880101&endDate=20250401&csvLocale=en&selectedMembers=%5B%5B%5D%2C%5B1%5D%2C%5B%5D%5D&checkedLevels=0D1%2C2D1%2C2D2
+  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData.action?pid=3410015101&latestN=0&startDate=19880101&endDate=&csvLocale=en&selectedMembers=%5B%5B%5D%2C%5B1%5D%2C%5B%5D%5D&checkedLevels=0D1%2C2D1%2C2D2
   COMMIT_MSG: Update Housing Start Data
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run the scraper
         run: |
-          python scrape.py ${{ env.STATS_CAN_URL }} metrics/statscan/housing-starts.json "Type of unit"
+          python scrape.py '${{ env.STATS_CAN_URL }}' metrics/statscan/housing-starts.json "Type of unit"
       # Commit as brendan so vercel will deploy it
       - name: Commit and push
         run: |-
