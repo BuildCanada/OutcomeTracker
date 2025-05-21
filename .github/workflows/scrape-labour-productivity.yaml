@@ -1,0 +1,36 @@
+name: Scrape Labour Productivity Data
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    # Daily at 9:23 AM UTC
+    - cron: "23 9 * * *"
+  # For hourly at 42 minutes past the hour: '42 * * * *'
+
+permissions:
+  contents: write
+
+env:
+  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData-nonTraduit.action?pid=3610020701&latestN=0&startDate=19801001&endDate=&csvLocale=en&selectedMembers=%5B%5B1%5D%2C%5B5%5D%2C%5B1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10%2C11%2C13%2C14%2C15%2C16%2C17%2C18%2C19%2C20%2C21%5D%5D&checkedLevels=
+  COMMIT_MSG: Update Labour Productivity Data
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.repository.is_template }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the scraper
+        run: |
+          python scrape.py '${{ env.STATS_CAN_URL }}' metrics/statscan/labour-productivity.json "North American Industry Classification System (NAICS)"
+      # Commit as brendan so vercel will deploy it
+      - name: Commit and push
+        run: |-
+          git config user.name "Automated"
+          git config user.email "brendan@brendansamek.com"
+          git add -A
+          timestamp=$(date -u)
+          git commit -m "${{ env.COMMIT_MSG }} - ${timestamp}" || exit 0
+          git pull --rebase
+          git push
