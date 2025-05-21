@@ -84,13 +84,29 @@ export default function PopulationChart({
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top" as const,
+        padding: 20,
+        labels: {
+          padding: 15,
+          font: {
+            size: 12,
+          },
+        },
       },
       title: {
         display: true,
         text: title,
+        font: {
+          size: 16,
+          weight: 'bold',
+        },
+        padding: {
+          top: 10,
+          bottom: 20,
+        },
       },
     },
     scales: {
@@ -99,16 +115,48 @@ export default function PopulationChart({
         title: {
           display: true,
           text: "Population",
+          font: {
+            size: 14,
+          },
+          padding: {
+            bottom: 10,
+          },
+        },
+        ticks: {
+          padding: 8,
         },
       },
       x: {
         title: {
           display: true,
           text: "Year-Month",
+          font: {
+            size: 14,
+          },
+          padding: {
+            top: 10,
+          },
         },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          padding: 5,
+        },
+      },
+    },
+    layout: {
+      padding: {
+        left: 15,
+        right: 15,
+        top: 20,
+        bottom: 20,
       },
     },
   };
 
-  return <Line data={chartData} options={options} />;
+  return (
+    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+      <Line data={chartData} options={options} />
+    </div>
+  );
 }
