@@ -99,15 +99,7 @@ def standardize_department_name(name_variant):
             return None
 
     original_name_str = str(name_variant).strip()
-    
-    # Normalize apostrophes and spaces, and convert to lowercase
-    normalized_name = (original_name_str.lower()
-                       .replace("\' ", "\'")  # Handle various apostrophes + space combinations
-                       .replace("\' ", "\'")
-                       .replace("`", "\'")
-                       .replace("´", "\'")
-                       .replace('\xa0', ' ') # Non-breaking space
-                       .strip())
+    normalized_name = original_name_str.lower().strip()
 
     if not normalized_name or normalized_name == 'nan':
          logger.debug(f"Input '{original_name_str}' normalized to empty or NaN, returning None.")
@@ -115,25 +107,33 @@ def standardize_department_name(name_variant):
 
     try:
         dept_config_ref = db.collection('department_config')
-        # Query where the name_variants array contains the normalized input
+        # 1. Try name_variants
         query = dept_config_ref.where(filter=FieldFilter('name_variants', 'array_contains', normalized_name)).limit(1)
         results = list(query.stream()) # Using list() to execute and get results easily
-
         if results:
             department_doc = results[0].to_dict()
             official_full_name = department_doc.get('official_full_name')
             if official_full_name:
-                logger.debug(f"Standardized '{original_name_str}' (Normalized: '{normalized_name}') to '{official_full_name}' via Firestore.")
+                logger.debug(f"Standardized '{original_name_str}' (Normalized: '{normalized_name}') to '{official_full_name}' via name_variants.")
                 return official_full_name
-            else:
-                logger.warning(f"Found matching doc for '{normalized_name}' in Firestore but 'official_full_name' is missing. Doc ID: {results[0].id}")
-                # Log unmapped variant even if doc is found but official_full_name is missing
-                _log_unmapped_variant(original_name_str, normalized_name)
-                return None
-        else:
-            logger.warning(f"Unmapped department variant: '{normalized_name}' (for input '{original_name_str}') in Firestore department_config.")
-            _log_unmapped_variant(original_name_str, normalized_name)
-            return None
+        # 2. Try official_full_name (case-insensitive, exact match)
+        query2 = dept_config_ref.where(filter=FieldFilter('official_full_name', '==', original_name_str)).limit(1)
+        results2 = list(query2.stream())
+        if results2:
+            department_doc = results2[0].to_dict()
+            official_full_name = department_doc.get('official_full_name')
+            if official_full_name:
+                logger.debug(f"Standardized '{original_name_str}' to '{official_full_name}' via official_full_name (case-sensitive match).")
+                return official_full_name
+        # 3. Try official_full_name (lowercase match)
+        for doc in dept_config_ref.stream():
+            doc_dict = doc.to_dict()
+            if doc_dict.get('official_full_name', '').lower() == normalized_name:
+                logger.debug(f"Standardized '{original_name_str}' to '{doc_dict.get('official_full_name')}' via official_full_name (lowercase match).")
+                return doc_dict.get('official_full_name')
+        logger.warning(f"Unmapped department variant: '{normalized_name}' (for input '{original_name_str}') in Firestore department_config.")
+        _log_unmapped_variant(original_name_str, normalized_name)
+        return None
     except Exception as e:
         logger.error(f"Error querying Firestore for department standardization of '{normalized_name}': {e}", exc_info=True)
         # Log unmapped variant on error too, as it might be a persistent issue
