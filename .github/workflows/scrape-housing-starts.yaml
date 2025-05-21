@@ -1,0 +1,36 @@
+name: Scrape Housing Starts Data
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    # Daily at 6:23 AM UTC
+    - cron: "23 6 * * *"
+  # For hourly at 42 minutes past the hour: '42 * * * *'
+
+permissions:
+  contents: write
+
+env:
+  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData.action?pid=3410015101&latestN=0&startDate=19880101&endDate=20250401&csvLocale=en&selectedMembers=%5B%5B%5D%2C%5B1%5D%2C%5B%5D%5D&checkedLevels=0D1%2C2D1%2C2D2
+  COMMIT_MSG: Update Housing Start Data
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.repository.is_template }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the scraper
+        run: |
+          python scrape.py ${{ env.STATS_CAN_URL }} metrics/statscan/housing-starts.json "Type of unit"
+      # Commit as brendan so vercel will deploy it
+      - name: Commit and push
+        run: |-
+          git config user.name "Automated"
+          git config user.email "brendan@brendansamek.com"
+          git add -A
+          timestamp=$(date -u)
+          git commit -m "${{ env.COMMIT_MSG }} - ${timestamp}" || exit 0
+          git pull --rebase
+          git push
