@@ -7,6 +7,7 @@ if len(sys.argv) < 2:
 
 data_url = sys.argv[1]
 out_path = sys.argv[2] if len(sys.argv) > 2 else None
+FACET = sys.argv[3] if len(sys.argv) > 3 else "GEO"
 
 # extract pid
 qs = parse_qs(urlparse(data_url).query)
@@ -30,7 +31,7 @@ def fetch_data(url):
     next(dr)
     out={}
     for row in dr:
-        g, d = row['GEO'], row['REF_DATE']
+        g, d = row[FACET], row['REF_DATE']
         v = float(row['VALUE']) if row['VALUE'] else None
         out.setdefault(g, []).append([d, v])
     return out
@@ -60,7 +61,10 @@ pretty = json.dumps(output, indent=2, sort_keys=True)
 
 # collapse any two-element arrays onto one line:
 #   [\n    "date",\n    value\n  ]  → [ "date", value ]
-pattern = re.compile(r'\[\s*\n\s*"([^"]+)",\s*([0-9]+(?:\.[0-9]+)?)\s*\n\s*\]', re.MULTILINE)
+pattern = re.compile(
+    r'\[\s*\n\s*"([^"]+)",\s*(-?[0-9]+(?:\.[0-9]+)?)\s*\n\s*\]',
+    re.MULTILINE
+)
 collapsed = pattern.sub(r'[ "\1", \2 ]', pretty)
 
 if out_path:
