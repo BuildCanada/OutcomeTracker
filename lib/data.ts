@@ -226,8 +226,7 @@ export async function fetchPromisesForDepartment(
     const q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentNameToQuery),
-      where('parliament_session_id', '==', parliamentSessionId),
-      where('bc_promise_rank', 'in', ["strong", "medium"])
+      where('parliament_session_id', '==', parliamentSessionId)
     );
 
     const querySnapshot = await getDocs(q);
@@ -245,6 +244,11 @@ export async function fetchPromisesForDepartment(
         linked_evidence_ids: data.linked_evidence_ids || [],
         evidence: [],
         commitment_history_rationale: data.commitment_history_rationale || [],
+        progress_score: data.progress_score ?? undefined,
+        progress_summary: data.progress_summary ?? undefined,
+        bc_promise_rank: data.bc_promise_rank ?? undefined,
+        bc_promise_rank_rationale: data.bc_promise_rank_rationale ?? undefined,
+        bc_promise_direction: data.bc_promise_direction ?? undefined,
       };
 
       if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {

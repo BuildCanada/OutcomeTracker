@@ -6,7 +6,7 @@ import PrimeMinisterSection from "@/components/PrimeMinisterSection";
 import MinisterSection from "@/components/MinisterSection";
 import {
   fetchPromisesForDepartment,
-  fetchEvidenceItemsForPromises
+  // fetchEvidenceItemsForPromises // This seems unused now, consider removing if not needed elsewhere
 } from "@/lib/data";
 import type {
   DepartmentConfig,
@@ -46,7 +46,7 @@ export default function HomePageClient({
   
   const [activeTabId, setActiveTabId] = useState<string>(initialActiveTabId);
   const [activeDepartmentData, setActiveDepartmentData] = useState<DepartmentPageData | null>(null);
-  const [currentMinisterInfo, setCurrentMinisterInfo] = useState<MinisterInfo | null | undefined>(undefined); // Allow undefined for pending state
+  const [currentMinisterInfo, setCurrentMinisterInfo] = useState<MinisterInfo | null | undefined>(undefined);
 
   // isLoadingConfig is effectively handled by server component rendering or suspense
   const [isLoadingTabData, setIsLoadingTabData] = useState<boolean>(false);
@@ -58,14 +58,11 @@ export default function HomePageClient({
     setMinisterInfos(initialMinisterInfos);
     if(initialActiveTabId) {
       setActiveTabId(initialActiveTabId);
-      // currentMinisterInfo will be set by the effect watching [activeTabId, ministerInfos]
     } else if (initialMainTabConfigs.length > 0) {
-      const firstTabId = initialMainTabConfigs[0].id;
-      setActiveTabId(firstTabId);
-      // currentMinisterInfo will be set by the effect watching [activeTabId, ministerInfos]
+      setActiveTabId(initialMainTabConfigs[0].id);
     } else {
       setActiveTabId("");
-      setCurrentMinisterInfo(null); // No tabs, no minister
+      setCurrentMinisterInfo(null); 
     }
   }, [initialAllDepartmentConfigs, initialMainTabConfigs, initialActiveTabId, initialMinisterInfos]);
 
@@ -74,11 +71,8 @@ export default function HomePageClient({
     if (activeTabId) {
       if (ministerInfos.hasOwnProperty(activeTabId)) {
         setCurrentMinisterInfo(ministerInfos[activeTabId]);
-        // activeDepartmentData will be updated by loadPromiseDataForTab effect
       } else {
-        // Data is not yet fetched/cached for this tab. Minister info is pending.
-        setCurrentMinisterInfo(undefined); 
-        setActiveDepartmentData(null); // Clear stale department data immediately
+        setCurrentMinisterInfo(undefined); // Mark as pending, data loading effect will fetch
       }
     } else {
       setCurrentMinisterInfo(null); // No active tab
@@ -86,144 +80,126 @@ export default function HomePageClient({
     }
   }, [activeTabId, ministerInfos]);
 
-  // New useEffect for fetching minister info if not cached
+  // Combined effect for fetching ALL data (minister and promises) for the active tab
   useEffect(() => {
-    const fetchMinisterDataForTab = async () => {
+    const loadDataForActiveTab = async () => {
       if (!activeTabId || !currentSessionId) {
-        return;
-      }
-
-      // If minister info is already loaded and cached for this tab, don't refetch.
-      // The other useEffect [activeTabId, ministerInfos] will set currentMinisterInfo.
-      if (ministerInfos.hasOwnProperty(activeTabId)) {
-        return;
-      }
-
-      console.log(`[HomePageClient] Minister info for ${activeTabId} not cached. Fetching...`);
-      setIsLoadingTabData(true); // Indicate that tab data is now loading (covers minister part)
-      setError(null); // Clear previous general errors
-
-      try {
-        const response = await fetch(`/api/minister-info?departmentId=${activeTabId}&sessionId=${currentSessionId}`);
-        if (!response.ok) {
-          let errorMsg = `Error fetching minister: ${response.statusText}`;
-          try {
-              const errorData = await response.json();
-              errorMsg = errorData.error || errorMsg;
-          } catch (e) { /* ignore json parsing error for error object */ }
-          throw new Error(errorMsg);
+        setActiveDepartmentData(null); // Clear data if no tab or session
+        if (!currentSessionId && activeTabId && !error) {
+            //setError("No active parliamentary session selected for data fetching.");
+            // console.warn("[HomePageClient] No active parliamentary session, cannot fetch tab data.");
         }
-        const data: MinisterInfo | null = await response.json();
-        
-        setMinisterInfos(prevInfos => ({
-          ...prevInfos,
-          [activeTabId]: data,
-        }));
-        // currentMinisterInfo will be updated by the effect watching [activeTabId, ministerInfos]
-        // No need to set setIsLoadingTabData(false) here; loadPromiseDataForTab will handle it.
-      } catch (err: any) {
-        console.error(`[HomePageClient] Failed to fetch minister info for ${activeTabId}:`, err);
-        setError(err.message || "Failed to load minister information.");
-        setMinisterInfos(prevInfos => ({
-          ...prevInfos,
-          [activeTabId]: null, // Cache null on error to prevent retries and allow promise loading (if applicable)
-        }));
-        // setIsLoadingTabData(false) will be handled by loadPromiseDataForTab.
-      }
-    };
-
-    fetchMinisterDataForTab();
-  }, [activeTabId, currentSessionId]); // ministerInfos is intentionally not a dependency here
-
-  useEffect(() => {
-    if (!activeTabId || !currentSessionId) { 
-        if(!currentSessionId && activeTabId && !error) setError("No active parliamentary session selected for data fetching.");
-        setActiveDepartmentData(null);
         return;
-    }
+      }
 
-    // If currentMinisterInfo is undefined, it means minister data is being fetched or hasn't been fetched yet.
-    // Wait for it to become defined (either MinisterInfo or null).
-    if (currentMinisterInfo === undefined) {
-      // Minister info is pending, don't load promises yet.
-      // setIsLoadingTabData(true) would have been set by the minister fetching effect if it started.
-      return;
-    }
+      const thisTabId = activeTabId; // Capture tab ID at the start of this async operation
 
-    const loadPromiseDataForTab = async () => {
       setIsLoadingTabData(true);
       setError(null);
+      // setActiveDepartmentData(null); // Clear previous tab's data immediately - this can cause a flash of loading state, let skeleton handle it
+
+      let ministerInfoForThisTab = ministerInfos[thisTabId]; // Try to get from cache first
+
+      // 1. Fetch Minister Info if not cached for THIS tab ID
+      if (!ministerInfos.hasOwnProperty(thisTabId)) {
+        console.log(`[HomePageClient] Minister info for ${thisTabId} not cached. Fetching...`);
+        try {
+          const response = await fetch(`/api/minister-info?departmentId=${thisTabId}&sessionId=${currentSessionId}`);
+          if (!response.ok) {
+            let errorMsg = `Error fetching minister for ${thisTabId}: ${response.statusText}`;
+            try { const errorData = await response.json(); errorMsg = errorData.error || errorMsg; } catch (e) { /* ignore */ }
+            throw new Error(errorMsg);
+          }
+          ministerInfoForThisTab = await response.json();
+          
+          if (activeTabId !== thisTabId) return; // Tab changed during minister fetch, abort
+
+          setMinisterInfos(prev => ({ ...prev, [thisTabId]: ministerInfoForThisTab }));
+          // setCurrentMinisterInfo will be updated by the separate effect watching ministerInfos
+        } catch (err: any) {
+          if (activeTabId !== thisTabId) return; // Tab changed, abort
+          console.error(`[HomePageClient] Failed to fetch minister info for ${thisTabId}:`, err);
+          setError(err.message || "Failed to load minister information.");
+          setMinisterInfos(prev => ({ ...prev, [thisTabId]: null })); // Cache null on error
+          setIsLoadingTabData(false);
+          setActiveDepartmentData({ ministerInfo: null, promises: [], evidenceItems: [] }); // Show error state for promises too
+          return; // Stop if minister fetch fails
+        }
+      } else {
+        console.log(`[HomePageClient] Minister info for ${thisTabId} found in cache.`);
+      }
       
-      const selectedConfig = allDepartmentConfigs.find(c => c.id === activeTabId);
+      // Ensure we are using the most up-to-date minister info for the *current* thisTabId,
+      // especially if it was just fetched and setMinisterInfos was called.
+      // The separate effect listening to ministerInfos will update currentMinisterInfo, 
+      // but for this specific load sequence, we use ministerInfoForThisTab directly if it was fetched,
+      // or the cached value if it was already there.
+      const finalMinisterInfoToUse = ministerInfos.hasOwnProperty(thisTabId) ? ministerInfos[thisTabId] : ministerInfoForThisTab;
+
+      // 2. Fetch Promises using the (now hopefully correct) minister info for thisTabId
+      const selectedConfig = allDepartmentConfigs.find(c => c.id === thisTabId);
       if (!selectedConfig) {
+        if (activeTabId !== thisTabId) return; // Tab changed
         setError("Could not find configuration for the selected department.");
         setIsLoadingTabData(false);
         return;
       }
       const departmentFullName = selectedConfig.official_full_name;
       if (!departmentFullName || typeof departmentFullName !== 'string') {
-        setError(`Department full name is missing or invalid for ID: ${activeTabId}`);
+        if (activeTabId !== thisTabId) return; // Tab changed
+        setError(`Department full name is missing or invalid for ID: ${thisTabId}`);
         setIsLoadingTabData(false);
         return;
       }
 
       try {
-        // Determine if an override for the department name is needed for fetching promises
         let effectiveDepartmentFullNameOverride: string | undefined = undefined;
-        if (currentMinisterInfo && 
-            currentMinisterInfo.effectiveDepartmentOfficialFullName &&
+        if (finalMinisterInfoToUse && 
+            finalMinisterInfoToUse.effectiveDepartmentOfficialFullName &&
             selectedConfig && 
-            currentMinisterInfo.effectiveDepartmentId !== selectedConfig.id) {
-            effectiveDepartmentFullNameOverride = currentMinisterInfo.effectiveDepartmentOfficialFullName;
-            console.log(`[HomePageClient] Overriding department name for promise fetch. Original: ${departmentFullName}, Effective: ${effectiveDepartmentFullNameOverride} (for department ID: ${activeTabId}, session: ${currentSessionId})`);
-        } else if (currentMinisterInfo && currentMinisterInfo.effectiveDepartmentOfficialFullName && selectedConfig && currentMinisterInfo.effectiveDepartmentId === selectedConfig.id) {
-            // This case is for logging/debugging: an effective name exists but matches the current config, so no override is strictly necessary
-            // but we pass it anyway if fetchPromisesForDepartment is designed to use it consistently or if there's a subtle difference.
-            // For now, we will only override if the IDs differ.
-            // console.log(`[HomePageClient] Effective department name matches current config for ${activeTabId}. No override needed based on ID difference.`);
+            finalMinisterInfoToUse.effectiveDepartmentId !== selectedConfig.id) {
+            effectiveDepartmentFullNameOverride = finalMinisterInfoToUse.effectiveDepartmentOfficialFullName;
         }
         
-        // Fetch promises; each promise will have its .fullPath and .evidence populated by this function call.
+        console.log(`[HomePageClient] Fetching promises for dept: ${departmentFullName}, session: ${currentSessionId}, party: ${currentGoverningPartyCode}, override: ${effectiveDepartmentFullNameOverride}`);
         const promisesForDept = await fetchPromisesForDepartment(
           departmentFullName, 
           currentSessionId, 
           currentGoverningPartyCode,
-          effectiveDepartmentFullNameOverride // Pass the override
+          effectiveDepartmentFullNameOverride
         );
         
-        // Optionally, create a flat, unique list of all evidence items for the displayed promises 
-        // if this flat list is needed elsewhere (e.g., for a global evidence view or other components).
-        // PromiseCard will use its own promise.evidence for its modal timeline.
         const allEvidenceItemsForDeptFlat = promisesForDept.reduce((acc, promise) => {
           if (promise.evidence) {
-            // Add evidence items to the accumulator if they are not already present (based on evidence ID)
             promise.evidence.forEach(ev => {
-              if (!acc.find(existingEv => existingEv.id === ev.id)) {
-                acc.push(ev);
-              }
+              if (!acc.find(existingEv => existingEv.id === ev.id)) acc.push(ev);
             });
           }
           return acc;
         }, [] as EvidenceItem[]);
 
+        if (activeTabId !== thisTabId) return; // Tab changed during promise fetch, abort
+
+        console.log(`[HomePageClient] Setting active department data for ${thisTabId} with minister:`, finalMinisterInfoToUse?.name, `and ${promisesForDept.length} promises.`);
         setActiveDepartmentData({
-          ministerInfo: currentMinisterInfo,
-          promises: promisesForDept, // Each promise already has .fullPath and .evidence populated
-          evidenceItems: allEvidenceItemsForDeptFlat // A flat, unique list of evidence items for this department view
+          ministerInfo: finalMinisterInfoToUse,
+          promises: promisesForDept,
+          evidenceItems: allEvidenceItemsForDeptFlat
         });
 
-      } catch (err) {
-        console.error(`Error fetching promise data for department ${departmentFullName} (Session: ${currentSessionId}):`, err);
+      } catch (err: any) {
+        if (activeTabId !== thisTabId) return; // Tab changed
+        console.error(`[HomePageClient] Error fetching promise data for department ${departmentFullName} (Session: ${currentSessionId}):`, err);
         setError(`Failed to load promise data for ${departmentFullName}.`);
-        setActiveDepartmentData({ ministerInfo: currentMinisterInfo, promises: [], evidenceItems: []}); 
+        setActiveDepartmentData({ ministerInfo: finalMinisterInfoToUse, promises: [], evidenceItems: []}); 
       } finally {
+        if (activeTabId !== thisTabId) return; // Ensure still on the same tab before stopping loader
         setIsLoadingTabData(false);
       }
     };
-    loadPromiseDataForTab();
-  }, [activeTabId, allDepartmentConfigs, currentSessionId, currentGoverningPartyCode, currentMinisterInfo]);
 
-  // const handleDropdownSelect = useCallback((departmentId: string) => { setActiveTabId(departmentId); }, []); // Removed
+    loadDataForActiveTab();
+  }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, error]); // Added ministerInfos and error
 
   // Actual JSX rendering for the client component
   return (
@@ -232,7 +208,7 @@ export default function HomePageClient({
       <div className="container mx-auto max-w-5xl px-4 py-12">
         <h1 className="mb-12 text-center text-5xl font-bold text-[#222222]">{pageTitle}</h1>
         <PrimeMinisterSection primeMinister={dynamicPrimeMinisterData} />
-        {error && !isLoadingTabData && <div className="text-red-500 text-center my-4">Error: {error}</div>} {/* Show general error if not loading tab data */}
+        {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>} {/* Show general error if not loading tab data AND no promises loaded*/}
         
         {mainTabConfigs.length > 0 ? (
           <Tabs value={activeTabId} onValueChange={setActiveTabId} className="mt-16">
@@ -251,8 +227,11 @@ export default function HomePageClient({
             {mainTabConfigs.map((dept) => (
               <TabsContent key={dept.id} value={dept.id} 
                 className="border border-t-0 border-[#d3c7b9] bg-white p-6 data-[state=inactive]:hidden mt-0 rounded-b-md shadow-sm"
-                forceMount
+                forceMount // Keep forceMount if you want to pre-render all tab contents (can be heavy)
+                          // Remove it if you want lazy rendering (better performance for many tabs)
               >
+                {/* Conditional rendering based on activeTabId happens inside MinisterSection now via departmentPageData */}
+                {/* Only render the content if this tab (dept.id) is the active one and data is ready or loading */}
                 {activeTabId === dept.id && (
                   isLoadingTabData ? (
                     <div className="space-y-4">
@@ -260,18 +239,20 @@ export default function HomePageClient({
                       <Skeleton className="h-8 w-1/3 bg-gray-200" />
                       <Skeleton className="h-40 w-full bg-gray-200" />
                     </div>
-                  ) : error && !activeDepartmentData?.promises.length ? (
+                  ) : error && (!activeDepartmentData || activeDepartmentData.promises.length === 0) ? (
                     <div className="text-center py-10 text-red-600 bg-red-100 border border-red-400 p-4">
                       {`Error loading data for ${dept.display_short_name}: ${error}`}
                     </div>
-                  ) : activeDepartmentData ? (
+                  ) : activeDepartmentData && activeDepartmentData.ministerInfo !== undefined ? (
                     <MinisterSection 
-                      departmentPageData={activeDepartmentData}
-                      departmentFullName={dept.official_full_name}
+                      departmentPageData={activeDepartmentData} // This now correctly contains data for the activeTabId
+                      departmentFullName={dept.official_full_name} // This is for the current Tab's config
                       departmentShortName={dept.display_short_name}
                     />
                   ) : (
-                    <div className="text-center py-10 text-gray-500">No data available for {dept.display_short_name} in this session.</div>
+                    // This case handles when activeDepartmentData is null (e.g. initial load, or after error clear, before loading starts for this tab)
+                    // or when ministerInfo is explicitly undefined (should be rare with current logic if loading works)
+                    <div className="text-center py-10 text-gray-500">Select a department to view details.</div>
                   )
                 )}
               </TabsContent>

@@ -50,7 +50,6 @@ export interface MinisterInfo {
   effectiveDepartmentOfficialFullName?: string; // Added for remapped department name
   effectiveDepartmentId?: string; // Added for remapped department ID
 }
-// --- END NEW TYPES ---
 
 export interface DepartmentConfig {
   id: string; // Firestore document ID (e.g., "health-canada")
@@ -96,11 +95,14 @@ export interface PromiseData {
   source_type: string;
   commitment_history_rationale?: RationaleEvent[]; // Added optional field
   date_issued?: string; // Optional
-  candidate_or_government?: string; // Optional
   linked_evidence_ids?: string[];
-  evidence?: EvidenceItem[]; // To hold resolved evidence items
+  evidence?: EvidenceItem[]; 
   parliament_session_id?: string; // Ensure this field exists on your promise docs if filtering by it
-  // Add other relevant fields as needed
+  progress_score?: number;
+  progress_summary?: string;
+  bc_promise_rank?: string;
+  bc_promise_rank_rationale?: string;
+  bc_promise_direction?: string;
 }
 
 // --- UI-specific data structures ---
@@ -118,8 +120,6 @@ export interface DepartmentPageData {
   evidenceItems: EvidenceItem[]; // Added field for evidence
 }
 
-// --- Old types that might be phased out or adapted --- 
-
 // PrimeMinister can be kept if there's a separate PM section with hardcoded/different data source
 export interface PrimeMinister {
   name: string;
@@ -127,59 +127,6 @@ export interface PrimeMinister {
   avatarUrl: string;
   guidingMetrics: Metric[];
 }
-
-// The old Minister type might be replaced by MinisterDetails
-// export interface Minister {
-//   name: string;
-//   title: string;
-//   avatarUrl: string;
-// }
-
-// TaskStatus, TaskImpact, TimelineEvent, Bill, Task might be removed or adapted 
-// if PromiseData and future enhancements cover their roles.
-// For now, commenting them out to avoid conflicts and to mark for review.
-
-// export interface TaskStatus {
-//   id: "in-progress" | "kept" | "not-started";
-//   label: string;
-// }
-
-// export interface TaskImpact {
-//   level: "high" | "medium" | "low";
-//   label: string;
-//   description: string;
-// }
-
-// export interface TimelineEvent {
-//   date: string;
-//   title: string;
-//   description: string;
-// }
-
-// export interface Bill {
-//   name: string;
-//   status: string;
-//   description: string;
-// }
-
-// export interface Task {
-//   title: string;
-//   description: string;
-//   status: TaskStatus;
-//   impact: TaskImpact;
-//   lastUpdate: string;
-//   timeline: TimelineEvent[];
-//   relatedBills?: Bill[];
-// }
-
-// The old Category type will be replaced by DepartmentPageData and DepartmentConfig for tab generation
-// export interface Category {
-//   id: string;
-//   name: string;
-//   minister: Minister; // old Minister type
-//   guidingMetrics: Metric[];
-//   tasks: Task[]; // old Task type
-// }
 
 // Define the structure for the rationale events
 export interface RationaleEvent {
