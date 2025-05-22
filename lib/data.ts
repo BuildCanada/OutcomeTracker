@@ -167,7 +167,7 @@ export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise
             evidence_source_type: data.evidence_source_type || '',
             source_document_raw_id: data.source_document_raw_id || undefined,
             linked_departments: data.linked_departments || [],
-            status_impact_on_promise: data.status_impact_on_promise || undefined,
+            //status_impact_on_promise: data.status_impact_on_promise || undefined,
             ingested_at: ingestedAt,
             additional_metadata: data.additional_metadata || {},
           } as EvidenceItem);
@@ -226,7 +226,8 @@ export async function fetchPromisesForDepartment(
     const q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentNameToQuery),
-      where('parliament_session_id', '==', parliamentSessionId)
+      where('parliament_session_id', '==', parliamentSessionId),
+      where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"]) // Case-insensitive filtering for string ranks
     );
 
     const querySnapshot = await getDocs(q);
