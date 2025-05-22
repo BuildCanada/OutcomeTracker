@@ -18,15 +18,14 @@ For *each* `commitment_text` provided, you must generate the following fields:
     *   **Content:** A clear, concise title (max 10 words) that represents the core policy proposal.
     *   **Source:** Derive this from the commitment's wording and relevant sections in the provided platform documents.
 
-2.  `what_it_means_for_canadians`:
-    *   **Content:** In 3-5 detailed sentences (approx. 50-150 words), explain what the commitment means for Canadians. Describe the practical implications, direct benefits, potential trade-offs or challenges, and any potential negative consequences for citizens, specific groups, or the country as a whole. Focus on the tangible changes or experiences. Do not include background information or the 'why' here; focus on the 'what' and its direct effects.
-    *   **Source:** Derive this directly from the commitment's wording and relevant sections in the provided platform documents.
-
-3.  `intended_impact_and_objectives`:
+2.  `description`:
     *   **Content:** 
-        1.  A **One-Sentence Essence** (20-30 words) that distills the core purpose and primary intended outcome of the commitment. This should be a concise summary of what the commitment aims to achieve.
-    *   **Source:** Identify the stated intentions or rationale within the platform documents related to this commitment.
-    *   **Length:** This essence should be 20-30 words.
+        1.  A **One-Sentence Description** (30-80 words), explaining the core idea of the commitment, including definitions for any key terms or concepts. 
+    *   **Source:** Identify context within the platform documents related to this commitment.
+
+3.  `what_it_means_for_canadians`:
+    *   **Content:** An array of 3-5 bullet points (approx. 25-50 words each bullet point), explain what the commitment means for Canadians. Describe the practical implications, direct benefits, potential trade-offs or challenges, and any potential negative consequences for citizens, specific groups, or the country as a whole. Focus on the tangible changes or experiences. Do not include background information or the 'why' here; focus on the 'what' and its direct effects.
+    *   **Source:** Use your own reasoning. Use external sources and opinions from notable policy experts if needed.
 
 4.  `background_and_context`:
     *   **Content:** A brief overview of the situation, existing issues, or reasons that likely led to this commitment being made by the party. Why was this promise included in the platform? What broader policy discussions or societal needs does it relate to?
@@ -42,8 +41,8 @@ Return the information as a single JSON array. Each element in the array is an o
   {
     "commitment_text": "The original text of the commitment as provided in the input.",
     "concise_title": "Improve Healthcare Access",
-    "what_it_means_for_canadians": "This commitment will mean X for Canadians by providing Y, though it may present challenges such as Z. Specific groups like A will benefit from B...",
-    "intended_impact_and_objectives": "This commitment seeks to enhance healthcare availability across Canada by reducing wait times and expanding services.",
+    "description": "Enhance healthcare availability across Canada by reducing wait times and expanding services.",
+    "what_it_means_for_canadians": ["This will mean X for Canadians by providing Y.", "It may present challenges such as Z.", "Specific groups like A will benefit from B", "Critics worry for the long-term financial burden"],
     "background_and_context": "This commitment was made in response to growing concerns about A and B, as highlighted in the platform document's section on C..."
   }
   // ... more commitment objects if multiple commitments are processed in a batch
@@ -51,7 +50,6 @@ Return the information as a single JSON array. Each element in the array is an o
 ```
 
 **Crucial Guidelines:**
-*   **Primary Reliance on Provided PDFs:** Your responses for all three fields MUST be grounded in the information explicitly stated or strongly implied within the two platform PDF documents provided above. Do not introduce external knowledge or speculation beyond what can be supported by these documents.
 *   **Direct Quotations (Use Sparingly):** You may use very short, illustrative quotes from the documents if they are particularly pertinent, but the majority of the content should be your own synthesis.
 *   **Neutrality:** Maintain a neutral, objective, and factual tone.
 *   **Conciseness:** Be as concise as possible while still being informative.
@@ -61,4 +59,4 @@ Return the information as a single JSON array. Each element in the array is an o
 **Commitments to Process:**
 (The script will append the list of commitment texts here, for example:)
 *   Commitment text 1...
-*   Commitment text 2... 
+*   Commitment text 2...
