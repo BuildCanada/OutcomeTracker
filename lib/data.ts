@@ -18,7 +18,6 @@ import type {
   MinisterDetails,
   PromiseData,
   EvidenceItem,
-  // Metric, // Keep if guidingMetrics are still needed for fallback
 } from "./types";
 
 /**
@@ -70,6 +69,47 @@ export const fetchDepartmentConfigs = async (): Promise<DepartmentConfig[]> => {
       console.error("Firestore error details:", error.code, error.message);
     }
     return []; // Return empty array on error
+  }
+};
+
+/**
+ * Fetches the start and end dates for a specific parliament session.
+ * @param parliament_session_id The ID of the parliament session (e.g., "44").
+ * @returns An object with sessionStartDate and sessionEndDate, or null if not found/error.
+ */
+export const fetchParliamentSessionDates = async (
+  parliament_session_id: string
+): Promise<{ sessionStartDate: string | null; sessionEndDate: string | null } | null> => {
+  if (!db) {
+    console.error("Firestore instance (db) is not available in fetchParliamentSessionDates.");
+    return null;
+  }
+  if (!parliament_session_id) {
+    console.error("parliament_session_id is required for fetchParliamentSessionDates");
+    return null;
+  }
+
+  console.log(`Fetching session dates for parliament_session_id: ${parliament_session_id}`);
+  try {
+    const sessionDocRef = doc(db, "parliament_session", parliament_session_id);
+    const docSnap = await getDoc(sessionDocRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const sessionStartDate = data?.election_called_date || null; // Assuming YYYY-MM-DD string
+      const sessionEndDate = data?.end_date || null; // Assuming YYYY-MM-DD string or null
+      console.log(`Session dates for ${parliament_session_id}: Start - ${sessionStartDate}, End - ${sessionEndDate}`);
+      return { sessionStartDate, sessionEndDate };
+    } else {
+      console.warn(`No session document found for parliament_session_id: ${parliament_session_id}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error fetching session dates for ${parliament_session_id}:`, error);
+    if (error instanceof FirestoreError) {
+      console.error("Firestore error details:", error.code, error.message);
+    }
+    return null;
   }
 };
 
@@ -210,6 +250,15 @@ export async function fetchPromisesForDepartment(
     return [];
   }
 
+  // Fetch session dates
+  const sessionDates = await fetchParliamentSessionDates(parliamentSessionId);
+  if (!sessionDates) {
+    console.warn(`Could not fetch session dates for ${parliamentSessionId}. Promises might not be filtered correctly by date.`);
+    // Decide if you want to proceed without date filtering or return []
+    // For now, proceeding but date filtering will be skipped.
+  }
+  const { sessionStartDate, sessionEndDate } = sessionDates || { sessionStartDate: null, sessionEndDate: null };
+
   const departmentNameToQuery = effectiveDepartmentFullNameOverride || departmentFullName;
 
   // Define constants for collection structure (ideally from env or shared config)
@@ -221,12 +270,25 @@ export async function fetchPromisesForDepartment(
   try {
     const promisesColPath = `${TARGET_PROMISES_COLLECTION_ROOT}/${DEFAULT_REGION_CODE}/${governingPartyCode}`;
     const promisesCol = collection(db, promisesColPath);
-    const q = query(
+    
+    let q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentNameToQuery),
       where('parliament_session_id', '==', parliamentSessionId),
       where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"])
-    ).withConverter<PromiseData>({
+    );
+
+    // Apply date filters if session dates are available
+    if (sessionStartDate) {
+      q = query(q, where('date_issued', '>=', sessionStartDate));
+      console.log(`Applied start date filter: date_issued >= ${sessionStartDate}`);
+    }
+    if (sessionEndDate) {
+      q = query(q, where('date_issued', '<=', sessionEndDate));
+      console.log(`Applied end date filter: date_issued <= ${sessionEndDate}`);
+    }
+
+    const finalQuery = q.withConverter<PromiseData>({
       toFirestore: (data: PromiseData) => data, // Not used for reads
       fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
@@ -246,11 +308,16 @@ export async function fetchPromisesForDepartment(
           bc_promise_direction: data.bc_promise_direction ?? undefined,
           // fullPath: `${promisesColPath}/${snapshot.id}`, // Excluded
           evidence: [], // Will be populated later
+          // ADDED: New explanation fields from PromiseData type in types.ts
+          concise_title: data.concise_title ?? undefined,
+          what_it_means_for_canadians: data.what_it_means_for_canadians ?? undefined,
+          intended_impact_and_objectives: data.intended_impact_and_objectives ?? undefined,
+          background_and_context: data.background_and_context ?? undefined,
         } as PromiseData;
       }
     });
 
-    const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(finalQuery);
     const promisesWithEvidence: PromiseData[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
@@ -358,5 +425,3 @@ export async function fetchEvidenceItemsForPromises(promiseIds: string[]): Promi
     return []; // Return empty on error
   }
 }
-
-// Note: The old hardcoded `

@@ -212,7 +212,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               {[1, 2, 3, 4, 5].map((dot, idx) => (
                 <div
                   key={dot}
-                  className={`w-3 h-3 rounded-full ${progressScore >= dot ? dotColors[dot - 1] : "bg-gray-300"}`}
+                  className={`w-3 h-3 rounded-full ${dot <= progressScore ? dotColors[progressScore - 1] : "bg-gray-300"}`}
                 />
               ))}
             </div>
