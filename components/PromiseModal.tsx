@@ -86,12 +86,12 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
           {concise_title ? (
             // Case 1: concise_title exists
             <>
-              <DialogTitle className="text-2xl font-bold text-[#222222] mb-1">
+              <DialogTitle className="text-2xl font-bold text-[#222222] mb-1 break-words">
                 {concise_title}
               </DialogTitle>
               {/* Display original text separately when concise_title is the main title */}
               <div 
-                className="text-sm text-gray-500 italic mt-1" 
+                className="text-sm text-gray-500 italic mt-1 break-words" 
                 title="Original commitment language"
               >
                 <span className="font-semibold not-italic">Original Text:</span> {text}
@@ -100,7 +100,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
           ) : (
             // Case 2: concise_title does NOT exist, use 'text' (with prefix) as the DialogTitle
             <DialogTitle 
-              className="text-2xl font-bold text-[#222222] mb-1" // Main title styling
+              className="text-2xl font-bold text-[#222222] mb-1 break-words" // Main title styling
               title="Original commitment language"
             >
               <span className="font-semibold not-italic">Original Text:</span> {text}
@@ -110,7 +110,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
 
           {/* Essence: Display if available, regardless of concise_title */}
           {intended_impact_and_objectives && (
-            <div className="text-sm text-gray-600 mt-2">
+            <div className="text-sm text-gray-600 mt-2 break-words">
               <span className="font-semibold">Essence:</span> {intended_impact_and_objectives}
             </div>
           )}
@@ -130,7 +130,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                 <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
                 What This Means for Canadians
               </h3>
-              <p className="text-[#333333] leading-relaxed whitespace-pre-line">
+              <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
                 {what_it_means_for_canadians}
               </p>
             </section>
@@ -156,7 +156,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                   </div>
                   {isDelivered && <span className="text-xs text-green-600 font-semibold">Delivered</span>}
                 </div>
-                <p className="text-[#333333] leading-relaxed whitespace-pre-line flex-1">
+                <p className="text-[#333333] leading-relaxed whitespace-pre-line flex-1 break-words">
                   {progress_summary || "Details on progress will be updated here."}
                 </p>
               </div>
@@ -182,7 +182,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
               {background_and_context && (
                 <div className="mb-4">
                   <h4 className="text-md font-semibold text-[#555555] mb-1">Why This Was Needed:</h4>
-                  <p className="text-[#333333] leading-relaxed whitespace-pre-line">
+                  <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
                     {background_and_context}
                   </p>
                 </div>
@@ -209,7 +209,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                             <p className="text-xs font-medium text-[#8b2332] mb-0.5">
                               {formatSimpleDate(event.date)}
                             </p>
-                            <p className="text-sm text-[#333333] mb-1">{event.action}</p>
+                            <p className="text-sm text-[#333333] mb-1 break-words">{event.action}</p>
                             <a
                               href={event.source_url}
                               target="_blank"

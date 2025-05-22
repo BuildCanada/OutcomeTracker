@@ -198,6 +198,9 @@ export default function HomePageClient({
           effectiveDepartmentFullNameOverride
         );
         
+        // Log the promises and their evidence arrays as returned from fetchPromisesForDepartment
+        console.log("[HomePageClient DEBUG] promisesForDept from fetchPromisesForDepartment:", JSON.parse(JSON.stringify(promisesForDept)));
+
         const allEvidenceItemsForDeptFlat = promisesForDept.reduce((acc, promise) => {
           if (promise.evidence) {
             promise.evidence.forEach(ev => {

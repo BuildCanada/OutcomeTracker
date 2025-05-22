@@ -96,8 +96,27 @@ export const fetchParliamentSessionDates = async (
 
     if (docSnap.exists()) {
       const data = docSnap.data();
-      const sessionStartDate = data?.election_called_date || null; // Assuming YYYY-MM-DD string
-      const sessionEndDate = data?.end_date || null; // Assuming YYYY-MM-DD string or null
+      
+      let sessionStartDate: string | null = null;
+      if (data?.election_called_date instanceof Timestamp) {
+        sessionStartDate = data.election_called_date.toDate().toISOString().split('T')[0]; // YYYY-MM-DD
+      } else if (typeof data?.election_called_date === 'string') {
+        // Fallback if it's still a string, though ideally it should be a Timestamp
+        console.warn(`[fetchParliamentSessionDates] election_called_date for session ${parliament_session_id} is a string, expected Timestamp.`);
+        sessionStartDate = data.election_called_date;
+      }
+
+      let sessionEndDate: string | null = null;
+      if (data?.end_date instanceof Timestamp) {
+        sessionEndDate = data.end_date.toDate().toISOString().split('T')[0]; // YYYY-MM-DD
+      } else if (typeof data?.end_date === 'string') {
+        // Fallback for string, or if it represents "current" conceptually via absence/null
+        console.warn(`[fetchParliamentSessionDates] end_date for session ${parliament_session_id} is a string, expected Timestamp or null.`);
+        sessionEndDate = data.end_date; 
+      } else if (data?.end_date === null || data?.end_date === undefined) {
+        sessionEndDate = null; // Explicitly null if Firestore field is null/undefined
+      }
+
       console.log(`Session dates for ${parliament_session_id}: Start - ${sessionStartDate}, End - ${sessionEndDate}`);
       return { sessionStartDate, sessionEndDate };
     } else {
@@ -166,7 +185,11 @@ export const fetchMinisterDetails = async (
  * @param evidenceDocIds An array of evidence document IDs.
  * @returns An array of EvidenceItem objects.
  */
-export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise<EvidenceItem[]> => {
+export const fetchEvidenceItemsByIds = async (
+  evidenceDocIds: string[],
+  sessionStartDate: string | null,
+  sessionEndDate: string | null
+): Promise<EvidenceItem[]> => {
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchEvidenceItemsByIds.");
     return [];
@@ -193,19 +216,19 @@ export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise
           fromFirestore: (snapshot, options) => {
             const data = snapshot.data(options);
             return {
-              id: snapshot.id,
+              id: snapshot.id, 
+              evidence_id: data.evidence_id || snapshot.id,
               promise_ids: data.promise_ids || [],
               evidence_source_type: data.evidence_source_type || '',
-              evidence_date: data.evidence_date, // Assuming Timestamp or valid string
+              evidence_date: data.evidence_date, // Keep as fetched (Timestamp, string, or undefined)
               title_or_summary: data.title_or_summary || '',
               description_or_details: data.description_or_details || undefined,
               source_url: data.source_url || undefined,
-              // evidence_id: data.evidence_id || snapshot.id, // Excluded, assuming id is primary
-              // source_document_raw_id: data.source_document_raw_id || undefined, // Excluded
-              // linked_departments: data.linked_departments || [], // Excluded
-              // status_impact_on_promise: data.status_impact_on_promise || undefined, // Excluded
-              // ingested_at: data.ingested_at, // Excluded
-              // additional_metadata: data.additional_metadata || {}, // Excluded
+              source_document_raw_id: data.source_document_raw_id || undefined,
+              linked_departments: data.linked_departments || [],
+              status_impact_on_promise: data.status_impact_on_promise || undefined,
+              ingested_at: data.ingested_at, 
+              additional_metadata: data.additional_metadata || undefined,
             } as EvidenceItem;
           }
         });
@@ -214,8 +237,54 @@ export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise
         allEvidenceItems.push(docSnapshot.data());
       });
     }
-    console.log(`Fetched ${allEvidenceItems.length} evidence items for ${evidenceDocIds.length} IDs.`);
-    return allEvidenceItems;
+
+    console.log(`[EvidenceFilter] About to filter ${allEvidenceItems.length} items. Session Start: ${sessionStartDate}, Session End: ${sessionEndDate}`);
+    
+    const sStartDateObj = sessionStartDate ? new Date(sessionStartDate + "T00:00:00Z") : null;
+    const sEndDateObj = sessionEndDate ? new Date(sessionEndDate + "T23:59:59Z") : null;
+
+    const filteredEvidenceItems = allEvidenceItems.filter(item => {
+      if (!item.evidence_date) {
+        console.log(`[EvidenceFilter] Skipping item ID ${item.id || 'N/A'} due to missing evidence_date field.`);
+        return false; 
+      }
+
+      let evidenceDateObj: Date;
+
+      if (item.evidence_date instanceof Timestamp) { // Check for actual Timestamp instance first
+        evidenceDateObj = item.evidence_date.toDate();
+      } else if (typeof item.evidence_date === 'object' && item.evidence_date !== null && 
+                 typeof (item.evidence_date as any).seconds === 'number' && 
+                 typeof (item.evidence_date as any).nanoseconds === 'number') {
+        // Handle serialized Timestamp plain object
+        evidenceDateObj = new Date((item.evidence_date as any).seconds * 1000);
+      } else if (typeof item.evidence_date === 'string') {
+        // Handle date string
+        const dateStr = item.evidence_date.includes('T') ? item.evidence_date : item.evidence_date + "T00:00:00Z";
+        evidenceDateObj = new Date(dateStr);
+      } else {
+        console.log(`[EvidenceFilter] Skipping item ID ${item.id || 'N/A'} due to unhandled evidence_date type:`, item.evidence_date);
+        return false;
+      }
+
+      if (isNaN(evidenceDateObj.getTime())) {
+        console.log(`[EvidenceFilter] Skipping item ID ${item.id || 'N/A'} due to invalid parsed evidence_date object from:`, item.evidence_date);
+        return false;
+      }
+      
+      if (sStartDateObj && evidenceDateObj < sStartDateObj) {
+        console.log(`[EvidenceFilter] Filtering out item ID ${item.id || 'N/A'}: evidence_date ${evidenceDateObj.toISOString()} is before session_start_date ${sessionStartDate}`);
+        return false;
+      }
+      if (sEndDateObj && evidenceDateObj > sEndDateObj) {
+        console.log(`[EvidenceFilter] Filtering out item ID ${item.id || 'N/A'}: evidence_date ${evidenceDateObj.toISOString()} is after session_end_date ${sessionEndDate}`);
+        return false;
+      }
+      return true;
+    });
+
+    console.log(`Fetched ${allEvidenceItems.length} evidence items, filtered to ${filteredEvidenceItems.length} within session dates for ${evidenceDocIds.length} IDs.`);
+    return filteredEvidenceItems;
   } catch (error) {
     console.error('Error fetching evidence items by IDs:', error);
     if (error instanceof FirestoreError) {
@@ -325,7 +394,8 @@ export async function fetchPromisesForDepartment(
       const promise = docSnapshot.data(); // Use the converted data directly
 
       if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
-        promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids);
+        // Pass session dates to the evidence fetching function
+        promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids, sessionStartDate, sessionEndDate);
       }
       promisesWithEvidence.push(promise);
     }
