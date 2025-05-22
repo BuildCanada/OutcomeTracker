@@ -243,53 +243,54 @@ export default function HomePageClient({
         {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>} {/* Show general error if not loading tab data AND no promises loaded*/}
         
         {mainTabConfigs.length > 0 ? (
-          <Tabs value={activeTabId} onValueChange={setActiveTabId} className="mt-16">
-            <div className="flex justify-between items-end border-b border-[#d3c7b9] mb-[-1px]">
-              <TabsList className="inline-flex items-stretch bg-transparent p-0 h-auto flex-grow">
-                {mainTabConfigs.map((dept) => (
-                  <TabsTrigger key={dept.id} value={dept.id} 
-                    className="flex-1 whitespace-normal h-auto flex items-center justify-center text-center border border-b-0 border-l-0 first:border-l border-[#d3c7b9] bg-white px-3 py-3 text-xs sm:text-sm uppercase tracking-wider data-[state=active]:bg-[#8b2332] data-[state=active]:text-white data-[state=active]:border-[#8b2332] data-[state=active]:border-b-transparent data-[state=active]:relative data-[state=active]:-mb-[1px] rounded-none rounded-t-md focus-visible:ring-offset-0 focus-visible:ring-2 focus-visible:ring-[#8b2332] focus:z-10 hover:bg-gray-50"
-                  >
-                    {dept.display_short_name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {/* Dropdown removed */}
+          <div className="mt-16">
+            {/* Pills Container */}
+            <div className="flex flex-wrap gap-2 mb-8">
+              {mainTabConfigs.map((dept) => (
+                <button
+                  key={dept.id}
+                  onClick={() => setActiveTabId(dept.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                    ${activeTabId === dept.id 
+                      ? 'bg-[#8b2332] text-white' 
+                      : 'bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50'
+                    }`}
+                >
+                  {dept.display_short_name}
+                </button>
+              ))}
             </div>
-            {mainTabConfigs.map((dept) => (
-              <TabsContent key={dept.id} value={dept.id} 
-                className="border border-t-0 border-[#d3c7b9] bg-white p-6 data-[state=inactive]:hidden mt-0 rounded-b-md shadow-sm"
-                forceMount // Keep forceMount if you want to pre-render all tab contents (can be heavy)
-                          // Remove it if you want lazy rendering (better performance for many tabs)
-              >
-                {/* Conditional rendering based on activeTabId happens inside MinisterSection now via departmentPageData */}
-                {/* Only render the content if this tab (dept.id) is the active one and data is ready or loading */}
-                {activeTabId === dept.id && (
-                  isLoadingTabData ? (
+
+            {/* Content Container */}
+            <div className="border border-[#d3c7b9] bg-white p-6 rounded-md shadow-sm">
+              {mainTabConfigs.map((dept) => (
+                <div
+                  key={dept.id}
+                  className={activeTabId === dept.id ? 'block' : 'hidden'}
+                >
+                  {isLoadingTabData ? (
                     <div className="space-y-4">
                       <Skeleton className="h-20 w-1/2 bg-gray-200" /> 
                       <Skeleton className="h-8 w-1/3 bg-gray-200" />
                       <Skeleton className="h-40 w-full bg-gray-200" />
                     </div>
-                  ) : error && (!activeDepartmentData || activeDepartmentData.promises.length === 0) ? (
+                  ) : error ? (
                     <div className="text-center py-10 text-red-600 bg-red-100 border border-red-400 p-4">
                       {`Error loading data for ${dept.display_short_name}: ${error}`}
                     </div>
                   ) : activeDepartmentData && activeDepartmentData.ministerInfo !== undefined ? (
                     <MinisterSection 
-                      departmentPageData={activeDepartmentData} // This now correctly contains data for the activeTabId
-                      departmentFullName={dept.official_full_name} // This is for the current Tab's config
+                      departmentPageData={activeDepartmentData}
+                      departmentFullName={dept.official_full_name}
                       departmentShortName={dept.display_short_name}
                     />
                   ) : (
-                    // This case handles when activeDepartmentData is null (e.g. initial load, or after error clear, before loading starts for this tab)
-                    // or when ministerInfo is explicitly undefined (should be rare with current logic if loading works)
                     <div className="text-center py-10 text-gray-500">Select a department to view details.</div>
-                  )
-                )}
-              </TabsContent>
-            ))}
-          </Tabs>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           !initialError && <div className="text-center my-4">No priority departments configured or found.</div>
         )}

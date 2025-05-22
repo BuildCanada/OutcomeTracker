@@ -56,9 +56,48 @@ const progressDotColors = [
 ];
 
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
-  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary } = promise;
+  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence } = promise;
 
   const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
+
+  // Get the last updated date from evidence items
+  const lastUpdateDate = evidence && evidence.length > 0 
+    ? (() => {
+        const sorted = [...evidence].sort((a, b) => {
+          const getDateMillis = (dateInput: EvidenceItem['evidence_date']): number => {
+            if (!dateInput) return NaN;
+            let d: Date;
+            if (dateInput instanceof Timestamp) {
+              d = dateInput.toDate();
+            } else if (typeof dateInput === 'object' && dateInput !== null && 
+                      typeof (dateInput as any).seconds === 'number' &&
+                      typeof (dateInput as any).nanoseconds === 'number') {
+              d = new Date((dateInput as any).seconds * 1000);
+            } else if (typeof dateInput === 'string') {
+              if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+                const [year, month, day] = dateInput.split('-').map(Number);
+                d = new Date(year, month - 1, day);
+              } else {
+                d = new Date(dateInput);
+              }
+            } else {
+              return NaN;
+            }
+            return d.getTime();
+          };
+
+          const dateAMillis = getDateMillis(a.evidence_date);
+          const dateBMillis = getDateMillis(b.evidence_date);
+
+          if (isNaN(dateAMillis) && isNaN(dateBMillis)) return 0;
+          if (isNaN(dateAMillis)) return 1;
+          if (isNaN(dateBMillis)) return -1;
+
+          return dateBMillis - dateAMillis; // Descending
+        });
+        return formatDate(sorted[0].evidence_date);
+      })()
+    : null;
 
   // ADDED: Log the received promise object, especially its evidence array
   console.log("[PromiseModal Debug] Received promise:", promise);
@@ -83,41 +122,29 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
       <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white p-0 border border-[#d3c7b9] shadow-xl rounded-lg z-50">
         {/* Header */}
         <DialogHeader className="border-b border-[#d3c7b9] p-6">
-          {concise_title ? (
-            // Case 1: concise_title exists
-            <>
-              <DialogTitle className="text-2xl font-bold text-[#222222] mb-1 break-words">
-                {concise_title}
-              </DialogTitle>
-              {/* Display original text separately when concise_title is the main title */}
-              <div 
-                className="text-sm text-gray-500 italic mt-1 break-words" 
-                title="Original commitment language"
-              >
-                <span className="font-semibold not-italic">Original Text:</span> {text}
-              </div>
-            </>
-          ) : (
-            // Case 2: concise_title does NOT exist, use 'text' (with prefix) as the DialogTitle
-            <DialogTitle 
-              className="text-2xl font-bold text-[#222222] mb-1 break-words" // Main title styling
-              title="Original commitment language"
-            >
-              <span className="font-semibold not-italic">Original Text:</span> {text}
-            </DialogTitle>
-            // No separate div for 'text' needed here as it's incorporated into DialogTitle
-          )}
+          {/* Title */}
+          <DialogTitle className="text-2xl font-bold text-[#222222] mb-2 break-words">
+            {concise_title || text}
+          </DialogTitle>
 
-          {/* Essence: Display if available, regardless of concise_title */}
+          {/* Description */}
           {intended_impact_and_objectives && (
-            <div className="text-sm text-gray-600 mt-2 break-words">
-              <span className="font-semibold">Essence:</span> {intended_impact_and_objectives}
+            <div className="text-base text-gray-700 mb-2 break-words">
+              {intended_impact_and_objectives}
             </div>
           )}
 
-          {date_issued && (
-            <DialogDescription className="text-gray-400 text-xs mt-2">
-              Announced: {formatSimpleDate(date_issued)}
+          {/* Original Text */}
+          {concise_title && (
+            <div className="text-sm italic text-gray-500 mb-2 break-words">
+              <span className="font-medium">Original Text:</span> {text}
+            </div>
+          )}
+
+          {/* Last Updated Date */}
+          {lastUpdateDate && (
+            <DialogDescription className="text-xs text-gray-400">
+              Last Updated: {lastUpdateDate}
             </DialogDescription>
           )}
         </DialogHeader>
@@ -141,7 +168,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
             <section className="border-t border-[#d3c7b9] pt-6">
               <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
                  <CheckCircle2Icon className="mr-2 h-5 w-5 text-[#8b2332]" /> {/* Placeholder Icon */}
-                Our Progress So Far
+                Progress So Far
               </h3>
               <div className="flex items-start gap-4">
                 <div className="flex flex-col items-center pt-1">
@@ -149,7 +176,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                     {[1, 2, 3, 4, 5].map((dot) => (
                       <div
                         key={dot}
-                        className={`w-3.5 h-3.5 rounded-full ${dot <= progress_score ? progressDotColors[progress_score - 1] : "bg-gray-300"}`}
+                        className={`w-0.5 h-4 ${dot <= progress_score ? progressDotColors[progress_score - 1] : "bg-gray-300"}`}
                         title={`Progress: ${progress_score}/5`}
                       />
                     ))}
