@@ -12,23 +12,34 @@ interface PromiseCardProps {
   departmentShortName?: string;
 }
 
-const formatDate = (dateInput: Timestamp | string | undefined): string | null => {
+const formatDate = (dateInput: EvidenceItem['evidence_date']): string | null => {
   if (!dateInput) return null;
   let dateObj: Date;
+
   if (dateInput instanceof Timestamp) {
     dateObj = dateInput.toDate();
-  } else if (typeof dateInput === "string") {
-    dateObj = new Date(dateInput);
-    if (isNaN(dateObj.getTime())) {
-      const parts = dateInput.split("-");
-      if (parts.length === 3) {
-        dateObj = new Date(Number.parseInt(parts[0]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[2]));
-      }
-      if (isNaN(dateObj.getTime())) return null;
+  } else if (typeof dateInput === 'object' && dateInput !== null && 
+             typeof (dateInput as any).seconds === 'number' && 
+             typeof (dateInput as any).nanoseconds === 'number') { // Handle serialized Timestamp
+    dateObj = new Date((dateInput as any).seconds * 1000);
+  } else if (typeof dateInput === 'string') {
+    // Prefer parsing YYYY-MM-DD as local date components to avoid UTC issues with new Date(str)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+      const [year, month, day] = dateInput.split('-').map(Number);
+      dateObj = new Date(year, month - 1, day);
+    } else {
+      dateObj = new Date(dateInput); // For other string formats like ISO with timezone
     }
   } else {
+    console.warn("[PromiseCard formatDate] Unknown dateInput type:", dateInput);
     return null;
   }
+
+  if (isNaN(dateObj.getTime())) {
+    console.warn("[PromiseCard formatDate] Invalid date constructed for input:", dateInput);
+    return null;
+  }
+
   return dateObj.toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
 };
 
@@ -43,17 +54,48 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
   const relevantEvidenceForThisPromise = promise.evidence || [];
 
   // Use linked_evidence_ids for the count if available, otherwise fallback to the length of promise.evidence.
-  const evidenceCount = promise.linked_evidence_ids?.length ?? relevantEvidenceForThisPromise.length;
+  // const evidenceCount = promise.linked_evidence_ids?.length ?? relevantEvidenceForThisPromise.length;
+  // Correctly count only the filtered evidence items passed in promise.evidence
+  const evidenceCount = relevantEvidenceForThisPromise.length;
 
   // Find the most recent evidence date for "Last Update"
   let lastUpdateDate: string | null = null;
   if (relevantEvidenceForThisPromise.length > 0) {
     const sorted = [...relevantEvidenceForThisPromise].sort((a, b) => {
-      const dateA = a.evidence_date instanceof Timestamp ? a.evidence_date.toMillis() : new Date(a.evidence_date as string).getTime();
-      const dateB = b.evidence_date instanceof Timestamp ? b.evidence_date.toMillis() : new Date(b.evidence_date as string).getTime();
-      return dateB - dateA;
+      const getDateMillis = (dateInput: EvidenceItem['evidence_date']): number => {
+        if (!dateInput) return NaN; 
+        let d: Date;
+        if (dateInput instanceof Timestamp) {
+          d = dateInput.toDate();
+        } else if (typeof dateInput === 'object' && dateInput !== null && 
+                   typeof (dateInput as any).seconds === 'number' &&
+                   typeof (dateInput as any).nanoseconds === 'number') { // Handle serialized Timestamp
+          d = new Date((dateInput as any).seconds * 1000);
+        } else if (typeof dateInput === 'string') {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+            const [year, month, day] = dateInput.split('-').map(Number);
+            d = new Date(year, month - 1, day);
+          } else {
+            d = new Date(dateInput);
+          }
+        } else {
+          return NaN; // Unknown type
+        }
+        return d.getTime();
+      };
+
+      const dateAMillis = getDateMillis(a.evidence_date);
+      const dateBMillis = getDateMillis(b.evidence_date);
+
+      if (isNaN(dateAMillis) && isNaN(dateBMillis)) return 0;
+      if (isNaN(dateAMillis)) return 1; // Treat NaN as earlier (pushes it to the end of a descending sort)
+      if (isNaN(dateBMillis)) return -1; // Treat NaN as earlier
+
+      return dateBMillis - dateAMillis; // Descending
     });
-    lastUpdateDate = formatDate(sorted[0]?.evidence_date);
+    if (sorted[0]) {
+        lastUpdateDate = formatDate(sorted[0].evidence_date);
+    }
   }
 
   // Prepare the promise data specifically for the modal.
