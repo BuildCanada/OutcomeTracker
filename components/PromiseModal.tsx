@@ -2,9 +2,10 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import type { PromiseData, RationaleEvent, EvidenceItem } from "@/lib/types"
-import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon } from "lucide-react"
+import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon, TrendingUpIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2Icon, XIcon } from "lucide-react"
 import { Timestamp } from 'firebase/firestore';
 import PromiseProgressTimeline from './PromiseProgressTimeline';
+import React, { useState } from 'react';
 
 interface PromiseModalProps {
   promise: PromiseData;
@@ -45,8 +46,19 @@ const formatSimpleDate = (dateString: string | undefined): string => {
   }
 };
 
+// Progress dot color scale (red to green) - moved here for use in modal
+const progressDotColors = [
+  "bg-red-500",      // Score 1
+  "bg-yellow-400", // Score 2
+  "bg-yellow-300", // Score 3
+  "bg-lime-400",   // Score 4
+  "bg-green-600",  // Score 5
+];
+
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
-  const { text, commitment_history_rationale, date_issued } = promise;
+  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary } = promise;
+
+  const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
 
   // ADDED: Log the received promise object, especially its evidence array
   console.log("[PromiseModal Debug] Received promise:", promise);
@@ -64,71 +76,158 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
     return null; 
   }
 
+  const isDelivered = progress_score === 5;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white p-0 border border-[#d3c7b9]">
+      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white p-0 border border-[#d3c7b9] shadow-xl rounded-lg z-50">
         {/* Header */}
         <DialogHeader className="border-b border-[#d3c7b9] p-6">
-          <DialogTitle className="text-2xl font-bold text-[#222222]">{text}</DialogTitle>
+          {concise_title ? (
+            // Case 1: concise_title exists
+            <>
+              <DialogTitle className="text-2xl font-bold text-[#222222] mb-1">
+                {concise_title}
+              </DialogTitle>
+              {/* Display original text separately when concise_title is the main title */}
+              <div 
+                className="text-sm text-gray-500 italic mt-1" 
+                title="Original commitment language"
+              >
+                <span className="font-semibold not-italic">Original Text:</span> {text}
+              </div>
+            </>
+          ) : (
+            // Case 2: concise_title does NOT exist, use 'text' (with prefix) as the DialogTitle
+            <DialogTitle 
+              className="text-2xl font-bold text-[#222222] mb-1" // Main title styling
+              title="Original commitment language"
+            >
+              <span className="font-semibold not-italic">Original Text:</span> {text}
+            </DialogTitle>
+            // No separate div for 'text' needed here as it's incorporated into DialogTitle
+          )}
+
+          {/* Essence: Display if available, regardless of concise_title */}
+          {intended_impact_and_objectives && (
+            <div className="text-sm text-gray-600 mt-2">
+              <span className="font-semibold">Essence:</span> {intended_impact_and_objectives}
+            </div>
+          )}
+
           {date_issued && (
-            <DialogDescription className="text-[#555555] mt-2">
+            <DialogDescription className="text-gray-400 text-xs mt-2">
               Announced: {formatSimpleDate(date_issued)}
             </DialogDescription>
           )}
         </DialogHeader>
 
         <div className="p-6 space-y-8">
-          {/* Rationale Section (Replaces Related Bills) */}
-          {commitment_history_rationale &&
-            commitment_history_rationale.length > 0 && (
-              <section>
-                <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
-                  <FileTextIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
-                  Rationale: Preceding Events
-                </h3>
-                <div className="space-y-4">
-                  {commitment_history_rationale.map(
-                    (event: RationaleEvent, index: number) => (
+          {/* What this means for Canadians Section */}
+          {what_it_means_for_canadians && (
+            <section>
+              <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
+                <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                What This Means for Canadians
+              </h3>
+              <p className="text-[#333333] leading-relaxed whitespace-pre-line">
+                {what_it_means_for_canadians}
+              </p>
+            </section>
+          )}
+
+          {/* Progress Section */}
+          {(progress_score > 0 || progress_summary) && (
+            <section className="border-t border-[#d3c7b9] pt-6">
+              <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
+                 <CheckCircle2Icon className="mr-2 h-5 w-5 text-[#8b2332]" /> {/* Placeholder Icon */}
+                Our Progress So Far
+              </h3>
+              <div className="flex items-start gap-4">
+                <div className="flex flex-col items-center pt-1">
+                  <div className="flex gap-1.5 mb-1">
+                    {[1, 2, 3, 4, 5].map((dot) => (
                       <div
-                        key={index}
-                        className="border border-[#d3c7b9] p-4 bg-background"
-                      >
-                        <p className="text-sm font-medium text-[#8b2332] mb-1">
-                          {formatSimpleDate(event.date)}
-                        </p>
-                        <p className="text-[#333333] mb-2">{event.action}</p>
-                        <a
-                          href={event.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-[#0056b3] hover:underline inline-flex items-center"
-                        >
-                          <LinkIcon className="mr-1 h-3 w-3" /> Source
-                        </a>
-                      </div>
-                    ),
-                  )}
+                        key={dot}
+                        className={`w-3.5 h-3.5 rounded-full ${dot <= progress_score ? progressDotColors[progress_score - 1] : "bg-gray-300"}`}
+                        title={`Progress: ${progress_score}/5`}
+                      />
+                    ))}
+                  </div>
+                  {isDelivered && <span className="text-xs text-green-600 font-semibold">Delivered</span>}
                 </div>
-              </section>
-            )}
-
-          {/* Impact on Canadians (Placeholder) */}
-          <section className="border-t border-[#d3c7b9] pt-8">
-            <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
-              <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
-              Impact on Canadians
-            </h3>
-            <p className="text-[#333333] leading-relaxed">
-              [Details on the expected or observed impact of this promise will
-              be added here.]
-            </p>
-          </section>
-
-          {/* Timeline Section - Uses PromiseProgressTimeline */}
-          <section className="border-t border-[#d3c7b9] pt-8">
-            {/* Pass the whole promise object, which should include its 'evidence' array */}
+                <p className="text-[#333333] leading-relaxed whitespace-pre-line flex-1">
+                  {progress_summary || "Details on progress will be updated here."}
+                </p>
+              </div>
+            </section>
+          )}
+          
+          {/* Timeline and Evidence Details Section - Existing Component */}
+          <section className="border-t border-[#d3c7b9] pt-6">
+             <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
+                <CalendarIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                Timeline & Evidence
+              </h3>
             <PromiseProgressTimeline promise={promise} /> 
           </section>
+
+          {/* Background Section */}
+          {(background_and_context || (commitment_history_rationale && commitment_history_rationale.length > 0)) && (
+            <section className="border-t border-[#d3c7b9] pt-6">
+              <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
+                <FileTextIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                Background
+              </h3>
+              {background_and_context && (
+                <div className="mb-4">
+                  <h4 className="text-md font-semibold text-[#555555] mb-1">Why This Was Needed:</h4>
+                  <p className="text-[#333333] leading-relaxed whitespace-pre-line">
+                    {background_and_context}
+                  </p>
+                </div>
+              )}
+
+              {commitment_history_rationale && commitment_history_rationale.length > 0 && (
+                <div>
+                  <button 
+                    onClick={() => setIsRationaleExpanded(!isRationaleExpanded)}
+                    className="flex items-center text-md font-semibold text-[#0056b3] hover:underline focus:outline-none mb-2"
+                    aria-expanded={isRationaleExpanded}
+                  >
+                    {isRationaleExpanded ? <ChevronDownIcon className="mr-1 h-4 w-4" /> : <ChevronRightIcon className="mr-1 h-4 w-4" />}
+                    More Details: Preceding Events
+                  </button>
+                  {isRationaleExpanded && (
+                    <div className="space-y-3 pl-2 border-l-2 border-[#8b2332]">
+                      {commitment_history_rationale.map(
+                        (event: RationaleEvent, index: number) => (
+                          <div
+                            key={index}
+                            className="border border-[#d3c7b9] p-3 bg-gray-50 rounded"
+                          >
+                            <p className="text-xs font-medium text-[#8b2332] mb-0.5">
+                              {formatSimpleDate(event.date)}
+                            </p>
+                            <p className="text-sm text-[#333333] mb-1">{event.action}</p>
+                            <a
+                              href={event.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-[#0056b3] hover:underline inline-flex items-center"
+                            >
+                              <LinkIcon className="mr-1 h-3 w-3" /> Source
+                            </a>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
         </div>
       </DialogContent>
     </Dialog>

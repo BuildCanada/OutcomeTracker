@@ -92,6 +92,14 @@ export default function MinisterSection({ departmentPageData, departmentFullName
         </div>
       </div>
 
+      {/* Key Metrics Placeholder Section */}
+      <div className="border-t border-[#d3c7b9] pt-8 mt-12 px-2 mb-8">
+        <h3 className="text-2xl font-semibold text-[#222222] mb-4">Key Performance Indicators & Metrics</h3>
+        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center flex items-center justify-center" style={{ minHeight: '20vh' }}>
+          <p className="text-gray-400 italic text-lg">[Placeholder: Charts and key metrics for {ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName} will be displayed here.]</p>
+        </div>
+      </div>
+
       {/* Promises Section */}
       <div className="mb-8 px-2">
         <h3 className="text-2xl font-semibold text-[#222222] mb-6">Commitments:</h3>
@@ -115,13 +123,6 @@ export default function MinisterSection({ departmentPageData, departmentFullName
         )}
       </div>
 
-      {/* Guiding Metrics Section (Placeholder) */}
-      {/* 
-      <div className="border-t border-[#d3c7b9] pt-8 mt-8 px-2">
-        <h3 className="text-2xl font-semibold text-[#222222] mb-4">Key Performance Indicators & Metrics</h3>
-        <p className="text-gray-500 italic">[Guiding metrics and performance indicators related to this department's portfolio will be displayed here.]</p>
-      </div>
-      */}
     </div>
   )
 } 
