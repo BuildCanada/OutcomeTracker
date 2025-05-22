@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import type { PromiseData, EvidenceItem } from "@/lib/types";
 import { Timestamp } from "firebase/firestore";
-import { CalendarDaysIcon, ListChecksIcon } from "lucide-react";
-import PromiseModal from './PromiseModal';
+import { CalendarDaysIcon, ListChecksIcon, TrendingUpIcon, XIcon, CheckIcon, PlusIcon, MinusIcon } from "lucide-react";
+import PromiseModal from "./PromiseModal";
 
 interface PromiseCardProps {
   promise: PromiseData;
@@ -17,141 +17,244 @@ const formatDate = (dateInput: Timestamp | string | undefined): string | null =>
   let dateObj: Date;
   if (dateInput instanceof Timestamp) {
     dateObj = dateInput.toDate();
-  } else if (typeof dateInput === 'string') {
+  } else if (typeof dateInput === "string") {
     dateObj = new Date(dateInput);
     if (isNaN(dateObj.getTime())) {
-      const parts = dateInput.split('-');
+      const parts = dateInput.split("-");
       if (parts.length === 3) {
-        dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        dateObj = new Date(Number.parseInt(parts[0]), Number.parseInt(parts[1]) - 1, Number.parseInt(parts[2]));
       }
       if (isNaN(dateObj.getTime())) return null;
     }
   } else {
     return null;
   }
-  return dateObj.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+  return dateObj.toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
 };
 
-export default function PromiseCard({ promise, evidenceItems, departmentShortName }: PromiseCardProps) {
+export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // --- DEBUG LOGS ---
-  console.log(`[PromiseCard Debug] Promise ID: ${promise.id}, Promise FullPath: ${promise.fullPath}`);
-  if (promise.evidence && promise.evidence.length > 0) {
-    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} has promise.evidence with ${promise.evidence.length} items. First item ID: ${promise.evidence[0]?.id}`);
-  } else {
-    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - promise.evidence is empty or undefined.`);
-  }
-  // Log the evidenceItems prop for comparison/diagostics if still needed, though we aim to rely less on it.
-  if (evidenceItems && evidenceItems.length > 0) {
-    console.log(`[PromiseCard Debug] evidenceItems prop for promise ${promise.id} (showing promise_ids of first 3):`, 
-      evidenceItems.slice(0, 3).map(ei => ({ id: ei.id, promise_ids: ei.promise_ids }))
-    );
-  } else {
-    console.log(`[PromiseCard Debug] evidenceItems prop for promise ${promise.id} is empty or undefined.`);
-  }
-  // --- END DEBUG LOGS ---
+  const [showProgressTooltip, setShowProgressTooltip] = useState(false);
+  const [showImpactTooltip, setShowImpactTooltip] = useState(false);
+  const [showAlignmentTooltip, setShowAlignmentTooltip] = useState(false);
+  const [showProgressModal, setShowProgressModal] = useState(false);
 
   // Use promise.evidence directly, as it should be populated by the data fetching layer.
   const relevantEvidenceForThisPromise = promise.evidence || [];
 
-  // --- DEBUG LOGS ---
-  console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - relevantEvidenceForThisPromise (from promise.evidence) count: ${relevantEvidenceForThisPromise.length}`);
-  if (relevantEvidenceForThisPromise.length > 0) {
-    console.log(`[PromiseCard Debug] Promise ID: ${promise.id} - First relevant evidence (from promise.evidence):`, relevantEvidenceForThisPromise[0]);
-  }
-  // --- END DEBUG LOGS ---
-
   // Use linked_evidence_ids for the count if available, otherwise fallback to the length of promise.evidence.
   const evidenceCount = promise.linked_evidence_ids?.length ?? relevantEvidenceForThisPromise.length;
 
-  let dateRangeString: string | null = null;
-  // Date range calculation now uses relevantEvidenceForThisPromise (which is promise.evidence)
+  // Find the most recent evidence date for "Last Update"
+  let lastUpdateDate: string | null = null;
   if (relevantEvidenceForThisPromise.length > 0) {
-    // Sort relevant evidence by date to find the first and last dates
-    const sortedEvidenceForDateRange = [...relevantEvidenceForThisPromise].sort((a, b) => {
+    const sorted = [...relevantEvidenceForThisPromise].sort((a, b) => {
       const dateA = a.evidence_date instanceof Timestamp ? a.evidence_date.toMillis() : new Date(a.evidence_date as string).getTime();
       const dateB = b.evidence_date instanceof Timestamp ? b.evidence_date.toMillis() : new Date(b.evidence_date as string).getTime();
-      if (isNaN(dateA) && isNaN(dateB)) return 0;
-      if (isNaN(dateA)) return 1;
-      if (isNaN(dateB)) return -1;
-      return dateA - dateB;
+      return dateB - dateA;
     });
-
-    const firstDate = formatDate(sortedEvidenceForDateRange[0]?.evidence_date);
-    const lastDate = formatDate(sortedEvidenceForDateRange[sortedEvidenceForDateRange.length - 1]?.evidence_date);
-
-    if (firstDate && lastDate) {
-      if (firstDate === lastDate) {
-        dateRangeString = firstDate;
-      } else {
-        dateRangeString = `${firstDate} - ${lastDate}`;
-      }
-    } else if (firstDate) {
-      dateRangeString = firstDate;
-    }
+    lastUpdateDate = formatDate(sorted[0]?.evidence_date);
   }
 
   // Prepare the promise data specifically for the modal.
-  // Since promise.evidence is already what we need, we can pass the promise object directly
-  // if PromiseModal is designed to use promise.evidence.
-  // For clarity, we ensure promiseForModal has the correct evidence array.
   const promiseForModal: PromiseData = {
-    ...promise, // This spread includes promise.evidence if it's populated
-    // If 'promise' object passed to modal already has 'evidence' populated correctly,
-    // this explicit setting might be redundant, but ensures clarity.
-    evidence: relevantEvidenceForThisPromise, 
+    ...promise,
+    evidence: relevantEvidenceForThisPromise,
   };
 
   const handleCardClick = () => {
-    console.log("[PromiseCard Debug onClick] Opening modal for promise ID:", promiseForModal.id, "Text:", promiseForModal.text?.substring(0,30), "Evidence count in modal data:", promiseForModal.evidence?.length);
     setIsModalOpen(true);
   };
 
+  // Progress Indicator
+  const progressScore = promise.progress_score || 0; // 1-5
+  const progressSummary = promise.progress_summary || "No progress summary available.";
+  const isDelivered = progressScore === 5;
+
+  // Impact Indicator
+  const impactRankRaw = promise.bc_promise_rank ?? '';
+  const impactRationale = promise.bc_promise_rank_rationale || "No rationale provided.";
+  let impactLabel = "";
+  let impactBgColor = "";
+  let impactIcon = null;
+  let impactRankStr = String(impactRankRaw).toLowerCase();
+  let impactRankNum = Number(impactRankRaw);
+  if (impactRankStr === 'strong' || impactRankNum >= 8) {
+    impactLabel = "High Impact";
+    impactBgColor = "bg-yellow-200 text-yellow-800";
+    impactIcon = <PlusIcon className="w-4 h-4 text-yellow-800" />;
+  } else if (impactRankStr === 'medium' || (impactRankNum >= 5 && impactRankNum < 8)) {
+    impactLabel = "Medium Impact";
+    impactBgColor = "bg-yellow-100 text-yellow-800";
+    impactIcon = <PlusIcon className="w-4 h-4 text-yellow-800" />;
+  } else if (impactRankStr === 'low' || (impactRankNum > 0 && impactRankNum < 5)) {
+    impactLabel = "Low Impact";
+    impactBgColor = "bg-gray-100 text-gray-600";
+    impactIcon = <MinusIcon className="w-4 h-4 text-gray-600" />;
+  }
+
+  // Alignment Indicator
+  const alignmentDirection = promise.bc_promise_direction;
+  let alignmentLabel = "";
+  let alignmentColor = "";
+  let alignmentBg = "";
+  let alignmentIcon = null;
+  switch (alignmentDirection) {
+    case "positive":
+      alignmentLabel = "Aligned";
+      alignmentColor = "text-green-700";
+      alignmentBg = "bg-green-50";
+      alignmentIcon = <TrendingUpIcon className="w-4 h-4 text-green-600" />;
+      break;
+    case "neutral":
+      alignmentLabel = "Neutral";
+      alignmentColor = "text-gray-600";
+      alignmentBg = "bg-gray-100";
+      alignmentIcon = <MinusIcon className="w-4 h-4 text-gray-400" />;
+      break;
+    case "negative":
+      alignmentLabel = "Not Aligned";
+      alignmentColor = "text-red-700";
+      alignmentBg = "bg-red-50";
+      alignmentIcon = <MinusIcon className="w-4 h-4 text-red-600" />;
+      break;
+    default:
+      alignmentLabel = "Unknown";
+      alignmentColor = "text-gray-400";
+      alignmentBg = "bg-gray-50";
+      alignmentIcon = <MinusIcon className="w-4 h-4 text-gray-400" />;
+  }
+  const alignmentTooltip = `Alignment with building Canada: ${alignmentLabel}`;
+
+  // Progress dot color scale (red to green)
+  const dotColors = [
+    "bg-red-500",
+    "bg-yellow-400",
+    "bg-yellow-300",
+    "bg-lime-400",
+    "bg-green-600"
+  ];
+
   return (
     <>
-      <div 
-        className="bg-white shadow-md rounded-lg p-5 border-l-4 border-canada-red flex flex-col gap-3 hover:shadow-lg transition-shadow cursor-pointer"
+      <div
+        className="bg-white shadow rounded-xl border-l-4 border-canada-red flex flex-col cursor-pointer transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-canada-red group relative"
+        tabIndex={0}
+        aria-label={promise.text}
         onClick={handleCardClick}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
       >
-        <div className="flex justify-between items-center">
-          {departmentShortName && (
-            <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
-              {departmentShortName}
-            </span>
-          )}
+        <div className="p-6 pb-4 flex-1">
+          <div className="text-lg font-bold text-[#111827] leading-snug mb-8">
+            {promise.text}
+          </div>
+          {/* Impact & Alignment indicators, bottom right, side by side */}
+          <div className="absolute right-6 bottom-16 flex flex-row items-center gap-2 z-10">
+            {/* Impact */}
+            {impactLabel && (
+              <div className="relative">
+                <div
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${impactBgColor} cursor-help`}
+                  onMouseEnter={() => setShowImpactTooltip(true)}
+                  onMouseLeave={() => setShowImpactTooltip(false)}
+                  onFocus={() => setShowImpactTooltip(true)}
+                  onBlur={() => setShowImpactTooltip(false)}
+                  tabIndex={0}
+                  aria-label={`Impact: ${impactLabel}`}
+                >
+                  {impactIcon}
+                  {impactLabel}
+                </div>
+                {showImpactTooltip && (
+                  <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 right-0 animate-fade-in">
+                    {impactRationale}
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Alignment */}
+            <div className="relative">
+              <div
+                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${alignmentBg} ${alignmentColor} cursor-help`}
+                onMouseEnter={() => setShowAlignmentTooltip(true)}
+                onMouseLeave={() => setShowAlignmentTooltip(false)}
+                onFocus={() => setShowAlignmentTooltip(true)}
+                onBlur={() => setShowAlignmentTooltip(false)}
+                tabIndex={0}
+                aria-label={`Alignment: ${alignmentLabel}`}
+              >
+                {alignmentIcon}
+                {alignmentLabel}
+              </div>
+              {showAlignmentTooltip && (
+                <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 right-0 animate-fade-in">
+                  {alignmentTooltip}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <h3 className="text-lg font-semibold text-gray-800 leading-tight">
-          {promise.text}
-        </h3>
-        <div className="mt-auto pt-3 flex justify-between items-center text-sm text-gray-600 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            {dateRangeString ? (
-              <>
-                <CalendarDaysIcon className="w-4 h-4 text-gray-500" />
-                <span>{dateRangeString}</span>
-              </>
-            ) : (
-              <div className="h-5"></div> // Placeholder for consistent height
+        {/* Progress and meta bar */}
+        <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex items-center justify-between rounded-b-xl">
+          {/* Progress dots and checkmark */}
+          <div className="flex items-center gap-2 relative">
+            <div
+              className="flex gap-1 cursor-pointer focus:outline-none"
+              onMouseEnter={() => setShowProgressTooltip(true)}
+              onMouseLeave={() => setShowProgressTooltip(false)}
+              onFocus={() => setShowProgressTooltip(true)}
+              onBlur={() => setShowProgressTooltip(false)}
+              tabIndex={0}
+              aria-label={`Commitment Progress`}
+              onClick={e => { e.stopPropagation(); setShowProgressModal(true); }}
+              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setShowProgressModal(true); } }}
+            >
+              {[1, 2, 3, 4, 5].map((dot, idx) => (
+                <div
+                  key={dot}
+                  className={`w-3 h-3 rounded-full ${progressScore >= dot ? dotColors[dot - 1] : "bg-gray-300"}`}
+                />
+              ))}
+            </div>
+            {isDelivered && (
+              <CheckIcon className="w-4 h-4 text-green-600 ml-2" aria-label="Delivered" />
+            )}
+            {showProgressTooltip && (
+              <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 left-0 animate-fade-in">
+                Commitment Progress
+              </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <ListChecksIcon className="w-4 h-4 text-gray-500" />
-            <span>{evidenceCount} progress updates</span>
+          {/* Last update and progress updates */}
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-1">
+              <CalendarDaysIcon className="w-4 h-4 text-gray-400" />
+              <span>Last Update: {lastUpdateDate || "N/A"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <ListChecksIcon className="w-4 h-4 text-gray-400" />
+              <span>{evidenceCount} progress updates</span>
+            </div>
           </div>
         </div>
       </div>
-      {/* 
-        When PromiseModal is opened, it receives the `promise` object.
-        The data fetching layer MUST ensure that `promise.evidence` is populated correctly 
-        with EvidenceItem[] specific to THIS promise, typically by resolving `promise.linked_evidence_ids`.
-        If promise.evidence is not populated correctly, the timeline in the modal will be empty or wrong.
-      */}
-      <PromiseModal
-        promise={promiseForModal} // Pass the updated promise object
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      {/* Progress Summary Modal */}
+      {showProgressModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative animate-fade-in">
+            <button
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 focus:outline-none"
+              onClick={() => setShowProgressModal(false)}
+              aria-label="Close progress summary"
+            >
+              <XIcon className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-bold mb-4">Commitment Progress</h2>
+            <div className="text-gray-800 whitespace-pre-line">{progressSummary}</div>
+          </div>
+        </div>
+      )}
+      <PromiseModal promise={promiseForModal} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   );
 } 

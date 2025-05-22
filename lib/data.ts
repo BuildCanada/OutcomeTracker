@@ -147,31 +147,31 @@ export const fetchEvidenceItemsByIds = async (evidenceDocIds: string[]): Promise
     const evidenceCol = collection(db, 'evidence_items');
     for (const chunk of idChunks) {
       if (chunk.length === 0) continue;
-      const q = query(evidenceCol, where(documentId(), 'in', chunk));
+      const q = query(evidenceCol, where(documentId(), 'in', chunk))
+        .withConverter<EvidenceItem>({
+          toFirestore: (data: EvidenceItem) => data,
+          fromFirestore: (snapshot, options) => {
+            const data = snapshot.data(options);
+            return {
+              id: snapshot.id,
+              promise_ids: data.promise_ids || [],
+              evidence_source_type: data.evidence_source_type || '',
+              evidence_date: data.evidence_date, // Assuming Timestamp or valid string
+              title_or_summary: data.title_or_summary || '',
+              description_or_details: data.description_or_details || undefined,
+              source_url: data.source_url || undefined,
+              // evidence_id: data.evidence_id || snapshot.id, // Excluded, assuming id is primary
+              // source_document_raw_id: data.source_document_raw_id || undefined, // Excluded
+              // linked_departments: data.linked_departments || [], // Excluded
+              // status_impact_on_promise: data.status_impact_on_promise || undefined, // Excluded
+              // ingested_at: data.ingested_at, // Excluded
+              // additional_metadata: data.additional_metadata || {}, // Excluded
+            } as EvidenceItem;
+          }
+        });
       const querySnapshot = await getDocs(q);
       querySnapshot.docs.forEach(docSnapshot => {
-        if (docSnapshot.exists()) {
-          const data = docSnapshot.data();
-          // Ensure Timestamps are correctly handled, provide defaults for missing fields
-          const evidenceDate = data.evidence_date instanceof Timestamp ? data.evidence_date : Timestamp.now();
-          const ingestedAt = data.ingested_at instanceof Timestamp ? data.ingested_at : Timestamp.now();
-
-          allEvidenceItems.push({
-            id: docSnapshot.id,
-            evidence_id: data.evidence_id || docSnapshot.id, // Fallback if specific field is missing
-            title_or_summary: data.title_or_summary || '',
-            evidence_date: evidenceDate,
-            source_url: data.source_url || '',
-            description_or_details: data.description_or_details || '',
-            promise_ids: data.promise_ids || [],
-            evidence_source_type: data.evidence_source_type || '',
-            source_document_raw_id: data.source_document_raw_id || undefined,
-            linked_departments: data.linked_departments || [],
-            status_impact_on_promise: data.status_impact_on_promise || undefined,
-            ingested_at: ingestedAt,
-            additional_metadata: data.additional_metadata || {},
-          } as EvidenceItem);
-        }
+        allEvidenceItems.push(docSnapshot.data());
       });
     }
     console.log(`Fetched ${allEvidenceItems.length} evidence items for ${evidenceDocIds.length} IDs.`);
@@ -220,42 +220,48 @@ export async function fetchPromisesForDepartment(
   
   try {
     const promisesColPath = `${TARGET_PROMISES_COLLECTION_ROOT}/${DEFAULT_REGION_CODE}/${governingPartyCode}`;
-    console.log(`Querying promises collection path: ${promisesColPath}`);
-
     const promisesCol = collection(db, promisesColPath);
     const q = query(
       promisesCol,
       where('responsible_department_lead', '==', departmentNameToQuery),
       where('parliament_session_id', '==', parliamentSessionId),
-      where('bc_promise_rank', 'in', ["strong", "medium"])
-    );
+      where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"])
+    ).withConverter<PromiseData>({
+      toFirestore: (data: PromiseData) => data, // Not used for reads
+      fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return {
+          id: snapshot.id,
+          text: data.text || '',
+          responsible_department_lead: data.responsible_department_lead || '',
+          // source_type: data.source_type || '', // Excluded
+          commitment_history_rationale: data.commitment_history_rationale || [],
+          date_issued: data.date_issued || undefined,
+          linked_evidence_ids: data.linked_evidence_ids || [],
+          parliament_session_id: data.parliament_session_id || undefined,
+          progress_score: data.progress_score ?? undefined,
+          progress_summary: data.progress_summary ?? undefined,
+          bc_promise_rank: data.bc_promise_rank ?? undefined,
+          bc_promise_rank_rationale: data.bc_promise_rank_rationale ?? undefined,
+          bc_promise_direction: data.bc_promise_direction ?? undefined,
+          // fullPath: `${promisesColPath}/${snapshot.id}`, // Excluded
+          evidence: [], // Will be populated later
+        } as PromiseData;
+      }
+    });
 
     const querySnapshot = await getDocs(q);
     const promisesWithEvidence: PromiseData[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
-      const data = docSnapshot.data();
-      const promise: PromiseData = {
-        id: docSnapshot.id,
-        fullPath: `${promisesColPath}/${docSnapshot.id}`,
-        text: data.text || '',
-        responsible_department_lead: data.responsible_department_lead || '',
-        source_type: data.source_type || '',
-        date_issued: data.date_issued || undefined,
-        linked_evidence_ids: data.linked_evidence_ids || [],
-        evidence: [],
-        commitment_history_rationale: data.commitment_history_rationale || [],
-      };
+      // const data = docSnapshot.data(); // Data is already converted by fromFirestore
+      const promise = docSnapshot.data(); // Use the converted data directly
 
       if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
-        console.log(`Fetching evidence for promise ID ${promise.id} with ${promise.linked_evidence_ids.length} linked IDs.`);
         promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids);
-        console.log(`Fetched ${promise.evidence.length} evidence items for promise ID ${promise.id}.`);
       }
       promisesWithEvidence.push(promise);
     }
-
-    console.log(`Fetched ${promisesWithEvidence.length} promises with their evidence for ${departmentFullName}`);
     return promisesWithEvidence;
   } catch (error) {
     console.error(`Error fetching promises for ${departmentFullName}:`, error);
