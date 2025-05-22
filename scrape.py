@@ -78,7 +78,7 @@ pretty = json.dumps(output, indent=2, sort_keys=True)
 
 # collapse two-element arrays onto one line
 pattern = re.compile(
-    r'\[\s*\n\s*"([^"]+)",\s*(-?[0-9]+(?:\.[0-9]+)?)\s*\n\s*\]',
+    r'\[\s*\n\s*"([^"]+)",\s*(null|-?[0-9]+(?:\.[0-9]+)?)\s*\n\s*\]',
     re.MULTILINE
 )
 collapsed = pattern.sub(r'[ "\1", \2 ]', pretty)
