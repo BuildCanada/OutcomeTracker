@@ -73,6 +73,15 @@ export interface DepartmentConfig {
   category_tags?: string[] | null;
   priority_score?: number; // This was in your Phase 2 summary for department_config
   alternative_names?: string[]; // This was also in your Phase 2 summary
+
+  // Field for historical remapping
+  historical_mapping?: {
+    [parliamentSessionId: string]: { // e.g., "44-1"
+      minister_lookup_slug: string; // The department_slug to use for minister lookup in that session
+      promise_query_department_name: string; // The official_full_name to use for promise queries in that session
+      promise_query_slug_override?: string; // Optional: if promise query needs a slug different from minister_lookup_slug
+    };
+  };
 }
 
 export interface MinisterDetails {
@@ -92,7 +101,7 @@ export interface PromiseData {
   fullPath?: string; // Full Firestore path for the promise document
   text: string;
   responsible_department_lead: string;
-  source_type: string;
+  source_type?: string; // Made optional as it's not used client-side
   commitment_history_rationale?: RationaleEvent[]; // Added optional field
   date_issued?: string; // Optional
   linked_evidence_ids?: string[];

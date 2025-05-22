@@ -21,27 +21,35 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
 
   let departmentIdForQuery = departmentConfig.id;
   let effectiveDeptConfigForName = departmentConfig; // Store the config to use for the final name
-  const parliamentNumberStr = String(session.parliament_number);
+  // const parliamentNumberStr = String(session.parliament_number); // We'll use session.id for mapping key
 
-  if (parliamentNumberStr === '44' && departmentConfig.id === 'artificial-intelligence-and-digital-innovation') {
-    const historicalDepartmentId44th = 'innovation-science-and-economic-development-canada';
-    console.log(`[Server Utils Info] Applying hardcoded remapping for Innovation in 44th Parliament. Original Dept ID: '${departmentConfig.id}', Querying with historical Dept ID: '${historicalDepartmentId44th}'.`);
-    departmentIdForQuery = historicalDepartmentId44th;
-    // Attempt to fetch the historical department config for its name
+  // Check for historical mapping using session.id as the key (e.g., "44-1")
+  const historicalMapping = departmentConfig.historical_mapping?.[session.id];
+
+  if (historicalMapping && historicalMapping.minister_lookup_slug) {
+    console.log(`[Server Utils Info] Applying historical mapping for Dept ID: '${departmentConfig.id}' in Session ID: '${session.id}'. Using historical minister_lookup_slug: '${historicalMapping.minister_lookup_slug}'.`);
+    departmentIdForQuery = historicalMapping.minister_lookup_slug;
+
+    // Attempt to fetch the historical department config for its name, using the minister_lookup_slug as its ID
     try {
-      const historicalDeptDoc = await firestoreAdmin.collection('department_config').doc(historicalDepartmentId44th).get();
+      const historicalDeptDoc = await firestoreAdmin.collection('department_config').doc(historicalMapping.minister_lookup_slug).get();
       if (historicalDeptDoc.exists) {
         effectiveDeptConfigForName = historicalDeptDoc.data() as DepartmentConfig;
         effectiveDeptConfigForName.id = historicalDeptDoc.id; // Ensure ID is part of the object
-        console.log(`[Server Utils Info] Successfully fetched historical DepartmentConfig for '${historicalDepartmentId44th}' to use its name: ${effectiveDeptConfigForName.official_full_name}`);
+        console.log(`[Server Utils Info] Successfully fetched historical DepartmentConfig for '${historicalMapping.minister_lookup_slug}' to use its name: ${effectiveDeptConfigForName.official_full_name}`);
       } else {
-        console.warn(`[Server Utils Warn] Historical DepartmentConfig not found for ID: '${historicalDepartmentId44th}'. Will use original department name if minister is found.`);
+        console.warn(`[Server Utils Warn] Historical DepartmentConfig not found for ID: '${historicalMapping.minister_lookup_slug}'. Will use original department name for display if minister is found.`);
       }
     } catch (configError) {
-      console.error(`[Server Utils Error] Error fetching historical DepartmentConfig for '${historicalDepartmentId44th}':`, configError);
+      console.error(`[Server Utils Error] Error fetching historical DepartmentConfig for '${historicalMapping.minister_lookup_slug}':`, configError);
       // Continue with original departmentConfig for name if historical fetch fails
     }
+  } else {
+    // Ensure parliamentNumberStr is defined if not using historical mapping for other parts of the function
+    // const parliamentNumberStr = String(session.parliament_number);
   }
+  // We still need parliamentNumberStr for the Firestore query regardless of mapping
+  const parliamentNumberStr = String(session.parliament_number);
 
   let t0 = Date.now();
   try {
