@@ -34,3 +34,6 @@ promisetrackerapp-firebase-adminsdk-fbsvc-6a44bafc23.json
 __pycache__
 *.pyc
 *storybook.log
+
+# JSON outputs
+scripts/ingestion_jobs/JSON_outputs
