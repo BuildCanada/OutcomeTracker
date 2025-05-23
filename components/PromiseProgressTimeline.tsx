@@ -135,7 +135,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
   }
 
   return (
-    <div className="my-6 font-sans">
+    <div className="my-6 font-financier">
       <h3 className="text-lg font-semibold text-gray-700 mb-5 px-3">Timeline of progress</h3>
       
       {/* Horizontal Timeline Section - visible on md screens and up */}

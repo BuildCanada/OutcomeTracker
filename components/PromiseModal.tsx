@@ -119,7 +119,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto bg-white p-0 border border-[#d3c7b9] shadow-xl rounded-lg z-50">
+      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border border-[#d3c7b9] shadow-xl rounded-lg z-50">
         {/* Header */}
         <DialogHeader className="border-b border-[#d3c7b9] p-6">
           {/* Title */}
@@ -149,7 +149,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
           )}
         </DialogHeader>
 
-        <div className="p-6 space-y-8">
+        <div className="p-6 space-y-8 break-words overflow-x-hidden">
           {/* What this means for Canadians Section */}
           {what_it_means_for_canadians && (
             <section>
@@ -157,9 +157,17 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                 <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
                 What This Means for Canadians
               </h3>
-              <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
-                {what_it_means_for_canadians}
-              </p>
+              <ul className="text-[#333333] leading-relaxed space-y-2 list-disc pl-5 break-words">
+                {Array.isArray(what_it_means_for_canadians) ? (
+                  what_it_means_for_canadians.map((item, index) => (
+                    <li key={index} className="break-words whitespace-pre-line">
+                      {item}
+                    </li>
+                  ))
+                ) : (
+                  <li className="break-words whitespace-pre-line">{what_it_means_for_canadians}</li>
+                )}
+              </ul>
             </section>
           )}
 

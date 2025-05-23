@@ -235,7 +235,7 @@ export default function HomePageClient({
 
   // Actual JSX rendering for the client component
   return (
-    <div className="min-h-screen bg-[#f8f2ea] font-sans">
+    <div className="min-h-screen bg-[#f8f2ea]">
       {/* Header is now part of the RootLayout or specific AdminLayout */}
       <div className="container mx-auto max-w-5xl px-4 py-12">
         <h1 className="mb-12 text-center text-5xl font-bold text-[#222222]">{pageTitle}</h1>
