@@ -42,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="bg-background">
       <body
         className={`${inter.className} text-neutral-800 dark:text-neutral-200 bg-background`}
       >
@@ -55,7 +55,7 @@ export default function RootLayout({
           >
             <SessionProvider>
               <Header />
-              <main className="container mx-auto p-4 bg-white dark:bg-neutral-900 site-main-content">
+              <main className="container mx-auto p-4 bg-background site-main-content">
                 {children}
               </main>
 

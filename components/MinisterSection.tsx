@@ -40,9 +40,6 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   const positionStart = ministerInfo?.positionStart;
   const positionEnd = ministerInfo?.positionEnd;
 
-  // Use the effective department name if available, otherwise fall back to the prop
-  const displayDepartmentFullName = ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName;
-
   let tenureString = "";
   const formattedStartDate = formatDate(positionStart);
   const formattedEndDate = formatDate(positionEnd);
@@ -84,7 +81,6 @@ export default function MinisterSection({ departmentPageData, departmentFullName
           <div>
             <h2 className="text-3xl font-bold text-[#222222]">{ministerName}</h2>
             <p className="text-lg text-[#555555]">{ministerTitle}</p>
-            <p className="text-sm text-[#8b2332]">{displayDepartmentFullName}</p>
             {tenureString && (
               <p className="text-xs text-gray-500 mt-1">{tenureString}</p>
             )}
@@ -93,7 +89,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       </div>
 
       {/* Key Metrics Placeholder Section */}
-      <div className="border-t border-[#d3c7b9] pt-8 mt-12 px-2 mb-8">
+      <div className="px-2 mb-8">
         <h3 className="text-2xl font-semibold text-[#222222] mb-4">Key Performance Indicators & Metrics</h3>
         <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center flex items-center justify-center" style={{ minHeight: '20vh' }}>
           <p className="text-gray-400 italic text-lg">[Placeholder: Charts and key metrics for {ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName} will be displayed here.]</p>
@@ -102,7 +98,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
 
       {/* Promises Section */}
       <div className="mb-8 px-2">
-        <h3 className="text-2xl font-semibold text-[#222222] mb-6">Commitments:</h3>
+        <h3 className="text-2xl font-semibold text-[#222222] mb-6">Commitments</h3>
         {promises && promises.length > 0 ? (
           <div className="grid grid-cols-1 gap-6">
             {[...promises].sort((a, b) => {

@@ -235,7 +235,7 @@ export default function HomePageClient({
 
   // Actual JSX rendering for the client component
   return (
-    <div className="min-h-screen bg-[#f8f2ea]">
+    <div className="min-h-screen">
       {/* Header is now part of the RootLayout or specific AdminLayout */}
       <div className="container mx-auto max-w-5xl px-4 py-12">
         <h1 className="mb-12 text-center text-5xl font-bold text-[#222222]">{pageTitle}</h1>
@@ -250,7 +250,7 @@ export default function HomePageClient({
                 <button
                   key={dept.id}
                   onClick={() => setActiveTabId(dept.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                  className={`px-4 py-2 text-sm font-medium transition-colors
                     ${activeTabId === dept.id 
                       ? 'bg-[#8b2332] text-white' 
                       : 'bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50'
@@ -262,7 +262,7 @@ export default function HomePageClient({
             </div>
 
             {/* Content Container */}
-            <div className="border border-[#d3c7b9] bg-white p-6 rounded-md shadow-sm">
+            <div className="border border-[#d3c7b9] bg-white p-6 shadow-sm">
               {mainTabConfigs.map((dept) => (
                 <div
                   key={dept.id}

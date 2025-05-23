@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
 
   return (
-    <div className="min-h-screen bg-[#f8f2ea] font-financier">
+    <div className="min-h-screen font-financier">
       {/* Main App Header */}
       <header className={`sticky top-0 z-50 bg-white shadow-sm ${HEADER_BOTTOM_BORDER_COLOR} border-b`}>
         <div className={`mx-auto flex max-w-7xl items-stretch`}>
@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Admin Content Area */}
       <main className="container mx-auto max-w-5xl px-4 py-12">
-        <div className="bg-white p-6 rounded-md shadow-sm border border-[#d3c7b9]">
+        <div className="bg-white p-6 shadow-sm border border-[#d3c7b9]">
             {children}
         </div>
       </main>

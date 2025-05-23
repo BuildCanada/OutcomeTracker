@@ -7,11 +7,11 @@
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 
-  /* BuildCanada.com specific colors (approximations) */
-  --bc-beige: #FAF7F2; /* Closer to the header background */
-  --bc-logo-red: #A62626; /* A guess for the logo background red, adjust if needed */
-  --bc-border-dark: #272727; /* For the tab borders */
-  --bc-tab-hover-bg: #EDEBE8; /* A light gray for tab hover */
+  --bc-beige: #f6ebe3; 
+  --bc-logo-red: #932f2;
+  --bc-border-dark: #585858; /* For the tab borders */
+  --bc-border-light: #cdc4bd;
+  --bc-tab-hover-bg: #cdc4bd; /* A light gray for tab hover */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,12 +30,7 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: rgb(var(--background-start-rgb));
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -128,7 +123,7 @@ body {
 
 @layer base {
     body {
-        @apply bg-[#f8f2ea];
+        @apply bg-[#f6ebe3];
     }
 
     h1,

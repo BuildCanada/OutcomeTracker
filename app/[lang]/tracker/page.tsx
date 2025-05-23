@@ -97,7 +97,7 @@ export default async function Home() {
   let initialDepartmentPromises: Record<string, any[]> = {}; // Using any[] for now
   let initialEvidenceItems: Record<string, any[]> = {}; // Using any[] for now
   let serverError: string | null = null;
-  let pageTitle = "Build Canada Promise Tracker"; // Default title
+  let pageTitle = "Outcomes Tracker"; // Default title
 
   try {
     const t0 = Date.now();
