@@ -296,9 +296,9 @@ async def generate_explanations_with_llm(promises_data: list[dict], base_prompt:
                "commitment_text" not in item or \
                "concise_title" not in item or \
                "what_it_means_for_canadians" not in item or \
-               "intended_impact_and_objectives" not in item or \
+               "description" not in item or \
                "background_and_context" not in item:
-                logger.warning(f"LLM output item {i} has incorrect structure or missing key fields (e.g., concise_title): {str(item)[:200]}. Skipping this item.")
+                logger.warning(f"LLM output item {i} has incorrect structure or missing key fields (e.g., concise_title, description): {str(item)[:200]}. Skipping this item.")
                 continue 
             validated_output.append(item)
         
@@ -352,10 +352,12 @@ async def store_explanations(
             logger.warning(f"Could not match LLM commitment text to an original promise for updating. Text: {commitment_text_from_llm[:100]}... Skipping this result.")
             continue
 
+        logger.info(f"Processed promise ID: {target_promise_ref.id} for update.")
+
         payload = {
             "concise_title": llm_item.get("concise_title"),
             "what_it_means_for_canadians": llm_item.get("what_it_means_for_canadians"),
-            "intended_impact_and_objectives": llm_item.get("intended_impact_and_objectives"),
+            "description": llm_item.get("description"),
             "background_and_context": llm_item.get("background_and_context"),
             "dev_explanation_enriched_at": firestore.SERVER_TIMESTAMP,
             "dev_explanation_enrichment_model": LLM_MODEL_NAME,

@@ -130,9 +130,17 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                 <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
                 What This Means for Canadians
               </h3>
-              <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
-                {what_it_means_for_canadians}
-              </p>
+              {Array.isArray(what_it_means_for_canadians) ? (
+                <ul className="list-disc list-inside text-[#333333] leading-relaxed space-y-1 pl-2 break-words">
+                  {what_it_means_for_canadians.map((item, index) => (
+                    <li key={index}>{item}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
+                  {what_it_means_for_canadians}
+                </p>
+              )}
             </section>
           )}
 
