@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PromiseData, EvidenceItem } from '../lib/types';
 import { Timestamp } from 'firebase/firestore';
 import TimelineNode from './TimelineNode'; // Import the new component
@@ -42,6 +42,29 @@ const formatDate = (dateInput: Timestamp | string): string => {
 const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promise }) => {
   const [timelineEvents, setTimelineEvents] = useState<TimelineDisplayEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<TimelineDisplayEvent | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+
+  // Add effect to scroll to selected event
+  useEffect(() => {
+    if (selectedEvent && timelineRef.current) {
+      const timelineContainer = timelineRef.current;
+      const selectedElement = timelineContainer.querySelector(`[data-event-id="${selectedEvent.id}"]`);
+      
+      if (selectedElement) {
+        const containerWidth = timelineContainer.offsetWidth;
+        const elementLeft = (selectedElement as HTMLElement).offsetLeft;
+        const elementWidth = (selectedElement as HTMLElement).offsetWidth;
+        
+        // Calculate scroll position to center the element
+        const scrollLeft = elementLeft - (containerWidth / 2) + (elementWidth / 2);
+        
+        timelineContainer.scrollTo({
+          left: scrollLeft,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (!promise) return;
@@ -92,7 +115,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
 
     setTimelineEvents(events);
     if (events.length > 0) {
-      setSelectedEvent(events[0]);
+      setSelectedEvent(events[events.length - 1]);
     } else {
       setSelectedEvent(null);
     }
@@ -112,12 +135,12 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
   }
 
   return (
-    <div className="my-6 font-sans">
+    <div className="my-6 font-financier">
       <h3 className="text-lg font-semibold text-gray-700 mb-5 px-3">Timeline of progress</h3>
       
       {/* Horizontal Timeline Section - visible on md screens and up */}
       <div className="hidden md:block mt-6 px-4 py-4 border border-gray-100 rounded-md bg-gray-50 relative overflow-hidden">
-        <div className="overflow-x-auto pb-2" style={{ maxWidth: "100%", overflowY: "hidden" }}>
+        <div className="overflow-x-auto pb-2" style={{ maxWidth: "100%", overflowY: "hidden" }} ref={timelineRef}>
           <ul className="timeline md:timeline-horizontal">
             {timelineEvents.map((event, index) => {
               const isFirstEvent = index === 0;
@@ -133,10 +156,10 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
               const positionClass = index % 2 === 0 ? "md:timeline-start" : "md:timeline-end";
 
               return (
-                <li key={event.id} className={`${liClass}`}>
-                  {!isFirstEvent && <hr className="bg-red-600 opacity-75" />}
+                <li key={event.id} className={`${liClass}`} data-event-id={event.id}>
+                  {!isFirstEvent && <hr className="bg-gray-600 opacity-75" />}
                   <div className="timeline-middle">
-                    <div className={`w-4 h-4 rounded-full ${isFirstEvent || isLastEvent ? 'bg-red-600' : 'bg-gray-500'}`}></div>
+                    <div className={`w-4 h-4 rounded-full bg-gray-500`}></div>
                   </div>
                   <div className={`${positionClass} timeline-box-wrapper`}>
                     <TimelineNode 
@@ -147,7 +170,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
                       isLast={isLastEvent}
                     />
                   </div>
-                  {!isLastEvent && <hr className="bg-red-600 opacity-75" />} 
+                  {!isLastEvent && <hr className="bg-gray-600 opacity-75" />} 
                 </li>
               );
             })}
@@ -163,7 +186,6 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
                     <div 
                         onClick={() => handleEventSelect(event)}
                         className={`cursor-pointer w-3 h-3 rounded-full border-2 border-white shrink-0 
-                                    ${event.type === 'mandate' && index === 0 ? 'bg-red-500' : (index === timelineEvents.length -1 && event.type === 'evidence' ? 'bg-red-500' : 'bg-gray-500')} 
                                     ${selectedEvent?.id === event.id ? 'ring-2 ' + (event.type === 'mandate' && index === 0 ? 'ring-red-300' : (index === timelineEvents.length -1 && event.type === 'evidence' ? 'ring-red-300' : 'ring-blue-300')) : ''}
                                   `}
                     ></div>

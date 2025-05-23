@@ -39,22 +39,15 @@ const TimelineNode: React.FC<TimelineNodeProps> = ({ event, isSelected, onClick,
   let boxClasses = "timeline-box w-full md:w-auto max-w-[300px] md:max-w-none cursor-pointer hover:shadow-md transition-shadow p-3 rounded-md"; // Base from HTML, p-3 added as timeline-box usually has padding
   let titleClasses = "font-medium line-clamp-3"; // From HTML (font-medium text-gray-900), line-clamp added
   let dateClasses = "text-xs mt-1"; // From HTML (text-xs mt-1 text-gray-700)
-  let pillClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs text-white border-white"; // From HTML
+  let pillClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs text-gray-900 border-gray-900"; // From HTML
 
-  if (isFirstMention || isLast) { // This condition now correctly uses the modified isFirstMention (which is just isFirst)
-    boxClasses += " bg-red-600 text-white ring-2 ring-red-600 font-semibold";
-    titleClasses += " !text-white"; // !important needed if base has higher specificity
-    dateClasses += " !text-white"; // !important needed
-    // Pill text color is already white, border is white.
-  } else {
-    boxClasses += " bg-white border border-gray-200"; // Regular items from HTML: bg-white, imply border for separation
-    titleClasses += " text-gray-900";
-    dateClasses += " text-gray-700";
-  }
+  boxClasses += "bg-white border border-gray-200 "; // Regular items from HTML: bg-white, imply border for separation
+  titleClasses += "text-gray-900";
+  dateClasses += "text-gray-700";
 
   // Retaining isSelected styling for accessibility / alternative interaction model
   if (isSelected) {
-     boxClasses += (isFirstMention || isLast) ? " ring-offset-2 ring-offset-red-700 ring-red-400" : " ring-2 ring-offset-2 ring-blue-500";
+     boxClasses +=  " ring-2 ring-offset-2 ring-red-500";
   }
 
   return (

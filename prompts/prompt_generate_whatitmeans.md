@@ -24,8 +24,8 @@ For *each* `commitment_text` provided, you must generate the following fields:
     *   **Source:** Identify context within the platform documents related to this commitment.
 
 3.  `what_it_means_for_canadians`:
-    *   **Content:** An array of 3-5 bullet points (approx. 25-50 words each bullet point), explain what the commitment means for Canadians. Describe the practical implications, direct benefits, potential trade-offs or challenges, and any potential negative consequences for citizens, specific groups, or the country as a whole. Focus on the tangible changes or experiences. Do not include background information or the 'why' here; focus on the direct effects.
-    *   **Source:** Use your own reasoning. Act as if you are a policy analyst under Build Canada, with the beliefs outlined in build_canada_tenets.txt.
+    *   **Content:** An array of 3-5 bullet points (approx. 25-50 words each bullet point), explain what the commitment means for Canadians. Describe the practical implications, direct benefits, potential trade-offs or challenges, and any potential negative consequences for citizens, specific groups, or the country as a whole. Focus on the tangible changes or experiences. Do not include background information or the 'why' here; focus on the 'what' and its direct effects.
+    *   **Source:** Use your own reasoning. Use external sources and opinions from notable policy experts if needed.
 
 4.  `background_and_context`:
     *   **Content:** A brief overview of the situation, existing issues, or reasons that likely led to this commitment being made by the party. Why was this promise included in the platform? What broader policy discussions or societal needs does it relate to?

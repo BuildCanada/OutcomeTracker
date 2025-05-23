@@ -17,10 +17,11 @@ export default function PrimeMinisterSection({
   return (
     <div className="border border-[#d3c7b9] bg-white p-6">
       <div className="flex items-center gap-6">
-        <Avatar className="h-20 w-20 rounded-full border-4 border-[#f5d0a9]">
+        <Avatar className="h-20 w-20">
           <AvatarImage
             src={primeMinister.avatarUrl || "/placeholder.svg"}
             alt={primeMinister.name}
+            className="object-cover object-[center_25%]"
           />
           <AvatarFallback className="bg-[#f5d0a9] text-[#8b2332]">
             {primeMinister.name

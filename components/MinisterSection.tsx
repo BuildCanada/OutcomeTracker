@@ -68,16 +68,16 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       <div className="mb-8 p-6 border border-[#d3c7b9] bg-[#fdfaf6]">
         <div className="flex items-center">
           {avatarUrl ? (
-             <Avatar className="h-20 w-20 mr-6 rounded-full bg-gray-100">
-               {/* <AvatarImage 
+             <Avatar className="h-20 w-20 mr-6 bg-gray-100">
+               <AvatarImage 
                  src={avatarUrl} 
                  alt={`Official portrait of ${ministerName}`} 
-                 className="object-contain w-full h-full"
-               /> */}
+                 className="object-cover"
+               />
                <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
              </Avatar>
           ) : (
-            <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200 rounded-full">
+            <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200">
               <span className="text-2xl text-gray-500">{getFallbackInitials(ministerName)}</span>
             </div>
           )}

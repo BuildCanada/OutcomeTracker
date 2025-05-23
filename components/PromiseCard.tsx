@@ -180,7 +180,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
   return (
     <>
       <div
-        className="bg-white shadow rounded-xl border-l-4 border-canada-red flex flex-col cursor-pointer transition-shadow hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-canada-red group relative"
+        className="bg-white border border-[#cdc4bd] flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 group relative"
         tabIndex={0}
         aria-label={promise.text}
         onClick={handleCardClick}
@@ -237,7 +237,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
           </div>
         </div>
         {/* Progress and meta bar */}
-        <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex items-center justify-between rounded-b-xl">
+        <div className="bg-gray-50 border-t border-[#cdc4bd] px-6 py-3 flex items-center justify-between">
           {/* Progress dots and checkmark */}
           <div className="flex items-center gap-2 relative">
             <div
@@ -254,7 +254,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               {[1, 2, 3, 4, 5].map((dot, idx) => (
                 <div
                   key={dot}
-                  className={`w-3 h-3 rounded-full ${dot <= progressScore ? dotColors[progressScore - 1] : "bg-gray-300"}`}
+                  className={`w-0.5 h-4 ${dot <= progressScore ? dotColors[progressScore - 1] : "bg-gray-300"}`}
                 />
               ))}
             </div>
