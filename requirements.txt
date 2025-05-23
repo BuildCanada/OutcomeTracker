@@ -6,3 +6,5 @@ yt_dlp
 python-dotenv
 beautifulsoup4
 requests
+feedparser
+python-dateutil # Added for robust date parsing

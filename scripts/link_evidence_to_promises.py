@@ -610,7 +610,7 @@ async def main_async_entrypoint():
         '--parliament_session_id',
         type=str,
         required=True,
-        help='The parliament_session_id to filter promises (e.g., "44-1").'
+        help='The parliament_session_id to filter promises (e.g., "44").'
     )
     parser.add_argument(
         '--source_type',
