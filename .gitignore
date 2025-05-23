@@ -36,4 +36,4 @@ __pycache__
 *storybook.log
 
 # JSON outputs
-/JSON_outputs
+scripts/ingestion_jobs/JSON_outputs
