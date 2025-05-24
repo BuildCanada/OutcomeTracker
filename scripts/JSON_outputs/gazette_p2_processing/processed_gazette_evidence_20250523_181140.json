@@ -1,0 +1,175 @@
+[
+    {
+        "evidence_id": "20250326_45_Gazette2_8b5616f7a0",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "On 2025-03-26, the Employment Insurance Board of Appeal Regulations were published, coming into force with section 634 of the Budget Implementation Act, 2023, No. 1.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors74-eng.html",
+        "source_document_raw_id": "SOR/2025-74",
+        "linked_departments": [
+            "Employment and Social Development Canada"
+        ],
+        "ingested_at": "2025-05-23T22:11:16.296418+00:00",
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_0f1b375ff203"
+        },
+        "dev_linking_status": "pending",
+        "llm_processing_result": {
+            "timeline_summary": "On 2025-03-26, the Employment Insurance Board of Appeal Regulations were published, coming into force with section 634 of the Budget Implementation Act, 2023, No. 1.",
+            "potential_relevance_score": "Medium",
+            "key_concepts": [
+                "Employment Insurance",
+                "Board of Appeal",
+                "Employment and Social Development",
+                "Budget Implementation Act",
+                "Employment Insurance Act",
+                "Regulations",
+                "Appeals"
+            ],
+            "sponsoring_department_standardized": "Employment and Social Development Canada",
+            "rias_summary": ""
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_31dfe4a95c",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "On 2025-03-26, Order 2024-87-24-01 amends the Domestic Substances List under CEPA 1999, applying significant new activity provisions to trixylyl phosphate for risk assessment.",
+        "description_or_details": "The Chemicals Management Plan (CMP) is a Government of Canada initiative assessing and managing risks from substances. This Order applies the significant new activity (SNAc) provisions of the Canadian Environmental Protection Act, 1999 (CEPA) to phenol, dimethyl-, phosphate (3:1), also known as \"trixylyl phosphate.\" SNAc provisions allow the Minister of the Environment to request information to assess potential environmental and human health risks when a substance is used in a significant new activity. If risks are identified, the Government may recommend mitigation measures. The CMP, launched in 2006, aims to reduce risks posed by substances through assessments conducted by Environment and Health departments under CEPA.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors81-eng.html",
+        "source_document_raw_id": "SOR/2025-81",
+        "linked_departments": [
+            "Environment and Climate Change Canada"
+        ],
+        "ingested_at": "2025-05-23T22:11:22.714982+00:00",
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_14b9adc52421"
+        },
+        "dev_linking_status": "pending",
+        "llm_processing_result": {
+            "timeline_summary": "On 2025-03-26, Order 2024-87-24-01 amends the Domestic Substances List under CEPA 1999, applying significant new activity provisions to trixylyl phosphate for risk assessment.",
+            "potential_relevance_score": "Medium",
+            "key_concepts": [
+                "Domestic Substances List",
+                "Canadian Environmental Protection Act",
+                "Chemicals Management Plan",
+                "significant new activity",
+                "trixylyl phosphate",
+                "environmental risks",
+                "human health risks",
+                "substance assessment",
+                "risk management"
+            ],
+            "sponsoring_department_standardized": "Environment and Climate Change Canada",
+            "rias_summary": "The Chemicals Management Plan (CMP) is a Government of Canada initiative assessing and managing risks from substances. This Order applies the significant new activity (SNAc) provisions of the Canadian Environmental Protection Act, 1999 (CEPA) to phenol, dimethyl-, phosphate (3:1), also known as \"trixylyl phosphate.\" SNAc provisions allow the Minister of the Environment to request information to assess potential environmental and human health risks when a substance is used in a significant new activity. If risks are identified, the Government may recommend mitigation measures. The CMP, launched in 2006, aims to reduce risks posed by substances through assessments conducted by Environment and Health departments under CEPA."
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_f2fcdd4580",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "On 2025-03-26, an Order transferred powers and duties concerning the Controlled Drugs and Substances Act and Tobacco and Vaping Products Act to the Minister of Health.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/si-tr36-eng.html",
+        "source_document_raw_id": "SI/2025-36",
+        "linked_departments": [
+            "Health Canada"
+        ],
+        "ingested_at": "2025-05-23T22:11:29.004217+00:00",
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_17abab9935ff"
+        },
+        "dev_linking_status": "pending",
+        "llm_processing_result": {
+            "timeline_summary": "On 2025-03-26, an Order transferred powers and duties concerning the Controlled Drugs and Substances Act and Tobacco and Vaping Products Act to the Minister of Health.",
+            "potential_relevance_score": "Low",
+            "key_concepts": [
+                "Minister of Mental Health and Addictions",
+                "Controlled Drugs and Substances Act",
+                "Tobacco and Vaping Products Act",
+                "Transfer of powers",
+                "Transfer of duties",
+                "Public Service Rearrangement",
+                "Mental health",
+                "Addictions",
+                "Public health"
+            ],
+            "sponsoring_department_standardized": "Health Canada",
+            "rias_summary": ""
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_20896c2767",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "On 2025-03-26, the Metal and Diamond Mining Effluent Regulations were amended under the Fisheries Act, coming into force to address effluent from metal and diamond mining.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors71-eng.html",
+        "source_document_raw_id": "SOR/2025-71",
+        "linked_departments": [
+            "Not specified"
+        ],
+        "ingested_at": "2025-05-23T22:11:36.988957+00:00",
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_18158b211437"
+        },
+        "dev_linking_status": "pending",
+        "llm_processing_result": {
+            "timeline_summary": "On 2025-03-26, the Metal and Diamond Mining Effluent Regulations were amended under the Fisheries Act, coming into force to address effluent from metal and diamond mining.",
+            "potential_relevance_score": "High",
+            "key_concepts": [
+                "Metal and Diamond Mining Effluent Regulations",
+                "Fisheries Act",
+                "mining effluent",
+                "environmental protection",
+                "regulations",
+                "metal mining",
+                "diamond mining"
+            ],
+            "sponsoring_department_standardized": "Not specified",
+            "rias_summary": ""
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_9e7ea67fee",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "On 2025-03-26, amendments to the Output-Based Pricing System Regulations under the Greenhouse Gas Pollution Pricing Act were published.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors108-eng.html",
+        "source_document_raw_id": "SOR/2025-108",
+        "linked_departments": [
+            "Environment and Climate Change Canada"
+        ],
+        "ingested_at": "2025-05-23T22:11:40.227266+00:00",
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_1a87de3127a3"
+        },
+        "dev_linking_status": "pending",
+        "llm_processing_result": {
+            "timeline_summary": "On 2025-03-26, amendments to the Output-Based Pricing System Regulations under the Greenhouse Gas Pollution Pricing Act were published.",
+            "potential_relevance_score": "High",
+            "key_concepts": [
+                "Output-Based Pricing System",
+                "Greenhouse Gas Pollution Pricing Act",
+                "greenhouse gas",
+                "carbon pricing",
+                "climate change",
+                "environmental regulation"
+            ],
+            "sponsoring_department_standardized": "Environment and Climate Change Canada",
+            "rias_summary": ""
+        }
+    }
+]

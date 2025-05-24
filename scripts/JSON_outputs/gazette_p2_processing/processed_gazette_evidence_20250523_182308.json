@@ -1,0 +1,152 @@
+[
+    {
+        "evidence_id": "20250326_45_Gazette2_c8013cc6b5",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Amended Wildlife Area Regulations streamline management of Prairie National Wildlife Area and correct administrative errors for Prince Edward Point NWA.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors100-eng.html",
+        "source_document_raw_id": "SOR/2025-100",
+        "linked_departments": [
+            "Environment and Climate Change Canada"
+        ],
+        "ingested_at": "2025-05-23T22:22:46.745716+00:00",
+        "potential_relevance_score": "High",
+        "key_concepts": [
+            "Wildlife Area Regulations",
+            "Canada Wildlife Act",
+            "National Wildlife Area",
+            "Prairie National Wildlife Area",
+            "Prince Edward Point NWA",
+            "species at risk",
+            "habitat conservation",
+            "biodiversity",
+            "environmental protection",
+            "land management"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_39dd267d8564",
+            "rias_summary": "The amendments to the Wildlife Area Regulations address issues with the Prairie National Wildlife Area, where only 7 of 26 units met current designation requirements, leading to complex and costly management. The changes enable more efficient management of high conservation value lands. Additionally, minor administrative errors in the boundary description of the Prince Edward Point National Wildlife Area are corrected. These regulatory updates support the government's commitments, including the Nature Legacy Initiative from Budget 2018 and the 2019 Speech from the Throne, to protect biodiversity and species at risk in Canada through the establishment and management of National Wildlife Areas."
+        },
+        "dev_linking_status": "pending"
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_0ba324e3d5",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Regulations amending the Aeronautics Act come into force, impacting Remotely Piloted Aircraft Systems (RPAS) operations, including beyond visual line-of-sight.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors70-eng.html",
+        "source_document_raw_id": "SOR/2025-70",
+        "linked_departments": [
+            "Transport Canada"
+        ],
+        "ingested_at": "2025-05-23T22:22:53.111522+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "Canadian Aviation Regulations",
+            "RPAS",
+            "Remotely Piloted Aircraft Systems",
+            "Beyond Visual Line-of-Sight",
+            "Aeronautics Act",
+            "Aviation operations",
+            "Drone operations"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_3fe8ce695f2b",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending"
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_8e067a6d69",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Order designates the Leader of the Government in the House of Commons as the Minister responsible for the Electoral Boundaries Readjustment Suspension Act, 1994.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/si-tr54-eng.html",
+        "source_document_raw_id": "SI/2025-54",
+        "linked_departments": [
+            "Privy Council Office"
+        ],
+        "ingested_at": "2025-05-23T22:22:59.559367+00:00",
+        "potential_relevance_score": "Low",
+        "key_concepts": [
+            "electoral boundaries",
+            "electoral boundaries readjustment",
+            "Leader of the Government in the House of Commons",
+            "Minister designation",
+            "Act administration"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_405c553f4e19",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending"
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_53b8b572bf",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "An Order transfers powers, duties, and functions from the Minister of Mental Health and Addictions and Associate Minister of Health to the Minister of Health under the Canadian Centre on Substance Abuse Act.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/si-tr37-eng.html",
+        "source_document_raw_id": "SI/2025-37",
+        "linked_departments": [
+            "Health Canada"
+        ],
+        "ingested_at": "2025-05-23T22:23:03.964864+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "mental health",
+            "addictions",
+            "public health",
+            "substance abuse",
+            "powers transfer",
+            "duties transfer",
+            "Canadian Centre on Substance Abuse Act"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_4454b64c1d59",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending"
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_f95b36f41e",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Regulations amending the Agricultural Marketing Programs Act come into force, impacting agricultural marketing programs.",
+        "description_or_details": "",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors90-eng.html",
+        "source_document_raw_id": "SOR/2025-90",
+        "linked_departments": [
+            "Agriculture and Agri-Food Canada"
+        ],
+        "ingested_at": "2025-05-23T22:23:08.985120+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "Agricultural Marketing Programs",
+            "Agricultural Marketing Programs Act",
+            "Regulations",
+            "Amendments",
+            "Agriculture",
+            "Canada"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_46aad7b61c5c",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending"
+    }
+]

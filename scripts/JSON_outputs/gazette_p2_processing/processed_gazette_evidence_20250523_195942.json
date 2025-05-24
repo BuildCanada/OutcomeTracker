@@ -1,0 +1,472 @@
+[
+    {
+        "evidence_id": "20250326_45_Gazette2_17a4249ea9",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Order designates the Leader of the Government in the House of Commons as the Minister responsible for the purposes of the Referendum Act.",
+        "description_or_details": "This Order designates the Leader of the Government in the House of Commons as the specific Minister responsible for administering the Referendum Act, which outlines the procedures for conducting national referendums, thereby clarifying ministerial oversight for potential future plebiscites.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/si-tr52-eng.html",
+        "source_document_raw_id": "SI/2025-52",
+        "linked_departments": [
+            "Privy Council Office"
+        ],
+        "ingested_at": "2025-05-23T23:58:54.311301+00:00",
+        "potential_relevance_score": "Low",
+        "key_concepts": [
+            "Referendum Act",
+            "Leader of the Government in the House of Commons",
+            "Ministerial designation",
+            "Government administration",
+            "Parliamentary procedure"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_03c7869f4b99",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Order designates the Leader of the Government in the House of Commons as the Minister responsible for the purposes of the Referendum Act.",
+            "potential_relevance_score": "Low",
+            "key_concepts": [
+                "Referendum Act",
+                "Leader of the Government in the House of Commons",
+                "Ministerial designation",
+                "Government administration",
+                "Parliamentary procedure"
+            ],
+            "sponsoring_department_standardized": "Privy Council Office",
+            "rias_summary": "",
+            "one_sentence_description": "This Order designates the Leader of the Government in the House of Commons as the specific Minister responsible for administering the Referendum Act, which outlines the procedures for conducting national referendums, thereby clarifying ministerial oversight for potential future plebiscites.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_f98a3d1f17",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Order amends Schedule I.1 of the Financial Administration Act concerning the Canadian Intergovernmental Conference Secretariat.",
+        "description_or_details": "This Order amends Schedule I.1 of the Financial Administration Act, which governs the financial administration of the Government of Canada, to include or modify provisions related to the Canadian Intergovernmental Conference Secretariat, an independent agency supporting federal-provincial/territorial conferences.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors104-eng.html",
+        "source_document_raw_id": "SOR/2025-104",
+        "linked_departments": [
+            "Treasury Board of Canada Secretariat"
+        ],
+        "ingested_at": "2025-05-23T23:58:58.493411+00:00",
+        "potential_relevance_score": "Low",
+        "key_concepts": [
+            "Financial Administration Act",
+            "Canadian Intergovernmental Conference Secretariat",
+            "Schedule I.1",
+            "administrative amendment",
+            "federal government finance"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_06da2c363b87",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Order amends Schedule I.1 of the Financial Administration Act concerning the Canadian Intergovernmental Conference Secretariat.",
+            "potential_relevance_score": "Low",
+            "key_concepts": [
+                "Financial Administration Act",
+                "Canadian Intergovernmental Conference Secretariat",
+                "Schedule I.1",
+                "administrative amendment",
+                "federal government finance"
+            ],
+            "sponsoring_department_standardized": "Treasury Board of Canada Secretariat",
+            "rias_summary": "",
+            "one_sentence_description": "This Order amends Schedule I.1 of the Financial Administration Act, which governs the financial administration of the Government of Canada, to include or modify provisions related to the Canadian Intergovernmental Conference Secretariat, an independent agency supporting federal-provincial/territorial conferences.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_e09eeb6a25",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Order designates Minister of Canadian Heritage as the minister for the purposes of the Canadian Multiculturalism Act.",
+        "description_or_details": "This order formally designates the Minister of Canadian Heritage as the responsible minister for the purposes of the Canadian Multiculturalism Act, clarifying ministerial accountability and enabling the Act's continued administration and implementation.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/si-tr45-eng.html",
+        "source_document_raw_id": "SI/2025-45",
+        "linked_departments": [
+            "Canadian Heritage"
+        ],
+        "ingested_at": "2025-05-23T23:59:02.657792+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "Canadian Multiculturalism Act",
+            "Minister of Canadian Heritage",
+            "Multiculturalism",
+            "Ministerial designation",
+            "Federal government"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_0df67b6acc05",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Order designates Minister of Canadian Heritage as the minister for the purposes of the Canadian Multiculturalism Act.",
+            "potential_relevance_score": "Medium",
+            "key_concepts": [
+                "Canadian Multiculturalism Act",
+                "Minister of Canadian Heritage",
+                "Multiculturalism",
+                "Ministerial designation",
+                "Federal government"
+            ],
+            "sponsoring_department_standardized": "Canadian Heritage",
+            "rias_summary": "",
+            "one_sentence_description": "This order formally designates the Minister of Canadian Heritage as the responsible minister for the purposes of the Canadian Multiculturalism Act, clarifying ministerial accountability and enabling the Act's continued administration and implementation.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_8b5616f7a0",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Employment Insurance Board of Appeal Regulations come into force, linked to the Budget Implementation Act, 2023, No. 1.",
+        "description_or_details": "These regulations establish the framework for the Employment Insurance Board of Appeal, a body responsible for hearing appeals related to Employment Insurance decisions, ensuring fair and consistent application of the Employment Insurance Act and supporting the social safety net for Canadian workers.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors74-eng.html",
+        "source_document_raw_id": "SOR/2025-74",
+        "linked_departments": [
+            "Employment and Social Development Canada"
+        ],
+        "ingested_at": "2025-05-23T23:59:07.504779+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "Employment Insurance",
+            "Board of Appeal",
+            "Regulations",
+            "Employment and Social Development",
+            "Budget Implementation Act"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_0f1b375ff203",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Employment Insurance Board of Appeal Regulations come into force, linked to the Budget Implementation Act, 2023, No. 1.",
+            "potential_relevance_score": "Medium",
+            "key_concepts": [
+                "Employment Insurance",
+                "Board of Appeal",
+                "Regulations",
+                "Employment and Social Development",
+                "Budget Implementation Act"
+            ],
+            "sponsoring_department_standardized": "Employment and Social Development Canada",
+            "rias_summary": "",
+            "one_sentence_description": "These regulations establish the framework for the Employment Insurance Board of Appeal, a body responsible for hearing appeals related to Employment Insurance decisions, ensuring fair and consistent application of the Employment Insurance Act and supporting the social safety net for Canadian workers.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_31dfe4a95c",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Order amends the Domestic Substances List under CEPA 1999, applying significant new activity provisions to trixylyl phosphate for risk assessment.",
+        "description_or_details": "This Order amends the Domestic Substances List (DSL) under the Canadian Environmental Protection Act, 1999 (CEPA), applying significant new activity (SNAc) provisions to trixylyl phosphate, enabling the Minister to request information for assessing potential environmental and human health risks from its new uses.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors81-eng.html",
+        "source_document_raw_id": "SOR/2025-81",
+        "linked_departments": [
+            "Environment and Climate Change Canada"
+        ],
+        "ingested_at": "2025-05-23T23:59:15.497255+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "Domestic Substances List",
+            "Canadian Environmental Protection Act, 1999",
+            "Chemicals Management Plan",
+            "significant new activity provisions",
+            "trixylyl phosphate",
+            "environmental risks",
+            "human health risks",
+            "substance assessment",
+            "risk management",
+            "phenol, dimethyl-, phosphate (3:1)"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_14b9adc52421",
+            "rias_summary": "The Regulatory Impact Analysis Statement outlines the Chemicals Management Plan (CMP), a Government of Canada initiative assessing and managing risks from substances. This Order, issued under subsection 87(3) of CEPA, applies the significant new activity (SNAc) provisions to phenol, dimethyl-, phosphate (3:1), also known as trixylyl phosphate. The SNAc provisions enable the Minister to request information to assess potential environmental and human health risks when the substance is used in new ways. If risks are identified, the Government may recommend mitigation measures. The CMP, launched in 2006, aims to reduce risks from substance exposure, with assessments conducted by the Departments of Environment and Health."
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Order amends the Domestic Substances List under CEPA 1999, applying significant new activity provisions to trixylyl phosphate for risk assessment.",
+            "potential_relevance_score": "Medium",
+            "key_concepts": [
+                "Domestic Substances List",
+                "Canadian Environmental Protection Act, 1999",
+                "Chemicals Management Plan",
+                "significant new activity provisions",
+                "trixylyl phosphate",
+                "environmental risks",
+                "human health risks",
+                "substance assessment",
+                "risk management",
+                "phenol, dimethyl-, phosphate (3:1)"
+            ],
+            "sponsoring_department_standardized": "Environment and Climate Change Canada",
+            "rias_summary": "The Regulatory Impact Analysis Statement outlines the Chemicals Management Plan (CMP), a Government of Canada initiative assessing and managing risks from substances. This Order, issued under subsection 87(3) of CEPA, applies the significant new activity (SNAc) provisions to phenol, dimethyl-, phosphate (3:1), also known as trixylyl phosphate. The SNAc provisions enable the Minister to request information to assess potential environmental and human health risks when the substance is used in new ways. If risks are identified, the Government may recommend mitigation measures. The CMP, launched in 2006, aims to reduce risks from substance exposure, with assessments conducted by the Departments of Environment and Health.",
+            "one_sentence_description": "This Order amends the Domestic Substances List (DSL) under the Canadian Environmental Protection Act, 1999 (CEPA), applying significant new activity (SNAc) provisions to trixylyl phosphate, enabling the Minister to request information for assessing potential environmental and human health risks from its new uses.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_f2fcdd4580",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Order transfers powers, duties, and functions under Controlled Drugs and Substances Act and Tobacco and Vaping Products Act to Minister of Mental Health and Addictions.",
+        "description_or_details": "This order transfers specific powers, duties, and functions related to the Controlled Drugs and Substances Act and the Tobacco and Vaping Products Act from the Minister of Health to the Minister of Mental Health and Addictions and Associate Minister of Health, clarifying ministerial responsibilities.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/si-tr36-eng.html",
+        "source_document_raw_id": "SI/2025-36",
+        "linked_departments": [
+            "Health Canada"
+        ],
+        "ingested_at": "2025-05-23T23:59:19.178468+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "Minister of Mental Health and Addictions",
+            "Associate Minister of Health",
+            "Minister of Health",
+            "Controlled Drugs and Substances Act",
+            "Tobacco and Vaping Products Act",
+            "transfer of powers",
+            "duties and functions",
+            "public service rearrangement",
+            "addictions",
+            "mental health"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_17abab9935ff",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Order transfers powers, duties, and functions under Controlled Drugs and Substances Act and Tobacco and Vaping Products Act to Minister of Mental Health and Addictions.",
+            "potential_relevance_score": "Medium",
+            "key_concepts": [
+                "Minister of Mental Health and Addictions",
+                "Associate Minister of Health",
+                "Minister of Health",
+                "Controlled Drugs and Substances Act",
+                "Tobacco and Vaping Products Act",
+                "transfer of powers",
+                "duties and functions",
+                "public service rearrangement",
+                "addictions",
+                "mental health"
+            ],
+            "sponsoring_department_standardized": "Health Canada",
+            "rias_summary": "",
+            "one_sentence_description": "This order transfers specific powers, duties, and functions related to the Controlled Drugs and Substances Act and the Tobacco and Vaping Products Act from the Minister of Health to the Minister of Mental Health and Addictions and Associate Minister of Health, clarifying ministerial responsibilities.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_20896c2767",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Regulations amending the Fisheries Act introduce new rules for metal and diamond mining effluent, impacting environmental protection.",
+        "description_or_details": "These regulations amend the Fisheries Act to establish new rules concerning effluent from metal and diamond mining operations, aiming to protect aquatic environments and ensure responsible resource development.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors71-eng.html",
+        "source_document_raw_id": "SOR/2025-71",
+        "linked_departments": [
+            "Not specified"
+        ],
+        "ingested_at": "2025-05-23T23:59:24.993642+00:00",
+        "potential_relevance_score": "High",
+        "key_concepts": [
+            "metal mining",
+            "diamond mining",
+            "effluent regulations",
+            "Fisheries Act",
+            "environmental protection",
+            "water quality"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_18158b211437",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Regulations amending the Fisheries Act introduce new rules for metal and diamond mining effluent, impacting environmental protection.",
+            "potential_relevance_score": "High",
+            "key_concepts": [
+                "metal mining",
+                "diamond mining",
+                "effluent regulations",
+                "Fisheries Act",
+                "environmental protection",
+                "water quality"
+            ],
+            "sponsoring_department_standardized": "Not specified",
+            "rias_summary": "",
+            "one_sentence_description": "These regulations amend the Fisheries Act to establish new rules concerning effluent from metal and diamond mining operations, aiming to protect aquatic environments and ensure responsible resource development.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_9e7ea67fee",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "Amends Output-Based Pricing System Regulations under Greenhouse Gas Pollution Pricing Act.",
+        "description_or_details": "These regulations amend the Output-Based Pricing System Regulations, which are part of Canada's Greenhouse Gas Pollution Pricing Act, to adjust the framework for industrial greenhouse gas emissions pricing, aiming to reduce pollution and support a clean economy.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors108-eng.html",
+        "source_document_raw_id": "SOR/2025-108",
+        "linked_departments": [
+            "Environment and Climate Change Canada"
+        ],
+        "ingested_at": "2025-05-23T23:59:28.038007+00:00",
+        "potential_relevance_score": "High",
+        "key_concepts": [
+            "Output-Based Pricing System",
+            "Greenhouse Gas Pollution Pricing Act",
+            "Greenhouse gas",
+            "Pollution pricing",
+            "Climate change",
+            "Clean economy",
+            "Regulations amending"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_1a87de3127a3",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "Amends Output-Based Pricing System Regulations under Greenhouse Gas Pollution Pricing Act.",
+            "potential_relevance_score": "High",
+            "key_concepts": [
+                "Output-Based Pricing System",
+                "Greenhouse Gas Pollution Pricing Act",
+                "Greenhouse gas",
+                "Pollution pricing",
+                "Climate change",
+                "Clean economy",
+                "Regulations amending"
+            ],
+            "sponsoring_department_standardized": "Environment and Climate Change Canada",
+            "rias_summary": "",
+            "one_sentence_description": "These regulations amend the Output-Based Pricing System Regulations, which are part of Canada's Greenhouse Gas Pollution Pricing Act, to adjust the framework for industrial greenhouse gas emissions pricing, aiming to reduce pollution and support a clean economy.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_5f361257fe",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "New regulations under the Proceeds of Crime (Money Laundering) and Terrorist Financing Act come into force, impacting reporting of goods.",
+        "description_or_details": "These Regulations, enacted under the Proceeds of Crime (Money Laundering) and Terrorist Financing Act, establish specific requirements for the reporting of goods to combat financial crimes such as money laundering and terrorist financing, aiming to enhance economic security.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors67-eng.html",
+        "source_document_raw_id": "SOR/2025-67",
+        "linked_departments": [
+            "Not specified"
+        ],
+        "ingested_at": "2025-05-23T23:59:33.844858+00:00",
+        "potential_relevance_score": "High",
+        "key_concepts": [
+            "Proceeds of Crime",
+            "Money Laundering",
+            "Terrorist Financing",
+            "Reporting of Goods",
+            "Financial Crime",
+            "Economic Security",
+            "Fall Economic Statement Implementation Act, 2023"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_1bf3d0321666",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "New regulations under the Proceeds of Crime (Money Laundering) and Terrorist Financing Act come into force, impacting reporting of goods.",
+            "potential_relevance_score": "High",
+            "key_concepts": [
+                "Proceeds of Crime",
+                "Money Laundering",
+                "Terrorist Financing",
+                "Reporting of Goods",
+                "Financial Crime",
+                "Economic Security",
+                "Fall Economic Statement Implementation Act, 2023"
+            ],
+            "sponsoring_department_standardized": "Not specified",
+            "rias_summary": "",
+            "one_sentence_description": "These Regulations, enacted under the Proceeds of Crime (Money Laundering) and Terrorist Financing Act, establish specific requirements for the reporting of goods to combat financial crimes such as money laundering and terrorist financing, aiming to enhance economic security.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    },
+    {
+        "evidence_id": "20250326_45_Gazette2_8698e2e999",
+        "promise_ids": [],
+        "parliament_session_id": "45",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "evidence_date": "2025-03-26T14:00:00+00:00",
+        "title_or_summary": "An Order amends Schedule I.1 of the Financial Administration Act, modifying the list of entities subject to specific financial administration rules.",
+        "description_or_details": "This Order amends Schedule I.1 of the Financial Administration Act (FAA), which lists federal government departments and agencies subject to specific financial management and accountability rules, thereby adjusting the scope of the Act's application to certain public entities.",
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2025/2025-03-26/html/sor-dors105-eng.html",
+        "source_document_raw_id": "SOR/2025-105",
+        "linked_departments": [
+            "Treasury Board of Canada Secretariat"
+        ],
+        "ingested_at": "2025-05-23T23:59:42.573592+00:00",
+        "potential_relevance_score": "Medium",
+        "key_concepts": [
+            "Financial Administration Act",
+            "Schedule I.1",
+            "Order Amending",
+            "Government finance",
+            "Public administration",
+            "Financial management",
+            "Federal government",
+            "Administrative law",
+            "Government entities",
+            "Financial regulations"
+        ],
+        "additional_metadata": {
+            "raw_gazette_notice_id": "CGP2_20250326_1f66334424be",
+            "rias_summary": ""
+        },
+        "dev_linking_status": "pending",
+        "llm_analysis_raw": {
+            "timeline_summary": "An Order amends Schedule I.1 of the Financial Administration Act, modifying the list of entities subject to specific financial administration rules.",
+            "potential_relevance_score": "Medium",
+            "key_concepts": [
+                "Financial Administration Act",
+                "Schedule I.1",
+                "Order Amending",
+                "Government finance",
+                "Public administration",
+                "Financial management",
+                "Federal government",
+                "Administrative law",
+                "Government entities",
+                "Financial regulations"
+            ],
+            "sponsoring_department_standardized": "Treasury Board of Canada Secretariat",
+            "rias_summary": "",
+            "one_sentence_description": "This Order amends Schedule I.1 of the Financial Administration Act (FAA), which lists federal government departments and agencies subject to specific financial management and accountability rules, thereby adjusting the scope of the Act's application to certain public entities.",
+            "model_name_used": "models/gemini-2.5-flash-preview-05-20"
+        }
+    }
+]
