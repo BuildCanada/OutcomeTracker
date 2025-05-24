@@ -1,6 +1,22 @@
 """
 Processes raw news items from Firestore, uses an LLM for analysis,
 and creates structured evidence items.
+
+CLI arguments:
+--dry_run: If True, do not write to Firestore but still call Gemini and log/store outputs. Default: False
+--log_level: Set the logging level. Default: INFO
+--JSON: If True, output processed evidence docs to a JSON file instead of Firestore. Default: False
+--json_output_dir: The directory to write the JSON file to. Default: ./JSON_outputs
+--force_reprocessing: If True, reprocess all items up to the limit, ignoring current status. Default: False
+--start_date: The start date to process from. Format: YYYY-MM-DD. Default: 2025-03-23
+--end_date: The end date to process to. Format: YYYY-MM-DD. Default: today
+
+Next steps to make ready for production:
+- add check for last run date in Firestore and only process items that are newer than that
+- update firestore collection to write to evidence_items instead of evidence_items_test
+- add any changes or config to run with docker
+- schedule cron job run hourly
+
 """
 import os
 import logging

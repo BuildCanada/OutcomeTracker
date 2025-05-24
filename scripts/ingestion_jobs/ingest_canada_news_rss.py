@@ -13,6 +13,7 @@ CLI arguments:
 Next steps to make ready for production:
 - add check for last run date in Firestore and only ingest items that are newer than that
 - add any changes or config to run with docker
+- schedule cron job run hourly
 """
 
 import os

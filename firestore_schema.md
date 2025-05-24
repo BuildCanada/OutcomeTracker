@@ -137,6 +137,32 @@ Stores the full text and associated metadata scraped from ministerial mandate le
 | `related_evidence_item_id`     | String (nullable)| ID of the document created in `evidence_items` if processed.                                                  | `evd_zyx987cba321`                                 |                                                                                                            |
 | `parliament_session_id_assigned` | String (nullable)| The parliamentary session this news item is likely associated with, based on its publication date.           | `45-1`                                             | Determined by comparing `publication_date` with `sessions_config`.                                         |
 
+## Collection: `raw_orders_in_council`
+
+Stores raw data scraped/fetched for individual Orders in Council (OICs) from the Privy Council Office (PCO) database.
+
+-   **Document ID**: Normalized OIC Number (e.g., "2025-0497")
+
+| Field Name                        | Type      | Description                                                                                                |
+| :-------------------------------- | :-------- | :--------------------------------------------------------------------------------------------------------- |
+| `raw_oic_id`                      | String    | Same as Document ID (normalized OIC Number).                                                               |
+| `attach_id`                       | Integer   | The numerical ID from the `attachment.php?attach=[ATTACH_ID]` URL used to fetch this OIC.                  |
+| `oic_number_full_raw`             | String    | The "PC Number" as displayed on the page (e.g., "P.C. 2025-0497").                                         |
+| `oic_date`                        | Timestamp | Date the OIC was made/registered (parsed from page, stored as timezone-aware UTC).                       |
+| `title_or_summary_raw`            | String    | The title or summary text from the OIC page.                                                               |
+| `responsible_department_raw`    | String    | (Nullable) Department listed on the OIC page, if available.                                                |
+| `responsible_minister_raw`      | String    | (Nullable) Minister listed on the OIC page, if available.                                                  |
+| `act_citation_raw`                | String    | (Nullable) Any cited Act(s) mentioned on the OIC page.                                                     |
+| `source_url_oic_detail_page`      | String    | Direct URL used to fetch this specific OIC (e.g., `https://orders-in-council.canada.ca/attachment.php?attach=XXXXX&lang=en`). |
+| `full_text_scraped`               | String    | (Nullable) The full text of the OIC as scraped from the page.                                              |
+| `ingested_at`                     | Timestamp | Firestore server timestamp when this raw record is created.                                                  |
+| `evidence_processing_status`      | String    | Default: "pending_evidence_creation". Others: "evidence_created", "skipped_low_relevance_score", "error_llm_processing", "error_missing_fields", "error_processing_script". |
+| `related_evidence_item_id`        | String    | (Nullable) ID of the corresponding document in `evidence_items` if successfully processed.                 |
+| `parliament_session_id_assigned`  | String    | (Nullable) Determined by `get_parliament_session_id` using `oic_date`.                                     |
+| `processed_at`                    | Timestamp | (Nullable) Firestore server timestamp when the item was last processed (successfully or with error).       |
+| `llm_model_name_last_attempt`     | String    | (Nullable) Name of the LLM model used in the last processing attempt.                                      |
+| `processing_error_message`        | String    | (Nullable) Stores the error message if `evidence_processing_status` is an error state.                     |
+
 ## Collection: `evidence_items`
 
 **Purpose:** Stores structured evidence linked to promises.

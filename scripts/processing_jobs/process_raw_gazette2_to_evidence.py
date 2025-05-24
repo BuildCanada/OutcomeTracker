@@ -2,6 +2,20 @@
 Processes raw Canada Gazette Part II notices into standardized evidence_items using Gemini LLM.
 Queries raw_gazette_p2_notices with evidence_processing_status == 'pending_evidence_creation',
 extracts key sections (RIAS, main text), sends to Gemini, and writes to evidence_items or updates status.
+
+CLI arguments:
+--dry_run: If True, do not write to Firestore but still call Gemini and log/store outputs. Default: False
+--log_level: Set the logging level. Default: INFO
+--JSON: If True, output processed evidence docs to a JSON file instead of Firestore. Default: False
+--json_output_dir: The directory to write the JSON file to. Default: ./JSON_outputs
+--force_reprocessing: If True, reprocess all items up to the limit, ignoring current status. Default: False
+--start_date: The start date to process from. Format: YYYY-MM-DD. Default: 2025-03-23
+--end_date: The end date to process to. Format: YYYY-MM-DD. Default: today
+
+Next steps to make ready for production:
+- add check for last run date in Firestore and only process items that are newer than that
+- add any changes or config to run with docker
+- schedule cron job to daily at 9:30am ET
 """
 import os
 import logging
