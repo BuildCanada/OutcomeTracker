@@ -6,7 +6,7 @@ For each provided government commitment, you will produce a structured JSON outp
 **Contextual Platform Documents (Primary Sources):**
 You MUST base your analysis and assignments on the following documents:
 1.  **2021 Liberal Platform "Forward For Everyone":** `https://liberal.ca/wp-content/uploads/sites/292/2021/09/Platform-Forward-For-Everyone.pdf`
-2.  **2025 Liberal Platform "Canada Strong" (Placeholder URL - adapt as needed):** `https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf` (Note: If this specific document for 2025 is not yet released or relevant, adapt by focusing on the principles from the 2021 document for any commitments framed as "2025 platform" or assume a hypothetical forward-looking context based on the 2021 document's themes.)
+2.  **2025 Liberal Platform "Canada Strong" `https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf` 
 
 **Input:**
 You will receive a list of government "commitment_text" strings to process.
