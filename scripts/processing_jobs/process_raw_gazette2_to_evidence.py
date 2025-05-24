@@ -6,7 +6,6 @@ extracts key sections (RIAS, main text), sends to Gemini, and writes to evidence
 import os
 import logging
 import json
-import uuid
 import asyncio
 from datetime import datetime, timezone, date
 from dotenv import load_dotenv
@@ -15,12 +14,10 @@ from firebase_admin import credentials, firestore
 import argparse
 import time
 import re
-import requests
 from bs4 import BeautifulSoup
 import hashlib
-import google.generativeai as genai
+from google import genai
 import traceback
-import pathlib
 
 # --- Configuration ---
 load_dotenv()
@@ -38,7 +35,7 @@ EVIDENCE_ITEMS_COLLECTION = "evidence_items_test"
 DEFAULT_PROCESS_LIMIT = 10
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 DEFAULT_JSON_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'JSON_outputs', 'gazette_p2_processing')
-PROMPT_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'prompts', 'prompt_gazette_evidence.md'))
+PROMPT_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'prompts', 'prompt_gazette2_evidence.md'))
 DEFAULT_START_DATE_STR = "2025-03-23"
 
 
@@ -47,8 +44,10 @@ if not GEMINI_API_KEY:
     logger.critical("GEMINI_API_KEY not found in environment variables or .env file.")
     exit("Exiting: Missing GEMINI_API_KEY.")
 
-# Configure the genai library with the API key
-genai.configure(api_key=GEMINI_API_KEY)
+# Set GOOGLE_API_KEY environment variable if not already set, for the client to pick up
+if "GOOGLE_API_KEY" not in os.environ and GEMINI_API_KEY:
+    os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+    logger.info("Set GOOGLE_API_KEY environment variable from GEMINI_API_KEY.")
 
 LLM_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME_GAZETTE_PROCESSING", "models/gemini-2.5-flash-preview-05-20")
 
@@ -58,18 +57,18 @@ GENERATION_CONFIG_DICT = {
     "temperature": 0.3, 
     "top_p": 0.95,
     "top_k": 64,
-    "max_output_tokens": 56536, 
+    "max_output_tokens": 65536, 
     "response_mime_type": "application/json", # Ensure your prompt asks for JSON
 }
 
 # Initialize the model directly
-llm_model = None
+client = None
 try:
-    llm_model = genai.GenerativeModel(LLM_MODEL_NAME)
-    logger.info(f"Successfully initialized Gemini Model: {LLM_MODEL_NAME}.")
+    client = genai.Client()
+    logger.info(f"Successfully initialized Gemini Client. Model {LLM_MODEL_NAME} will be used at call time.")
 except Exception as e:
-    logger.critical(f"Failed to initialize Gemini model '{LLM_MODEL_NAME}': {e}", exc_info=True)
-    exit(f"Exiting: Gemini model '{LLM_MODEL_NAME}' initialization failed.")
+    logger.critical(f"Failed to initialize Gemini client: {e}", exc_info=True)
+    exit("Exiting: Gemini client initialization failed.")
 # --- End Gemini Configuration ---
 
 # --- Firestore Setup ---
@@ -130,31 +129,26 @@ def clean_json_from_markdown(text_blob: str) -> str:
     else:
         return text_blob.strip()
 
-async def call_gemini_llm(prompt_text, model_to_call=None):
-    current_model = model_to_call or llm_model
-    model_name_for_return = "unknown_model"
-
-    if not current_model:
-        logger.critical("Gemini model not initialized. Cannot call LLM.")
-        return None, None # Return None for result and model name
-    
-    model_name_for_return = current_model.model_name if hasattr(current_model, 'model_name') else "unknown_model_instance"
+async def call_gemini_llm(prompt_text):
+    if not client:
+        logger.critical("Gemini client not initialized. Cannot call LLM.")
+        return None, LLM_MODEL_NAME
 
     try:
-        response = await current_model.generate_content_async(
-            contents=[prompt_text],
-            generation_config=genai.types.GenerationConfig(**GENERATION_CONFIG_DICT)
+        response = await client.aio.models.generate_content(
+            model=LLM_MODEL_NAME,
+            contents=[prompt_text]
         )
         raw_response_text = response.text
         json_str = clean_json_from_markdown(raw_response_text)
         parsed_result = json.loads(json_str)
-        return parsed_result, model_name_for_return
+        return parsed_result, LLM_MODEL_NAME
     except json.JSONDecodeError as json_err:
         logger.error(f"LLM response was not valid JSON. Error: {json_err}. Raw Response: {raw_response_text[:500] if 'raw_response_text' in locals() else ''}", exc_info=True)
-        return None, model_name_for_return
+        return None, LLM_MODEL_NAME
     except Exception as e:
-        logger.error(f"Error calling Gemini LLM ({model_name_for_return}): {e}\n{traceback.format_exc()}")
-        return None, model_name_for_return
+        logger.error(f"Error calling Gemini LLM ({LLM_MODEL_NAME}): {e}\n{traceback.format_exc()}")
+        return None, LLM_MODEL_NAME
 
 def load_gemini_prompt_template(prompt_file: str) -> str:
     try:
@@ -188,15 +182,15 @@ async def process_pending_gazette_notices(db_client, dry_run=False, output_to_js
     start_datetime_utc = datetime.combine(start_date_filter_dt, datetime.min.time(), tzinfo=timezone.utc)
     end_datetime_utc = datetime.combine(end_date_filter_dt, datetime.max.time(), tzinfo=timezone.utc) # up to end of day
 
-    query = query.where("publication_date", ">=", start_datetime_utc)
-    query = query.where("publication_date", "<=", end_datetime_utc)
+    query = query.where(filter=firestore.FieldFilter("publication_date", ">=", start_datetime_utc))
+    query = query.where(filter=firestore.FieldFilter("publication_date", "<=", end_datetime_utc))
 
     if force_reprocessing:
         logger.info("Force reprocessing is ENABLED. Will attempt to reprocess all items in date range regardless of current status.")
         # No further status filter needed
     else:
         logger.info("Querying for items in date range with status 'pending_evidence_creation'.")
-        query = query.where("evidence_processing_status", "==", "pending_evidence_creation")
+        query = query.where(filter=firestore.FieldFilter("evidence_processing_status", "==", "pending_evidence_creation"))
     
     # The .limit() is removed here to process ALL matching documents
     docs_snapshot = query.stream() # Use stream for potentially large results
@@ -260,7 +254,7 @@ async def process_pending_gazette_notices(db_client, dry_run=False, output_to_js
             key_concepts = gemini_result_dict.get('key_concepts', [])
             sponsoring_department_standardized = gemini_result_dict.get('sponsoring_department_standardized', '')
             rias_summary_llm = gemini_result_dict.get('rias_summary', '')
-            one_sentence_description_llm = gemini_result_dict.get('one_sentence_description', '') # New field
+            one_sentence_description_llm = gemini_result_dict.get('one_sentence_description', '') 
 
             evidence_doc = {
                 'evidence_id': evidence_id,
@@ -323,8 +317,7 @@ async def process_pending_gazette_notices(db_client, dry_run=False, output_to_js
                 doc.reference.update(update_data)
         except Exception as e_proc:
             logger.error(f"Error processing Gazette doc {doc_id}: {e_proc}", exc_info=True)
-            # model_used_for_call might not be defined if error is before LLM call, handle this
-            model_name_at_error = model_used_for_call if 'model_used_for_call' in locals() else llm_model.model_name
+            model_name_at_error = model_used_for_call if 'model_used_for_call' in locals() else LLM_MODEL_NAME
             if not dry_run:
                 update_data = {
                     'evidence_processing_status': 'processing_error',

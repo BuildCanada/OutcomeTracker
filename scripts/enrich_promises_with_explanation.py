@@ -6,7 +6,6 @@ import firebase_admin
 from firebase_admin import firestore, credentials
 import os
 from google import genai
-# from google.genai.types import GenerationConfig, Tool # Tool might not be needed if not using GoogleSearch directly
 import time
 import asyncio
 import logging
@@ -91,12 +90,6 @@ GENERATION_CONFIG_DICT = {
     "max_output_tokens": 65536, # Adjusted based on typical output needs for 3 fields * N promises
     "response_mime_type": "application/json",
 }
-
-# TOOLS_LIST might not be needed if the prompt directly tells the LLM to use URLs
-# and we are not using the GoogleSearch tool explicitly in the script.
-# TOOLS_LIST = [
-#     Tool(google_search=GoogleSearch()) 
-# ]
 
 client = None
 try:
