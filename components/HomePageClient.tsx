@@ -238,7 +238,7 @@ export default function HomePageClient({
     <div className="min-h-screen">
       {/* Header is now part of the RootLayout or specific AdminLayout */}
       <div className="container mx-auto max-w-5xl px-4 py-12">
-        <h1 className="mb-12 text-center text-5xl font-bold text-[#222222]">{pageTitle}</h1>
+        <h1 className="mb-12 text-center text-5xl">{pageTitle}</h1>
         <PrimeMinisterSection primeMinister={dynamicPrimeMinisterData} />
         {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>} {/* Show general error if not loading tab data AND no promises loaded*/}
         
@@ -262,7 +262,7 @@ export default function HomePageClient({
             </div>
 
             {/* Content Container */}
-            <div className="border border-[#d3c7b9] bg-white p-6 shadow-sm">
+            <div>
               {mainTabConfigs.map((dept) => (
                 <div
                   key={dept.id}

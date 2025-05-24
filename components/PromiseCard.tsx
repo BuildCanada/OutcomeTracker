@@ -187,7 +187,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
       >
         <div className="p-6 pb-4 flex-1">
-          <div className="text-lg font-bold text-[#111827] leading-snug mb-8">
+          <div className="text-lg leading-snug mb-8">
             {promise.text}
           </div>
           {/* Impact & Alignment indicators, bottom right, side by side */}
