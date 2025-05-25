@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ListChecks, Settings, Archive } from 'lucide-react'; // Icons
+import { ListChecks, Settings, Archive, Activity } from 'lucide-react'; // Icons
 
 export default function AdminHomePage() {
   const adminSections = [
@@ -20,6 +20,13 @@ export default function AdminHomePage() {
       title: 'Manage Promises',
       description: 'Search, view, and edit promise details. Add new evidence directly to promises.',
       icon: <Archive className="mb-4 h-12 w-12 text-[#8b2332]" />,
+    },
+    {
+      id: 'monitoring',
+      href: '/admin/monitoring',
+      title: 'RSS Monitoring',
+      description: 'Monitor RSS feeds, data ingestion pipelines, and system health with real-time analytics and alerts.',
+      icon: <Activity className="mb-4 h-12 w-12 text-[#8b2332]" />,
     },
     {
       id: 'settings',
