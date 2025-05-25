@@ -18,10 +18,14 @@ Your RSS monitoring system is **fully functional** with comprehensive monitoring
    - Both scripts log start/completion, response times, and success/failure
 
 3. **Cloud Run Service** (`cloud_run_main.py`)
-   - Flask application with 4 endpoints:
+   - Flask application with 8 endpoints:
      - `/rss-check` - LEGISinfo RSS checks
      - `/full-ingestion` - Full bill ingestion
      - `/canada-news-ingestion` - Canada news RSS
+     - `/oic-ingestion` - Order in Council (OIC) ingestion
+     - `/gazette-p2-ingestion` - Canada Gazette Part II ingestion
+     - `/gazette-p2-processing` - Gazette P2 evidence processing
+     - `/gazette-p2-pipeline` - Complete Gazette P2 pipeline (ingestion + processing)
      - `/manual-trigger` - Manual operations
    - Ready for deployment with proper error handling
 

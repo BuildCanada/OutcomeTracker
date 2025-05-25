@@ -124,6 +124,30 @@ gcloud scheduler jobs create http canada-news-job \
   --description="Canada news RSS ingestion daily at 8 AM"
 ```
 
+### OIC Ingestion Job (Daily at 9 AM)
+```bash
+gcloud scheduler jobs create http oic-ingestion-job \
+  --location=northamerica-northeast2 \
+  --schedule="0 9 * * *" \
+  --uri="https://rss-monitor-[HASH]-nn.a.run.app/oic-ingestion" \
+  --http-method=POST \
+  --headers="Content-Type=application/json" \
+  --message-body='{"dry_run": false, "max_consecutive_misses": 50}' \
+  --description="Order in Council ingestion daily at 9 AM"
+```
+
+### Gazette P2 Pipeline Job (Daily at 10 AM)
+```bash
+gcloud scheduler jobs create http gazette-p2-pipeline-job \
+  --location=northamerica-northeast2 \
+  --schedule="0 10 * * *" \
+  --uri="https://rss-monitor-[HASH]-nn.a.run.app/gazette-p2-pipeline" \
+  --http-method=POST \
+  --headers="Content-Type=application/json" \
+  --message-body='{"dry_run": false, "force_reprocessing": false}' \
+  --description="Gazette P2 ingestion and processing pipeline daily at 10 AM"
+```
+
 **Note:** Replace `[HASH]` with the actual hash from your deployed Cloud Run service URL.
 
 ## Step 7: Get Service URL
@@ -145,6 +169,21 @@ curl "https://rss-monitor-[HASH]-nn.a.run.app/"
 curl -X POST "https://rss-monitor-[HASH]-nn.a.run.app/rss-check" \
   -H "Content-Type: application/json" \
   -d '{"hours_threshold": 1, "parliament_filter": 44}'
+
+# Test OIC ingestion
+curl -X POST "https://rss-monitor-[HASH]-nn.a.run.app/oic-ingestion" \
+  -H "Content-Type: application/json" \
+  -d '{"dry_run": true, "max_consecutive_misses": 5}'
+
+# Test Gazette P2 ingestion
+curl -X POST "https://rss-monitor-[HASH]-nn.a.run.app/gazette-p2-ingestion" \
+  -H "Content-Type: application/json" \
+  -d '{"dry_run": true, "start_date": "2025-01-01"}'
+
+# Test Gazette P2 pipeline (ingestion + processing)
+curl -X POST "https://rss-monitor-[HASH]-nn.a.run.app/gazette-p2-pipeline" \
+  -H "Content-Type: application/json" \
+  -d '{"dry_run": true, "start_date": "2025-01-01"}'
 
 # Test manual trigger
 curl -X POST "https://rss-monitor-[HASH]-nn.a.run.app/manual-trigger" \
@@ -209,6 +248,10 @@ Once deployed, your service will provide these endpoints:
 - `POST /rss-check` - Trigger RSS feed check
 - `POST /full-ingestion` - Trigger full bill ingestion
 - `POST /canada-news-ingestion` - Trigger Canada news ingestion
+- `POST /oic-ingestion` - Trigger Order in Council (OIC) ingestion
+- `POST /gazette-p2-ingestion` - Trigger Canada Gazette Part II ingestion
+- `POST /gazette-p2-processing` - Trigger Gazette P2 evidence processing
+- `POST /gazette-p2-pipeline` - Run complete Gazette P2 pipeline (ingestion + processing)
 - `POST /manual-trigger` - Manual trigger with action parameter
 
 ## Monitoring Integration
