@@ -63,7 +63,7 @@ def reset_error_statuses():
     logger.info(f"--- Starting Reset Process for Evidence Items with status '{ERROR_STATUS_TO_RESET}' ---")
 
     docs_to_reset_query = (db.collection(EVIDENCE_ITEMS_COLLECTION)
-                           .where(filter=firestore.FieldFilter('dev_linking_status', '==', ERROR_STATUS_TO_RESET)))
+                           .where(filter=firestore.FieldFilter('promise_linking_status', '==', ERROR_STATUS_TO_RESET)))
     
     docs_stream = docs_to_reset_query.stream()
     
@@ -77,9 +77,9 @@ def reset_error_statuses():
         logger.info(f"Found document {doc.id} with status '{ERROR_STATUS_TO_RESET}'. Adding to batch for update.")
         
         update_data = {
-            'dev_linking_status': NEW_STATUS,
-            'dev_linking_error_message': None  # Clear the previous error message
-            # Optionally, you could set a field like 'dev_linking_reset_at': firestore.SERVER_TIMESTAMP
+            'promise_linking_status': NEW_STATUS,
+            'promise_linking_error_message': None  # Clear the previous error message
+            # Optionally, you could set a field like 'promise_linking_reset_at': firestore.SERVER_TIMESTAMP
         }
         batch.update(doc.reference, update_data)
         batch_item_count += 1
@@ -117,8 +117,8 @@ if __name__ == "__main__":
     # Confirm with the user before proceeding
     confirm = input(
         f"This script will find all documents in '{EVIDENCE_ITEMS_COLLECTION}' "
-        f"with dev_linking_status = '{ERROR_STATUS_TO_RESET}' "
-        f"and update their status to '{NEW_STATUS}', clearing 'dev_linking_error_message'.\n"
+        f"with promise_linking_status = '{ERROR_STATUS_TO_RESET}' "
+        f"and update their status to '{NEW_STATUS}', clearing 'promise_linking_error_message'.\n"
         "Are you sure you want to proceed? (yes/no): "
     )
     if confirm.lower() == 'yes':

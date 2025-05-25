@@ -8,3 +8,6 @@ beautifulsoup4
 requests
 feedparser
 python-dateutil # Added for robust date parsing
+flask # For Cloud Run web service
+gunicorn # For production WSGI server
+google-genai # For LLM processing

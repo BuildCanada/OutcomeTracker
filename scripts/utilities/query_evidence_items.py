@@ -81,12 +81,6 @@ def test_query():
             # Check if promise_ids is a list and is not empty
             if isinstance(promise_ids, list) and len(promise_ids) > 0:
                 evidence_source_type_counts[source_type]["linked_to_promise"] += 1
-            
-            # Commented out individual record logging as requested
-            # if total_records <= 20: # Log details for the first few
-            #      dev_linking_status_value = doc_data.get('dev_linking_status', '##FIELD_MISSING_IN_PYTHON##')
-            #      has_field = 'dev_linking_status' in doc_data
-            #      logger.info(f"  Fetched doc ID: {doc.id}, Has 'dev_linking_status' field: {has_field}, Value (or default): '{dev_linking_status_value}'")
         
         logger.info("--- Aggregated Data ---")
         logger.info(f"1. Total records in '{EVIDENCE_ITEMS_COLLECTION}': {total_records}")

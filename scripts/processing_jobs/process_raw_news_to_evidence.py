@@ -1,6 +1,22 @@
 """
 Processes raw news items from Firestore, uses an LLM for analysis,
 and creates structured evidence items.
+
+CLI arguments:
+--dry_run: If True, do not write to Firestore but still call Gemini and log/store outputs. Default: False
+--log_level: Set the logging level. Default: INFO
+--JSON: If True, output processed evidence docs to a JSON file instead of Firestore. Default: False
+--json_output_dir: The directory to write the JSON file to. Default: ./JSON_outputs
+--force_reprocessing: If True, reprocess all items up to the limit, ignoring current status. Default: False
+--start_date: The start date to process from. Format: YYYY-MM-DD. Default: 2025-03-23
+--end_date: The end date to process to. Format: YYYY-MM-DD. Default: today
+
+Next steps to make ready for production:
+- add check for last run date in Firestore and only process items that are newer than that
+- update firestore collection to write to evidence_items instead of evidence_items_test
+- add any changes or config to run with docker
+- schedule cron job run hourly
+
 """
 import os
 import logging
@@ -13,7 +29,7 @@ from firebase_admin import credentials, firestore # For Firestore connection
 import asyncio # For potential async LLM calls
 import time # For unique app name fallback in Firebase init
 import argparse # For CLI arguments
-import google.generativeai as genai # For Gemini LLM
+from google import genai
 import traceback # For detailed error logging
 import hashlib # For generating deterministic IDs
 import re # For cleaning LLM output
@@ -36,32 +52,6 @@ DEFAULT_JSON_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)
 PROMPT_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'prompts', 'prompt_news_evidence.md'))
 DEFAULT_START_DATE_STR = "2025-03-23" # Default start date for processing
 # --- End Constants ---
-
-
-# --- Gemini Configuration ---
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    logger.critical("GEMINI_API_KEY not found in environment variables or .env file.")
-    exit("Exiting: Missing GEMINI_API_KEY.")
-
-genai.configure(api_key=GEMINI_API_KEY)
-LLM_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME_NEWS_PROCESSING", "models/gemini-1.5-flash-latest")
-GENERATION_CONFIG_DICT = {
-    "temperature": 0.3,
-    "top_p": 0.95,
-    "top_k": 64,
-    "max_output_tokens": 8192,
-    "response_mime_type": "application/json",
-}
-llm_model = None
-try:
-    llm_model = genai.GenerativeModel(LLM_MODEL_NAME)
-    logger.info(f"Successfully initialized Gemini Model: {LLM_MODEL_NAME}.")
-except Exception as e:
-    logger.critical(f"Failed to initialize Gemini model '{LLM_MODEL_NAME}': {e}", exc_info=True)
-    exit(f"Exiting: Gemini model '{LLM_MODEL_NAME}' initialization failed.")
-# --- End Gemini Configuration ---
-
 
 # --- Firebase Configuration ---
 db = None
@@ -89,6 +79,34 @@ if db is None:
     exit("Exiting: Firestore client not available.")
 # --- End Firebase Configuration ---
 
+# --- Gemini Configuration ---
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    logger.critical("GEMINI_API_KEY not found in environment variables or .env file.")
+    exit("Exiting: Missing GEMINI_API_KEY.")
+
+if "GOOGLE_API_KEY" not in os.environ and GEMINI_API_KEY:
+    os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+    
+LLM_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME_NEWS_PROCESSING", "models/gemini-2.5-flash-preview-05-20")
+GENERATION_CONFIG_DICT = {
+    "temperature": 0.3,
+    "top_p": 0.95,
+    "top_k": 64,
+    "max_output_tokens": 65536,
+    "response_mime_type": "application/json",
+}
+
+client = None
+try:
+    client = genai.Client() 
+    logger.info(f"Successfully initialized Gemini Client with model {LLM_MODEL_NAME}.")
+except Exception as e:
+    logger.critical(f"Failed to initialize Gemini client: {e}", exc_info=True)
+    exit("Exiting: Gemini client initialization failed.")
+# --- End Gemini Configuration ---
+
+
 _department_configs_cache = None # For standardizing department names
 _parliament_sessions_cache = None # For parliament session ID lookups
 
@@ -100,32 +118,26 @@ def clean_json_from_markdown(text_blob: str) -> str:
         return match.group(1).strip()
     return text_blob.strip()
 
-async def call_gemini_llm(prompt_text, model_to_call=None):
-    current_model = model_to_call or llm_model
-    model_name_for_return = "unknown_model"
-
-    if not current_model:
-        logger.critical("Gemini model not initialized. Cannot call LLM.")
-        return None, None # Return None for result and model name
-    
-    model_name_for_return = current_model.model_name if hasattr(current_model, 'model_name') else "unknown_model_instance"
+async def call_gemini_llm(prompt_text):
+    if not client:
+        logger.critical("Gemini model client not initialized. Cannot call LLM.")
+        return None, LLM_MODEL_NAME
 
     try:
-        response = await current_model.generate_content_async(
-            contents=[prompt_text],
-            generation_config=genai.types.GenerationConfig(**GENERATION_CONFIG_DICT)
+        response = await client.aio.models.generate_content(
+            model=LLM_MODEL_NAME,
+            contents=[prompt_text]
         )
         raw_response_text = response.text
         json_str = clean_json_from_markdown(raw_response_text)
         parsed_result = json.loads(json_str)
-        # No need to add model_name_used here; it's returned separately
-        return parsed_result, model_name_for_return
+        return parsed_result, LLM_MODEL_NAME
     except json.JSONDecodeError as json_err:
         logger.error(f"LLM response was not valid JSON. Error: {json_err}. Raw: {raw_response_text[:500] if 'raw_response_text' in locals() else ''}", exc_info=True)
-        return None, model_name_for_return
+        return None, LLM_MODEL_NAME
     except Exception as e:
-        logger.error(f"Error calling Gemini LLM ({model_name_for_return}): {e}\n{traceback.format_exc()}", exc_info=True)
-        return None, model_name_for_return
+        logger.error(f"Error calling Gemini LLM ({LLM_MODEL_NAME}): {e}\n{traceback.format_exc()}", exc_info=True)
+        return None, LLM_MODEL_NAME
 
 def load_gemini_prompt_template(prompt_file: str) -> str:
     try:
@@ -259,14 +271,14 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
 
         start_datetime_utc = datetime.combine(start_date_filter_dt, datetime.min.time(), tzinfo=timezone.utc)
         end_datetime_utc = datetime.combine(end_date_filter_dt, datetime.max.time(), tzinfo=timezone.utc)
-        query = query.where("publication_date", ">=", start_datetime_utc)
-        query = query.where("publication_date", "<=", end_datetime_utc)
+        query = query.where(filter=firestore.FieldFilter("publication_date", ">=", start_datetime_utc))
+        query = query.where(filter=firestore.FieldFilter("publication_date", "<=", end_datetime_utc))
 
         if force_reprocessing:
             logger.info("Force reprocessing enabled. Processing all items in date range.")
         else:
             logger.info("Querying for 'pending_evidence_creation' items in date range.")
-            query = query.where("evidence_processing_status", "==", "pending_evidence_creation")
+            query = query.where(filter=firestore.FieldFilter("evidence_processing_status", "==", "pending_evidence_creation"))
         
         if limit:
             query = query.limit(limit)
@@ -282,7 +294,6 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
         for raw_item_doc_snapshot in pending_item_docs:
             raw_item_data = raw_item_doc_snapshot.to_dict()
             raw_item_id = raw_item_doc_snapshot.id
-            model_used_for_call = llm_model.model_name # Default model, might be updated if LLM call fails early
 
             # Get publication date for session ID lookup
             pub_date_obj_for_session = raw_item_data.get('publication_date')
@@ -313,7 +324,7 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                         await asyncio.to_thread(db_client.collection(RAW_NEWS_RELEASES_COLLECTION).document(raw_item_id).update, {
                             "evidence_processing_status": "error_missing_fields", 
                             "last_updated_at": firestore.SERVER_TIMESTAMP,
-                            "llm_model_name_last_attempt": model_used_for_call
+                            "llm_model_name_last_attempt": LLM_MODEL_NAME
                         })
                     error_count +=1
                     continue
@@ -325,15 +336,15 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                 prompt_input_data['parliament_session_id_assigned'] = calculated_parliament_session_id # Override for prompt
                 llm_prompt = build_news_gemini_prompt(prompt_input_data, prompt_template)
 
-                gemini_result_dict, model_used_for_call = await call_gemini_llm(llm_prompt)
+                gemini_result_dict, model_name_from_call = await call_gemini_llm(llm_prompt)
 
                 if not gemini_result_dict:
-                    logger.error(f"LLM analysis failed for {raw_item_id} (Model: {model_used_for_call}).")
+                    logger.error(f"LLM analysis failed for {raw_item_id} (Model: {model_name_from_call}).")
                     if not dry_run:
                          await asyncio.to_thread(db_client.collection(RAW_NEWS_RELEASES_COLLECTION).document(raw_item_id).update, {
                             "evidence_processing_status": "error_llm_processing", 
                             "last_updated_at": firestore.SERVER_TIMESTAMP,
-                            "llm_model_name_last_attempt": model_used_for_call
+                            "llm_model_name_last_attempt": model_name_from_call
                         })
                     error_count +=1
                     continue
@@ -342,26 +353,26 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                 potential_relevance_score = gemini_result_dict.get("potential_relevance_score", "Low")
                 key_concepts = gemini_result_dict.get("key_concepts", [])
                 sponsoring_department_llm = gemini_result_dict.get("sponsoring_department_standardized", "")
+                one_sentence_description_llm = gemini_result_dict.get('one_sentence_description', '') 
 
                 if not timeline_summary:
-                    logger.error(f"LLM result for {raw_item_id} missing timeline_summary (Model: {model_used_for_call}).")
+                    logger.error(f"LLM result for {raw_item_id} missing timeline_summary (Model: {model_name_from_call}).")
                     if not dry_run:
                         await asyncio.to_thread(db_client.collection(RAW_NEWS_RELEASES_COLLECTION).document(raw_item_id).update, {
                             "evidence_processing_status": "error_llm_missing_summary", 
                             "last_updated_at": firestore.SERVER_TIMESTAMP,
-                            "llm_model_name_last_attempt": model_used_for_call
+                            "llm_model_name_last_attempt": model_name_from_call
                         })
                     error_count += 1
                     continue
 
                 if potential_relevance_score.lower() == "low":
-                    logger.info(f"Skipping item {raw_item_id} due to low relevance score ('{potential_relevance_score}') (Model: {model_used_for_call}).")
+                    logger.info(f"Skipping item {raw_item_id} due to low relevance score ('{potential_relevance_score}') (Model: {model_name_from_call}).")
                     if not dry_run:
                         await asyncio.to_thread(db_client.collection(RAW_NEWS_RELEASES_COLLECTION).document(raw_item_id).update, {
                             "evidence_processing_status": "skipped_low_relevance_score", 
                             "last_updated_at": firestore.SERVER_TIMESTAMP,
-                            "llm_model_name_last_attempt": model_used_for_call 
-                            # We are no longer storing the full llm_analysis_raw here
+                            "llm_model_name_last_attempt": model_name_from_call
                         })
                     skipped_low_score_count += 1
                     continue
@@ -389,7 +400,7 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                     "evidence_source_type": "News Release (Canada.ca)", 
                     "evidence_date": pub_date_obj, 
                     "title_or_summary": timeline_summary, 
-                    "description_or_details": raw_item_data.get("summary_or_snippet_raw", ""), 
+                    "description_or_details": one_sentence_description_llm, # Created by LLM
                     "source_url": raw_item_data.get("source_url"),
                     "linked_departments": linked_departments or None,
                     "parliament_session_id": calculated_parliament_session_id, # Use calculated session ID
@@ -399,7 +410,7 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                     "additional_metadata": {
                         "raw_news_release_id": raw_item_id
                     },
-                    "dev_linking_status": "pending"
+                    "promise_linking_status": "pending"
                 }
                 
                 if output_to_json:
@@ -417,7 +428,7 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                         "evidence_processing_status": "evidence_created",
                         "related_evidence_item_id": evidence_id,
                         "last_updated_at": firestore.SERVER_TIMESTAMP,
-                        "llm_model_name_last_attempt": model_used_for_call
+                        "llm_model_name_last_attempt": model_name_from_call
                     })
                 else: 
                     logger.info(f"[DRY RUN] Would create evidence item {evidence_id} from raw item {raw_item_id}.")
@@ -427,15 +438,13 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
             except Exception as e_inner:
                 logger.error(f"Error processing raw news item {raw_item_id}: {e_inner}", exc_info=True)
                 error_count += 1
-                # model_used_for_call might not be set if error is very early
-                model_name_at_error = model_used_for_call if 'model_used_for_call' in locals() else llm_model.model_name
                 if not dry_run:
                     try:
                         await asyncio.to_thread(db_client.collection(RAW_NEWS_RELEASES_COLLECTION).document(raw_item_id).update, {
                             "evidence_processing_status": "error_processing_script",
                             "processing_error_message": str(e_inner),
                             "last_updated_at": firestore.SERVER_TIMESTAMP,
-                            "llm_model_name_last_attempt": model_name_at_error
+                            "llm_model_name_last_attempt": LLM_MODEL_NAME
                         })
                     except Exception as update_err:
                         logger.error(f"Failed to mark item {raw_item_id} as error_processing: {update_err}")

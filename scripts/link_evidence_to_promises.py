@@ -392,7 +392,7 @@ async def process_and_store_evidence(
                     logger.warning(f"Timeline entry for promise {promise_id} is missing required fields (type, date, action, url). Entry: {evidence_entry}. Skipping.")
                     continue
 
-                current_timestamp = firestore.SERVER_TIMESTAMP # For ingested_at, dev_linking_processed_at
+                current_timestamp = firestore.SERVER_TIMESTAMP # For ingested_at, promise_linking_processed_at
                 evidence_date_dt = None
                 try:
                     evidence_date_dt = datetime.strptime(evidence_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
@@ -401,9 +401,9 @@ async def process_and_store_evidence(
                     continue
                 
                 evidence_data_payload = {
-                    "dev_linking_error_message": None,
-                    "dev_linking_processed_at": current_timestamp,
-                    "dev_linking_status": "processed",
+                    "promise_linking_error_message": None,
+                    "promise_linking_processed_at": current_timestamp,
+                    "promise_linking_status": "processed",
                     "evidence_date": evidence_date_dt,
                     "evidence_source_type": evidence_source_type,
                     "ingested_at": current_timestamp,
