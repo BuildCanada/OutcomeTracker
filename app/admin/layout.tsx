@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
 
   return (
-    <div className="min-h-screen font-financier">
+    <div className="min-h-screen">
       {/* Main App Header */}
       <header className={`sticky top-0 z-50 bg-white shadow-sm ${HEADER_BOTTOM_BORDER_COLOR} border-b`}>
         <div className={`mx-auto flex max-w-7xl items-stretch`}>

@@ -15,8 +15,8 @@ export default function PrimeMinisterSection({
   }
 
   return (
-    <div className="border border-[#d3c7b9] bg-white p-6">
-      <div className="flex items-center gap-6">
+    <div>
+      <div className="flex items-center gap-6 mb-8">
         <Avatar className="h-20 w-20">
           <AvatarImage
             src={primeMinister.avatarUrl || "/placeholder.svg"}
@@ -32,24 +32,26 @@ export default function PrimeMinisterSection({
         </Avatar>
 
         <div>
-          <h2 className="text-2xl font-bold text-[#222222]">
+          <h2 className="text-2xl">
             {primeMinister.name}
           </h2>
-          <p className="text-[#555555]">{primeMinister.title}</p>
+          <p className="text-sm font-mono">{primeMinister.title}</p>
         </div>
       </div>
 
-      {primeMinister.guidingMetrics &&
-        primeMinister.guidingMetrics.length > 0 && (
-          <div className="mt-10 w-full max-w-md border border-[#d3c7b9] p-4">
-            <PopulationChart />
-            {/* <MetricChart
-              title={primeMinister.guidingMetrics[0].title}
-              data={primeMinister.guidingMetrics[0].data}
-              goal={primeMinister.guidingMetrics[0].goal}
-            /> */}
-          </div>
-        )}
+      <div className="border border-[#d3c7b9] bg-white p-6">
+        {primeMinister.guidingMetrics &&
+          primeMinister.guidingMetrics.length > 0 && (
+            <div className="w-full max-w-md border border-[#d3c7b9] p-4">
+              <PopulationChart />
+              {/* <MetricChart
+                title={primeMinister.guidingMetrics[0].title}
+                data={primeMinister.guidingMetrics[0].data}
+                goal={primeMinister.guidingMetrics[0].goal}
+              /> */}
+            </div>
+          )}
+      </div>
     </div>
   );
 }
