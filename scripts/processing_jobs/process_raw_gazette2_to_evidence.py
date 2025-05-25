@@ -288,7 +288,7 @@ async def process_pending_gazette_notices(db_client, dry_run=False, output_to_js
                     'raw_gazette_notice_id': doc_id,
                     'rias_summary': rias_summary_llm # LLM-generated RIAS summary here
                 },
-                'dev_linking_status': 'pending',
+                'promise_linking_status': 'pending',
                 'llm_analysis_raw': gemini_result_dict, # Keep this for the evidence item itself for now
             }
 

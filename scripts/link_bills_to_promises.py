@@ -227,25 +227,25 @@ def link_bills_to_promises(processing_limit=None, batch_size=50):
             # Initialize a counter for LLM calls for this specific evidence item
             llm_calls_made_for_this_evidence = 0
 
-            # --- Client-side filter for dev_linking_status --- START
-            current_linking_status = evidence_doc.to_dict().get('dev_linking_status')
+            # --- Client-side filter for promise_linking_status --- START
+            current_linking_status = evidence_doc.to_dict().get('promise_linking_status')
             if current_linking_status is not None and current_linking_status != "pending":
                 logger.info(f"Skipping evidence_item {evidence_id} due to client-side status check: '{current_linking_status}'")
                 continue # Skip to the next document if status is not None and not "pending"
-            # --- Client-side filter for dev_linking_status --- END
+            # --- Client-side filter for promise_linking_status --- END
 
             # If we are here, the item needs processing (status is None or "pending")
             actual_processed_count += 1
             logger.info(f"Processing evidence_item: {evidence_id} (Status: {current_linking_status if current_linking_status else 'None'}) - Item {actual_processed_count} of {processing_limit if processing_limit else 'unlimited'}")
 
-            evidence_item_updates = {'dev_linking_processed_at': firestore.SERVER_TIMESTAMP}
+            evidence_item_updates = {'promise_linking_processed_at': firestore.SERVER_TIMESTAMP}
 
             try:
                 bill_parl_id = evidence_doc.to_dict().get('bill_parl_id')
                 if not bill_parl_id:
                     logger.warning(f"Skipping evidence_item {evidence_id}: missing 'bill_parl_id'.")
-                    evidence_item_updates['dev_linking_status'] = 'error_missing_bill_id'
-                    evidence_item_updates['dev_linking_error_message'] = "Missing bill_parl_id"
+                    evidence_item_updates['promise_linking_status'] = 'error_missing_bill_id'
+                    evidence_item_updates['promise_linking_error_message'] = "Missing bill_parl_id"
                     failed_updates[evidence_id] = "Missing bill_parl_id"
                     continue
 
@@ -253,8 +253,8 @@ def link_bills_to_promises(processing_limit=None, batch_size=50):
                 bill_doc_snapshot = bill_doc_ref.get()
                 if not bill_doc_snapshot.exists:
                     logger.warning(f"Bill document {bill_parl_id} not found for evidence {evidence_id}. Skipping promise linking for this bill.")
-                    evidence_item_updates['dev_linking_status'] = 'error_bill_doc_not_found'
-                    evidence_item_updates['dev_linking_error_message'] = f"Bill {bill_parl_id} not found"
+                    evidence_item_updates['promise_linking_status'] = 'error_bill_doc_not_found'
+                    evidence_item_updates['promise_linking_error_message'] = f"Bill {bill_parl_id} not found"
                     failed_updates[evidence_id] = f"Bill {bill_parl_id} not found"
                     continue
                 
@@ -262,7 +262,7 @@ def link_bills_to_promises(processing_limit=None, batch_size=50):
                 bill_keywords = bill_data.get('extracted_keywords_concepts', [])
                 if not bill_keywords: # Only attempt to link if bill has keywords
                     logger.info(f"Skipping bill {bill_parl_id} for evidence {evidence_id} as it has no extracted keywords.")
-                    evidence_item_updates['dev_linking_status'] = 'skipped_no_bill_keywords'
+                    evidence_item_updates['promise_linking_status'] = 'skipped_no_bill_keywords'
                     failed_updates[evidence_id] = "Bill has no keywords"
                     continue
 
@@ -286,7 +286,7 @@ def link_bills_to_promises(processing_limit=None, batch_size=50):
                 if not all_promises_info:
                     logger.warning("No promises found in the database to link against. Skipping bill linking for this batch.")
                     # Update evidence item status to reflect no promises were available for linking at this time
-                    evidence_item_updates['dev_linking_status'] = 'skipped_no_promises_in_db'
+                    evidence_item_updates['promise_linking_status'] = 'skipped_no_promises_in_db'
                     failed_updates[evidence_id] = "No promises in DB for linking"
                     continue # Continue to next evidence item
 
@@ -364,24 +364,24 @@ def link_bills_to_promises(processing_limit=None, batch_size=50):
                     logger.info(f"    Created potential link: {potential_link_id} (Promise Path: {promise_full_path} <=> Evi: {evidence_id})")
 
                 if found_at_least_one_potential_link_for_evidence:
-                    evidence_item_updates['dev_linking_status'] = 'completed_links_created'
+                    evidence_item_updates['promise_linking_status'] = 'completed_links_created'
                 else:
-                    evidence_item_updates['dev_linking_status'] = 'completed_no_links_found'
+                    evidence_item_updates['promise_linking_status'] = 'completed_no_links_found'
             
             except Exception as e_inner:
                 logger.error(f"Error processing evidence_item {evidence_id} for bill linking: {e_inner}", exc_info=True)
                 failed_updates[evidence_id] = str(e_inner)
-                evidence_item_updates['dev_linking_status'] = 'error_processing_item'
-                evidence_item_updates['dev_linking_error_message'] = str(e_inner)[:500]
+                evidence_item_updates['promise_linking_status'] = 'error_processing_item'
+                evidence_item_updates['promise_linking_error_message'] = str(e_inner)[:500]
             
             finally:
                 # Update the evidence item's linking status
                 if evidence_item_updates:
                     try:
                         db.collection(EVIDENCE_ITEMS_COLLECTION).document(evidence_id).update(evidence_item_updates)
-                        logger.debug(f"Updated dev_linking_status for evidence {evidence_id} to: {evidence_item_updates.get('dev_linking_status')}")
+                        logger.debug(f"Updated promise_linking_status for evidence {evidence_id} to: {evidence_item_updates.get('promise_linking_status')}")
                     except Exception as e_update:
-                        logger.error(f"Failed to update dev_linking_status for evidence {evidence_id}: {e_update}")
+                        logger.error(f"Failed to update promise_linking_status for evidence {evidence_id}: {e_update}")
                         failed_updates[evidence_id] = f"Failed to update status: {e_update}"
                 
                 last_processed_evidence_snapshot = evidence_doc # For pagination

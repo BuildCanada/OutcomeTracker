@@ -286,6 +286,21 @@ def fetch_and_process_feeds(db_client, dry_run=False, start_date_filter=None, en
     if output_to_json: # Added
         logger.info("*** JSON OUTPUT MODE ENABLED - New items will be written to a JSON file instead of Firestore. ***")
 
+    # Import monitoring
+    try:
+        from .rss_monitoring_logger import rss_monitor
+        monitor_id = rss_monitor.log_rss_check_start(hours_threshold=24, parliament_filter=None, check_type="canada_news_rss")
+    except ImportError:
+        try:
+            from rss_monitoring_logger import rss_monitor
+            monitor_id = rss_monitor.log_rss_check_start(hours_threshold=24, parliament_filter=None, check_type="canada_news_rss")
+        except ImportError:
+            logger.warning("RSS monitoring not available")
+            rss_monitor = None
+            monitor_id = None
+    
+    start_time = time.time()
+
     newly_ingested_count = 0 # For items actually added or that would be added
     skipped_duplicates_count = 0
     error_count = 0
@@ -493,6 +508,14 @@ def fetch_and_process_feeds(db_client, dry_run=False, start_date_filter=None, en
         logger.info(f"Total items appearing in multiple feeds this run: {overlapping_items_count}")
     logger.info("--- End Feed Overlap Analysis ---")
     # --- Log Overlapping Items --- End
+
+    # Log monitoring result
+    if rss_monitor and monitor_id:
+        response_time_ms = int((time.time() - start_time) * 1000)
+        success = error_count == 0  # Consider successful if no errors occurred
+        rss_monitor.log_rss_check_result(monitor_id, success, newly_ingested_count, 
+                                        f"Errors: {error_count}" if error_count > 0 else None, 
+                                        response_time_ms)
 
     logger.info("--- Ingestion Summary ---")
     logger.info(f"Total items considered for processing (after basic API fetch, before script date filter): {items_considered_for_processing}")

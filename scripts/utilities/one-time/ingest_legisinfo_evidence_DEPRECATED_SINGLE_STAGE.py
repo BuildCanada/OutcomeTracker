@@ -75,7 +75,7 @@ if db is None: exit("Exiting: Firestore client not available.")
 # --- End Firebase Configuration ---
 
 # --- Constants ---
-FIRESTORE_EVIDENCE_COLLECTION = 'evidence_items'
+FIRESTORE_EVIDENCE_COLLECTION = 'evidence_items_test'
 FIRESTORE_BILLS_DATA_COLLECTION = 'bills_data' # New collection for bill details
 # TARGET_START_DATE = datetime(2022, 1, 1, tzinfo=timezone.utc) # No longer strictly needed if processing all events from feed bills
 # TARGET_END_DATE = datetime(2022, 6, 30, 23, 59, 59, tzinfo=timezone.utc) # No longer strictly needed

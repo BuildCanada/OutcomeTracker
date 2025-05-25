@@ -421,7 +421,7 @@ async def process_pending_raw_oics(db_client, dry_run=False, output_to_json=Fals
                         "raw_oic_document_id": raw_oic_id, # The ID of the raw OIC doc in its collection
                         "attach_id": raw_oic_data.get("attach_id")
                     },
-                    "dev_linking_status": "pending",
+                    "promise_linking_status": "pending",
                 }
                 
                 if output_to_json:

@@ -410,7 +410,7 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                     "additional_metadata": {
                         "raw_news_release_id": raw_item_id
                     },
-                    "dev_linking_status": "pending"
+                    "promise_linking_status": "pending"
                 }
                 
                 if output_to_json:
