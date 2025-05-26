@@ -122,8 +122,8 @@ export default async function Home() {
     console.log(`[Server LCP Debug] Filtered to ${initialMainTabConfigs.length} main tab department configs.`);
 
     if (globalSession && initialMainTabConfigs.length > 0) {
-      initialActiveTabId = initialMainTabConfigs[0].id;
-      // const initialActiveTabConfig = initialMainTabConfigs.find(c => c.id === initialActiveTabId);
+      // Set Finance as the initial active tab
+      initialActiveTabId = 'finance-canada';
       console.log(`[Server LCP Debug] Initial Active Tab ID: ${initialActiveTabId}`);
 
       // Pre-fetch minister info for ALL main tabs
@@ -187,10 +187,93 @@ export default async function Home() {
     guidingMetrics: staticPrimeMinisterData.guidingMetrics 
   };
 
+  // Add Prime Minister as a department
+  const primeMinisterDepartment: DepartmentConfig = {
+    id: 'prime-minister',
+    official_full_name: 'Office of the Prime Minister',
+    display_short_name: 'Prime Minister',
+    bc_priority: 1,
+    is_prime_minister: true,
+    department_slug: 'prime-minister',
+    display_order: 1 // Prime Minister is first
+  };
+
+  // Define display order for other departments
+  const departmentDisplayOrder: Record<string, number> = {
+    'finance-canada': 2,
+    'infrastructure-canada': 3, // Housing
+    'national-defence': 4,
+    'immigration-refugees-and-citizenship-canada': 5, // Immigration
+    'treasury-board-of-canada-secretariat': 6, // Government
+    'natural-resources-canada': 7, // Energy
+    'innovation-science-and-economic-development-canada': 8,
+    'artificial-intelligence-and-digital-innovation': 8, // Also Innovation
+    'health-canada': 9
+  };
+
+  // Add display_order to all department configs and override display names where needed
+  // Ensure all departments get a display_order, defaulting if not in map
+  const allDepartmentConfigsWithOrder = initialAllDepartmentConfigs.map(config => {
+    const baseConfig = {
+      ...config,
+      display_order: departmentDisplayOrder[config.id] ?? 999 // Use nullish coalescing for safety
+    };
+
+    // Override display names for specific departments
+    if (config.id === 'treasury-board-of-canada-secretariat') {
+      return {
+        ...baseConfig,
+        display_short_name: 'Government'
+      };
+    }
+
+    return baseConfig;
+  });
+
+  // Combine Prime Minister and all other departments
+  const allDepartmentsCombined = [primeMinisterDepartment, ...allDepartmentConfigsWithOrder];
+
+  // Sort the combined list entirely by display_order
+  const sortedAllDepartmentConfigs = allDepartmentsCombined
+    .sort((a, b) => (a.display_order ?? 999) - (b.display_order ?? 999));
+
+  // Filter to get main tab configs (bc_priority === 1) from the fully sorted list
+  let mainTabConfigsWithPM = sortedAllDepartmentConfigs.filter(config => config.bc_priority === 1);
+
+  // Apply parliament-based filtering for ISED/AIDI on the server
+  if (currentSessionId?.startsWith("44")) {
+    mainTabConfigsWithPM = mainTabConfigsWithPM.filter(
+      config => config.id !== 'artificial-intelligence-and-digital-innovation'
+    );
+  } else if (currentSessionId?.startsWith("45")) {
+    mainTabConfigsWithPM = mainTabConfigsWithPM.filter(
+      config => config.id !== 'innovation-science-and-economic-development-canada'
+    );
+  } else {
+    const aidiExists = mainTabConfigsWithPM.some(c => c.id === 'artificial-intelligence-and-digital-innovation');
+    if (aidiExists) {
+      mainTabConfigsWithPM = mainTabConfigsWithPM.filter(config => config.id !== 'innovation-science-and-economic-development-canada');
+    }
+  }
+
+  // Add PM to minister infos
+  const ministerInfosWithPM = {
+    ...initialMinisterInfos,
+    'prime-minister': {
+      name: dynamicPrimeMinisterData.name,
+      title: dynamicPrimeMinisterData.title,
+      avatarUrl: dynamicPrimeMinisterData.avatarUrl,
+      positionStart: globalSession?.start_date,
+      positionEnd: globalSession?.end_date || undefined,
+      effectiveDepartmentOfficialFullName: 'Office of the Prime Minister',
+      guidingMetrics: dynamicPrimeMinisterData.guidingMetrics
+    }
+  };
+
   return <HomePageClient 
-            initialAllDepartmentConfigs={initialAllDepartmentConfigs}
-            initialMainTabConfigs={initialMainTabConfigs}
-            initialMinisterInfos={initialMinisterInfos} // Pass new minister data
+            initialAllDepartmentConfigs={sortedAllDepartmentConfigs}
+            initialMainTabConfigs={mainTabConfigsWithPM}
+            initialMinisterInfos={ministerInfosWithPM}
             initialActiveTabId={initialActiveTabId}
             initialError={serverError}
             currentSessionId={currentSessionId}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PrimeMinisterSection from "@/components/PrimeMinisterSection";
 import MinisterSection from "@/components/MinisterSection";
 import {
   fetchPromisesForDepartment,
@@ -56,45 +55,6 @@ export default function HomePageClient({
   const [isLoadingTabData, setIsLoadingTabData] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(initialError || null);
 
-  useEffect(() => {
-    setAllDepartmentConfigs(initialAllDepartmentConfigs);
-    // setMainTabConfigs(initialMainTabConfigs); // We will set this after filtering
-    setMinisterInfos(initialMinisterInfos);
-
-    let filteredMainTabConfigs = initialMainTabConfigs;
-
-    // Parlament-based filtering for ISED/AIDI
-    if (currentSessionId?.startsWith("44")) {
-      console.log("[HomePageClient] Parliament 44 detected, filtering to show ISED and hide AIDI for 'Innovation' tab.");
-      filteredMainTabConfigs = initialMainTabConfigs.filter(
-        config => config.id !== AIDI_DEPARTMENT_ID
-      );
-    } else if (currentSessionId?.startsWith("45")) {
-      console.log("[HomePageClient] Parliament 45 detected, filtering to show AIDI and hide ISED for 'Innovation' tab.");
-      filteredMainTabConfigs = initialMainTabConfigs.filter(
-        config => config.id !== ISED_DEPARTMENT_ID
-      );
-    } else {
-      // Default behavior for other/unknown parliaments: prefer AIDI if it exists
-      const aidiExists = initialMainTabConfigs.some(c => c.id === AIDI_DEPARTMENT_ID);
-      if (aidiExists) {
-        console.log("[HomePageClient] Defaulting to AIDI for 'Innovation' tab (hiding ISED if present).");
-        filteredMainTabConfigs = initialMainTabConfigs.filter(config => config.id !== ISED_DEPARTMENT_ID);
-      }
-    }
-
-    setMainTabConfigs(filteredMainTabConfigs);
-
-    if(initialActiveTabId && filteredMainTabConfigs.some(c => c.id === initialActiveTabId)) {
-      setActiveTabId(initialActiveTabId);
-    } else if (filteredMainTabConfigs.length > 0) {
-      setActiveTabId(filteredMainTabConfigs[0].id);
-    } else {
-      setActiveTabId("");
-      setCurrentMinisterInfo(null); 
-    }
-  }, [initialAllDepartmentConfigs, initialMainTabConfigs, initialActiveTabId, initialMinisterInfos, currentSessionId]);
-
   // Effect to set currentMinisterInfo based on activeTabId and cached ministerInfos
   useEffect(() => {
     if (activeTabId) {
@@ -125,9 +85,8 @@ export default function HomePageClient({
 
       setIsLoadingTabData(true);
       setError(null);
-      // setActiveDepartmentData(null); // Clear previous tab's data immediately - this can cause a flash of loading state, let skeleton handle it
 
-      let ministerInfoForThisTab = ministerInfos[thisTabId]; // Try to get from cache first
+      let ministerInfoForThisTab = ministerInfos[thisTabId];
 
       // 1. Fetch Minister Info if not cached for THIS tab ID
       if (!ministerInfos.hasOwnProperty(thisTabId)) {
@@ -144,7 +103,6 @@ export default function HomePageClient({
           if (activeTabId !== thisTabId) return; // Tab changed during minister fetch, abort
 
           setMinisterInfos(prev => ({ ...prev, [thisTabId]: ministerInfoForThisTab }));
-          // setCurrentMinisterInfo will be updated by the separate effect watching ministerInfos
         } catch (err: any) {
           if (activeTabId !== thisTabId) return; // Tab changed, abort
           console.error(`[HomePageClient] Failed to fetch minister info for ${thisTabId}:`, err);
@@ -158,14 +116,9 @@ export default function HomePageClient({
         console.log(`[HomePageClient] Minister info for ${thisTabId} found in cache.`);
       }
       
-      // Ensure we are using the most up-to-date minister info for the *current* thisTabId,
-      // especially if it was just fetched and setMinisterInfos was called.
-      // The separate effect listening to ministerInfos will update currentMinisterInfo, 
-      // but for this specific load sequence, we use ministerInfoForThisTab directly if it was fetched,
-      // or the cached value if it was already there.
       const finalMinisterInfoToUse = ministerInfos.hasOwnProperty(thisTabId) ? ministerInfos[thisTabId] : ministerInfoForThisTab;
 
-      // 2. Fetch Promises using the (now hopefully correct) minister info for thisTabId
+      // 2. For Prime Minister tab, we don't need to fetch promises
       const selectedConfig = allDepartmentConfigs.find(c => c.id === thisTabId);
       if (!selectedConfig) {
         if (activeTabId !== thisTabId) return; // Tab changed
@@ -173,6 +126,20 @@ export default function HomePageClient({
         setIsLoadingTabData(false);
         return;
       }
+
+      // If this is the Prime Minister tab, just set the data without fetching promises
+      if (selectedConfig.is_prime_minister) {
+        if (activeTabId !== thisTabId) return; // Tab changed
+        setActiveDepartmentData({
+          ministerInfo: finalMinisterInfoToUse,
+          promises: [], // No promises for PM
+          evidenceItems: []
+        });
+        setIsLoadingTabData(false);
+        return;
+      }
+
+      // For other departments, fetch promises as usual
       const departmentFullName = selectedConfig.official_full_name;
       if (!departmentFullName || typeof departmentFullName !== 'string') {
         if (activeTabId !== thisTabId) return; // Tab changed
@@ -198,9 +165,6 @@ export default function HomePageClient({
           effectiveDepartmentFullNameOverride
         );
         
-        // Log the promises and their evidence arrays as returned from fetchPromisesForDepartment
-        console.log("[HomePageClient DEBUG] promisesForDept from fetchPromisesForDepartment:", JSON.parse(JSON.stringify(promisesForDept)));
-
         const allEvidenceItemsForDeptFlat = promisesForDept.reduce((acc, promise) => {
           if (promise.evidence) {
             promise.evidence.forEach(ev => {
@@ -231,16 +195,14 @@ export default function HomePageClient({
     };
 
     loadDataForActiveTab();
-  }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, error]); // Added ministerInfos and error
+  }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, error]);
 
   // Actual JSX rendering for the client component
   return (
     <div className="min-h-screen">
-      {/* Header is now part of the RootLayout or specific AdminLayout */}
       <div className="container mx-auto max-w-5xl px-4 py-12">
         <h1 className="mb-12 text-center text-5xl">{pageTitle}</h1>
-        <PrimeMinisterSection primeMinister={dynamicPrimeMinisterData} />
-        {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>} {/* Show general error if not loading tab data AND no promises loaded*/}
+        {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>}
         
         {mainTabConfigs.length > 0 ? (
           <div className="mt-16">
