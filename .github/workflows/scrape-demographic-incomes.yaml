@@ -12,7 +12,7 @@ permissions:
   contents: write
 
 env:
-  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData-nonTraduit.action?pid=1710012101&latestN=5&startDate=&endDate=&csvLocale=en&selectedMembers=%5B%5B1%5D%2C%5B%5D%5D&checkedLevels=1D1%2C1D2%2C1D3
+  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData-nonTraduit.action?pid=1110009101&latestN=2&startDate=&endDate=&csvLocale=en&selectedMembers=%5B%5B1%5D%2C%5B%5D%2C%5B%5D%2C%5B%5D%2C%5B5%5D%5D&checkedLevels=1D1%2C1D2%2C1D3%2C2D1%2C3D1
   COMMIT_MSG: Update Demographic Income Data for Non-Permanent Residents
 
 jobs:
