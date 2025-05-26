@@ -79,7 +79,7 @@ export const WithTarget: Story = {
     startYear: 2015,
     endYear: 2023,
     showTarget: true,
-    targetValue: 300000,
+    targetValue: 500000,
   },
   render: (args) => (
     <ChartWrapper>
