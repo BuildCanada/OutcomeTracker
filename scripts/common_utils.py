@@ -1,50 +1,53 @@
-# common_utils.py
+# common_utils_flat.py
+# Updated common utilities for flat promises collection structure
+
 import logging
 import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 from dotenv import load_dotenv
-import hashlib # For content hashing
-from datetime import datetime # For date parsing
+import hashlib
+from datetime import datetime
 
-# --- Load Environment Variables (for Firestore init if needed) ---
-load_dotenv() # Loads .env file from current dir or parent dirs
-# --- End Load Environment Variables ---
+# Load environment variables
+load_dotenv()
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
-# --- Begin: Constants for Promise ID and Path Generation ---
+# --- Constants for Flat Structure ---
 TARGET_PROMISES_COLLECTION_ROOT = os.getenv("TARGET_PROMISES_COLLECTION", "promises")
 DEFAULT_REGION_CODE = "Canada"
 
+# Updated party mapping (consistent with existing structure)
 PARTY_NAME_TO_CODE_MAPPING = {
     "Liberal Party of Canada": "LPC",
-    "Liberal Party of Canada (2025 Platform)": "LPC", # Added variation
+    "Liberal Party of Canada (2025 Platform)": "LPC",
     "Conservative Party of Canada": "CPC",
     "New Democratic Party": "NDP",
     "Bloc Québécois": "BQ",
-    # Add other variations as observed in your 'party' field
+    "Green Party of Canada": "GP",
 }
 
+# Known party codes for iteration
+KNOWN_PARTY_CODES = ["LPC", "CPC", "NDP", "BQ", "GP"]
+
+# Source type mappings
 SOURCE_TYPE_TO_ID_CODE_MAPPING = {
     "Video Transcript (YouTube)": "YTVID",
     "Mandate Letter Commitment (Structured)": "MANDL",
     "2021 LPC Mandate Letters": "MANDL",
     "2025 LPC Platform": "PLTFM",
-    # Add more as needed
-    "DEFAULT_SOURCE_ID_CODE": "OTHER" # Fallback code
+    "DEFAULT_SOURCE_ID_CODE": "OTHER"
 }
-# --- End: Constants for Promise ID and Path Generation ---
 
 PROMISE_CATEGORIES = [
-    "Finance", "Health", "Immigration", "Defence", "Housing", "Energy",  
+    "Finance", "Health", "Immigration", "Defence", "Housing", "Energy",
     "Innovation", "Government Transformation", "Environment",
-    "Indigenous Relations", "Foreign Affairs", "Other" 
+    "Indigenous Relations", "Foreign Affairs", "Other"
 ]
 
-# --- Firestore Client Initialization ---
-# Global Firestore client instance for this module
+# Global Firestore client instance
 db = None
 
 def _initialize_firestore_client():
@@ -53,48 +56,41 @@ def _initialize_firestore_client():
     if db is None:
         try:
             if not firebase_admin._apps:
-                logger.info("Initializing Firebase Admin SDK for common_utils...")
-                # Attempt to initialize with application default credentials first 
+                logger.info("Initializing Firebase Admin SDK for common_utils_flat...")
                 try:
                     firebase_admin.initialize_app()
                     project_id = os.getenv('FIREBASE_PROJECT_ID', '[Not Set - Using Default]')
-                    logger.info(f"common_utils: Connected to CLOUD Firestore (Project: {project_id}) using default credentials.")
+                    logger.info(f"common_utils_flat: Connected to CLOUD Firestore (Project: {project_id}) using default credentials.")
                 except Exception as e_default:
-                    logger.warning(f"common_utils: Cloud Firestore init with default creds failed: {e_default}")
+                    logger.warning(f"common_utils_flat: Cloud Firestore init with default creds failed: {e_default}")
                     cred_path = os.getenv('FIREBASE_SERVICE_ACCOUNT_KEY_PATH')
                     if cred_path:
                         try:
-                            logger.info(f"common_utils: Attempting Firebase init with service account key from env var: {cred_path}")
+                            logger.info(f"common_utils_flat: Attempting Firebase init with service account key from env var: {cred_path}")
                             cred = credentials.Certificate(cred_path)
                             firebase_admin.initialize_app(cred)
                             project_id_sa = os.getenv('FIREBASE_PROJECT_ID', '[Not Set - Using Service Account]')
-                            logger.info(f"common_utils: Connected to CLOUD Firestore (Project: {project_id_sa}) via service account.")
+                            logger.info(f"common_utils_flat: Connected to CLOUD Firestore (Project: {project_id_sa}) via service account.")
                         except Exception as e_sa:
-                            logger.critical(f"common_utils: Firebase init with service account key from {cred_path} failed: {e_sa}", exc_info=True)
-                            raise  # Re-raise critical error
+                            logger.critical(f"common_utils_flat: Firebase init with service account key from {cred_path} failed: {e_sa}", exc_info=True)
+                            raise
                     else:
-                        logger.error("common_utils: FIREBASE_SERVICE_ACCOUNT_KEY_PATH env var not set and default creds failed. Firestore client not initialized.")
+                        logger.error("common_utils_flat: FIREBASE_SERVICE_ACCOUNT_KEY_PATH env var not set and default creds failed.")
                         raise ConnectionError("Failed to initialize Firestore: No credentials provided.")
             else:
-                 logger.info("common_utils: Firebase Admin SDK already initialized elsewhere.")
+                logger.info("common_utils_flat: Firebase Admin SDK already initialized elsewhere.")
             db = firestore.client()
         except Exception as e:
-            logger.critical(f"common_utils: CRITICAL - Failed to initialize Firestore client: {e}", exc_info=True)
-            db = None # Ensure db is None on failure
-            # Depending on application needs, this might need to be a fatal error.
-            # For now, functions will check if db is None.
+            logger.critical(f"common_utils_flat: CRITICAL - Failed to initialize Firestore client: {e}", exc_info=True)
+            db = None
 
-# Call initialization once when the module is loaded, or rely on first function call.
-# _initialize_firestore_client() # Option 1: Initialize on module load
-
-# --- Department Standardization Functions (Firestore-backed) ---
-
+# Department standardization functions (reuse from original)
 def standardize_department_name(name_variant):
     """Standardizes a department or minister name to its official full name using Firestore department_config."""
     global db
-    if db is None: # Option 2: Initialize on first use if not done on module load
+    if db is None:
         _initialize_firestore_client()
-        if db is None: # Check again after attempt
+        if db is None:
             logger.error("standardize_department_name: Firestore client is not available. Cannot proceed.")
             return None
 
@@ -102,41 +98,33 @@ def standardize_department_name(name_variant):
     normalized_name = original_name_str.lower().strip()
 
     if not normalized_name or normalized_name == 'nan':
-         logger.debug(f"Input '{original_name_str}' normalized to empty or NaN, returning None.")
-         return None 
+        logger.debug(f"Input '{original_name_str}' normalized to empty or NaN, returning None.")
+        return None
 
     try:
         dept_config_ref = db.collection('department_config')
-        # 1. Try name_variants
+        # Try name_variants
         query = dept_config_ref.where(filter=FieldFilter('name_variants', 'array_contains', normalized_name)).limit(1)
-        results = list(query.stream()) # Using list() to execute and get results easily
+        results = list(query.stream())
         if results:
             department_doc = results[0].to_dict()
             official_full_name = department_doc.get('official_full_name')
             if official_full_name:
-                logger.debug(f"Standardized '{original_name_str}' (Normalized: '{normalized_name}') to '{official_full_name}' via name_variants.")
+                logger.debug(f"Standardized '{original_name_str}' to '{official_full_name}' via name_variants.")
                 return official_full_name
-        # 2. Try official_full_name (case-insensitive, exact match)
-        query2 = dept_config_ref.where(filter=FieldFilter('official_full_name', '==', original_name_str)).limit(1)
-        results2 = list(query2.stream())
-        if results2:
-            department_doc = results2[0].to_dict()
-            official_full_name = department_doc.get('official_full_name')
-            if official_full_name:
-                logger.debug(f"Standardized '{original_name_str}' to '{official_full_name}' via official_full_name (case-sensitive match).")
-                return official_full_name
-        # 3. Try official_full_name (lowercase match)
+
+        # Try official_full_name (case-insensitive)
         for doc in dept_config_ref.stream():
             doc_dict = doc.to_dict()
             if doc_dict.get('official_full_name', '').lower() == normalized_name:
-                logger.debug(f"Standardized '{original_name_str}' to '{doc_dict.get('official_full_name')}' via official_full_name (lowercase match).")
+                logger.debug(f"Standardized '{original_name_str}' to '{doc_dict.get('official_full_name')}' via official_full_name.")
                 return doc_dict.get('official_full_name')
+
         logger.warning(f"Unmapped department variant: '{normalized_name}' (for input '{original_name_str}') in Firestore department_config.")
         _log_unmapped_variant(original_name_str, normalized_name)
         return None
     except Exception as e:
         logger.error(f"Error querying Firestore for department standardization of '{normalized_name}': {e}", exc_info=True)
-        # Log unmapped variant on error too, as it might be a persistent issue
         _log_unmapped_variant(original_name_str, normalized_name)
         return None
 
@@ -148,14 +136,9 @@ def _log_unmapped_variant(raw_variant, normalized_variant, source_promise_id=Non
         return
 
     try:
-        # Use the normalized_variant as the document ID for easy lookup and aggregation
-        # Firestore IDs have limitations, so replace problematic characters if any (though unlikely for dept names)
-        doc_id = normalized_variant.replace('/', '_SLASH_') # Basic sanitization for document ID
-        
+        doc_id = normalized_variant.replace('/', '_SLASH_')
         activity_ref = db.collection('unmapped_department_activity').document(doc_id)
-        
-        # Atomically increment count and update timestamps
-        # We use a transaction to safely read-modify-write.
+
         @firestore.transactional
         def update_in_transaction(transaction, doc_ref):
             snapshot = doc_ref.get(transaction=transaction)
@@ -164,13 +147,13 @@ def _log_unmapped_variant(raw_variant, normalized_variant, source_promise_id=Non
             if snapshot.exists:
                 new_count = snapshot.get('count') + 1
                 example_ids = snapshot.get('example_source_identifiers') or []
-                if source_promise_id and source_promise_id not in example_ids and len(example_ids) < 10: # Limit array size
+                if source_promise_id and source_promise_id not in example_ids and len(example_ids) < 10:
                     example_ids.append(source_promise_id)
-                
+
                 transaction.update(doc_ref, {
                     'count': new_count,
                     'last_seen_at': current_server_time,
-                    'variant_text_raw': raw_variant, # Update raw text in case it differs slightly but normalizes the same
+                    'variant_text_raw': raw_variant,
                     'example_source_identifiers': example_ids
                 })
             else:
@@ -181,11 +164,11 @@ def _log_unmapped_variant(raw_variant, normalized_variant, source_promise_id=Non
                     'count': 1,
                     'first_seen_at': current_server_time,
                     'last_seen_at': current_server_time,
-                    'status': 'new', # Initial status
+                    'status': 'new',
                     'example_source_identifiers': example_ids,
                     'notes': ''
                 })
-        
+
         transaction = db.transaction()
         update_in_transaction(transaction, activity_ref)
         logger.info(f"Logged/updated unmapped variant activity for: '{normalized_variant}' (Raw: '{raw_variant}')")
@@ -196,167 +179,298 @@ def _log_unmapped_variant(raw_variant, normalized_variant, source_promise_id=Non
 def get_department_short_name(standardized_full_name):
     """
     Takes a standardized FULL department name and returns its display_short_name from Firestore department_config.
-    Returns the short name string, or the input full name if no short name is mapped.
     """
     global db
-    if db is None: # Option 2: Initialize on first use
+    if db is None:
         _initialize_firestore_client()
-        if db is None: # Check again after attempt
+        if db is None:
             logger.error("get_department_short_name: Firestore client is not available. Cannot proceed.")
-            return standardized_full_name # Fallback as per original spec
+            return standardized_full_name
 
     if not standardized_full_name:
         logger.debug("Input standardized_full_name is empty, returning None.")
-        return None 
-        
+        return None
+
     try:
         dept_config_ref = db.collection('department_config')
         query = dept_config_ref.where(filter=FieldFilter('official_full_name', '==', standardized_full_name)).limit(1)
         results = list(query.stream())
-
+        
         if results:
             department_doc = results[0].to_dict()
-            display_short_name = department_doc.get('display_short_name')
-            if display_short_name:
-                logger.debug(f"Retrieved short name '{display_short_name}' for full name '{standardized_full_name}' from Firestore.")
-                return display_short_name
-            else:
-                logger.warning(f"Found doc for '{standardized_full_name}' but 'display_short_name' is missing. Doc ID: {results[0].id}. Returning full name.")
-                return standardized_full_name # Fallback
-        else:
-            logger.warning(f"No short name mapping found in Firestore department_config for full name: '{standardized_full_name}'. Returning full name.")
-            return standardized_full_name # Fallback as per original spec
+            short_name = department_doc.get('display_short_name')
+            if short_name:
+                logger.debug(f"Found short name '{short_name}' for '{standardized_full_name}'")
+                return short_name
+
+        logger.debug(f"No short name mapping found for '{standardized_full_name}', returning full name")
+        return standardized_full_name
     except Exception as e:
-        logger.error(f"Error querying Firestore for department short name of '{standardized_full_name}': {e}", exc_info=True)
-        return standardized_full_name # Fallback
+        logger.error(f"Error getting short name for '{standardized_full_name}': {e}", exc_info=True)
+        return standardized_full_name
 
-# --- Begin: Helper Functions for Promise ID and Path Generation ---
 def generate_content_hash(text: str, length: int = 10) -> str:
-    """Generates a truncated SHA-256 hash of the input text."""
+    """Generate a hash from the text content for document ID purposes."""
     if not text:
-        logger.warning("generate_content_hash received empty text, returning unique 'nohash' placeholder.")
-        # Return a unique placeholder if text is empty to avoid collisions on empty strings
-        return "nohash" + datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[-length:] 
-        
-    normalized_text = text.lower().strip()
-    # Consider more aggressive normalization (e.g., remove punctuation, multiple spaces) 
-    # for better deduplication if strictly identical promises should have identical hashes.
-    # Example:
-    # import re
-    # normalized_text = re.sub(r'\s+', ' ', normalized_text) # Replace multiple spaces with one
-    # normalized_text = re.sub(r'[^a-z0-9\s-]', '', normalized_text) # Keep alphanumeric, spaces, hyphens
+        return "empty_content"
+    hash_obj = hashlib.sha256(text.encode('utf-8'))
+    return hash_obj.hexdigest()[:length]
 
-    hasher = hashlib.sha256()
-    hasher.update(normalized_text.encode('utf-8'))
-    return hasher.hexdigest()[:length]
+# UPDATED FUNCTIONS FOR FLAT STRUCTURE
 
-def get_promise_document_path(
+def get_promise_document_path_flat(
     party_name_str: str,
-    date_issued_str: str, # Expected format YYYY-MM-DD
+    date_issued_str: str,
     source_type_str: str,
     promise_text: str,
     target_collection_root: str = TARGET_PROMISES_COLLECTION_ROOT,
     region_code: str = DEFAULT_REGION_CODE
 ) -> str | None:
     """
-    Constructs the full Firestore document path for a promise based on its attributes.
-    Returns the path string or None if critical information is missing or invalid.
+    Constructs the document path for a promise in the FLAT structure.
+    Returns: promises/{deterministic_document_id}
+    The region and party are stored as fields, not in the path.
     """
-    # 1. Get Party Code
+    # Get party code
     party_code = PARTY_NAME_TO_CODE_MAPPING.get(party_name_str)
     if not party_code:
-        # Fallback for party if direct match fails (e.g. "Liberal Party of Canada (2025 Platform)")
         for key, value in PARTY_NAME_TO_CODE_MAPPING.items():
             if party_name_str and key in party_name_str:
                 party_code = value
-                logger.debug(f"get_promise_document_path: Found party code '{party_code}' using substring for '{party_name_str}'.")
+                logger.debug(f"Found party code '{party_code}' using substring for '{party_name_str}'.")
                 break
     if not party_code:
-        logger.warning(f"get_promise_document_path: No party code mapping for party '{party_name_str}'. Cannot generate path.")
+        logger.warning(f"No party code mapping for party '{party_name_str}'. Cannot generate path.")
         return None
 
-    # 2. Format Date (YYYY-MM-DD -> YYYYMMDD)
-    yyyymmdd_str = ""
-    if not date_issued_str or not isinstance(date_issued_str, str):
-        logger.warning(f"get_promise_document_path: Invalid or missing date_issued_str ('{date_issued_str}'). Using 'nodate'.")
-        yyyymmdd_str = "nodate" + datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[-4:] # Unique placeholder
-    else:
+    # Format date
+    try:
+        date_obj = datetime.strptime(date_issued_str, "%Y-%m-%d")
+        yyyymmdd_str = date_obj.strftime("%Y%m%d")
+    except ValueError:
         try:
-            dt_obj = datetime.strptime(date_issued_str, "%Y-%m-%d")
-            yyyymmdd_str = dt_obj.strftime("%Y%m%d")
+            # Try YYYYMMDD format
+            datetime.strptime(date_issued_str, "%Y%m%d")
+            yyyymmdd_str = date_issued_str
         except ValueError:
-            logger.warning(f"get_promise_document_path: Malformed date_issued_str ('{date_issued_str}'), attempting direct replace. Using 'baddate'.")
-            yyyymmdd_str = date_issued_str.replace("-", "")
-            if len(yyyymmdd_str) != 8 or not yyyymmdd_str.isdigit():
-                yyyymmdd_str = "baddate" + datetime.utcnow().strftime("%Y%m%d%H%M%S%f")[-4:] # Unique placeholder
+            logger.warning(f"Invalid date format '{date_issued_str}'. Cannot generate path.")
+            return None
+
+    # Get source type code
+    source_id_code = SOURCE_TYPE_TO_ID_CODE_MAPPING.get(source_type_str, 
+                                                       SOURCE_TYPE_TO_ID_CODE_MAPPING["DEFAULT_SOURCE_ID_CODE"])
+
+    # Generate deterministic document ID
+    content_hash = generate_content_hash(promise_text, 8)
+    document_id = f"{party_code}_{yyyymmdd_str}_{source_id_code}_{content_hash}"
+
+    # Return flat path (just collection + document ID)
+    flat_path = f"{target_collection_root}/{document_id}"
     
-    # 3. Get Source Type Code
-    source_id_code = SOURCE_TYPE_TO_ID_CODE_MAPPING.get(source_type_str, SOURCE_TYPE_TO_ID_CODE_MAPPING["DEFAULT_SOURCE_ID_CODE"])
-    if source_type_str not in SOURCE_TYPE_TO_ID_CODE_MAPPING:
-        logger.debug(f"get_promise_document_path: Source type '{source_type_str}' not in explicit map, used default '{source_id_code}'.")
+    logger.debug(f"Generated flat path: {flat_path} for party: {party_name_str}, date: {date_issued_str}")
+    return flat_path
 
-    # 4. Generate Content Hash
-    content_hash = generate_content_hash(promise_text)
+def get_legacy_promise_document_path(
+    party_name_str: str,
+    date_issued_str: str,
+    source_type_str: str,
+    promise_text: str,
+    target_collection_root: str = TARGET_PROMISES_COLLECTION_ROOT,
+    region_code: str = DEFAULT_REGION_CODE
+) -> str | None:
+    """
+    Constructs the legacy subcollection path for backward compatibility.
+    Returns: promises/{region}/{party}/{document_id}
+    """
+    # Get party code
+    party_code = PARTY_NAME_TO_CODE_MAPPING.get(party_name_str)
+    if not party_code:
+        for key, value in PARTY_NAME_TO_CODE_MAPPING.items():
+            if party_name_str and key in party_name_str:
+                party_code = value
+                break
+    if not party_code:
+        return None
 
-    # 5. Construct Leaf Document ID
-    doc_leaf_id = f"{yyyymmdd_str}_{source_id_code}_{content_hash}"
+    # Format date and generate ID (same logic as flat)
+    try:
+        date_obj = datetime.strptime(date_issued_str, "%Y-%m-%d")
+        yyyymmdd_str = date_obj.strftime("%Y%m%d")
+    except ValueError:
+        try:
+            datetime.strptime(date_issued_str, "%Y%m%d")
+            yyyymmdd_str = date_issued_str
+        except ValueError:
+            return None
 
-    # 6. Construct Full Path
-    full_path = f"{target_collection_root}/{region_code}/{party_code}/{doc_leaf_id}"
-    logger.debug(f"get_promise_document_path: Generated path '{full_path}' for promise based on inputs.")
-    return full_path
+    source_id_code = SOURCE_TYPE_TO_ID_CODE_MAPPING.get(source_type_str, 
+                                                       SOURCE_TYPE_TO_ID_CODE_MAPPING["DEFAULT_SOURCE_ID_CODE"])
+    content_hash = generate_content_hash(promise_text, 8)
+    document_id = f"{party_code}_{yyyymmdd_str}_{source_id_code}_{content_hash}"
 
-# --- End: Helper Functions for Promise ID and Path Generation ---
+    # Return legacy subcollection path
+    legacy_path = f"{target_collection_root}/{region_code}/{party_code}/{document_id}"
+    return legacy_path
 
-# Ensure logger is configured for scripts that might import this utility early
-if __name__ == '__main__':
-    # Basic logging config for direct testing of this module
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s - %(levelname)s - %(module)s - %(funcName)s - %(message)s')
-    logger.info("common_utils.py executed directly for testing.")
+def query_promises_flat(
+    db_client,
+    parliament_session_id: str = None,
+    party_code: str = None,
+    region_code: str = DEFAULT_REGION_CODE,
+    source_type: str = None,
+    responsible_department: str = None,
+    limit_count: int = None
+) -> list:
+    """
+    Query promises from the flat collection structure with various filters.
+    """
+    if not db_client:
+        logger.error("Database client not provided to query_promises_flat")
+        return []
 
-    # --- Test Cases (requires Firestore to be populated and accessible) ---
-    # Ensure your .env or GOOGLE_APPLICATION_CREDENTIALS is set up for these tests.
-    _initialize_firestore_client() # Explicitly initialize for testing if not done on module load
-    if db:
-        logger.info("--- Running Test Cases for Department Standardization ---")
+    try:
+        collection_ref = db_client.collection(TARGET_PROMISES_COLLECTION_ROOT)
+        query = collection_ref
+
+        # Apply filters
+        if parliament_session_id:
+            query = query.where(filter=FieldFilter("parliament_session_id", "==", parliament_session_id))
         
-        test_variants = [
-            "minister of finance",
-            "MINISTER OF HEALTH",
-            "Minister of natural resources",
-            "Natural Resources Canada", 
-            "treasury board of canada secretariat",
-            "non_existent_department_variant",
-            "MINISTRE OF FOREIGN AFFAIRS", # Typo from old map
-            None,
-            "  "
-        ]
+        if party_code:
+            query = query.where(filter=FieldFilter("party_code", "==", party_code))
         
-        for variant in test_variants:
-            print(f"\nInput Variant: '{variant}'")
-            full_name = standardize_department_name(variant)
-            print(f"  -> Standardized Full Name: '{full_name}'")
-            if full_name:
-                short_name = get_department_short_name(full_name)
-                print(f"  -> Display Short Name: '{short_name}'")
-            else:
-                print(f"  -> No short name lookup due to None full name.")
+        if region_code:
+            query = query.where(filter=FieldFilter("region_code", "==", region_code))
+        
+        if source_type:
+            query = query.where(filter=FieldFilter("source_type", "==", source_type))
+        
+        if responsible_department:
+            query = query.where(filter=FieldFilter("responsible_department_lead", "==", responsible_department))
 
-        logger.info("--- Test Cases Complete ---")
-        logger.info("--- Running Test Cases for Promise Path Generation ---")
-        test_promise_data = [
-            ("Liberal Party of Canada", "2025-04-19", "2025 LPC Platform", "Build 1 million new homes."),
-            ("Conservative Party of Canada", "2024-01-01", "Speech", "Lower taxes for families."),
-            ("NDP", "2023-11-15", "Press Release", "Invest in public healthcare."), # Example with unmapped party name if NDP not in mapping
-            ("Bloc Québécois", "bad-date-format", "Some Custom Source", "Represent Quebec."),
-            ("Liberal Party of Canada", "2025-05-20", "Video Transcript (YouTube)", "Another LPC promise text example."),
-            ("Unknown Party", "2025-06-01", "Unknown Source", "A test promise from an unknown party.")
-        ]
-        for party, date_str, source_str, text_str in test_promise_data:
-            print(f"\nInput: Party='{party}', Date='{date_str}', Source='{source_str}', Text=\"{text_str[:30]}...\"")
-            path = get_promise_document_path(party, date_str, source_str, text_str)
-            print(f"  -> Generated Path: '{path}'")
-        logger.info("--- Promise Path Generation Test Cases Complete ---")
-    else:
-        logger.error("Firestore client not initialized. Skipping test cases.")
+        if limit_count:
+            query = query.limit(limit_count)
+
+        # Execute query
+        results = []
+        for doc in query.stream():
+            doc_data = doc.to_dict()
+            doc_data['id'] = doc.id
+            doc_data['document_path'] = doc.reference.path
+            results.append(doc_data)
+
+        logger.info(f"Query returned {len(results)} promises with filters: session={parliament_session_id}, party={party_code}, region={region_code}")
+        return results
+
+    except Exception as e:
+        logger.error(f"Error querying flat promises collection: {e}", exc_info=True)
+        return []
+
+def create_promise_document_flat(
+    db_client,
+    promise_data: dict,
+    party_name: str,
+    region_code: str = DEFAULT_REGION_CODE
+) -> tuple[bool, str]:
+    """
+    Create a promise document in the flat structure.
+    Returns (success, document_id_or_error_message)
+    """
+    if not db_client:
+        logger.error("Database client not provided to create_promise_document_flat")
+        return False, "No database client"
+
+    try:
+        # Get party code
+        party_code = PARTY_NAME_TO_CODE_MAPPING.get(party_name)
+        if not party_code:
+            return False, f"Unknown party: {party_name}"
+
+        # Generate document ID
+        date_str = promise_data.get('date_issued', '')
+        source_type = promise_data.get('source_type', '')
+        text = promise_data.get('text', '')
+
+        doc_path = get_promise_document_path_flat(
+            party_name, date_str, source_type, text, region_code=region_code
+        )
+        
+        if not doc_path:
+            return False, "Failed to generate document path"
+
+        document_id = doc_path.split('/')[-1]
+
+        # Add flat structure fields to promise data
+        enhanced_data = {
+            **promise_data,
+            'region_code': region_code,
+            'party_code': party_code,
+            'created_at': firestore.SERVER_TIMESTAMP,
+            'last_updated_at': firestore.SERVER_TIMESTAMP
+        }
+
+        # Create document
+        doc_ref = db_client.collection(TARGET_PROMISES_COLLECTION_ROOT).document(document_id)
+        doc_ref.set(enhanced_data)
+
+        logger.info(f"Created promise document: {document_id}")
+        return True, document_id
+
+    except Exception as e:
+        error_msg = f"Error creating promise document: {e}"
+        logger.error(error_msg, exc_info=True)
+        return False, error_msg
+
+def update_promise_references_for_flat_structure(
+    db_client,
+    old_promise_path: str,
+    new_promise_id: str
+) -> bool:
+    """
+    Update references to promises in other collections after migration to flat structure.
+    This updates evidence_items and other collections that reference promise paths.
+    """
+    if not db_client:
+        logger.error("Database client not provided to update_promise_references_for_flat_structure")
+        return False
+
+    try:
+        # Update evidence_items collection
+        evidence_collection = db_client.collection('evidence_items')
+        
+        # Find evidence items that reference the old promise path
+        # This assumes evidence items store promise paths in some field
+        # Adjust the field name based on your actual schema
+        query = evidence_collection.where(filter=FieldFilter('promise_paths', 'array_contains', old_promise_path))
+        
+        batch = db_client.batch()
+        update_count = 0
+
+        for evidence_doc in query.stream():
+            evidence_data = evidence_doc.to_dict()
+            promise_paths = evidence_data.get('promise_paths', [])
+            
+            # Replace old path with new flat path
+            if old_promise_path in promise_paths:
+                new_promise_paths = [new_promise_id if path == old_promise_path else path for path in promise_paths]
+                
+                batch.update(evidence_doc.reference, {
+                    'promise_paths': new_promise_paths,
+                    'migration_updated_at': firestore.SERVER_TIMESTAMP
+                })
+                update_count += 1
+
+        if update_count > 0:
+            batch.commit()
+            logger.info(f"Updated {update_count} evidence items to reference new promise ID: {new_promise_id}")
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Error updating promise references: {e}", exc_info=True)
+        return False
+
+# Export compatibility with existing code
+def get_promise_document_path(*args, **kwargs):
+    """Compatibility wrapper - defaults to flat structure."""
+    return get_promise_document_path_flat(*args, **kwargs) 
