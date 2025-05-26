@@ -6,6 +6,9 @@ import Image from 'next/image'
 import PromiseCard from "./PromiseCard"
 import PopulationChart from "./charts/PopulationChart"
 import MetricChart from "./MetricChart"
+import { useState } from "react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Timestamp } from "firebase/firestore"
 
 interface MinisterSectionProps {
   departmentPageData: DepartmentPageData | null
@@ -26,6 +29,12 @@ const formatDate = (dateString: string | undefined | null): string | null => {
 };
 
 export default function MinisterSection({ departmentPageData, departmentFullName, departmentShortName }: MinisterSectionProps) {
+  // Add filter state
+  const [progressFilter, setProgressFilter] = useState<string>("all");
+  const [impactFilter, setImpactFilter] = useState<string>("all");
+  const [alignmentFilter, setAlignmentFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("default");
+
   if (!departmentPageData) {
     return (
       <div className="text-center py-10">
@@ -60,6 +69,87 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       .join("")
       .toUpperCase()
   }
+
+  // Filter promises based on selected filters
+  const filteredPromises = promises.filter(promise => {
+    // Progress filter
+    if (progressFilter !== "all") {
+      const progressScore = promise.progress_score || 0;
+      if (progressFilter === "complete" && progressScore !== 5) return false;
+      if (progressFilter === "in_progress" && (progressScore === 0 || progressScore === 5)) return false;
+      if (progressFilter === "not_started" && progressScore !== 0) return false;
+    }
+
+    // Impact filter
+    if (impactFilter !== "all") {
+      const impactRank = promise.bc_promise_rank?.toLowerCase() || "";
+      const impactNum = Number(promise.bc_promise_rank) || 0;
+      
+      if (impactFilter === "high" && !(impactRank === "strong" || impactNum >= 8)) return false;
+      if (impactFilter === "medium" && !(impactRank === "medium" || (impactNum >= 5 && impactNum < 8))) return false;
+      if (impactFilter === "low" && !(impactRank === "low" || (impactNum > 0 && impactNum < 5))) return false;
+    }
+
+    // Alignment filter
+    if (alignmentFilter !== "all") {
+      const direction = promise.bc_promise_direction?.toLowerCase() || "";
+      if (alignmentFilter === "aligned" && direction !== "positive") return false;
+      if (alignmentFilter === "neutral" && direction !== "neutral") return false;
+      if (alignmentFilter === "not_aligned" && direction !== "negative") return false;
+    }
+
+    return true;
+  });
+
+  // Helper function to get impact score
+  const getImpactScore = (promise: PromiseData): number => {
+    const impactRank = promise.bc_promise_rank?.toLowerCase() || "";
+    const impactNum = Number(promise.bc_promise_rank) || 0;
+    
+    if (impactRank === "strong" || impactNum >= 8) return 3;
+    if (impactRank === "medium" || (impactNum >= 5 && impactNum < 8)) return 2;
+    if (impactRank === "low" || (impactNum > 0 && impactNum < 5)) return 1;
+    return 0;
+  };
+
+  // Helper function to get last evidence date
+  const getLastEvidenceDate = (promise: PromiseData): number => {
+    if (!promise.evidence || promise.evidence.length === 0) return 0;
+    
+    return Math.max(...promise.evidence.map(ev => {
+      if (!ev.evidence_date) return 0;
+      if (ev.evidence_date instanceof Timestamp) {
+        return ev.evidence_date.toMillis();
+      }
+      if (typeof ev.evidence_date === 'string') {
+        return new Date(ev.evidence_date).getTime();
+      }
+      return 0;
+    }));
+  };
+
+  // Sort promises based on selected sort option
+  const sortedPromises = [...filteredPromises].sort((a, b) => {
+    if (sortBy === "last_updated") {
+      // Sort by last evidence date (descending)
+      const lastDateA = getLastEvidenceDate(a);
+      const lastDateB = getLastEvidenceDate(b);
+      return lastDateB - lastDateA;
+    } else {
+      // Default sort: progress score (descending) -> impact (descending) -> last evidence date (descending)
+      const progressA = a.progress_score || 0;
+      const progressB = b.progress_score || 0;
+      if (progressA !== progressB) return progressB - progressA;
+
+      const impactA = getImpactScore(a);
+      const impactB = getImpactScore(b);
+      if (impactA !== impactB) return impactB - impactA;
+
+      const lastDateA = getLastEvidenceDate(a);
+      const lastDateB = getLastEvidenceDate(b);
+      return lastDateB - lastDateA;
+    }
+  });
 
   return (
     <div>
@@ -114,14 +204,60 @@ export default function MinisterSection({ departmentPageData, departmentFullName
 
         {/* Promises Section */}
         <div className="mb-8">
-          <h3 className="text-2xl font-semibold mb-6">Commitments</h3>
-          {promises && promises.length > 0 ? (
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-semibold">Commitments</h3>
+            <div className="flex gap-4">
+              <Select value={progressFilter} onValueChange={setProgressFilter}>
+                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                  <SelectValue placeholder="Progress" />
+                </SelectTrigger>
+                <SelectContent className="rounded-none">
+                  <SelectItem value="all">All Progress</SelectItem>
+                  <SelectItem value="complete">Complete</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="not_started">Not Started</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={impactFilter} onValueChange={setImpactFilter}>
+                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                  <SelectValue placeholder="Impact" />
+                </SelectTrigger>
+                <SelectContent className="rounded-none">
+                  <SelectItem value="all">All Impact</SelectItem>
+                  <SelectItem value="high">High Impact</SelectItem>
+                  <SelectItem value="medium">Medium Impact</SelectItem>
+                  <SelectItem value="low">Low Impact</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={alignmentFilter} onValueChange={setAlignmentFilter}>
+                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                  <SelectValue placeholder="Alignment" />
+                </SelectTrigger>
+                <SelectContent className="rounded-none">
+                  <SelectItem value="all">All Alignment</SelectItem>
+                  <SelectItem value="aligned">Aligned</SelectItem>
+                  <SelectItem value="neutral">Neutral</SelectItem>
+                  <SelectItem value="not_aligned">Not Aligned</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent className="rounded-none">
+                  <SelectItem value="default">Default Sort</SelectItem>
+                  <SelectItem value="last_updated">Last Updated</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {sortedPromises && sortedPromises.length > 0 ? (
             <div className="grid grid-cols-1 gap-6">
-              {[...promises].sort((a, b) => {
-                const countA = a.linked_evidence_ids?.length || 0;
-                const countB = b.linked_evidence_ids?.length || 0;
-                return countB - countA; // Sort in descending order
-              }).map((promise: PromiseData) => (
+              {sortedPromises.map((promise: PromiseData) => (
                 <PromiseCard 
                   key={promise.id} 
                   promise={promise} 
@@ -131,10 +267,9 @@ export default function MinisterSection({ departmentPageData, departmentFullName
               ))}
             </div>
           ) : (
-            <p className="text-gray-600 italic">No specific mandate letter commitments found for this department.</p>
+            <p className="text-gray-600 italic">No commitments match the selected filters.</p>
           )}
         </div>
-
       </div>
     </div>
   )
