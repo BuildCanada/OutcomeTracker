@@ -161,13 +161,8 @@ for region in regions:
 - Check for ID conflicts
 - Estimate migration time
 
-**Step 2: Staged Migration**
-- Migrate one party at a time (start with smallest dataset)
-- Verify data integrity after each party
-- Run validation scripts
-
-**Step 3: Full Migration**
-- Migrate remaining parties
+**Step 2: Migration**
+- Migrate LPC party data, there is currently only data for the LPC
 - Run comprehensive validation
 - Update migration tracking
 
