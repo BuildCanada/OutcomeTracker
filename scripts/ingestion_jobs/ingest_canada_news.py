@@ -272,7 +272,7 @@ def _process_entry(entry, db_client, start_date_filter, end_date_filter, feed_na
         return None, True # Indicate an error occurred
 
 
-def fetch_and_process_feeds(db_client, dry_run=False, start_date_filter=None, end_date_filter=None, output_to_json=False):
+def fetch_and_process_feeds(db_client, dry_run=False, start_date_filter=None, end_date_filter=None, output_to_json=False, max_consecutive_empty_batches=5):
     """
     Fetches RSS feeds, processes items, and stores them in Firestore or outputs to JSON.
     Uses the provided db_client for Firestore operations.
@@ -470,15 +470,30 @@ def fetch_and_process_feeds(db_client, dry_run=False, start_date_filter=None, en
                 logger.info(f"Last page for {feed_name} reached (received {entries_in_batch} items, expected up to {DEFAULT_PAGE_SIZE}).")
                 fetch_more = False
             else:
-                 # If we got a full page, there might be more.
-                 # Add a safeguard: if a full batch yielded no new ingestable items (all filtered out or duplicates from a previous identical page due to API error),
-                 # then stop to prevent infinite loops on faulty feeds.
-                if not batch_had_new_ingestable_items and entries_in_batch > 0:
-                    logger.warning(f"Full batch of {entries_in_batch} items for {feed_name} at offset {current_skip} yielded no new items to ingest. Stopping pagination for this feed to prevent potential loop.")
-                    fetch_more = False
+                 # Continue pagination even if current batch has no new items, but add safeguards
+                 # Track consecutive empty batches to prevent infinite loops
+                if not hasattr(fetch_and_process_feeds, '_consecutive_empty_batches'):
+                    fetch_and_process_feeds._consecutive_empty_batches = {}
+                    
+                if feed_name not in fetch_and_process_feeds._consecutive_empty_batches:
+                    fetch_and_process_feeds._consecutive_empty_batches[feed_name] = 0
+                    
+                if not batch_had_new_ingestable_items:
+                    fetch_and_process_feeds._consecutive_empty_batches[feed_name] += 1
+                    logger.info(f"Batch at offset {current_skip} for {feed_name} yielded no new items (consecutive empty batches: {fetch_and_process_feeds._consecutive_empty_batches[feed_name]}).")
+                    
+                    # Stop after max_consecutive_empty_batches to prevent infinite loops
+                    if fetch_and_process_feeds._consecutive_empty_batches[feed_name] >= max_consecutive_empty_batches:
+                        logger.warning(f"Stopping pagination for {feed_name} after {fetch_and_process_feeds._consecutive_empty_batches[feed_name]} consecutive empty batches.")
+                        fetch_more = False
+                    else:
+                        current_skip += DEFAULT_PAGE_SIZE
+                        logger.info(f"Continuing to next page despite empty batch, offset {current_skip}.")
                 else:
+                    # Reset counter when we find new items
+                    fetch_and_process_feeds._consecutive_empty_batches[feed_name] = 0
                     current_skip += DEFAULT_PAGE_SIZE
-                    logger.info(f"Potentially more items for {feed_name}. Moving to next page, offset {current_skip}.")
+                    logger.info(f"Found new items. Moving to next page, offset {current_skip}.")
 
     # After processing all feeds
     if output_to_json and items_for_json_output:
@@ -538,6 +553,7 @@ def main():
     parser.add_argument("--end_date", type=str, help="End date filter (YYYY-MM-DD). Defaults to today if not specified.")
     parser.add_argument("--log_level", type=str, default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], help="Set the logging level.")
     parser.add_argument("--JSON", action="store_true", help="Output ingested items to a JSON file instead of Firestore.") # Added
+    parser.add_argument("--max_consecutive_empty_batches", type=int, default=5, help="Maximum consecutive empty batches before stopping pagination (default: 5)")
 
     args = parser.parse_args()
     logger.setLevel(getattr(logging, args.log_level.upper()))
@@ -579,7 +595,7 @@ def main():
         logger.error(f"Error: Start date ({effective_start_date.strftime('%Y-%m-%d')}) cannot be after end date ({effective_end_date.strftime('%Y-%m-%d')}). Exiting.")
         return
 
-    fetch_and_process_feeds(db, args.dry_run, effective_start_date, effective_end_date, args.JSON)
+    fetch_and_process_feeds(db, args.dry_run, effective_start_date, effective_end_date, args.JSON, args.max_consecutive_empty_batches)
 
 if __name__ == "__main__":
     main() 

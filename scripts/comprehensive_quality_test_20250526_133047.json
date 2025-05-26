@@ -1,0 +1,69 @@
+{
+  "test_timestamp": "2025-05-26T13:30:47.208199",
+  "promises_tested": 2,
+  "enriched_promises": [
+    {
+      "id": "20211216_MANDL_00638bafc9",
+      "text": "Establish a new NATO Centre of Excellence on Climate and Security based in Canada.",
+      "concise_title": "NATO Climate & Security Centre in Canada",
+      "what_it_means_for_canadians": [
+        "Canada will strengthen its global leadership in addressing climate change and its security implications, enhancing its diplomatic influence and showcasing its commitment to international cooperation on pressing global challenges.",
+        "The centre could foster significant research and innovation, potentially attracting international experts and funding, thereby creating high-skilled jobs and advancing Canadian expertise in crucial fields.",
+        "Canadians would benefit from enhanced national security and preparedness as the centre's work on climate-induced migration, resource scarcity, and disaster response improves strategic planning and resilience.",
+        "It represents an investment in Canada's defence and foreign policy infrastructure, potentially requiring sustained financial commitment to establish and operate, which would draw on taxpayer funds."
+      ],
+      "description": "This commitment proposes creating a NATO Centre of Excellence (COE) in Canada, specifically focused on the intersection of climate change and security, serving as a hub for research, training, and expertise within the NATO alliance to address emerging threats.",
+      "background_and_context": "The platform documents likely emphasize Canada's commitment to multilateralism and its role within NATO, recognizing the growing urgency of climate change as a destabilizing force globally. This commitment responds to the increasing consensus among defence and security experts that environmental degradation, extreme weather, and resource scarcity are profound drivers of conflict and instability, directly impacting national and international security. Establishing such a centre aligns with Canada's broader foreign policy objectives of promoting peace, security, and environmental stewardship, positioning the country as a key contributor to NATO's evolving strategic priorities in the face of modern threats.",
+      "extracted_keywords_concepts": [
+        "NATO",
+        "Centre of Excellence",
+        "Climate",
+        "Security",
+        "Canada"
+      ],
+      "implied_action_type": "program_launch",
+      "explanation_enriched_at": "2025-05-26 17:30:24.265000+00:00",
+      "keywords_enriched_at": "2025-05-26 17:30:27.403000+00:00",
+      "action_type_enriched_at": "2025-05-26 17:30:37.075000+00:00"
+    },
+    {
+      "id": "20211216_MANDL_00f67326c0",
+      "text": "Ensure all members of the Defence Team, including Department of National Defence employees, Veterans...",
+      "concise_title": "Expand Sexual Misconduct Response Access",
+      "what_it_means_for_canadians": [
+        "Victims and survivors of sexual misconduct within the broader defence community will receive comprehensive support, including counselling, peer support, and referrals, helping to address a long-standing systemic issue.",
+        "This expansion will enhance trust in the institutions responsible for addressing sexual misconduct, fostering a more inclusive and safer environment for all individuals connected to the Canadian Armed Forces and DND.",
+        "It signifies a deeper commitment to accountability and cultural change within the military and related organizations, promoting greater transparency and improving how allegations of misconduct are handled.",
+        "This initiative will necessitate increased funding and resources for the SMRC, potentially leading to higher operational costs, but aims to reduce long-term social and health costs associated with unaddressed trauma."
+      ],
+      "description": "This commitment aims to broaden access to the Sexual Misconduct Response Centre (SMRC) beyond Canadian Armed Forces (CAF) members to include all Department of National Defence (DND) employees, Veterans, and military families, providing critical support and resources for those affected by sexual misconduct.",
+      "background_and_context": "The platform documents would frame this commitment within the context of ongoing efforts to address systemic issues of sexual misconduct within the Canadian Armed Forces and the Department of National Defence. It acknowledges that the impact of sexual misconduct extends beyond serving members to the entire 'Defence Team' and their families. This commitment likely arises from extensive public discussion, previous independent reviews (such as the Deschamps and Arbour reports), and a recognized need to provide comprehensive, accessible support to all individuals affected, thereby strengthening the culture of respect and improving institutional responses to misconduct across the entire defence community.",
+      "extracted_keywords_concepts": [
+        "Defence Team",
+        "Department of National Defence",
+        "Veterans",
+        "military families",
+        "Sexual Misconduct Response Centre",
+        "Sexual Misconduct"
+      ],
+      "implied_action_type": "policy_development",
+      "explanation_enriched_at": "2025-05-26 17:30:24.300000+00:00",
+      "keywords_enriched_at": "2025-05-26 17:30:31.176000+00:00",
+      "action_type_enriched_at": "2025-05-26 17:30:46.024000+00:00"
+    }
+  ],
+  "overall_successes": [
+    "✅ what_it_means_for_canadians is array with 4 items",
+    "✅ description is string (260 chars)",
+    "✅ background_and_context is string (713 chars)",
+    "✅ extracted_keywords_concepts is array with 5 items",
+    "✅ implied_action_type is string: 'program_launch'",
+    "✅ what_it_means_for_canadians is array with 4 items",
+    "✅ description is string (307 chars)",
+    "✅ background_and_context is string (709 chars)",
+    "✅ extracted_keywords_concepts is array with 6 items",
+    "✅ implied_action_type is string: 'policy_development'"
+  ],
+  "overall_issues": [],
+  "quality_score": "10 successes / 0 issues"
+}

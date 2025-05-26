@@ -65,8 +65,7 @@ if "GOOGLE_API_KEY" not in os.environ and GEMINI_API_KEY:
 
 LLM_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME_GAZETTE_PROCESSING", "models/gemini-2.5-flash-preview-05-20")
 
-# GENERATION_CONFIG_DICT can be used with model.generate_content if needed, 
-# but is often passed directly or relies on model defaults for simpler calls.
+# Generation configuration to ensure consistent JSON output and avoid truncation
 GENERATION_CONFIG_DICT = { 
     "temperature": 0.3, 
     "top_p": 0.95,
@@ -153,24 +152,30 @@ async def call_gemini_llm(prompt_text):
         try:
             response = await client.aio.models.generate_content(
                 model=LLM_MODEL_NAME,
-                contents=[prompt_text]
+                contents=[prompt_text],
+                config=GENERATION_CONFIG_DICT
             )
             raw_response_text = response.text
             
-            # Log truncated responses to help debug
-            if len(raw_response_text) > 1000 and not raw_response_text.strip().endswith('}'):
-                logger.warning(f"LLM response appears to be truncated (length: {len(raw_response_text)}, ends with: '{raw_response_text[-50:]}'). Attempt {attempt + 1}/{max_retries}")
-                if attempt < max_retries - 1:
-                    continue  # Retry if not the last attempt
-            
+            # Improved truncation detection - check if we can parse valid JSON
             json_str = clean_json_from_markdown(raw_response_text)
             parsed_result = json.loads(json_str)
+            
+            # Optional: Log if response seems unusually short for debugging
+            if len(raw_response_text) < 500:
+                logger.debug(f"Received short response (length: {len(raw_response_text)}) - may be truncated but parsing succeeded.")
+            
             return parsed_result, LLM_MODEL_NAME
             
         except json.JSONDecodeError as json_err:
             logger.error(f"LLM response was not valid JSON on attempt {attempt + 1}. Error: {json_err}")
             logger.error(f"Raw Response (first 800 chars): {raw_response_text[:800] if 'raw_response_text' in locals() else 'N/A'}")
             logger.error(f"Raw Response (last 200 chars): {raw_response_text[-200:] if 'raw_response_text' in locals() else 'N/A'}")
+            
+            # Check for potential truncation patterns that might cause JSON parse failures
+            response_ends = raw_response_text.strip()[-50:] if 'raw_response_text' in locals() else ''
+            if len(raw_response_text) > 1000 and not any(pattern in response_ends for pattern in ['}', '```', '"}']):
+                logger.warning(f"Response appears truncated - length: {len(raw_response_text)}, ends with: '{response_ends}'")
             
             if attempt < max_retries - 1:
                 logger.info(f"Retrying LLM call ({attempt + 2}/{max_retries})...")

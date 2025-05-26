@@ -516,7 +516,7 @@ async def process_and_store_evidence(
                 update_promise_payload = {
                     "linked_evidence_ids": firestore.ArrayUnion(newly_linked_evidence_ids_for_this_promise),
                     "last_evidence_linking_at": firestore.SERVER_TIMESTAMP,
-                    "dev_evidence_linking_status": "processed" # General status for this promise
+                    "evidence_linking_status": "processed" # General status for this promise
                 }
                 if progress_score_for_commitment is not None: 
                     update_promise_payload["progress_score"] = progress_score_for_commitment

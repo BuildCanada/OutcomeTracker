@@ -172,7 +172,7 @@ async def fetch_unlinked_evidence_items(parliament_session_target: str, evidence
         query = db.collection(EVIDENCE_ITEMS_COLLECTION).where(
             filter=firestore.FieldFilter("parliament_session_id", "==", parliament_session_target)
         ).where(
-            filter=firestore.FieldFilter("dev_linking_status", "in", [None, "pending_linking"])
+            filter=firestore.FieldFilter("linking_status", "in", [None, "pending_linking"])
         )
         
         # Add source type filter if specified
@@ -488,12 +488,12 @@ async def update_evidence_linking_status(evidence_id: str, status: str, error_me
     """
     try:
         update_data = {
-            'dev_linking_status': status,
-            'dev_linking_processed_at': firestore.SERVER_TIMESTAMP
+            'linking_status': status,
+            'linking_processed_at': firestore.SERVER_TIMESTAMP
         }
         
         if error_message:
-            update_data['dev_linking_error_message'] = error_message[:500]
+            update_data['linking_error_message'] = error_message[:500]
         
         if not dry_run:
             doc_ref = db.collection(EVIDENCE_ITEMS_COLLECTION).document(evidence_id)

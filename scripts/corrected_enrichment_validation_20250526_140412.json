@@ -1,0 +1,104 @@
+{
+  "test_summary": {
+    "total_promises_tested": 2,
+    "total_successes": 10,
+    "total_issues": 14,
+    "all_requirements_met": false
+  },
+  "successes": [
+    "✅ Unwanted field 'implementation_notes' correctly removed",
+    "✅ Unwanted field 'key_points' correctly removed",
+    "✅ Unwanted field 'migration_metadata' correctly removed",
+    "✅ Unwanted field 'political_significance' correctly removed",
+    "✅ commitment_history_rationale is empty array (valid)",
+    "✅ Unwanted field 'implementation_notes' correctly removed",
+    "✅ Unwanted field 'key_points' correctly removed",
+    "✅ Unwanted field 'migration_metadata' correctly removed",
+    "✅ Unwanted field 'political_significance' correctly removed",
+    "✅ commitment_history_rationale is empty array (valid)"
+  ],
+  "issues": [
+    "❌ Missing required field: concise_title",
+    "❌ Missing required field: description",
+    "❌ Missing required field: what_it_means_for_canadians",
+    "❌ Missing required field: background_and_context",
+    "❌ Missing required field: extracted_keywords_concepts",
+    "❌ Missing required field: implied_action_type",
+    "❌ Missing required field: commitment_history_rationale",
+    "❌ Missing required field: concise_title",
+    "❌ Missing required field: description",
+    "❌ Missing required field: what_it_means_for_canadians",
+    "❌ Missing required field: background_and_context",
+    "❌ Missing required field: extracted_keywords_concepts",
+    "❌ Missing required field: implied_action_type",
+    "❌ Missing required field: commitment_history_rationale"
+  ],
+  "enriched_promises": [
+    {
+      "id": "20211216_MANDL_00638bafc9",
+      "data": {
+        "source_type": "2021 LPC Mandate Letters",
+        "linked_evidence_ids": [],
+        "explanation_enrichment_model": "models/gemini-2.5-flash-preview-05-20",
+        "region_code": "Canada",
+        "bc_promise_rank": "weak",
+        "explanation_enrichment_status": "processed",
+        "mlc_raw_reporting_lead": "Minister of Foreign Affairs",
+        "source_document_url": "https://www.pm.gc.ca/en/mandate-letters/2021/12/16/minister-foreign-affairs-mandate-letter",
+        "promise_id": "2328",
+        "responsible_department_lead": "Global Affairs Canada",
+        "parliament_session_id": "44",
+        "intended_impact_and_objectives": "This commitment aims to solidify Canada's leadership in global climate action and security by establishing a dedicated NATO center to research and develop strategies for climate change's security implications.",
+        "text": "Establish a new NATO Centre of Excellence on Climate and Security based in Canada.",
+        "last_updated_at": "2025-05-20 13:01:40.973000+00:00",
+        "linking_preprocessing_done_at": "2025-05-13 16:38:38.039000+00:00",
+        "candidate_or_government": "Government of Canada (2021 Mandate)",
+        "category": null,
+        "party": "Liberal Party of Canada",
+        "mlc_raw_all_ministers": "Minister of Foreign Affairs; Minister of National Defence",
+        "relevant_departments": [
+          "Global Affairs Canada",
+          "National Defence"
+        ],
+        "party_code": "LPC",
+        "ingested_at": "2025-05-12 20:09:16.588000+00:00",
+        "bc_promise_rank_rationale": "Focuses on climate and security, with minimal direct relevance or scale impacting national economic prosperity or core tenets.",
+        "date_issued": "2021-12-16",
+        "bc_promise_direction": "neutral"
+      }
+    },
+    {
+      "id": "20211216_MANDL_00f67326c0",
+      "data": {
+        "source_type": "2021 LPC Mandate Letters",
+        "linked_evidence_ids": [],
+        "explanation_enrichment_model": "models/gemini-2.5-flash-preview-05-20",
+        "region_code": "Canada",
+        "bc_promise_rank": "weak",
+        "explanation_enrichment_status": "processed",
+        "mlc_raw_reporting_lead": "Minister of National Defence",
+        "source_document_url": "https://www.pm.gc.ca/en/mandate-letters/2021/12/16/minister-national-defence-mandate-letter",
+        "promise_id": "2310",
+        "responsible_department_lead": "National Defence",
+        "parliament_session_id": "44",
+        "intended_impact_and_objectives": "This commitment seeks to ensure comprehensive and accessible support for all Defence Team members affected by sexual misconduct, aiming to foster a safer, more respectful environment.",
+        "text": "Ensure all members of the Defence Team, including Department of National Defence employees, Veterans and members of military families, have access to the Sexual Misconduct Response Centre.",
+        "last_updated_at": "2025-05-20 13:01:40.973000+00:00",
+        "linking_preprocessing_done_at": "2025-05-13 16:38:38.039000+00:00",
+        "candidate_or_government": "Government of Canada (2021 Mandate)",
+        "category": null,
+        "party": "Liberal Party of Canada",
+        "mlc_raw_all_ministers": "Minister of National Defence; Minister of Veterans Affairs and Associate Minister of National Defence",
+        "relevant_departments": [
+          "National Defence",
+          "Veterans Affairs Canada"
+        ],
+        "party_code": "LPC",
+        "ingested_at": "2025-05-12 20:09:16.099000+00:00",
+        "bc_promise_rank_rationale": "Focuses on social support for a specific group with minimal direct link to national economic productivity, investment, or competitiveness, resulting in low relevance and scale relative to the Build Canada tenets.",
+        "date_issued": "2021-12-16",
+        "bc_promise_direction": "neutral"
+      }
+    }
+  ]
+}

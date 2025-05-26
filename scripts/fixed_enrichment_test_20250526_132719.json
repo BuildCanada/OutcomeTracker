@@ -1,0 +1,44 @@
+{
+  "test_timestamp": "2025-05-26T13:27:19.843588",
+  "promises_tested": 2,
+  "enriched_promises": [
+    {
+      "id": "20211216_MANDL_00638bafc9",
+      "text": "Establish a new NATO Centre of Excellence on Climate and Security based in Canada.",
+      "concise_title": "NATO Climate Security Centre in Canada",
+      "what_it_means_for_canadians": [
+        "Canada's global standing as a leader in both climate action and international security will be enhanced, potentially attracting international experts and resources.",
+        "It could foster new research opportunities and job creation in fields related to climate science, defence, and international policy within Canada.",
+        "Canadians may see increased awareness and preparedness for the security challenges posed by climate change, both domestically and globally.",
+        "The initiative reinforces Canada's commitment to multilateralism and its role within NATO, potentially influencing future alliance strategies.",
+        "It represents an investment in Canada's diplomatic and defence infrastructure, demonstrating leadership on critical global issues."
+      ],
+      "description": "This commitment involves creating a specialized NATO facility in Canada focused on researching and developing strategies to address the security implications of climate change, such as natural disasters, population displacement, and resource conflicts, by integrating military, scientific, and policy expertise.",
+      "background_and_context": "The commitment to establish a NATO Centre of Excellence on Climate and Security was introduced in the 2021 Liberal platform. It arose from a recognition that climate change is an increasingly significant threat to global security and stability, potentially leading to natural disasters, mass displacement, and resource conflicts. The Liberal government aimed to position Canada as a leading partner within NATO, contributing robustly and effectively to global security. By hosting such a centre, Canada sought to bring together diverse expertise to research and develop strategies addressing these complex security implications, reinforcing its commitment to both climate action and allied defence.",
+      "extracted_keywords_concepts": "N/A",
+      "implied_action_type": "N/A",
+      "explanation_enriched_at": "2025-05-26 17:27:19.685000+00:00",
+      "keywords_enriched_at": "N/A",
+      "action_type_enriched_at": "N/A"
+    },
+    {
+      "id": "20211216_MANDL_00f67326c0",
+      "text": "Ensure all members of the Defence Team, including Department of National Defence employees, Veterans and members of military families, have access to the Sexual Misconduct Response Centre.",
+      "concise_title": "Expand Sexual Misconduct Response Centre Access",
+      "what_it_means_for_canadians": [
+        "More individuals connected to the military community will have access to crucial independent support and resources for sexual misconduct, fostering a safer environment.",
+        "It signifies an acknowledgment of the widespread impact of sexual misconduct within the military ecosystem, extending support beyond uniformed personnel.",
+        "Increased trust in the system may lead to more reporting of incidents, contributing to a clearer picture of the issue and improved accountability.",
+        "Military families and Veterans, who previously might have lacked direct SMRC access, will now have dedicated support for related experiences.",
+        "Critics might raise concerns about the capacity of the SMRC to handle a significantly expanded caseload effectively and the need for sustained funding."
+      ],
+      "description": "This commitment aims to extend access to the Sexual Misconduct Response Centre (SMRC), a body providing independent support for those affected by sexual misconduct, to include all Department of National Defence employees, Veterans, and military families, beyond just Canadian Armed Forces members.",
+      "background_and_context": "This commitment stems from ongoing efforts to address sexual assault and harassment within the Canadian Armed Forces (CAF) and the broader Defence Team. The Liberal government previously established the Sexual Misconduct Response Centre (SMRC) to offer independent support to CAF members. However, recognition grew that sexual misconduct impacts a wider community, including Department of National Defence employees, Veterans, and military families. The promise in the 2021 platform aimed to expand SMRC access, ensuring that everyone associated with Canada's defence apparatus has the right to a safe workplace and access to support, reflecting a broader societal need to combat harassment and discrimination.",
+      "extracted_keywords_concepts": "N/A",
+      "implied_action_type": "N/A",
+      "explanation_enriched_at": "2025-05-26 17:27:19.719000+00:00",
+      "keywords_enriched_at": "N/A",
+      "action_type_enriched_at": "N/A"
+    }
+  ]
+}
