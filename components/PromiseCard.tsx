@@ -113,27 +113,54 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
   const progressSummary = promise.progress_summary || "No progress summary available.";
   const isDelivered = progressScore === 5;
 
+  // Human-friendly progress tooltip
+  let progressTooltip = "";
+  if (progressScore === 0) progressTooltip = "No progress made yet";
+  else if (progressScore === 1) progressTooltip = "Early progress made";
+  else if (progressScore === 2) progressTooltip = "Some progress made";
+  else if (progressScore === 3) progressTooltip = "Good progress made";
+  else if (progressScore === 4) progressTooltip = "Almost complete";
+  else if (progressScore === 5) progressTooltip = "Complete";
+
   // Impact Indicator
   const impactRankRaw = promise.bc_promise_rank ?? '';
   const impactRationale = promise.bc_promise_rank_rationale || "No rationale provided.";
-  let impactLabel = "";
-  let impactBgColor = "";
   let impactIcon = null;
   let impactRankStr = String(impactRankRaw).toLowerCase();
   let impactRankNum = Number(impactRankRaw);
+  let filledBars = 0;
+  let impactLevelLabel = '';
   if (impactRankStr === 'strong' || impactRankNum >= 8) {
-    impactLabel = "High Impact";
-    impactBgColor = "bg-yellow-200 text-yellow-800";
-    impactIcon = <PlusIcon className="w-4 h-4 text-yellow-800" />;
+    filledBars = 3;
+    impactLevelLabel = 'High Impact';
   } else if (impactRankStr === 'medium' || (impactRankNum >= 5 && impactRankNum < 8)) {
-    impactLabel = "Medium Impact";
-    impactBgColor = "bg-yellow-100 text-yellow-800";
-    impactIcon = <PlusIcon className="w-4 h-4 text-yellow-800" />;
+    filledBars = 2;
+    impactLevelLabel = 'Medium Impact';
   } else if (impactRankStr === 'low' || (impactRankNum > 0 && impactRankNum < 5)) {
-    impactLabel = "Low Impact";
-    impactBgColor = "bg-gray-100 text-gray-600";
-    impactIcon = <MinusIcon className="w-4 h-4 text-gray-600" />;
+    filledBars = 1;
+    impactLevelLabel = 'Low Impact';
   }
+  let impactPillBg = '';
+  let impactBarColor = '';
+  if (filledBars === 3) {
+    impactPillBg = 'bg-green-50'; // same as alignment
+    impactBarColor = '#166534'; // dark green
+  } else if (filledBars === 2) {
+    impactPillBg = 'bg-yellow-50'; // very light yellow
+    impactBarColor = '#ca8a04'; // burnt yellow (yellow-700)
+  } else if (filledBars === 1) {
+    impactPillBg = 'bg-gray-100'; // light gray
+    impactBarColor = '#374151'; // dark gray
+  }
+  // SVG for network bars
+  impactIcon = (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="10" width="2" height="6" rx="1" fill={filledBars >= 1 ? impactBarColor : '#d1d5db'} />
+      <rect x="7" y="7" width="2" height="9" rx="1" fill={filledBars >= 2 ? impactBarColor : '#d1d5db'} />
+      <rect x="12" y="4" width="2" height="12" rx="1" fill={filledBars >= 3 ? impactBarColor : '#d1d5db'} />
+    </svg>
+  );
+  const impactTooltip = `${impactLevelLabel}${impactLevelLabel ? ' - ' : ''}${impactRationale}`;
 
   // Alignment Indicator
   const alignmentDirection = promise.bc_promise_direction;
@@ -158,7 +185,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
       alignmentLabel = "Not Aligned";
       alignmentColor = "text-red-700";
       alignmentBg = "bg-red-50";
-      alignmentIcon = <MinusIcon className="w-4 h-4 text-red-600" />;
+      alignmentIcon = <TrendingUpIcon className="w-4 h-4 text-red-600" style={{ transform: 'scaleY(-1)' }} />;
       break;
     default:
       alignmentLabel = "Unknown";
@@ -166,7 +193,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
       alignmentBg = "bg-gray-50";
       alignmentIcon = <MinusIcon className="w-4 h-4 text-gray-400" />;
   }
-  const alignmentTooltip = `Alignment with building Canada: ${alignmentLabel}`;
+  const alignmentTooltip = `${alignmentLabel} with building Canada`;
 
   // Progress dot color scale (red to green)
   const dotColors = [
@@ -177,6 +204,36 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
     "bg-green-600"
   ];
 
+  // Helper function to get SVG arc path for pie fill
+  function getPieArcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+    const start = polarToCartesian(cx, cy, r, endAngle);
+    const end = polarToCartesian(cx, cy, r, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+    return [
+      "M", cx, cy,
+      "L", start.x, start.y,
+      "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+      "Z"
+    ].join(" ");
+  }
+  function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: number): { x: number; y: number } {
+    var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+    return {
+      x: cx + (r * Math.cos(angleInRadians)),
+      y: cy + (r * Math.sin(angleInRadians))
+    };
+  }
+  function getPieColor(progressScore: number): string {
+    const colorMap = [
+      '#ef4444', // red-500
+      '#facc15', // yellow-400
+      '#fde047', // yellow-300
+      '#a3e635', // lime-400
+      '#16a34a', // green-600
+    ];
+    return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
+  }
+
   return (
     <>
       <div
@@ -186,96 +243,114 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
         onClick={handleCardClick}
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
       >
-        <div className="p-6 pb-4 flex-1">
-          <div className="text-lg leading-snug mb-8">
-            {promise.text}
-          </div>
-          {/* Impact & Alignment indicators, bottom right, side by side */}
-          <div className="absolute right-6 bottom-16 flex flex-row items-center gap-2 z-10">
-            {/* Impact */}
-            {impactLabel && (
-              <div className="relative">
-                <div
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${impactBgColor} cursor-help`}
-                  onMouseEnter={() => setShowImpactTooltip(true)}
-                  onMouseLeave={() => setShowImpactTooltip(false)}
-                  onFocus={() => setShowImpactTooltip(true)}
-                  onBlur={() => setShowImpactTooltip(false)}
-                  tabIndex={0}
-                  aria-label={`Impact: ${impactLabel}`}
-                >
-                  {impactIcon}
-                  {impactLabel}
-                </div>
-                {showImpactTooltip && (
-                  <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 right-0 animate-fade-in">
-                    {impactRationale}
+        <div className="p-6">
+          <div className="flex flex-row items-center justify-between gap-4">
+            {/* Progress Indicator - Column 1 */}
+            <div className="flex-shrink-0 flex flex-row items-start gap-2" style={{ minWidth: '2.5rem' }}>
+              <div
+                className="relative w-6 h-6 cursor-pointer focus:outline-none"
+                onMouseEnter={() => setShowProgressTooltip(true)}
+                onMouseLeave={() => setShowProgressTooltip(false)}
+                onFocus={() => setShowProgressTooltip(true)}
+                onBlur={() => setShowProgressTooltip(false)}
+                tabIndex={0}
+                aria-label={`Commitment Progress`}
+                onClick={e => { e.stopPropagation(); setShowProgressModal(true); }}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setShowProgressModal(true); } }}
+              >
+                <svg className="w-6 h-6" viewBox="0 0 24 24">
+                  {/* Full colored circle as background */}
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    fill={getPieColor(progressScore)}
+                    stroke={getPieColor(progressScore)}
+                    strokeWidth="2"
+                  />
+                  {/* White arc for incomplete portion (only if not complete) */}
+                  {progressScore < 5 && progressScore > 0 && (
+                    <path
+                      d={getPieArcPath(12, 12, 10, 0, (1 - progressScore / 5) * 360)}
+                      fill="#fff"
+                    />
+                  )}
+                  {/* Outline circle (same color as fill) */}
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    fill="none"
+                    stroke={getPieColor(progressScore)}
+                    strokeWidth="2"
+                  />
+                </svg>
+                {showProgressTooltip && (
+                  <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 left-1/2 -translate-x-1/2 animate-fade-in whitespace-nowrap">
+                    {progressTooltip}
                   </div>
                 )}
               </div>
-            )}
-            {/* Alignment */}
-            <div className="relative">
-              <div
-                className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${alignmentBg} ${alignmentColor} cursor-help`}
-                onMouseEnter={() => setShowAlignmentTooltip(true)}
-                onMouseLeave={() => setShowAlignmentTooltip(false)}
-                onFocus={() => setShowAlignmentTooltip(true)}
-                onBlur={() => setShowAlignmentTooltip(false)}
-                tabIndex={0}
-                aria-label={`Alignment: ${alignmentLabel}`}
-              >
-                {alignmentIcon}
-                {alignmentLabel}
+              <div className="flex flex-col items-start justify-start">
+                <span className="text-xs font-medium text-gray-700">
+                  {progressScore === 0 ? 'Not started' : progressScore === 5 ? 'Complete' : 'In Progress'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  Last update {lastUpdateDate || 'N/A'}
+                </span>
               </div>
-              {showAlignmentTooltip && (
-                <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 right-0 animate-fade-in">
-                  {alignmentTooltip}
+            </div>
+            {/* Title and Description - Column 2 */}
+            <div className="flex-1 min-w-0">
+              <div className="text-lg font-semibold leading-snug">
+                {promise.concise_title}
+              </div>
+              <div className="text-sm text-gray-600 line-clamp-2">
+                {promise.intended_impact_and_objectives}
+              </div>
+            </div>
+            {/* Impact and Alignment - Column 3 */}
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              {/* Impact pill */}
+              {impactIcon && (
+                <div className="relative">
+                  <div
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${impactPillBg} cursor-help`}
+                    onMouseEnter={() => setShowImpactTooltip(true)}
+                    onMouseLeave={() => setShowImpactTooltip(false)}
+                    onFocus={() => setShowImpactTooltip(true)}
+                    onBlur={() => setShowImpactTooltip(false)}
+                    tabIndex={0}
+                    aria-label={`Impact`}
+                  >
+                    {impactIcon}
+                  </div>
+                  {showImpactTooltip && (
+                    <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-md top-full mt-1 right-0 animate-fade-in">
+                      {impactTooltip}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-        {/* Progress and meta bar */}
-        <div className="bg-gray-50 border-t border-[#cdc4bd] px-6 py-3 flex items-center justify-between">
-          {/* Progress dots and checkmark */}
-          <div className="flex items-center gap-2 relative">
-            <div
-              className="flex gap-1 cursor-pointer focus:outline-none"
-              onMouseEnter={() => setShowProgressTooltip(true)}
-              onMouseLeave={() => setShowProgressTooltip(false)}
-              onFocus={() => setShowProgressTooltip(true)}
-              onBlur={() => setShowProgressTooltip(false)}
-              tabIndex={0}
-              aria-label={`Commitment Progress`}
-              onClick={e => { e.stopPropagation(); setShowProgressModal(true); }}
-              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setShowProgressModal(true); } }}
-            >
-              {[1, 2, 3, 4, 5].map((dot, idx) => (
+              {/* Alignment pill */}
+              <div className="relative">
                 <div
-                  key={dot}
-                  className={`w-0.5 h-4 ${dot <= progressScore ? dotColors[progressScore - 1] : "bg-gray-300"}`}
-                />
-              ))}
-            </div>
-            {isDelivered && (
-              <CheckIcon className="w-4 h-4 text-green-600 ml-2" aria-label="Delivered" />
-            )}
-            {showProgressTooltip && (
-              <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 left-0 animate-fade-in">
-                Commitment Progress
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${alignmentBg} ${alignmentColor} cursor-help`}
+                  onMouseEnter={() => setShowAlignmentTooltip(true)}
+                  onMouseLeave={() => setShowAlignmentTooltip(false)}
+                  onFocus={() => setShowAlignmentTooltip(true)}
+                  onBlur={() => setShowAlignmentTooltip(false)}
+                  tabIndex={0}
+                  aria-label={`Alignment: ${alignmentLabel}`}
+                >
+                  {alignmentIcon}
+                </div>
+                {showAlignmentTooltip && (
+                  <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 right-0 animate-fade-in">
+                    {alignmentTooltip}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {/* Last update and progress updates */}
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <div className="flex items-center gap-1">
-              <CalendarDaysIcon className="w-4 h-4 text-gray-400" />
-              <span>Last Update: {lastUpdateDate || "N/A"}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ListChecksIcon className="w-4 h-4 text-gray-400" />
-              <span>{evidenceCount} progress updates</span>
             </div>
           </div>
         </div>
