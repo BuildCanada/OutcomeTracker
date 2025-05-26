@@ -1,0 +1,63 @@
+{
+  "collection_name": "parliament_session",
+  "document_count": 2,
+  "backup_timestamp": "2025-05-26T09:40:56.661986",
+  "documents": [
+    {
+      "id": "44",
+      "data": {
+        "end_date": {
+          "_firestore_type": "timestamp",
+          "value": 1742702400.423
+        },
+        "election_called_date": {
+          "_firestore_type": "timestamp",
+          "value": 1629000000.753
+        },
+        "prime_minister_name": "Justin Trudeau",
+        "start_date": {
+          "_firestore_type": "timestamp",
+          "value": 1637557200.687
+        },
+        "election_date_preceding": {
+          "_firestore_type": "timestamp",
+          "value": 1632110400.861
+        },
+        "governing_party_code": "LPC",
+        "parliament_number": "44",
+        "session_label": "44th Parliament (2021-2025)",
+        "governing_party": "Liberal Party of Canada",
+        "is_current_for_tracking": true,
+        "notes": null
+      }
+    },
+    {
+      "id": "45",
+      "data": {
+        "end_date": {
+          "_firestore_type": "timestamp",
+          "value": 2537150400.567
+        },
+        "election_called_date": {
+          "_firestore_type": "timestamp",
+          "value": 1742702400.352
+        },
+        "prime_minister_name": "Mark Carney",
+        "start_date": {
+          "_firestore_type": "timestamp",
+          "value": 1748318400.478
+        },
+        "election_date_preceding": {
+          "_firestore_type": "timestamp",
+          "value": 1745812800.665
+        },
+        "governing_party_code": "LPC",
+        "parliament_number": "45",
+        "session_label": "45th Parliament (2025-Present)",
+        "governing_party": "Liberal Party of Canada",
+        "is_current_for_tracking": false,
+        "notes": null
+      }
+    }
+  ]
+}

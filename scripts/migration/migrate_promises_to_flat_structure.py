@@ -18,7 +18,10 @@ from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
-from common_utils import TARGET_PROMISES_COLLECTION_ROOT, DEFAULT_REGION_CODE, KNOWN_PARTY_CODES
+from common_utils import TARGET_PROMISES_COLLECTION_ROOT, DEFAULT_REGION_CODE, PARTY_NAME_TO_CODE_MAPPING
+
+# Derive known party codes from the mapping
+KNOWN_PARTY_CODES = list(set(PARTY_NAME_TO_CODE_MAPPING.values()))
 
 # Load environment variables
 load_dotenv()

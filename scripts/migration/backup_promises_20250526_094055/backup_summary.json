@@ -1,0 +1,50 @@
+{
+  "backup_info": {
+    "timestamp": "2025-05-26T09:40:55.534681",
+    "region_code": "Canada",
+    "parties": {
+      "CPC": {
+        "document_count": 0,
+        "backup_file": "promises_Canada_CPC.json",
+        "collection_path": "promises/Canada/CPC"
+      },
+      "LPC": {
+        "document_count": 1374,
+        "backup_file": "promises_Canada_LPC.json",
+        "collection_path": "promises/Canada/LPC"
+      },
+      "NDP": {
+        "document_count": 0,
+        "backup_file": "promises_Canada_NDP.json",
+        "collection_path": "promises/Canada/NDP"
+      },
+      "BQ": {
+        "document_count": 0,
+        "backup_file": "promises_Canada_BQ.json",
+        "collection_path": "promises/Canada/BQ"
+      }
+    },
+    "total_documents": 1374,
+    "collection_root": "promises"
+  },
+  "metadata_backup": {
+    "evidence_items": {
+      "document_count": 2992,
+      "backup_file": "metadata_evidence_items.json"
+    },
+    "promise_evidence_links": {
+      "document_count": 170,
+      "backup_file": "metadata_promise_evidence_links.json"
+    },
+    "department_config": {
+      "document_count": 32,
+      "backup_file": "metadata_department_config.json"
+    },
+    "parliament_session": {
+      "document_count": 2,
+      "backup_file": "metadata_parliament_session.json"
+    }
+  },
+  "backup_directory": "backup_promises_20250526_094055",
+  "backup_completed_at": "2025-05-26T09:40:56.662166"
+}
