@@ -116,6 +116,18 @@ export interface PromiseData {
   what_it_means_for_canadians?: string;
   intended_impact_and_objectives?: string;
   background_and_context?: string;
+  
+  // NEW FIELDS FOR FLAT STRUCTURE MIGRATION
+  region_code?: string; // e.g., "Canada" - region identifier
+  party_code?: string; // e.g., "LPC", "CPC", "NDP", "BQ" - party identifier
+  migration_metadata?: {
+    migrated_at?: Timestamp | string;
+    source_path?: string; // Original subcollection path
+    migration_version?: string;
+    original_id?: string; // Original document ID if changed
+    conflict_resolved?: boolean; // True if ID conflict was resolved
+    new_id?: string; // New ID if conflict was resolved
+  };
 }
 
 // --- UI-specific data structures ---

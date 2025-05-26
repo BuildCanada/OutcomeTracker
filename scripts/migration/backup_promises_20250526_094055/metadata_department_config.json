@@ -1,0 +1,681 @@
+{
+  "collection_name": "department_config",
+  "document_count": 32,
+  "backup_timestamp": "2025-05-26T09:40:56.644835",
+  "documents": [
+    {
+      "id": "agriculture-and-agri-food-canada",
+      "data": {
+        "official_full_name": "Agriculture and Agri-Food Canada",
+        "notes": null,
+        "display_short_name": "Agriculture",
+        "name_variants": [
+          "minister of agriculture and agri-food"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "agriculture-and-agri-food-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "artificial-intelligence-and-digital-innovation",
+      "data": {
+        "notes": "",
+        "bc_priority": 1,
+        "official_full_name": "Artificial Intelligence and Digital Innovation",
+        "name_variants": [
+          "minister of innovation, science and industry",
+          "minister of artificial intelligence and digital innovation"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747514367.226
+        },
+        "last_updated_by": "Manual",
+        "department_slug": "artificial-intelligence-and-digital-innovation",
+        "display_short_name": "Innovation"
+      }
+    },
+    {
+      "id": "atlantic-canada-opportunities-agency",
+      "data": {
+        "created_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.687
+        },
+        "minister_of_state": false,
+        "notes": "Added by populate_new_department_configs.py script",
+        "name_variants": [
+          "minister responsible for the atlantic canada opportunities agency",
+          "Minister responsible for the Atlantic Canada Opportunities Agency"
+        ],
+        "display_short_name": "ACOA",
+        "official_full_name": "Atlantic Canada Opportunities Agency",
+        "updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.687
+        },
+        "department_slug": "atlantic-canada-opportunities-agency",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "canada-economic-development-for-quebec-regions",
+      "data": {
+        "created_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.625
+        },
+        "minister_of_state": false,
+        "notes": "Added by populate_new_department_configs.py script",
+        "name_variants": [
+          "minister responsible for canada economic development for quebec regions",
+          "Minister responsible for Canada Economic Development for Quebec Regions"
+        ],
+        "display_short_name": "CED Quebec",
+        "official_full_name": "Canada Economic Development for Quebec Regions",
+        "updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.625
+        },
+        "department_slug": "canada-economic-development-for-quebec-regions",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "canada-revenue-agency",
+      "data": {
+        "official_full_name": "Canada Revenue Agency",
+        "notes": null,
+        "display_short_name": "Revenue",
+        "name_variants": [
+          "minister of national revenue",
+          "secretary of state (canada revenue agency and financial institutions)"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "canada-revenue-agency",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "canadian-heritage",
+      "data": {
+        "display_short_name": "Heritage",
+        "official_full_name": "Canadian Heritage",
+        "notes": null,
+        "name_variants": [
+          "minister of canadian heritage",
+          "minister of canadian heritage and quebec lieutenant",
+          "minister of official languages",
+          "minister of official languages and minister responsible for the atlantic canada opportunities agency",
+          "minister of sport and minister responsible for the economic development agency of canada for the regions of quebec",
+          "minister of sport and physical activity",
+          "minister of canadian identity and culture"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "canadian-heritage",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "crown-indigenous-relations-and-northern-affairs-canada",
+      "data": {
+        "display_short_name": "Crown-Indigenous Relations",
+        "official_full_name": "Crown-Indigenous Relations and Northern Affairs Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of crown-indigenous relations",
+          "minister of northern affairs, minister responsible for prairies economic development canada and minister responsible for the canadian northern economic development agency",
+          "minister of northern affairs, minister responsible for prairies economic development canada, and minister responsible for the canadian northern economic development agency",
+          "minister of northern and arctic affairs",
+          "minister of northern and arctic affairs and minister responsible for the canadian northern economic development agency"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "crown-indigenous-relations-and-northern-affairs-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "emergency-preparedness-canada",
+      "data": {
+        "display_short_name": "Emergency Preparedness",
+        "official_full_name": "Emergency Preparedness Canada",
+        "notes": null,
+        "name_variants": [
+          "president of the king's privy council for canada and minister of emergency preparedness",
+          "minister of emergency management and community resilience"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "emergency-preparedness-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "employment-and-social-development-canada",
+      "data": {
+        "display_short_name": "Employment",
+        "official_full_name": "Employment and Social Development Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of employment, workforce development and disability inclusion",
+          "minister of seniors",
+          "minister of jobs and families",
+          "secretary of state (labour)",
+          "secretary of state (seniors)",
+          "secretary of state (children and youth)",
+          "minister of labour",
+          "minister of families, children and social development",
+          "Secretary of State (Children and Youth)"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.797
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "employment-and-social-development-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "environment-and-climate-change-canada",
+      "data": {
+        "display_short_name": "Environment",
+        "official_full_name": "Environment and Climate Change Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of environment and climate change",
+          "secretary of state (nature)",
+          "environment and climate change canada"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "environment-and-climate-change-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "federal-economic-development-agency-for-southern-ontario",
+      "data": {
+        "official_full_name": "Federal Economic Development Agency for Southern Ontario",
+        "notes": null,
+        "display_short_name": "FedDev Ontario",
+        "name_variants": [
+          "minister responsible for the federal economic development agency for southern ontario"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "federal-economic-development-agency-for-southern-ontario",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "finance-canada",
+      "data": {
+        "display_short_name": "Finance",
+        "official_full_name": "Finance Canada",
+        "notes": null,
+        "name_variants": [
+          "deputy prime minister and minister of finance",
+          "minister of finance",
+          "minister of finance and national revenue"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "finance-canada",
+        "bc_priority": 1
+      }
+    },
+    {
+      "id": "fisheries-and-oceans-canada",
+      "data": {
+        "display_short_name": "Fisheries",
+        "official_full_name": "Fisheries and Oceans Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of fisheries, oceans and canadian coast guard",
+          "minister of fisheries, oceans and the canadian coast guard",
+          "minister of fisheries"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "fisheries-and-oceans-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "global-affairs-canada",
+      "data": {
+        "display_short_name": "Foreign Affairs",
+        "official_full_name": "Global Affairs Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of international trade, export promotion, small business and economic development",
+          "minister of foreign affairs",
+          "Secretary of State (International Development)",
+          "minister of international trade",
+          "secretary of state (international development)",
+          "Minister of International Trade",
+          "minister of international development and minister responsible for the pacific economic development agency of canada",
+          "minister responsible for pacific economic development canada",
+          "ministre of foreign affairs"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.836
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "global-affairs-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "health-canada",
+      "data": {
+        "official_full_name": "Health Canada",
+        "notes": null,
+        "display_short_name": "Health",
+        "name_variants": [
+          "minister of health",
+          "minister of mental health and addictions and associate minister of health"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "health-canada",
+        "bc_priority": 1
+      }
+    },
+    {
+      "id": "immigration-refugees-and-citizenship-canada",
+      "data": {
+        "official_full_name": "Immigration, Refugees and Citizenship Canada",
+        "notes": null,
+        "display_short_name": "Immigration",
+        "name_variants": [
+          "minister of immigration, refugees and citizenship"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "immigration-refugees-and-citizenship-canada",
+        "bc_priority": 1
+      }
+    },
+    {
+      "id": "indigenous-services-canada",
+      "data": {
+        "official_full_name": "Indigenous Services Canada",
+        "notes": null,
+        "display_short_name": "Indigenous Services",
+        "name_variants": [
+          "minister of indigenous services",
+          "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario",
+          "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario and minister responsible for the federal economic development agency for northern ontario",
+          "minister of indigenous services and minister responsible for the federal economic development agency for northern ontario canada"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "indigenous-services-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "infrastructure-canada",
+      "data": {
+        "display_short_name": "Housing",
+        "official_full_name": "Infrastructure Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of housing and diversity and inclusion",
+          "minister of intergovernmental affairs, infrastructure and communities",
+          "minister of housing and infrastructure"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "infrastructure-canada",
+        "bc_priority": 1
+      }
+    },
+    {
+      "id": "innovation-science-and-economic-development-canada",
+      "data": {
+        "official_full_name": "Innovation, Science and Economic Development Canada",
+        "display_short_name": "Innovation",
+        "bc_priority": 1,
+        "name_variants": [
+          "secretary of state (small business and tourism)",
+          "minister of innovation, science and industry",
+          "Secretary of State (Small Business and Tourism)",
+          "minister of tourism and associate minister of finance",
+          "minister of industry"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.91
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "innovation-science-and-economic-development-canada",
+        "notes": null
+      }
+    },
+    {
+      "id": "justice-canada",
+      "data": {
+        "official_full_name": "Justice Canada",
+        "notes": null,
+        "display_short_name": "Justice",
+        "name_variants": [
+          "minister of justice and attorney general of canada"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "justice-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "multiple-departments-needs-review",
+      "data": {
+        "display_short_name": "Multiple",
+        "official_full_name": "Multiple Departments - Needs Review",
+        "notes": null,
+        "name_variants": [
+          "president of the queen's privy council for canada and minister of emergency preparedness president of the treasury board",
+          "all other ministers"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "multiple-departments-needs-review",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "national-defence",
+      "data": {
+        "display_short_name": "Defence",
+        "official_full_name": "National Defence",
+        "notes": null,
+        "name_variants": [
+          "minister of national defence",
+          "secretary of state (defence procurement)"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "national-defence",
+        "bc_priority": 1
+      }
+    },
+    {
+      "id": "natural-resources-canada",
+      "data": {
+        "display_short_name": "Energy",
+        "official_full_name": "Natural Resources Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of natural resources",
+          "natural resources canada",
+          "minister of energy and natural resources"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "natural-resources-canada",
+        "bc_priority": 1
+      }
+    },
+    {
+      "id": "privy-council-office",
+      "data": {
+        "official_full_name": "Privy Council Office",
+        "notes": null,
+        "display_short_name": "Privy Council",
+        "name_variants": [
+          "leader of the government in the house of commons"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "privy-council-office",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "privy-council-office-intergovernmental-affairs-secretariat",
+      "data": {
+        "created_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.746
+        },
+        "minister_of_state": false,
+        "official_full_name": "Privy Council Office / Intergovernmental Affairs Secretariat",
+        "name_variants": [
+          "president of the king's privy council for canada and minister responsible for canada-u.s. trade, intergovernmental affairs and one canadian economy",
+          "President of the King's Privy Council for Canada and Minister responsible for Canada-U.S. Trade, Intergovernmental Affairs and One Canadian Economy",
+          "president of the king’s privy council for canada and minister responsible for canada-u.s. trade, intergovernmental affairs and one canadian economy"
+        ],
+        "display_short_name": "Privy Council / IGA",
+        "notes": "Added by populate_new_department_configs.py script",
+        "updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747516470.746
+        },
+        "department_slug": "privy-council-office-intergovernmental-affairs-secretariat",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "public-safety-canada",
+      "data": {
+        "display_short_name": "Public Safety",
+        "official_full_name": "Public Safety Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of public safety",
+          "minister of public safety, democratic institutions and intergovernmental affairs",
+          "president of the queen's privy council and minister of emergency preparedness",
+          "president of the queen's privy council for canada and minister of emergency preparedness",
+          "public safety canada",
+          "secretary of state (combatting crime)"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "public-safety-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "public-services-and-procurement-canada",
+      "data": {
+        "display_short_name": "Procurement",
+        "official_full_name": "Public Services and Procurement Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of public services and procurement",
+          "public services and procurement canada",
+          "minister of government transformation, public works and procurement"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "public-services-and-procurement-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "rural-economic-development",
+      "data": {
+        "created_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747756688.007
+        },
+        "bc_priority": 2,
+        "notes": "manual",
+        "name_variants": [
+          "Secretary of State (Rural Development)",
+          "secretary of state (rural development)"
+        ],
+        "official_full_name": "Rural Economic Development",
+        "updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747756845.454
+        },
+        "minister of state": false,
+        "department_slug": "rural-economic-development",
+        "display_short_name": "Rural Development"
+      }
+    },
+    {
+      "id": "transport-canada",
+      "data": {
+        "display_short_name": "Transport",
+        "official_full_name": "Transport Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of transport",
+          "transport canada",
+          "minister of transport and internal trade"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "transport-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "treasury-board-of-canada-secretariat",
+      "data": {
+        "official_full_name": "Treasury Board of Canada Secretariat",
+        "notes": null,
+        "display_short_name": "Government Transformation",
+        "name_variants": [
+          "minister of citizens' services",
+          "president of the treasury board",
+          "treasury board of canada secretariat"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "treasury-board-of-canada-secretariat",
+        "bc_priority": 1
+      }
+    },
+    {
+      "id": "veterans-affairs-canada",
+      "data": {
+        "display_short_name": "Veterans Affairs",
+        "official_full_name": "Veterans Affairs Canada",
+        "notes": null,
+        "name_variants": [
+          "minister of veteran's affairs",
+          "minister of veterans affairs and associate minister of national defence",
+          "veterans affairs canada",
+          "minister of veterans affairs"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "veterans-affairs-canada",
+        "bc_priority": 2
+      }
+    },
+    {
+      "id": "women-and-gender-equality-canada",
+      "data": {
+        "display_short_name": "Gender Equality",
+        "official_full_name": "Women and Gender Equality Canada",
+        "notes": null,
+        "name_variants": [
+          "minister for women and gender equality and youth",
+          "women and gender equality canada",
+          "minister of women and gender equality"
+        ],
+        "last_updated_at": {
+          "_firestore_type": "timestamp",
+          "value": 1747421006.723
+        },
+        "last_updated_by": "System Migration Script - Initial Population",
+        "department_slug": "women-and-gender-equality-canada",
+        "bc_priority": 2
+      }
+    }
+  ]
+}

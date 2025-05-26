@@ -1,0 +1,105 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.admin == true;
+    }
+    
+    // Promises collection - flat structure
+    match /promises/{promiseId} {
+      // Public read access for displaying promises
+      allow read: if true;
+      
+      // Temporary: Allow write access for development (TODO: Implement proper auth)
+      allow write: if true;
+      
+      // Validate required fields for flat structure when creating/updating
+      allow create, update: if 'region_code' in request.resource.data &&
+                               'party_code' in request.resource.data &&
+                               'text' in request.resource.data &&
+                               'source_type' in request.resource.data;
+    }
+    
+    // Evidence items collection
+    match /evidence_items/{evidenceId} {
+      allow read: if true;
+      allow write: if true; // Temporary for development
+    }
+    
+    // Promise evidence links
+    match /promise_evidence_links/{linkId} {
+      allow read: if true;
+      allow write: if true; // Temporary for development
+    }
+    
+    // Department configuration
+    match /department_config/{deptId} {
+      allow read: if true;
+      allow write: if true; // Temporary for development
+    }
+    
+    // Bills data
+    match /bills_data/{billId} {
+      allow read: if true;
+      allow write: if true; // Temporary for development
+    }
+    
+    // Parliament sessions
+    match /parliament_session/{sessionId} {
+      allow read: if true;
+      allow write: if true; // Temporary for development
+    }
+    
+    // Admin settings - admin only
+    match /admin_settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Script configuration - admin only
+    match /script_config/{configId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Migration tracking - admin only
+    match /migration_tracking/{migrationId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // RSS and monitoring data - admin read/write, public read for metrics
+    match /rss_feed_metrics/{metricId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /rss_feed_monitoring/{monitorId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Development collections - admin only
+    match /evidence_items_test/{testId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /potential_links_dev/{devId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /unmapped_department_activity/{activityId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Default deny for any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

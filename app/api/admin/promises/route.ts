@@ -26,10 +26,14 @@ export async function GET(request: NextRequest) {
   const limitParam = searchParams.get('limit');
   const pageParam = searchParams.get('page'); // For pagination, if implemented later
 
-  // FIXME: This is hardcoded for LPC in Canada. Make dynamic if other parties/regions needed.
-  const collectionPath = 'promises/Canada/LPC';
+  // Using flat promises collection structure
+  const collectionPath = 'promises';
   let query: Query<DocumentData> = firestoreAdmin.collection(collectionPath);
   let countQuery: Query<DocumentData> = firestoreAdmin.collection(collectionPath); // Separate query for counting
+
+  // Apply filters for flat structure - hardcoded for LPC in Canada for now
+  query = query.where('party_code', '==', 'LPC').where('region_code', '==', 'Canada');
+  countQuery = countQuery.where('party_code', '==', 'LPC').where('region_code', '==', 'Canada');
 
   // Apply filters using tuple syntax for .where()
   if (source_type && source_type !== 'all') {

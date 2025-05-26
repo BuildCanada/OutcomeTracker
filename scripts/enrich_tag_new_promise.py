@@ -423,11 +423,11 @@ async def run_batch_processing(limit: int | None, force_reprocessing: bool):
             logger.info(f"Overall processing limit ({limit}) reached. Halting batch processing.")
             break
 
-        party_collection_path = f"{TARGET_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code}"
-        logger.info(f"--- Querying Party Collection: {party_collection_path} ---")
+        logger.info(f"--- Querying flat promises collection for party: {party_code} ---")
         
         try:
-            party_collection_ref = db.collection(party_collection_path)
+            # Query the flat promises collection with party filter
+            party_collection_ref = db.collection(TARGET_COLLECTION_ROOT).where('party_code', '==', party_code)
             
             doc_list_for_party = []
             processed_ids_this_party = set() # To avoid processing a doc twice if it matches both queries
@@ -450,10 +450,10 @@ async def run_batch_processing(limit: int | None, force_reprocessing: bool):
                 doc_list_for_party = await asyncio.to_thread(get_party_docs_sync_force)
             else:
                 logger.info(f"Force reprocessing is OFF. Querying for documents needing history OR linking preprocessing for {party_code}.")
-                # Query 1: Needs commitment_history_rationale
-                query1 = party_collection_ref.where(filter=firestore.FieldFilter(HISTORY_RATIONALE_FIELD, "==", None))
-                # Query 2: Needs linking_preprocessing_done_at
-                query2 = party_collection_ref.where(filter=firestore.FieldFilter(LINKING_PREPROCESSING_DONE_FIELD, "==", None))
+                # Query 1: Needs commitment_history_rationale (with party filter)
+                query1 = db.collection(TARGET_COLLECTION_ROOT).where('party_code', '==', party_code).where(filter=firestore.FieldFilter(HISTORY_RATIONALE_FIELD, "==", None))
+                # Query 2: Needs linking_preprocessing_done_at (with party filter)
+                query2 = db.collection(TARGET_COLLECTION_ROOT).where('party_code', '==', party_code).where(filter=firestore.FieldFilter(LINKING_PREPROCESSING_DONE_FIELD, "==", None))
 
                 # Fetch all candidates from both queries first
                 logger.debug(f"Executing query for ALL docs needing history for {party_code}...")
@@ -525,7 +525,7 @@ async def run_batch_processing(limit: int | None, force_reprocessing: bool):
                         await asyncio.sleep(RATE_LIMIT_DELAY_SECONDS)
         
         except Exception as e_party_query:
-            logger.error(f"Error querying or processing documents for party {party_code} at path {party_collection_path}: {e_party_query}", exc_info=True)
+            logger.error(f"Error querying or processing documents for party {party_code} in flat collection: {e_party_query}", exc_info=True)
             error_in_batch_flag = True
             continue # Move to the next party if one party fails at collection level
 

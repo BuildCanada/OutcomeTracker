@@ -179,18 +179,15 @@ def get_llm_evaluation(model, promise_text, tenets_text, economic_context_text, 
 
 # --- Main Logic ---
 def rank_promises(db, model, source_arg, limit, force_reprocess):
-    # Determine the base collection path.
-    # FIXME: This is hardcoded for LPC in Canada. Make dynamic if other parties/regions needed.
-    # Example: derive party from context_info["firestore_query_value"] or add to SOURCE_TYPE_CONFIG
+    # Use flat collection structure
     default_region = "Canada"
     default_party_for_config = "LPC" # Assuming current configs are for LPC
-    base_collection_path = f"promises/{default_region}/{default_party_for_config}"
     
     try:
-        target_collection_ref = db.collection(base_collection_path)
-        logger.info(f"Targeting Firestore collection: {base_collection_path}")
+        target_collection_ref = db.collection("promises")
+        logger.info(f"Targeting flat Firestore collection: promises")
     except Exception as e_col:
-        logger.critical(f"Failed to get reference to collection '{base_collection_path}': {e_col}")
+        logger.critical(f"Failed to get reference to flat collection 'promises': {e_col}")
         return
 
     # Load static prompt components once
@@ -239,6 +236,10 @@ def rank_promises(db, model, source_arg, limit, force_reprocess):
 
         base_query = target_collection_ref.where(
             filter=firestore.FieldFilter('source_type', '==', context_info["firestore_query_value"])
+        ).where(
+            filter=firestore.FieldFilter('party_code', '==', default_party_for_config)
+        ).where(
+            filter=firestore.FieldFilter('region_code', '==', default_region)
         )
 
         if not force_reprocess:

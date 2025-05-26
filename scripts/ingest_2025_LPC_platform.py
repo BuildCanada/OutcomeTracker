@@ -9,8 +9,8 @@ import os
 import csv
 import logging
 
-# Import the common utility for department standardization and NEW promise path generation
-from common_utils import standardize_department_name, get_promise_document_path 
+# Import the common utility for department standardization and flat promise path generation
+from common_utils import standardize_department_name, get_promise_document_path_flat, DEFAULT_REGION_CODE, PARTY_NAME_TO_CODE_MAPPING 
 
 # --- Logger Setup ---
 logging.basicConfig(level=logging.INFO,
@@ -124,6 +124,10 @@ def process_lpc_platform_csv(file_path):
                         'responsible_department_lead': reporting_lead_standardized,
                         'relevant_departments': all_ministers_standardized,
                         
+                        # Flat structure fields
+                        'region_code': DEFAULT_REGION_CODE,
+                        'party_code': PARTY_NAME_TO_CODE_MAPPING.get('Liberal Party of Canada', 'LPC'),
+                        
                         # Fields for subsequent processing
                         'key_points': [],
                         'commitment_history_rationale': None,
@@ -137,12 +141,13 @@ def process_lpc_platform_csv(file_path):
                         'last_updated_at': firestore.SERVER_TIMESTAMP,
                     }
 
-                    # Generate the new document path using common_utils
-                    new_doc_full_path = get_promise_document_path(
+                    # Generate the flat document path using common_utils
+                    new_doc_full_path = get_promise_document_path_flat(
                         party_name_str=promise_doc_data['party'],
                         date_issued_str=promise_doc_data['date_issued'],
                         source_type_str=promise_doc_data['source_type'],
-                        promise_text=promise_doc_data['text']
+                        promise_text=promise_doc_data['text'],
+                        region_code=DEFAULT_REGION_CODE
                     )
 
                     if not new_doc_full_path:

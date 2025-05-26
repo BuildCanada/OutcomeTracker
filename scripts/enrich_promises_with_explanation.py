@@ -145,11 +145,12 @@ async def query_promises_for_enrichment(parliament_session_id: str, limit: int |
     
     # Hardcoded to LPC as per the source types
     party_code = "LPC" 
-    collection_path = f"{PROMISES_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code}"
-    logger.debug(f"Querying collection: {collection_path}")
+    logger.debug(f"Querying flat promises collection for party: {party_code}")
 
     try:
-        query = db.collection(collection_path).where(
+        query = db.collection(PROMISES_COLLECTION_ROOT).where(
+            filter=firestore.FieldFilter("party_code", "==", party_code)
+        ).where(
             filter=firestore.FieldFilter("parliament_session_id", "==", parliament_session_id)
         ).where(
             filter=firestore.FieldFilter("source_type", "in", TARGET_SOURCE_TYPES)
@@ -185,12 +186,12 @@ async def query_promises_for_enrichment(parliament_session_id: str, limit: int |
                     "doc_ref": doc_snapshot.reference # Store the document reference
                 })
             else:
-                logger.warning(f"Promise {doc_snapshot.id} in {collection_path} missing 'text' field, skipping.")
+                logger.warning(f"Promise {doc_snapshot.id} for party {party_code} missing 'text' field, skipping.")
         
         logger.info(f"Retrieved {len(all_matching_promises)} promises for enrichment based on criteria.")
         return all_matching_promises
     except Exception as e:
-        logger.error(f"Error querying promises for party {party_code} in {collection_path}: {e}", exc_info=True)
+        logger.error(f"Error querying promises for party {party_code} in flat collection: {e}", exc_info=True)
         return []
 
 

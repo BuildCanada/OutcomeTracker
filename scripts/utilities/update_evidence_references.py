@@ -165,11 +165,10 @@ async def main_async():
     # --- Pass 1: Collect all new promise paths for each evidence item ---
     logger.info("--- Pass 1: Collecting new promise paths for evidence items ---")
     for party_code in KNOWN_PARTY_CODES:
-        party_collection_path = f"{TARGET_PROMISES_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code}"
-        logger.info(f"Scanning Party Collection: {party_collection_path}")
+        logger.info(f"Scanning flat promises collection for party: {party_code}")
         
         try:
-            promise_docs_stream = db.collection(party_collection_path).stream()
+            promise_docs_stream = db.collection(TARGET_PROMISES_COLLECTION_ROOT).where("party_code", "==", party_code).stream()
             party_promises_scanned = 0
             for promise_doc_snap in promise_docs_stream:
                 total_promises_scanned += 1
@@ -193,7 +192,7 @@ async def main_async():
                             logger.warning(f"Invalid evidence_item_id '{evidence_item_id}' in promise {promise_full_path}.")
             logger.info(f"Finished scanning party {party_code}. Promises scanned in party: {party_promises_scanned}.")
         except Exception as e:
-            logger.error(f"Error scanning party {party_code} at {party_collection_path}: {e}", exc_info=True)
+            logger.error(f"Error scanning party {party_code} in flat collection: {e}", exc_info=True)
     
     logger.info(f"--- Pass 1 Complete: Total promises scanned: {total_promises_scanned}. Total promise-evidence links collected: {total_links_found}. Unique evidence items to update: {len(evidence_to_new_promise_paths)} ---")
 
