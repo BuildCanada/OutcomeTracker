@@ -55,45 +55,6 @@ export default function HomePageClient({
   const [isLoadingTabData, setIsLoadingTabData] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(initialError || null);
 
-  useEffect(() => {
-    setAllDepartmentConfigs(initialAllDepartmentConfigs);
-    // setMainTabConfigs(initialMainTabConfigs); // We will set this after filtering
-    setMinisterInfos(initialMinisterInfos);
-
-    let filteredMainTabConfigs = initialMainTabConfigs;
-
-    // Parlament-based filtering for ISED/AIDI
-    if (currentSessionId?.startsWith("44")) {
-      console.log("[HomePageClient] Parliament 44 detected, filtering to show ISED and hide AIDI for 'Innovation' tab.");
-      filteredMainTabConfigs = initialMainTabConfigs.filter(
-        config => config.id !== AIDI_DEPARTMENT_ID
-      );
-    } else if (currentSessionId?.startsWith("45")) {
-      console.log("[HomePageClient] Parliament 45 detected, filtering to show AIDI and hide ISED for 'Innovation' tab.");
-      filteredMainTabConfigs = initialMainTabConfigs.filter(
-        config => config.id !== ISED_DEPARTMENT_ID
-      );
-    } else {
-      // Default behavior for other/unknown parliaments: prefer AIDI if it exists
-      const aidiExists = initialMainTabConfigs.some(c => c.id === AIDI_DEPARTMENT_ID);
-      if (aidiExists) {
-        console.log("[HomePageClient] Defaulting to AIDI for 'Innovation' tab (hiding ISED if present).");
-        filteredMainTabConfigs = initialMainTabConfigs.filter(config => config.id !== ISED_DEPARTMENT_ID);
-      }
-    }
-
-    setMainTabConfigs(filteredMainTabConfigs);
-
-    if(initialActiveTabId && filteredMainTabConfigs.some(c => c.id === initialActiveTabId)) {
-      setActiveTabId(initialActiveTabId);
-    } else if (filteredMainTabConfigs.length > 0) {
-      setActiveTabId(filteredMainTabConfigs[0].id);
-    } else {
-      setActiveTabId("");
-      setCurrentMinisterInfo(null); 
-    }
-  }, [initialAllDepartmentConfigs, initialMainTabConfigs, initialActiveTabId, initialMinisterInfos, currentSessionId]);
-
   // Effect to set currentMinisterInfo based on activeTabId and cached ministerInfos
   useEffect(() => {
     if (activeTabId) {

@@ -201,10 +201,10 @@ export default async function Home() {
   // Define display order for other departments
   const departmentDisplayOrder: Record<string, number> = {
     'finance-canada': 2,
-    'housing-infrastructure-and-communities': 3,
+    'infrastructure-canada': 3, // Housing
     'national-defence': 4,
-    'immigration-refugees-and-citizenship': 5,
-    'treasury-board-secretariat': 6, // Government
+    'immigration-refugees-and-citizenship-canada': 5, // Immigration
+    'treasury-board-of-canada-secretariat': 6, // Government
     'natural-resources-canada': 7, // Energy
     'innovation-science-and-economic-development-canada': 8,
     'artificial-intelligence-and-digital-innovation': 8, // Also Innovation
@@ -212,10 +212,11 @@ export default async function Home() {
   };
 
   // Add display_order to all department configs and override display names where needed
+  // Ensure all departments get a display_order, defaulting if not in map
   const allDepartmentConfigsWithOrder = initialAllDepartmentConfigs.map(config => {
     const baseConfig = {
       ...config,
-      display_order: departmentDisplayOrder[config.id] || 999 // Default to end if not specified
+      display_order: departmentDisplayOrder[config.id] ?? 999 // Use nullish coalescing for safety
     };
 
     // Override display names for specific departments
@@ -229,12 +230,31 @@ export default async function Home() {
     return baseConfig;
   });
 
-  // Sort departments by display_order
-  const sortedAllDepartmentConfigs = [primeMinisterDepartment, ...allDepartmentConfigsWithOrder]
-    .sort((a, b) => (a.display_order || 999) - (b.display_order || 999));
+  // Combine Prime Minister and all other departments
+  const allDepartmentsCombined = [primeMinisterDepartment, ...allDepartmentConfigsWithOrder];
 
-  // Filter to get main tab configs (bc_priority === 1) while maintaining order
-  const mainTabConfigsWithPM = sortedAllDepartmentConfigs.filter(config => config.bc_priority === 1);
+  // Sort the combined list entirely by display_order
+  const sortedAllDepartmentConfigs = allDepartmentsCombined
+    .sort((a, b) => (a.display_order ?? 999) - (b.display_order ?? 999));
+
+  // Filter to get main tab configs (bc_priority === 1) from the fully sorted list
+  let mainTabConfigsWithPM = sortedAllDepartmentConfigs.filter(config => config.bc_priority === 1);
+
+  // Apply parliament-based filtering for ISED/AIDI on the server
+  if (currentSessionId?.startsWith("44")) {
+    mainTabConfigsWithPM = mainTabConfigsWithPM.filter(
+      config => config.id !== 'artificial-intelligence-and-digital-innovation'
+    );
+  } else if (currentSessionId?.startsWith("45")) {
+    mainTabConfigsWithPM = mainTabConfigsWithPM.filter(
+      config => config.id !== 'innovation-science-and-economic-development-canada'
+    );
+  } else {
+    const aidiExists = mainTabConfigsWithPM.some(c => c.id === 'artificial-intelligence-and-digital-innovation');
+    if (aidiExists) {
+      mainTabConfigsWithPM = mainTabConfigsWithPM.filter(config => config.id !== 'innovation-science-and-economic-development-canada');
+    }
+  }
 
   // Add PM to minister infos
   const ministerInfosWithPM = {
