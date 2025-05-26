@@ -1,0 +1,55 @@
+# Node.js dependencies and build artifacts
+node_modules/
+.next/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Development and testing files
+.git/
+.gitignore
+README.md
+*.md
+.DS_Store
+.vscode/
+.idea/
+
+# Build and deployment files
+deploy_cloud_run.py
+test_cloud_run_local.py
+Dockerfile
+.dockerignore
+
+# Documentation and examples
+docs/
+stories/
+.storybook/
+
+# Raw data and outputs (can be large)
+raw-data/
+scripts/JSON_outputs/
+2025-promises/
+
+# Other Next.js specific
+.next/
+out/
+.swc/
+
+# Logs
+*.log
+
+# Testing
+coverage/
+.nyc_output/ 

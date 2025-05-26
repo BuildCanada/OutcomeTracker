@@ -27,6 +27,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           <nav className="flex flex-1 items-stretch">
             <Link
+              href="/admin/monitoring" 
+              className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
+            >
+              RSS Monitoring
+            </Link>
+            <Link
               href="/en/tracker" 
               className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
             >

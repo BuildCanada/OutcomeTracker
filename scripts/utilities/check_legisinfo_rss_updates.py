@@ -134,18 +134,14 @@ def fetch_rss_updates(hours_threshold=DEFAULT_HOURS_THRESHOLD, max_items=DEFAULT
     if parliament_filter:
         logger.info(f"Filtering for Parliament {parliament_filter} only")
     
-    # Import monitoring
+    # Import monitoring (same directory)
     try:
-        from .rss_monitoring_logger import rss_monitor
+        from rss_monitoring_logger import rss_monitor
         monitor_id = rss_monitor.log_rss_check_start(hours_threshold, parliament_filter)
     except ImportError:
-        try:
-            from rss_monitoring_logger import rss_monitor
-            monitor_id = rss_monitor.log_rss_check_start(hours_threshold, parliament_filter)
-        except ImportError:
-            logger.warning("RSS monitoring not available")
-            rss_monitor = None
-            monitor_id = None
+        logger.warning("RSS monitoring not available")
+        rss_monitor = None
+        monitor_id = None
     
     start_time = time.time()
     

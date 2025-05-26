@@ -148,21 +148,47 @@ async def call_gemini_llm(prompt_text):
         logger.critical("Gemini client not initialized. Cannot call LLM.")
         return None, LLM_MODEL_NAME
 
-    try:
-        response = await client.aio.models.generate_content(
-            model=LLM_MODEL_NAME,
-            contents=[prompt_text]
-        )
-        raw_response_text = response.text
-        json_str = clean_json_from_markdown(raw_response_text)
-        parsed_result = json.loads(json_str)
-        return parsed_result, LLM_MODEL_NAME
-    except json.JSONDecodeError as json_err:
-        logger.error(f"LLM response was not valid JSON. Error: {json_err}. Raw Response: {raw_response_text[:500] if 'raw_response_text' in locals() else ''}", exc_info=True)
-        return None, LLM_MODEL_NAME
-    except Exception as e:
-        logger.error(f"Error calling Gemini LLM ({LLM_MODEL_NAME}): {e}\n{traceback.format_exc()}")
-        return None, LLM_MODEL_NAME
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = await client.aio.models.generate_content(
+                model=LLM_MODEL_NAME,
+                contents=[prompt_text]
+            )
+            raw_response_text = response.text
+            
+            # Log truncated responses to help debug
+            if len(raw_response_text) > 1000 and not raw_response_text.strip().endswith('}'):
+                logger.warning(f"LLM response appears to be truncated (length: {len(raw_response_text)}, ends with: '{raw_response_text[-50:]}'). Attempt {attempt + 1}/{max_retries}")
+                if attempt < max_retries - 1:
+                    continue  # Retry if not the last attempt
+            
+            json_str = clean_json_from_markdown(raw_response_text)
+            parsed_result = json.loads(json_str)
+            return parsed_result, LLM_MODEL_NAME
+            
+        except json.JSONDecodeError as json_err:
+            logger.error(f"LLM response was not valid JSON on attempt {attempt + 1}. Error: {json_err}")
+            logger.error(f"Raw Response (first 800 chars): {raw_response_text[:800] if 'raw_response_text' in locals() else 'N/A'}")
+            logger.error(f"Raw Response (last 200 chars): {raw_response_text[-200:] if 'raw_response_text' in locals() else 'N/A'}")
+            
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying LLM call ({attempt + 2}/{max_retries})...")
+                continue
+            else:
+                logger.error("Failed to get valid JSON after all retry attempts")
+                return None, LLM_MODEL_NAME
+                
+        except Exception as e:
+            logger.error(f"Error calling Gemini LLM ({LLM_MODEL_NAME}) on attempt {attempt + 1}: {e}")
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying LLM call ({attempt + 2}/{max_retries})...")
+                continue
+            else:
+                logger.error("Failed after all retry attempts", exc_info=True)
+                return None, LLM_MODEL_NAME
+    
+    return None, LLM_MODEL_NAME
 
 def load_gemini_prompt_template(prompt_file: str) -> str:
     try:
@@ -243,7 +269,9 @@ async def process_pending_gazette_notices(db_client, dry_run=False, output_to_js
 
             # The RIAS summary is now part of gemini_result_dict
             rias_summary = gemini_result_dict.get('rias_summary', '')
-            logger.debug(f"RIAS summary (from main LLM call) for {doc_id}: {rias_summary[:100]}...")
+            # Safe slicing to handle None or empty strings
+            rias_preview = (rias_summary[:100] + "...") if rias_summary else "No RIAS summary available"
+            logger.debug(f"RIAS summary (from main LLM call) for {doc_id}: {rias_preview}")
 
             # Evidence ID: YYYYMMDD_sessionID_Gazette2_{short hash}
             pub_date_obj = raw_doc_data.get('publication_date')
@@ -263,12 +291,13 @@ async def process_pending_gazette_notices(db_client, dry_run=False, output_to_js
             evidence_id = f"{pub_date_str}_{session_id_str}_Gazette2_{short_hash}"
 
             # Extract LLM results directly to top-level and specific locations
-            timeline_summary = gemini_result_dict.get('timeline_summary', '')
-            potential_relevance_score = gemini_result_dict.get('potential_relevance_score', 'Low') # Default to Low if missing
-            key_concepts = gemini_result_dict.get('key_concepts', [])
-            sponsoring_department_standardized = gemini_result_dict.get('sponsoring_department_standardized', '')
-            rias_summary_llm = gemini_result_dict.get('rias_summary', '')
-            one_sentence_description_llm = gemini_result_dict.get('one_sentence_description', '') 
+            # Use safe extraction with fallbacks for None values
+            timeline_summary = gemini_result_dict.get('timeline_summary') or ''
+            potential_relevance_score = gemini_result_dict.get('potential_relevance_score') or 'Low'  # Default to Low if missing
+            key_concepts = gemini_result_dict.get('key_concepts') or []
+            sponsoring_department_standardized = gemini_result_dict.get('sponsoring_department_standardized') or ''
+            rias_summary_llm = gemini_result_dict.get('rias_summary') or ''
+            one_sentence_description_llm = gemini_result_dict.get('one_sentence_description') or '' 
 
             evidence_doc = {
                 'evidence_id': evidence_id,

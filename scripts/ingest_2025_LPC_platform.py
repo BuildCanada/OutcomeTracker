@@ -60,7 +60,6 @@ if db is None:
 
 def process_lpc_platform_csv(file_path):
     """Processes the 2025-LPC-platform.csv and adds/updates docs in Firestore using the new structure."""
-    # promises_collection = db.collection('promises') # OLD WAY
     
     processed_count = 0
     skipped_count = 0

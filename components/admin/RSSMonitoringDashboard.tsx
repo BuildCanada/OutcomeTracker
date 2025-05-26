@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Timestamp } from 'firebase-admin/firestore';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface RSSMetrics {
   id?: string;
@@ -10,8 +10,8 @@ interface RSSMetrics {
   successful_checks: number;
   total_bills_found: number;
   avg_response_time_ms: number;
-  last_check: Timestamp;
-  created_at?: Timestamp;
+  last_check: string | null;
+  created_at?: string | null;
 }
 
 interface RSSAlert {
@@ -21,7 +21,7 @@ interface RSSAlert {
   message: string;
   error_message?: string;
   failure_count: number;
-  created_at: Timestamp;
+  created_at: string | null;
   resolved: boolean;
 }
 
@@ -29,13 +29,14 @@ interface RecentActivity {
   id: string;
   operation: 'rss_check' | 'bill_ingestion';
   status: string;
-  start_time: Timestamp;
-  end_time?: Timestamp;
+  start_time: string | null;
+  end_time?: string | null;
   bills_found?: number;
   bills_processed?: number;
   evidence_created?: number;
   ingestion_type?: string;
   triggered_by?: string;
+  check_type?: string;
 }
 
 interface Props {
@@ -45,6 +46,8 @@ interface Props {
   weeklyMetrics: RSSMetrics[];
   activeAlerts: RSSAlert[];
   recentActivity: RecentActivity[];
+  feedStats: Record<string, { total: number; successful: number; bills_found: number }>;
+  selectedFeed: string;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -65,20 +68,23 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const formatTimestamp = (timestamp: Timestamp) => {
+const formatTimestamp = (timestamp: string | null) => {
+  if (!timestamp) return 'Never';
+  
   try {
-    return timestamp.toDate().toLocaleString();
+    return new Date(timestamp).toLocaleString();
   } catch {
     return 'Invalid date';
   }
 };
 
-const formatDuration = (start: Timestamp, end?: Timestamp) => {
+const formatDuration = (start: string | null, end?: string | null) => {
+  if (!start) return 'Unknown';
   if (!end) return 'In progress...';
   
   try {
-    const startMs = start.toDate().getTime();
-    const endMs = end.toDate().getTime();
+    const startMs = new Date(start).getTime();
+    const endMs = new Date(end).getTime();
     const durationMs = endMs - startMs;
     
     if (durationMs < 1000) return `${durationMs}ms`;
@@ -95,10 +101,80 @@ export default function RSSMonitoringDashboard({
   todayMetrics,
   weeklyMetrics,
   activeAlerts,
-  recentActivity
+  recentActivity,
+  feedStats,
+  selectedFeed
 }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const handleFeedChange = (feedType: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (feedType === 'all') {
+      params.delete('feed');
+    } else {
+      params.set('feed', feedType);
+    }
+    router.push(`/admin/monitoring?${params.toString()}`);
+  };
+
+  const getFeedDisplayName = (feedType: string) => {
+    switch (feedType) {
+      case 'legisinfo_bills': return 'LEGISinfo Bills';
+      case 'canada_news_rss': return 'Canada News RSS';
+      case 'all': return 'All Feeds';
+      default: return feedType;
+    }
+  };
+
+  const currentFeedStats = feedStats[selectedFeed] || feedStats.all;
+
   return (
     <div className="space-y-6">
+      {/* Feed Selector */}
+      <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-900">RSS Feed Monitor</h3>
+          <div className="flex items-center gap-4">
+            <label htmlFor="feed-select" className="text-sm font-medium text-gray-700">
+              View Feed:
+            </label>
+            <select
+              id="feed-select"
+              value={selectedFeed}
+              onChange={(e) => handleFeedChange(e.target.value)}
+              className="block w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            >
+              <option value="all">All Feeds</option>
+              <option value="legisinfo_bills">LEGISinfo Bills</option>
+              <option value="canada_news_rss">Canada News RSS</option>
+            </select>
+          </div>
+        </div>
+        
+        {/* Feed Stats Summary */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {Object.entries(feedStats).map(([feedType, stats]) => (
+            <div key={feedType} className={`p-3 rounded border ${
+              selectedFeed === feedType ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <h4 className="text-sm font-medium text-gray-900">{getFeedDisplayName(feedType)}</h4>
+              <div className="mt-1 text-xs text-gray-600">
+                {stats.total} checks, {stats.successful} successful, {stats.bills_found} bills found
+              </div>
+              {stats.total > 0 && (
+                <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-green-500 h-1.5 rounded-full" 
+                    style={{ width: `${(stats.successful / stats.total) * 100}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Health Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow border">
@@ -123,7 +199,7 @@ export default function RSSMonitoringDashboard({
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow border">
-          <h3 className="text-sm font-medium text-gray-500">Bills Found Today</h3>
+          <h3 className="text-sm font-medium text-gray-500">Evidence Found Today</h3>
           <p className="text-2xl font-bold text-gray-900 mt-2">
             {todayMetrics?.total_bills_found || 0}
           </p>
@@ -136,7 +212,7 @@ export default function RSSMonitoringDashboard({
             {Math.round(todayMetrics?.avg_response_time_ms || 0)}ms
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            Last check: {todayMetrics?.last_check ? formatTimestamp(todayMetrics.last_check) : 'Never'}
+            Last check: {formatTimestamp(todayMetrics?.last_check || null)}
           </p>
         </div>
       </div>
@@ -247,18 +323,19 @@ export default function RSSMonitoringDashboard({
                       <div className="text-sm font-medium text-gray-900">
                         {activity.operation === 'rss_check' ? 'RSS Check' : 'Bill Ingestion'}
                       </div>
-                      {activity.ingestion_type && (
-                        <div className="text-xs text-gray-500">
-                          {activity.ingestion_type} ({activity.triggered_by})
-                        </div>
-                      )}
+                      <div className="text-xs text-gray-500">
+                        {activity.check_type && getFeedDisplayName(activity.check_type)}
+                        {activity.ingestion_type && (
+                          <span> - {activity.ingestion_type} ({activity.triggered_by})</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={activity.status} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {activity.operation === 'rss_check' ? (
-                        `${activity.bills_found || 0} bills found`
+                        `${activity.bills_found || 0} items found`
                       ) : (
                         `${activity.bills_processed || 0} processed, ${activity.evidence_created || 0} evidence`
                       )}

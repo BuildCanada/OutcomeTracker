@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-# PromiseTracker/scripts/enrich_and_preprocess_promise.py
-# This script is used to enrich and preprocess new promises after they are added to the promise collection.
+# PromiseTracker/scripts/enrich_tag_new_promise.py
+# This script is used to enrich and tag new promises after they are added to the promise collection.
 
 import firebase_admin
 from firebase_admin import firestore, credentials
@@ -195,22 +195,8 @@ Ensure the output is ONLY the JSON array.
         # Pass system instruction during the call for this specific task
         response = await generative_model.generate_content_async(
             prompt,
-            generation_config=GENERATION_CONFIG, # Ensure config is passed if not default on model
-            # To pass system_instruction here, it should be part of `contents` or a different model init
-            # For now, relying on it being part of the prompt or a global model setting if that's how it works.
-            # Re-checking: system_instruction is usually set at model initialization.
-            # Let's create a specific model instance if system_instruction is critical and different per call.
-            # For simplicity now, assume HISTORY_RATIONALE_SYSTEM_INSTRUCTION guides the main model if set,
-            # or the detailed prompt is sufficient.
-            # If using a single model, system_instruction should be general or prompts very explicit.
-            # The current `generative_model` was init'd without a system instruction.
-            # The `process_mandate_commitments.py` set it on its model. Let's try passing it:
+            generation_config=GENERATION_CONFIG,
         )
-        # The `genai.GenerativeModel` takes `system_instruction` at init.
-        # To have different system instructions, you'd typically use different model objects or
-        # ensure the user prompt is comprehensive enough.
-        # Let's re-initialize a model specifically for this task if needed, or ensure prompt is king.
-        # For now, this prompt is very detailed.
 
         # The response_mime_type="application/json" should ensure `response.text` is parseable JSON.
         timeline_events = json.loads(response.text) # Direct parsing due to mime_type

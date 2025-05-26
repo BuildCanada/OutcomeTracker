@@ -17,6 +17,7 @@ Next steps to make ready for production:
 """
 
 import os
+import sys
 import logging
 import feedparser
 import hashlib
@@ -50,7 +51,7 @@ RSS_FEEDS_TO_MONITOR = {
 
 RAW_NEWS_RELEASES_COLLECTION = "raw_news_releases"
 DEFAULT_PAGE_SIZE = 100
-DEFAULT_START_DATE_STR = "2025-03-25"
+DEFAULT_START_DATE_STR = "2025-03-14"
 # Define JSON_OUTPUT_DIR relative to the script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 JSON_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "..", "JSON_outputs") # Corrected path
@@ -286,18 +287,15 @@ def fetch_and_process_feeds(db_client, dry_run=False, start_date_filter=None, en
     if output_to_json: # Added
         logger.info("*** JSON OUTPUT MODE ENABLED - New items will be written to a JSON file instead of Firestore. ***")
 
-    # Import monitoring
+    # Import monitoring from utilities
     try:
-        from .rss_monitoring_logger import rss_monitor
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utilities'))
+        from rss_monitoring_logger import rss_monitor
         monitor_id = rss_monitor.log_rss_check_start(hours_threshold=24, parliament_filter=None, check_type="canada_news_rss")
     except ImportError:
-        try:
-            from rss_monitoring_logger import rss_monitor
-            monitor_id = rss_monitor.log_rss_check_start(hours_threshold=24, parliament_filter=None, check_type="canada_news_rss")
-        except ImportError:
-            logger.warning("RSS monitoring not available")
-            rss_monitor = None
-            monitor_id = None
+        logger.warning("RSS monitoring not available")
+        rss_monitor = None
+        monitor_id = None
     
     start_time = time.time()
 

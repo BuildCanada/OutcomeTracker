@@ -5,7 +5,7 @@ import RSSMonitoringDashboard from '../../../components/admin/RSSMonitoringDashb
 
 export const metadata = {
   title: 'RSS Monitoring - Admin Dashboard',
-  description: 'Monitor RSS feed health and ingestion performance'
+  description: 'Monitor RSS feed health and ingestion performance across multiple sources'
 };
 
 interface RSSMetrics {
@@ -14,7 +14,7 @@ interface RSSMetrics {
   successful_checks: number;
   total_bills_found: number;
   avg_response_time_ms: number;
-  last_check: Timestamp;
+  last_check: string | null;
 }
 
 interface RSSAlert {
@@ -24,7 +24,7 @@ interface RSSAlert {
   message: string;
   error_message?: string;
   failure_count: number;
-  created_at: Timestamp;
+  created_at: string | null;
   resolved: boolean;
 }
 
@@ -32,8 +32,8 @@ interface RecentActivity {
   id: string;
   operation: 'rss_check' | 'bill_ingestion';
   status: string;
-  start_time: Timestamp;
-  end_time?: Timestamp;
+  start_time: string | null;
+  end_time?: string | null;
   bills_found?: number;
   bills_processed?: number;
   evidence_created?: number;
@@ -41,7 +41,32 @@ interface RecentActivity {
   triggered_by?: string;
 }
 
-async function getMonitoringData() {
+// Helper function to serialize Firestore Timestamps
+function serializeTimestamp(timestamp: Timestamp | undefined | null): string | null {
+  if (!timestamp) return null;
+  return timestamp.toDate().toISOString();
+}
+
+// Helper function to serialize data for client components
+function serializeFirestoreData(data: any): any {
+  if (!data) return data;
+  
+  const serialized = { ...data };
+  
+  // Convert Firestore Timestamps to ISO strings
+  Object.keys(serialized).forEach(key => {
+    if (serialized[key] && typeof serialized[key] === 'object' && '_seconds' in serialized[key]) {
+      serialized[key] = serializeTimestamp(serialized[key]);
+    }
+    if (serialized[key] && serialized[key].toDate && typeof serialized[key].toDate === 'function') {
+      serialized[key] = serialized[key].toDate().toISOString();
+    }
+  });
+  
+  return serialized;
+}
+
+async function getMonitoringData(feedType?: string) {
   try {
     // Get today's metrics
     const today = new Date().toISOString().split('T')[0];
@@ -50,7 +75,8 @@ async function getMonitoringData() {
       .doc(`daily_metrics_${today}`)
       .get();
 
-    const todayMetrics = metricsDoc.exists ? metricsDoc.data() as RSSMetrics : null;
+    const todayMetricsRaw = metricsDoc.exists ? metricsDoc.data() : null;
+    const todayMetrics = todayMetricsRaw ? serializeFirestoreData(todayMetricsRaw) : null;
 
     // Get last 7 days of metrics for trending
     const sevenDaysAgo = new Date();
@@ -65,8 +91,8 @@ async function getMonitoringData() {
 
     const weeklyMetrics = weeklyMetricsSnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
-    })) as (RSSMetrics & { id: string })[];
+      ...serializeFirestoreData(doc.data())
+    }));
 
     // Get active alerts
     const alertsSnapshot = await firestoreAdmin
@@ -78,24 +104,60 @@ async function getMonitoringData() {
 
     const activeAlerts = alertsSnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
-    })) as RSSAlert[];
+      ...serializeFirestoreData(doc.data())
+    }));
 
     // Get recent activity (last 24 hours)
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    const recentActivitySnapshot = await firestoreAdmin
+    let recentActivityQuery = firestoreAdmin
       .collection('rss_feed_monitoring')
-      .where('start_time', '>=', twentyFourHoursAgo)
+      .where('start_time', '>=', twentyFourHoursAgo);
+
+    // Filter by feed type if specified
+    if (feedType && feedType !== 'all') {
+      recentActivityQuery = recentActivityQuery.where('check_type', '==', feedType);
+    }
+
+    const recentActivitySnapshot = await recentActivityQuery
       .orderBy('start_time', 'desc')
       .limit(50)
       .get();
 
     const recentActivity = recentActivitySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
-    })) as RecentActivity[];
+      ...serializeFirestoreData(doc.data())
+    }));
+
+    // Get feed summary stats for all feeds
+    const allActivitySnapshot = await firestoreAdmin
+      .collection('rss_feed_monitoring')
+      .where('start_time', '>=', twentyFourHoursAgo)
+      .get();
+
+    const feedStats: Record<string, { total: number; successful: number; bills_found: number }> = {
+      legisinfo_bills: { total: 0, successful: 0, bills_found: 0 },
+      canada_news_rss: { total: 0, successful: 0, bills_found: 0 },
+      all: { total: 0, successful: 0, bills_found: 0 }
+    };
+
+    allActivitySnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const checkType = data.check_type || 'unknown';
+      const success = data.success === true;
+      const billsFound = data.bills_found || 0;
+
+      if (feedStats[checkType]) {
+        feedStats[checkType].total += 1;
+        if (success) feedStats[checkType].successful += 1;
+        feedStats[checkType].bills_found += billsFound;
+      }
+
+      feedStats.all.total += 1;
+      if (success) feedStats.all.successful += 1;
+      feedStats.all.bills_found += billsFound;
+    });
 
     // Calculate health status
     let healthStatus = 'unknown';
@@ -119,7 +181,8 @@ async function getMonitoringData() {
       todayMetrics,
       weeklyMetrics,
       activeAlerts,
-      recentActivity
+      recentActivity,
+      feedStats
     };
 
   } catch (error) {
@@ -130,20 +193,30 @@ async function getMonitoringData() {
       todayMetrics: null,
       weeklyMetrics: [],
       activeAlerts: [],
-      recentActivity: []
+      recentActivity: [],
+      feedStats: {
+        legisinfo_bills: { total: 0, successful: 0, bills_found: 0 },
+        canada_news_rss: { total: 0, successful: 0, bills_found: 0 },
+        all: { total: 0, successful: 0, bills_found: 0 }
+      }
     };
   }
 }
 
-export default async function MonitoringPage() {
-  const monitoringData = await getMonitoringData();
+export default async function MonitoringPage({ 
+  searchParams 
+}: { 
+  searchParams: { feed?: string } 
+}) {
+  const selectedFeed = searchParams.feed || 'all';
+  const monitoringData = await getMonitoringData(selectedFeed);
 
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">RSS Feed Monitoring</h1>
         <p className="text-gray-600 mt-2">
-          Monitor the health and performance of LEGISinfo RSS feed ingestion
+          Monitor the health and performance of RSS feed ingestion from multiple sources
         </p>
       </div>
 
@@ -154,6 +227,8 @@ export default async function MonitoringPage() {
         weeklyMetrics={monitoringData.weeklyMetrics}
         activeAlerts={monitoringData.activeAlerts}
         recentActivity={monitoringData.recentActivity}
+        feedStats={monitoringData.feedStats}
+        selectedFeed={selectedFeed}
       />
     </div>
   );
