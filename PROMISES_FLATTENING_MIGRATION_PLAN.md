@@ -59,14 +59,16 @@ promises/
 
 ### Phase 2: Code Updates (Parallel Development)
 
+**File Naming Strategy**: During development, create new versions with temporary "_flat" suffixes. During deployment, these will replace the original files to become the main implementation.
+
 #### 2.1 Backend Scripts Updates
 
 **Files requiring updates:**
 
-1. **`scripts/common_utils.py`**
-   - ✅ Update `get_promise_document_path()` to return flat path
-   - ✅ Add `get_legacy_promise_document_path()` for backward compatibility
-   - ✅ Update constants and path generation logic
+1. **`scripts/common_utils.py`** → **`scripts/common_utils_flat.py`** (temporary)
+   - ✅ Created flat structure version with new functions
+   - ✅ Includes backward compatibility functions  
+   - ✅ Will replace `common_utils.py` in Phase 4 deployment
 
 2. **`scripts/link_bills_to_promises.py`**
    - ✅ Replace party loop with single collection query
@@ -98,10 +100,10 @@ promises/
 
 **Files requiring updates:**
 
-1. **`lib/data.ts`**
-   - ✅ Update `fetchPromisesForDepartment()` function
-   - ✅ Replace path construction with direct collection query
-   - ✅ Add party and region filters to queries
+1. **`lib/data.ts`** → **`lib/data-flat.ts`** (temporary)
+   - ✅ Created optimized version for flat structure
+   - ✅ New functions: `fetchPromisesForDepartmentFlat()`, `getPromiseCountsByParty()`, etc.
+   - ✅ Will replace `lib/data.ts` in Phase 4 deployment
 
 2. **`app/` components and pages**
    - ✅ Update any direct promises collection references
@@ -182,7 +184,36 @@ for region in regions:
 
 ### Phase 4: Deployment and Cleanup
 
-#### 4.1 Deployment Strategy
+#### 4.1 File Replacement Strategy
+
+**Automated File Replacement**
+```bash
+# Use the automated replacement script
+python scripts/migration/replace_files_for_production.py
+```
+
+**Manual Steps (Alternative)**
+```bash
+# Step 1: Backup original files
+cp lib/data.ts lib/data-legacy-backup.ts
+cp scripts/common_utils.py scripts/common_utils-legacy-backup.py
+
+# Step 2: Replace with flat structure files
+mv lib/data-flat.ts lib/data.ts
+mv scripts/common_utils_flat.py scripts/common_utils.py
+
+# Step 3: Update import references and function names manually
+# (Use find/replace in your editor)
+```
+
+**What the automated script does:**
+- Creates backups of original files (`*-legacy-backup.*`)
+- Replaces flat structure files with main file names
+- Updates all import statements throughout the codebase
+- Removes "Flat" suffixes from function names
+- Verifies the replacement was successful
+
+#### 4.2 Deployment Strategy
 
 **Option A: Blue-Green Deployment**
 - Deploy new code with feature flag disabled
@@ -198,7 +229,7 @@ for region in regions:
 - Switch to read-from-new mode
 - Clean up old data
 
-#### 4.2 Firestore Security Rules Update
+#### 4.3 Firestore Security Rules Update
 
 **Current Rules** (assumed):
 ```javascript
@@ -214,7 +245,7 @@ match /promises/{promiseId} {
 }
 ```
 
-#### 4.3 Index Management
+#### 4.4 Index Management
 
 **Required New Indexes**:
 - `party_code`, `region_code`, `parliament_session_id`
@@ -280,9 +311,10 @@ match /promises/{promiseId} {
 - [ ] Create validation scripts
 
 ### Week 2: Code Updates
-- [ ] Update backend scripts
-- [ ] Update frontend code
+- [ ] Develop flat structure versions (temporary _flat files)
+- [ ] Create automated file replacement script
 - [ ] Update security rules (prepare)
+- [ ] Test new code alongside existing code
 
 ### Week 3: Migration Development
 - [ ] Develop migration scripts
@@ -297,12 +329,14 @@ match /promises/{promiseId} {
 ### Week 5: Production Migration
 - [ ] Execute migration
 - [ ] Validate results
+- [ ] Run automated file replacement script
 - [ ] Deploy updated code
 
 ### Week 6: Cleanup
 - [ ] Clean up old data
-- [ ] Remove temporary code
+- [ ] Remove temporary _flat files and backup files
 - [ ] Update documentation
+- [ ] Archive migration scripts
 
 ## Risk Mitigation
 
