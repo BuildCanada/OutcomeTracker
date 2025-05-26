@@ -45,9 +45,9 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   const formattedEndDate = formatDate(positionEnd);
 
   if (formattedStartDate && formattedEndDate) {
-    tenureString = `Portfolio held: ${formattedStartDate} - ${formattedEndDate}`;
+    tenureString = `${formattedStartDate} - ${formattedEndDate}`;
   } else if (formattedStartDate) {
-    tenureString = `Portfolio held: Since ${formattedStartDate}`;
+    tenureString = `Since ${formattedStartDate}`;
   }
   
   const getFallbackInitials = (name: string) => {
@@ -60,65 +60,62 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   }
 
   return (
-    <div className="bg-white">
+    <div>
       {/* Minister Info Header */}
-      <div className="mb-8 p-6 border border-[#d3c7b9] bg-[#fdfaf6]">
-        <div className="flex items-center">
-          {avatarUrl ? (
-             <Avatar className="h-20 w-20 mr-6 bg-gray-100">
-               <AvatarImage 
-                 src={avatarUrl} 
-                 alt={`Official portrait of ${ministerName}`} 
-                 className="object-cover"
-               />
-               <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
-             </Avatar>
-          ) : (
-            <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200">
-              <span className="text-2xl text-gray-500">{getFallbackInitials(ministerName)}</span>
-            </div>
-          )}
-          <div>
-            <h2 className="text-3xl font-bold text-[#222222]">{ministerName}</h2>
-            <p className="text-lg text-[#555555]">{ministerTitle}</p>
-            {tenureString && (
-              <p className="text-xs text-gray-500 mt-1">{tenureString}</p>
-            )}
+      <div className="flex items-center mb-8">
+        {avatarUrl ? (
+            <Avatar className="h-20 w-20 mr-6 bg-gray-100">
+              <AvatarImage 
+                src={avatarUrl} 
+                alt={`Official portrait of ${ministerName}`} 
+                className="object-cover"
+              />
+              <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
+            </Avatar>
+        ) : (
+          <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200">
+            <span className="text-2xl text-gray-500">{getFallbackInitials(ministerName)}</span>
           </div>
+        )}
+        <div>
+          <h2 className="text-3xl">{ministerName}</h2>
+          <p className="mt-1 text-sm font-mono">{ministerTitle}, {tenureString}</p>
         </div>
       </div>
 
       {/* Key Metrics Placeholder Section */}
-      <div className="px-2 mb-8">
-        <h3 className="text-2xl font-semibold text-[#222222] mb-4">Key Performance Indicators & Metrics</h3>
-        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-8 text-center flex items-center justify-center" style={{ minHeight: '20vh' }}>
-          <p className="text-gray-400 italic text-lg">[Placeholder: Charts and key metrics for {ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName} will be displayed here.]</p>
-        </div>
-      </div>
-
-      {/* Promises Section */}
-      <div className="mb-8 px-2">
-        <h3 className="text-2xl font-semibold text-[#222222] mb-6">Commitments</h3>
-        {promises && promises.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6">
-            {[...promises].sort((a, b) => {
-              const countA = a.linked_evidence_ids?.length || 0;
-              const countB = b.linked_evidence_ids?.length || 0;
-              return countB - countA; // Sort in descending order
-            }).map((promise: PromiseData) => (
-              <PromiseCard 
-                key={promise.id} 
-                promise={promise} 
-                evidenceItems={evidenceItems || []}
-                departmentShortName={departmentShortName ? departmentShortName : undefined}
-              />
-            ))}
+      <div>
+        <h3 className="text-2xl mb-4">Key Performance Indicators & Metrics</h3>
+        <div className="mb-8">
+          <div className="bg-gray-50 border border-dashed border-gray-300 p-8 text-center flex items-center justify-center" style={{ minHeight: '20vh' }}>
+            <p className="text-gray-400 italic text-lg">[Placeholder: Charts and key metrics for {ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName} will be displayed here.]</p>
           </div>
-        ) : (
-          <p className="text-gray-600 italic">No specific mandate letter commitments found for this department.</p>
-        )}
-      </div>
+        </div>
 
+        {/* Promises Section */}
+        <div className="mb-8">
+          <h3 className="text-2xl font-semibold mb-6">Commitments</h3>
+          {promises && promises.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6">
+              {[...promises].sort((a, b) => {
+                const countA = a.linked_evidence_ids?.length || 0;
+                const countB = b.linked_evidence_ids?.length || 0;
+                return countB - countA; // Sort in descending order
+              }).map((promise: PromiseData) => (
+                <PromiseCard 
+                  key={promise.id} 
+                  promise={promise} 
+                  evidenceItems={evidenceItems || []}
+                  departmentShortName={departmentShortName ? departmentShortName : undefined}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 italic">No specific mandate letter commitments found for this department.</p>
+          )}
+        </div>
+
+      </div>
     </div>
   )
 } 

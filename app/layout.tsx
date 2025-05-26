@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">
       <body
-        className={`${inter.className} text-neutral-800 dark:text-neutral-200 bg-background`}
+        className={`text-neutral-800 dark:text-neutral-200 bg-background`}
       >
         <div className="border-2 border-black m-5">
           <ThemeProvider
