@@ -58,6 +58,7 @@ export interface DepartmentConfig {
   official_full_name_en?: string;
   official_full_name_fr?: string;
   department_slug: string; // New: e.g., "health-canada" (often same as id)
+  display_order?: number; // Used for manual ordering of departments
 
   // Optional fields from screenshot and common usage:
   bc_priority?: number;
@@ -82,6 +83,8 @@ export interface DepartmentConfig {
       promise_query_slug_override?: string; // Optional: if promise query needs a slug different from minister_lookup_slug
     };
   };
+
+  is_prime_minister?: boolean; // Add this field to identify PM department
 }
 
 export interface MinisterDetails {
@@ -150,6 +153,9 @@ export interface PrimeMinister {
   name: string;
   title: string;
   avatarUrl: string;
+  positionStart?: string;
+  positionEnd?: string;
+  effectiveDepartmentOfficialFullName?: string;
   guidingMetrics: Metric[];
 }
 

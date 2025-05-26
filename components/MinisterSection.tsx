@@ -3,7 +3,9 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { DepartmentPageData, PromiseData, MinisterInfo, EvidenceItem } from "@/lib/types"
 import Image from 'next/image'
-import PromiseCard from "./PromiseCard" 
+import PromiseCard from "./PromiseCard"
+import PopulationChart from "./charts/PopulationChart"
+import MetricChart from "./MetricChart"
 
 interface MinisterSectionProps {
   departmentPageData: DepartmentPageData | null
@@ -83,13 +85,31 @@ export default function MinisterSection({ departmentPageData, departmentFullName
         </div>
       </div>
 
-      {/* Key Metrics Placeholder Section */}
+      {/* Key Metrics Section */}
       <div>
         <h3 className="text-2xl mb-4">Key Performance Indicators & Metrics</h3>
         <div className="mb-8">
-          <div className="bg-gray-50 border border-dashed border-gray-300 p-8 text-center flex items-center justify-center" style={{ minHeight: '20vh' }}>
-            <p className="text-gray-400 italic text-lg">[Placeholder: Charts and key metrics for {ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName} will be displayed here.]</p>
-          </div>
+          {ministerInfo?.guidingMetrics && ministerInfo.guidingMetrics.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {ministerInfo.guidingMetrics.map((metric, index) => (
+                <div key={index} className="border border-[#d3c7b9] bg-white p-4">
+                  {metric.title === "Population" ? (
+                    <PopulationChart />
+                  ) : (
+                    <MetricChart
+                      title={metric.title}
+                      data={metric.data}
+                      goal={metric.goal}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-dashed border-gray-300 p-8 text-center flex items-center justify-center" style={{ minHeight: '20vh' }}>
+              <p className="text-gray-400 italic text-lg">[Placeholder: Charts and key metrics for {ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName} will be displayed here.]</p>
+            </div>
+          )}
         </div>
 
         {/* Promises Section */}

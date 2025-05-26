@@ -39,7 +39,7 @@ SOURCE_TYPE_TO_ID_CODE_MAPPING = {
 
 PROMISE_CATEGORIES = [
     "Finance", "Health", "Immigration", "Defence", "Housing", "Energy",  
-    "Innovation", "Government Transformation", "Environment",
+    "Innovation", "Government", "Environment",
     "Indigenous Relations", "Foreign Affairs", "Other" 
 ]
 

@@ -122,8 +122,8 @@ export default async function Home() {
     console.log(`[Server LCP Debug] Filtered to ${initialMainTabConfigs.length} main tab department configs.`);
 
     if (globalSession && initialMainTabConfigs.length > 0) {
-      initialActiveTabId = initialMainTabConfigs[0].id;
-      // const initialActiveTabConfig = initialMainTabConfigs.find(c => c.id === initialActiveTabId);
+      // Set Finance as the initial active tab
+      initialActiveTabId = 'finance-canada';
       console.log(`[Server LCP Debug] Initial Active Tab ID: ${initialActiveTabId}`);
 
       // Pre-fetch minister info for ALL main tabs
@@ -187,10 +187,73 @@ export default async function Home() {
     guidingMetrics: staticPrimeMinisterData.guidingMetrics 
   };
 
+  // Add Prime Minister as a department
+  const primeMinisterDepartment: DepartmentConfig = {
+    id: 'prime-minister',
+    official_full_name: 'Office of the Prime Minister',
+    display_short_name: 'Prime Minister',
+    bc_priority: 1,
+    is_prime_minister: true,
+    department_slug: 'prime-minister',
+    display_order: 1 // Prime Minister is first
+  };
+
+  // Define display order for other departments
+  const departmentDisplayOrder: Record<string, number> = {
+    'finance-canada': 2,
+    'housing-infrastructure-and-communities': 3,
+    'national-defence': 4,
+    'immigration-refugees-and-citizenship': 5,
+    'treasury-board-secretariat': 6, // Government
+    'natural-resources-canada': 7, // Energy
+    'innovation-science-and-economic-development-canada': 8,
+    'artificial-intelligence-and-digital-innovation': 8, // Also Innovation
+    'health-canada': 9
+  };
+
+  // Add display_order to all department configs and override display names where needed
+  const allDepartmentConfigsWithOrder = initialAllDepartmentConfigs.map(config => {
+    const baseConfig = {
+      ...config,
+      display_order: departmentDisplayOrder[config.id] || 999 // Default to end if not specified
+    };
+
+    // Override display names for specific departments
+    if (config.id === 'treasury-board-of-canada-secretariat') {
+      return {
+        ...baseConfig,
+        display_short_name: 'Government'
+      };
+    }
+
+    return baseConfig;
+  });
+
+  // Sort departments by display_order
+  const sortedAllDepartmentConfigs = [primeMinisterDepartment, ...allDepartmentConfigsWithOrder]
+    .sort((a, b) => (a.display_order || 999) - (b.display_order || 999));
+
+  // Filter to get main tab configs (bc_priority === 1) while maintaining order
+  const mainTabConfigsWithPM = sortedAllDepartmentConfigs.filter(config => config.bc_priority === 1);
+
+  // Add PM to minister infos
+  const ministerInfosWithPM = {
+    ...initialMinisterInfos,
+    'prime-minister': {
+      name: dynamicPrimeMinisterData.name,
+      title: dynamicPrimeMinisterData.title,
+      avatarUrl: dynamicPrimeMinisterData.avatarUrl,
+      positionStart: globalSession?.start_date,
+      positionEnd: globalSession?.end_date || undefined,
+      effectiveDepartmentOfficialFullName: 'Office of the Prime Minister',
+      guidingMetrics: dynamicPrimeMinisterData.guidingMetrics
+    }
+  };
+
   return <HomePageClient 
-            initialAllDepartmentConfigs={initialAllDepartmentConfigs}
-            initialMainTabConfigs={initialMainTabConfigs}
-            initialMinisterInfos={initialMinisterInfos} // Pass new minister data
+            initialAllDepartmentConfigs={sortedAllDepartmentConfigs}
+            initialMainTabConfigs={mainTabConfigsWithPM}
+            initialMinisterInfos={ministerInfosWithPM}
             initialActiveTabId={initialActiveTabId}
             initialError={serverError}
             currentSessionId={currentSessionId}
