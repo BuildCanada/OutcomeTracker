@@ -17,13 +17,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# File replacement mappings
+# File replacement mappings (from project root)
 FILE_REPLACEMENTS = {
     # Frontend files
-    'lib/data-flat.ts': 'lib/data.ts',
+    '../../lib/data-flat.ts': '../../lib/data.ts',
     
     # Backend files  
-    'scripts/common_utils_flat.py': 'scripts/common_utils.py',
+    '../common_utils_flat.py': '../common_utils.py',
 }
 
 # Function name replacements within files

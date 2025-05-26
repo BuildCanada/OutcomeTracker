@@ -12,7 +12,7 @@ import logging
 import traceback
 from dotenv import load_dotenv
 import argparse # Added for CLI arguments
-from common_utils import PROMISE_CATEGORIES, get_promise_document_path, TARGET_PROMISES_COLLECTION_ROOT, DEFAULT_REGION_CODE 
+from common_utils import PROMISE_CATEGORIES, get_promise_document_path_flat, DEFAULT_REGION_CODE, PARTY_NAME_TO_CODE_MAPPING 
 from datetime import datetime, date # ADDED date
 
 # --- Load Environment Variables ---
@@ -292,8 +292,8 @@ async def process_single_video_transcript(video_doc_snapshot):
                     logger.warning(f"    Skipping a promise for {video_id} (summary: '{text_for_hash[:50]}...') due to missing formatted upload date for path generation.")
                     continue
 
-                # Generate the new hierarchical document path
-                new_doc_full_path = get_promise_document_path(
+                # Generate the new flat document path
+                new_doc_full_path = get_promise_document_path_flat(
                     party_name_str=party_name,
                     date_issued_str=formatted_upload_date_for_path,
                     source_type_str=source_type_for_promise,
@@ -307,7 +307,7 @@ async def process_single_video_transcript(video_doc_snapshot):
                 
                 leaf_id = new_doc_full_path.split("/")[-1]
 
-                # Construct promise data
+                # Construct promise data for flat structure
                 promise_data = {
                     'promise_id': leaf_id, # Store the deterministic leaf ID
                     'text': promise_detail_from_llm.get('promise_summary', 'N/A'), # Main text/summary
@@ -321,7 +321,10 @@ async def process_single_video_transcript(video_doc_snapshot):
                     'date_issued': formatted_upload_date_for_path, # Store YYYY-MM-DD
                     'party': party_name,
                     'candidate_or_government': candidate_name, # Specific candidate if known
+                    
+                    # Flat structure fields
                     'region_code': DEFAULT_REGION_CODE,
+                    'party_code': PARTY_NAME_TO_CODE_MAPPING.get(party_name, 'UNK'),
 
                     'video_source_id': video_id,
                     'video_title': video_data.get('title', 'N/A'),

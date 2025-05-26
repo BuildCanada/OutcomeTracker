@@ -131,8 +131,8 @@ async def delete_data_for_session(
                     logger.warning(f"Found empty or null promise_id in evidence item {evidence_id}. Skipping.")
                     continue
 
-                promise_doc_path = f"{PROMISES_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code_for_promises}/{promise_id}"
-                promise_doc_ref = db.document(promise_doc_path)
+                # Use the flat promises collection structure
+                promise_doc_ref = db.collection(PROMISES_COLLECTION_ROOT).document(promise_id)
                 
                 update_payload = {
                     "linked_evidence_ids": firestore.ArrayRemove([evidence_id]),
@@ -142,7 +142,7 @@ async def delete_data_for_session(
                 }
                 
                 # Log before adding to batch, regardless of dry_run
-                log_message_promise = f"Updating promise ID: {promise_id} (Path: {promise_doc_path}). Removing link to evidence {evidence_id}, resetting progress."
+                log_message_promise = f"Updating promise ID: {promise_id} in flat collection. Removing link to evidence {evidence_id}, resetting progress."
                 if dry_run:
                      logger.info(f"[DRY RUN] {log_message_promise} with payload: {update_payload}")
                 else:

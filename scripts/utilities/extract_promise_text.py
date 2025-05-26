@@ -57,11 +57,10 @@ def extract_and_export_promise_text(limit=None, output_filename="extracted_promi
     logger.info(f"Starting extraction for source_type: '{target_source_type}' from new structure.")
 
     for party_code in KNOWN_PARTY_CODES:
-        party_collection_path = f"{TARGET_PROMISES_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code}"
-        logger.info(f"  Querying party collection: {party_collection_path}")
+        logger.info(f"  Querying flat promises collection for party: {party_code}")
         
         try:
-            query = db.collection(party_collection_path).where("source_type", "==", target_source_type).select(["text"])
+            query = db.collection(TARGET_PROMISES_COLLECTION_ROOT).where("party_code", "==", party_code).where("source_type", "==", target_source_type).select(["text"])
             results = query.stream()
             
             party_texts_count = 0
@@ -72,11 +71,11 @@ def extract_and_export_promise_text(limit=None, output_filename="extracted_promi
                     all_extracted_texts.append(promise_data["text"])
                     party_texts_count += 1
                 else:
-                    logger.debug(f"    ID: {doc.id} in {party_collection_path}, Text field missing or empty.")
-            logger.info(f"    Found {party_texts_count} texts from {party_collection_path}.")
+                    logger.debug(f"    ID: {doc.id} for party {party_code}, Text field missing or empty.")
+            logger.info(f"    Found {party_texts_count} texts for party {party_code}.")
 
         except Exception as e_party_query:
-            logger.error(f"  Error querying {party_collection_path}: {e_party_query}", exc_info=True)
+            logger.error(f"  Error querying party {party_code} in flat collection: {e_party_query}", exc_info=True)
             continue # Continue to the next party if one fails
 
     logger.info(f"Scanned a total of {total_docs_scanned_across_parties} documents across all relevant party collections.")

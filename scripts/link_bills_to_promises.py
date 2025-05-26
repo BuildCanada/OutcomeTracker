@@ -17,7 +17,7 @@ import argparse
 # --- Load Environment Variables ---
 from dotenv import load_dotenv
 load_dotenv()
-from common_utils import TARGET_PROMISES_COLLECTION_ROOT, DEFAULT_REGION_CODE, KNOWN_PARTY_CODES # Added imports
+from common_utils import KNOWN_PARTY_CODES # Added imports
 # --- End Load Environment Variables ---
 
 # --- Logger Setup ---
@@ -266,20 +266,22 @@ def link_bills_to_promises(processing_limit=None, batch_size=50):
                     failed_updates[evidence_id] = "Bill has no keywords"
                     continue
 
-                # Fetch all promises (now from new structure)
+                # Fetch all promises (using flat structure)
                 all_promises_info = []
                 logger.debug(f"Fetching all promises to compare with bill {bill_parl_id} (evidence {evidence_id}).")
-                for party_code in KNOWN_PARTY_CODES:
-                    party_collection_path = f"{TARGET_PROMISES_COLLECTION_ROOT}/{DEFAULT_REGION_CODE}/{party_code}"
-                    try:
-                        party_promises_stream = db.collection(party_collection_path).stream()
-                        for p_snap in party_promises_stream:
-                            p_data = p_snap.to_dict()
-                            if 'id' not in p_data: # Ensure id (leaf) is present for internal logic
-                                p_data['id'] = p_snap.id
-                            all_promises_info.append({'data': p_data, 'path': p_snap.reference.path})
-                    except Exception as e_party_coll:
-                        logger.error(f"Error fetching promises from {party_collection_path} for bill {bill_parl_id}: {e_party_coll}")
+                try:
+                    # Query the flat promises collection directly
+                    promises_collection = db.collection("promises")
+                    promises_stream = promises_collection.stream()
+                    
+                    for p_snap in promises_stream:
+                        p_data = p_snap.to_dict()
+                        if 'id' not in p_data: # Ensure id (leaf) is present for internal logic
+                            p_data['id'] = p_snap.id
+                        all_promises_info.append({'data': p_data, 'path': p_snap.reference.path})
+                        
+                except Exception as e_promises:
+                    logger.error(f"Error fetching promises from flat collection for bill {bill_parl_id}: {e_promises}")
                 
                 logger.debug(f"Fetched {len(all_promises_info)} total promises to check against bill {bill_parl_id}.")
 

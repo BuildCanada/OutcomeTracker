@@ -62,10 +62,10 @@ def initialize_firestore():
 def initialize_promise_fields(db):
     """
     Initializes new fields (bc_promise_rank, bc_promise_direction, bc_promise_rank_rationale)
-    to None for all documents in the 'promises/Canada/LPC' collection.
+    to None for all documents in the flat promises collection.
     """
-    # Target the specific collection where promises are stored, matching rank_promise_priority.py
-    target_collection_path = "promises/Canada/LPC" 
+    # Target the flat promises collection 
+    target_collection_path = "promises" 
     logger.info(f"Targeting Firestore collection for initialization: {target_collection_path}")
     promises_ref = db.collection(target_collection_path)
     promises = promises_ref.stream()
