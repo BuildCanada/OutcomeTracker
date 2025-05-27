@@ -9,6 +9,15 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/tracker",
+        destination: "/en/tracker",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
@@ -37,7 +46,7 @@ const nextConfig = {
       },
       {
         source: "/:path*",
-        destination: "https://www.buildcanada.com/:path*",
+        destination: "https://staging-build-canada.webflow.io/:path*",
       },
     ];
   },
