@@ -55,6 +55,38 @@ const progressDotColors = [
   "bg-green-600",  // Score 5
 ];
 
+// Helper function to get SVG arc path for pie fill
+function getPieArcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return [
+    "M", cx, cy,
+    "L", start.x, start.y,
+    "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+    "Z"
+  ].join(" ");
+}
+
+function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: number): { x: number; y: number } {
+  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+  return {
+    x: cx + (r * Math.cos(angleInRadians)),
+    y: cy + (r * Math.sin(angleInRadians))
+  };
+}
+
+function getPieColor(progressScore: number): string {
+  const colorMap = [
+    '#ef4444', // red-500
+    '#facc15', // yellow-400
+    '#fde047', // yellow-300
+    '#a3e635', // lime-400
+    '#16a34a', // green-600
+  ];
+  return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
+}
+
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
   const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence } = promise;
 
@@ -119,7 +151,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border border-[#d3c7b9] shadow-xl rounded-lg z-50">
+      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border shadow-xl z-50">
         {/* Header */}
         <DialogHeader className="border-b border-[#d3c7b9] p-6">
           {/* Title */}
@@ -175,24 +207,40 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
           {(progress_score > 0 || progress_summary) && (
             <section className="border-t border-[#d3c7b9] pt-6">
               <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
-                 <CheckCircle2Icon className="mr-2 h-5 w-5 text-[#8b2332]" /> {/* Placeholder Icon */}
-                Progress So Far
-              </h3>
-              <div className="flex items-start gap-4">
-                <div className="flex flex-col items-center pt-1">
-                  <div className="flex gap-1.5 mb-1">
-                    {[1, 2, 3, 4, 5].map((dot) => (
-                      <div
-                        key={dot}
-                        className={`w-0.5 h-4 ${dot <= progress_score ? progressDotColors[progress_score - 1] : "bg-gray-300"}`}
-                        title={`Progress: ${progress_score}/5`}
+                {/* Progress SVG indicator as section icon */}
+                <span className="mr-2 w-6 h-6 inline-flex items-center justify-center">
+                  <svg className="w-6 h-6" viewBox="0 0 24 24">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      fill={getPieColor(progress_score)}
+                      stroke={getPieColor(progress_score)}
+                      strokeWidth="2"
+                    />
+                    {progress_score < 5 && progress_score > 0 && (
+                      <path
+                        d={getPieArcPath(12, 12, 10, 0, (1 - progress_score / 5) * 360)}
+                        fill="#fff"
                       />
-                    ))}
-                  </div>
-                  {isDelivered && <span className="text-xs text-green-600 font-semibold">Delivered</span>}
-                </div>
+                    )}
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      fill="none"
+                      stroke={getPieColor(progress_score)}
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </span>
+                {progress_score === 0 ? "Not started" : progress_score === 5 ? "Complete" : "In Progress"}
+              </h3>
+              <div className="flex items-start">
+                {/* No status label here anymore */}
+                <div className="flex flex-col items-center pt-1"></div>
                 <p className="text-[#333333] leading-relaxed whitespace-pre-line flex-1 break-words">
-                  {progress_summary || "Details on progress will be updated here."}
+                  {progress_summary || ""}
                 </p>
               </div>
             </section>
@@ -202,7 +250,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
           <section className="border-t border-[#d3c7b9] pt-6">
              <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
                 <CalendarIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
-                Timeline & Evidence
+                Timeline
               </h3>
             <PromiseProgressTimeline promise={promise} /> 
           </section>
@@ -216,7 +264,6 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
               </h3>
               {background_and_context && (
                 <div className="mb-4">
-                  <h4 className="text-md font-semibold text-[#555555] mb-1">Why This Was Needed:</h4>
                   <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
                     {background_and_context}
                   </p>
@@ -227,21 +274,21 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                 <div>
                   <button 
                     onClick={() => setIsRationaleExpanded(!isRationaleExpanded)}
-                    className="flex items-center text-sm text-[#0056b3] hover:underline focus:outline-none mb-2"
+                    className="flex items-center text-xs text-[#0056b3] hover:underline focus:outline-none mb-2"
                     aria-expanded={isRationaleExpanded}
                   >
                     {isRationaleExpanded ? <ChevronDownIcon className="mr-1 h-4 w-4" /> : <ChevronRightIcon className="mr-1 h-4 w-4" />}
-                    More Details: Preceding Events
+                    More Details of Preceding Events
                   </button>
                   {isRationaleExpanded && (
-                    <div className="space-y-3 pl-2 border-l-2 border-[#8b2332]">
+                    <div className="space-y-3 pl-2 border-l-2 border-gray-900">
                       {commitment_history_rationale.map(
                         (event: RationaleEvent, index: number) => (
                           <div
                             key={index}
-                            className="border border-[#d3c7b9] p-3 bg-gray-50 rounded"
+                            className="border p-3 bg-gray-50"
                           >
-                            <p className="text-xs font-medium text-[#8b2332] mb-0.5">
+                            <p className="text-xs font-medium mb-0.5">
                               {formatSimpleDate(event.date)}
                             </p>
                             <p className="text-sm text-[#333333] mb-1 break-words">{event.action}</p>
@@ -249,7 +296,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                               href={event.source_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-[#0056b3] hover:underline inline-flex items-center"
+                              className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
                             >
                               <LinkIcon className="mr-1 h-3 w-3" /> Source
                             </a>
