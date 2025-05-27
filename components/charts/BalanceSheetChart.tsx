@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import balanceSheetsData from "@/metrics/statscan/balance-sheets.json";
 
 // Type definition for the balance sheet data
@@ -46,22 +46,24 @@ export default function BalanceSheetChart({
 }: BalanceSheetChartProps) {
   // Get data for selected categories
   const allData = (balanceSheetsData as unknown as BalanceSheetData).data;
-  
+
   // Filter data by date range
   const filteredData: Record<string, [string, number][]> = {};
-  
+
   categories.forEach((category) => {
     if (allData[category]) {
-      filteredData[category] = allData[category].filter((entry: BalanceSheetDataEntry) => {
-        const [dateStr] = entry;
-        return dateStr >= startDate && dateStr <= endDate;
-      });
+      filteredData[category] = allData[category].filter(
+        (entry: BalanceSheetDataEntry) => {
+          const [dateStr] = entry;
+          return dateStr >= startDate && dateStr <= endDate;
+        },
+      );
     }
   });
 
   // Find common dates across all selected categories
   let commonDates = Object.values(filteredData)[0]?.map(([date]) => date) || [];
-  
+
   Object.values(filteredData).forEach((categoryData) => {
     const categoryDates = categoryData.map(([date]) => date);
     commonDates = commonDates.filter((date) => categoryDates.includes(date));
@@ -78,9 +80,9 @@ export default function BalanceSheetChart({
       { border: "rgb(40, 167, 69)", background: "rgba(40, 167, 69, 0.5)" },
       { border: "rgb(255, 193, 7)", background: "rgba(255, 193, 7, 0.5)" },
     ];
-    
+
     const colorIndex = index % colors.length;
-    
+
     const values = commonDates.map((date) => {
       const entry = filteredData[category]?.find(([d]) => d === date);
       let value = entry ? entry[1] : 0;
@@ -89,7 +91,7 @@ export default function BalanceSheetChart({
       }
       return value;
     });
-    
+
     return {
       label: category,
       data: values,
@@ -123,7 +125,7 @@ export default function BalanceSheetChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -132,20 +134,20 @@ export default function BalanceSheetChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
-            let label = context.dataset.label || '';
+          label: function (context: any) {
+            let label = context.dataset.label || "";
             if (label) {
-              label += ': ';
+              label += ": ";
             }
             if (context.parsed.y !== null) {
-              label += showThousands 
-                ? `$${context.parsed.y.toFixed(0)}k` 
+              label += showThousands
+                ? `$${context.parsed.y.toFixed(0)}k`
                 : `$${context.parsed.y.toFixed(0)}`;
             }
             return label;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -162,11 +164,11 @@ export default function BalanceSheetChart({
         },
         ticks: {
           padding: 8,
-          callback: function(this: any, value: any) {
-            return showThousands 
-              ? `$${Number(value).toFixed(0)}k` 
+          callback: function (this: any, value: any) {
+            return showThousands
+              ? `$${Number(value).toFixed(0)}k`
               : `$${Number(value).toFixed(0)}`;
-          }
+          },
         },
       },
       x: {
@@ -198,7 +200,14 @@ export default function BalanceSheetChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options as any} />
     </div>
   );

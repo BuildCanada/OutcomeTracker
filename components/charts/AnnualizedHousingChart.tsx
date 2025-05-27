@@ -11,7 +11,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import housingStartsData from "@/metrics/statscan/housing-starts.json";
 
 // Register Chart.js components
@@ -38,7 +38,7 @@ interface AnnualizedHousingChartProps {
 
 // Type for bar dataset
 interface BarDataset {
-  type?: 'bar';
+  type?: "bar";
   label: string;
   data: number[];
   backgroundColor: string;
@@ -49,7 +49,7 @@ interface BarDataset {
 
 // Type for line dataset
 interface LineDataset {
-  type: 'line';
+  type: "line";
   label: string;
   data: number[];
   borderColor: string;
@@ -85,42 +85,55 @@ export default function AnnualizedHousingChart({
 
   // Calculate trailing 12-month sums for each month
   const trailingData: { date: string; sum: number }[] = [];
-  
-  filteredData.forEach((dataPoint: [string, number], index: number, array: [string, number][]) => {
-    if (index >= 11) { // Need at least 12 months of data
-      const date = dataPoint[0];
-      let sum = 0;
-      
-      // Sum the current month and previous 11 months
-      for (let i = 0; i < 12; i++) {
-        sum += array[index - i][1];
+
+  filteredData.forEach(
+    (dataPoint: [string, number], index: number, array: [string, number][]) => {
+      if (index >= 11) {
+        // Need at least 12 months of data
+        const date = dataPoint[0];
+        let sum = 0;
+
+        // Sum the current month and previous 11 months
+        for (let i = 0; i < 12; i++) {
+          sum += array[index - i][1];
+        }
+
+        trailingData.push({
+          date,
+          sum,
+        });
       }
-      
-      trailingData.push({
-        date,
-        sum,
-      });
-    }
-  });
+    },
+  );
 
   // Format dates for display and get annualized values
-  const labels = trailingData.map(item => {
+  const labels = trailingData.map((item) => {
     const [year, month] = item.date.split("-");
     // Convert month number to month name
     const monthNames = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     const monthIndex = parseInt(month) - 1;
     return `${year}-${monthNames[monthIndex]}`;
   });
 
-  const annualizedValues = trailingData.map(item => item.sum);
+  const annualizedValues = trailingData.map((item) => item.sum);
 
   // Configure datasets for the chart
   const datasets: ChartDataset[] = [
     {
-      type: 'bar',
+      type: "bar",
       label: `Annualized ${category}`,
       data: annualizedValues,
       backgroundColor: "rgba(53, 162, 235, 0.7)",
@@ -133,7 +146,7 @@ export default function AnnualizedHousingChart({
   // Add target line if requested
   if (showTarget && targetValue) {
     datasets.push({
-      type: 'line',
+      type: "line",
       label: "Annual Target",
       data: Array(labels.length).fill(targetValue),
       borderColor: "rgb(255, 99, 132)",
@@ -150,7 +163,7 @@ export default function AnnualizedHousingChart({
     labels,
     datasets,
   };
-  
+
   const options: any = {
     responsive: true,
     maintainAspectRatio: false,
@@ -175,7 +188,7 @@ export default function AnnualizedHousingChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -184,11 +197,11 @@ export default function AnnualizedHousingChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} units`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -205,9 +218,9 @@ export default function AnnualizedHousingChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return value.toLocaleString();
-          }
+          },
         },
       },
       x: {
@@ -241,8 +254,15 @@ export default function AnnualizedHousingChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
-      <Chart type='bar' data={chartData} options={options} />
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
+      <Chart type="bar" data={chartData} options={options} />
     </div>
   );
 }

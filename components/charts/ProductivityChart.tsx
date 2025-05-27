@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
 
 ChartJS.register(
@@ -80,18 +80,22 @@ export default function ProductivityChart({
   });
 
   // Get productivity values
-  const productivityValues = filteredData.map((dataPoint: [string, number]) => dataPoint[1]);
+  const productivityValues = filteredData.map(
+    (dataPoint: [string, number]) => dataPoint[1],
+  );
 
   // Calculate year-over-year growth rates if requested
   let growthRates: number[] = [];
   if (showGrowthRate) {
-    growthRates = productivityValues.map((value: number, index: number) => {
-      if (index < 4) return null; // Need at least 4 quarters for YoY comparison
-      const previousYearValue = productivityValues[index - 4];
-      if (previousYearValue === 0) return null;
-      return ((value - previousYearValue) / previousYearValue) * 100;
-    }).filter((val: any) => val !== null) as number[];
-    
+    growthRates = productivityValues
+      .map((value: number, index: number) => {
+        if (index < 4) return null; // Need at least 4 quarters for YoY comparison
+        const previousYearValue = productivityValues[index - 4];
+        if (previousYearValue === 0) return null;
+        return ((value - previousYearValue) / previousYearValue) * 100;
+      })
+      .filter((val: any) => val !== null) as number[];
+
     // Pad beginning with nulls to align with original data
     const padding = new Array(4).fill(null);
     growthRates = [...padding, ...growthRates];
@@ -157,7 +161,7 @@ export default function ProductivityChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -166,16 +170,16 @@ export default function ProductivityChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             if (context.dataset.label.includes("Growth Rate")) {
               return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
             } else if (context.dataset.label.includes("Target")) {
               return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
             }
             return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -192,9 +196,9 @@ export default function ProductivityChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return value.toFixed(1);
-          }
+          },
         },
       },
       x: {
@@ -228,7 +232,14 @@ export default function ProductivityChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

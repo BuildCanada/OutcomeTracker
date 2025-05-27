@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import populationData from "@/metrics/statscan/population.json";
 
 ChartJS.register(
@@ -101,7 +101,7 @@ export default function PopulationChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold',
+          weight: "bold",
         },
         padding: {
           top: 10,
@@ -155,7 +155,14 @@ export default function PopulationChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

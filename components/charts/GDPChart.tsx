@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
 
 // Define TypeScript interfaces for our data structure
@@ -86,7 +86,9 @@ export default function GDPChart({
   });
 
   // Get GDP values
-  const gdpValues = filteredData.map((dataPoint: GDPDataPoint) => dataPoint[1] / 1000); // Convert to billions for readability
+  const gdpValues = filteredData.map(
+    (dataPoint: GDPDataPoint) => dataPoint[1] / 1000,
+  ); // Convert to billions for readability
 
   const datasets: ChartDataset[] = [
     {
@@ -134,7 +136,7 @@ export default function GDPChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -143,11 +145,11 @@ export default function GDPChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} billion`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -164,9 +166,9 @@ export default function GDPChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return value.toLocaleString();
-          }
+          },
         },
       },
       x: {
@@ -198,7 +200,14 @@ export default function GDPChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

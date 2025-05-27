@@ -10,10 +10,13 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
 import populationData from "@/metrics/statscan/population.json";
-import { calculatePerCapita, TimeSeriesDataPoint } from "./utils/PerCapitaCalculator";
+import {
+  calculatePerCapita,
+  TimeSeriesDataPoint,
+} from "./utils/PerCapitaCalculator";
 
 ChartJS.register(
   CategoryScale,
@@ -51,16 +54,20 @@ export default function GDPPerCapitaChart({
   const populationCanadaData = (populationData as any).data["Canada"] || [];
 
   // Calculate per capita values (in thousands of dollars)
-  const perCapitaValues = calculatePerCapita(gdpMetricData, populationCanadaData, 1000);
+  const perCapitaValues = calculatePerCapita(
+    gdpMetricData,
+    populationCanadaData,
+    1000,
+  );
 
   // Filter data by year range
-  const filteredData = perCapitaValues.filter(dataPoint => {
+  const filteredData = perCapitaValues.filter((dataPoint) => {
     const year = parseInt(dataPoint.date.split("-")[0]);
     return year >= startYear && year <= endYear;
   });
 
   // Format dates for display
-  const labels = filteredData.map(dataPoint => {
+  const labels = filteredData.map((dataPoint) => {
     if (quarterlyData) {
       const [year, month] = dataPoint.date.split("-");
       // Convert month number to quarter (01->Q1, 04->Q2, 07->Q3, 10->Q4)
@@ -72,22 +79,22 @@ export default function GDPPerCapitaChart({
   });
 
   // GDP per capita values
-  const perCapitaDataValues = filteredData.map(dataPoint => dataPoint.value);
+  const perCapitaDataValues = filteredData.map((dataPoint) => dataPoint.value);
 
   // Calculate annual average if requested
   let annualAverages: number[] = [];
   if (showAnnual && quarterlyData) {
     // Group data by year to calculate averages
     const yearlyGroups: Record<string, number[]> = {};
-    
-    filteredData.forEach(dataPoint => {
+
+    filteredData.forEach((dataPoint) => {
       const year = dataPoint.date.split("-")[0];
       if (!yearlyGroups[year]) yearlyGroups[year] = [];
       yearlyGroups[year].push(dataPoint.value);
     });
-    
+
     // For each quarter datapoint, find its year's average
-    annualAverages = filteredData.map(dataPoint => {
+    annualAverages = filteredData.map((dataPoint) => {
       const year = dataPoint.date.split("-")[0];
       const yearValues = yearlyGroups[year] || [];
       if (yearValues.length === 0) return 0;
@@ -165,7 +172,7 @@ export default function GDPPerCapitaChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -174,15 +181,15 @@ export default function GDPPerCapitaChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             // Different format for target value
             if (context.dataset.label === "Target") {
               return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`;
             }
             return `${context.dataset.label}: $${context.parsed.y.toLocaleString()} per person`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -199,9 +206,9 @@ export default function GDPPerCapitaChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return `$${value.toLocaleString()}`;
-          }
+          },
         },
       },
       x: {
@@ -235,7 +242,14 @@ export default function GDPPerCapitaChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

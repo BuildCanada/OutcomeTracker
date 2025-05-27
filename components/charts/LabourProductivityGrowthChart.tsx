@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
 
 ChartJS.register(
@@ -68,19 +68,26 @@ export default function LabourProductivityGrowthChart({
   });
 
   // Calculate year-over-year growth rates
-  const growthRates: (number | null)[] = filteredData.map((dataPoint: [string, number], index: number) => {
-    if (index < 4) return null; // Need at least 4 quarters for YoY comparison
-    
-    const currentValue = dataPoint[1];
-    const previousYearValue = filteredData[index - 4][1];
-    
-    if (previousYearValue === 0 || previousYearValue === null || currentValue === null) return null;
-    
-    return ((currentValue - previousYearValue) / previousYearValue) * 100;
-  });
+  const growthRates: (number | null)[] = filteredData.map(
+    (dataPoint: [string, number], index: number) => {
+      if (index < 4) return null; // Need at least 4 quarters for YoY comparison
+
+      const currentValue = dataPoint[1];
+      const previousYearValue = filteredData[index - 4][1];
+
+      if (
+        previousYearValue === 0 ||
+        previousYearValue === null ||
+        currentValue === null
+      )
+        return null;
+
+      return ((currentValue - previousYearValue) / previousYearValue) * 100;
+    },
+  );
 
   // Get productivity index values for secondary axis if requested
-  const productivityValues = showProductivityIndex 
+  const productivityValues = showProductivityIndex
     ? filteredData.map((dataPoint: [string, number]) => dataPoint[1])
     : [];
 
@@ -104,7 +111,7 @@ export default function LabourProductivityGrowthChart({
       borderColor: "rgb(53, 162, 235)",
       backgroundColor: "rgba(53, 162, 235, 0.5)",
       tension: 0.3,
-      yAxisID: 'y',
+      yAxisID: "y",
     },
   ];
 
@@ -117,7 +124,7 @@ export default function LabourProductivityGrowthChart({
       backgroundColor: "rgba(156, 163, 175, 0.5)",
       tension: 0.3,
       borderDash: [3, 3],
-      yAxisID: 'y1',
+      yAxisID: "y1",
     });
   }
 
@@ -132,7 +139,7 @@ export default function LabourProductivityGrowthChart({
       borderDash: [5, 5],
       pointRadius: 0,
       tension: 0,
-      yAxisID: 'y',
+      yAxisID: "y",
     });
   }
 
@@ -145,7 +152,7 @@ export default function LabourProductivityGrowthChart({
     responsive: true,
     maintainAspectRatio: false,
     interaction: {
-      mode: 'index' as const,
+      mode: "index" as const,
       intersect: false,
     },
     plugins: {
@@ -164,7 +171,7 @@ export default function LabourProductivityGrowthChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -173,7 +180,7 @@ export default function LabourProductivityGrowthChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             if (context.dataset.label.includes("Target")) {
               return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
             } else if (context.dataset.label.includes("Growth Rate")) {
@@ -183,9 +190,9 @@ export default function LabourProductivityGrowthChart({
               return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}`;
             }
             return `${context.dataset.label}: ${context.parsed.y}`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       x: {
@@ -208,9 +215,9 @@ export default function LabourProductivityGrowthChart({
         },
       },
       y: {
-        type: 'linear' as const,
+        type: "linear" as const,
         display: true,
-        position: 'left' as const,
+        position: "left" as const,
         title: {
           display: true,
           text: "Growth Rate (%)",
@@ -223,9 +230,9 @@ export default function LabourProductivityGrowthChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return `${value.toFixed(1)}%`;
-          }
+          },
         },
         grid: {
           drawOnChartArea: true,
@@ -233,9 +240,9 @@ export default function LabourProductivityGrowthChart({
       },
       ...(showProductivityIndex && {
         y1: {
-          type: 'linear' as const,
+          type: "linear" as const,
           display: true,
-          position: 'right' as const,
+          position: "right" as const,
           title: {
             display: true,
             text: "Productivity Index (2017=100)",
@@ -248,9 +255,9 @@ export default function LabourProductivityGrowthChart({
           },
           ticks: {
             padding: 8,
-            callback: function(value: any) {
+            callback: function (value: any) {
               return value.toFixed(1);
-            }
+            },
           },
           grid: {
             drawOnChartArea: false,
@@ -269,7 +276,14 @@ export default function LabourProductivityGrowthChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

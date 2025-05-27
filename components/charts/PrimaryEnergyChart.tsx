@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import primaryEnergyData from "@/metrics/statscan/primary-energy.json";
 
 ChartJS.register(
@@ -73,8 +73,18 @@ export default function PrimaryEnergyChart({
       const [year, month] = dateStr.split("-");
       // Convert month number to month name
       const monthNames = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ];
       const monthIndex = parseInt(month) - 1;
       return `${year}-${monthNames[monthIndex]}`;
@@ -84,22 +94,26 @@ export default function PrimaryEnergyChart({
   });
 
   // Get energy production values (convert from terajoules to petajoules for readability)
-  const energyValues = filteredData.map((dataPoint: [string, number]) => dataPoint[1] / 1000);
+  const energyValues = filteredData.map(
+    (dataPoint: [string, number]) => dataPoint[1] / 1000,
+  );
 
   // Calculate moving average for trend line if requested
   let trendValues: number[] = [];
   if (showTrend) {
     const period = 12; // 12-month moving average
-    trendValues = energyValues.map((_: number, index: number, array: number[]) => {
-      if (index < period - 1) return null;
-      
-      let sum = 0;
-      for (let i = 0; i < period; i++) {
-        sum += array[index - i];
-      }
-      return sum / period;
-    }).filter((val: any) => val !== null) as number[];
-    
+    trendValues = energyValues
+      .map((_: number, index: number, array: number[]) => {
+        if (index < period - 1) return null;
+
+        let sum = 0;
+        for (let i = 0; i < period; i++) {
+          sum += array[index - i];
+        }
+        return sum / period;
+      })
+      .filter((val: any) => val !== null) as number[];
+
     // Pad beginning with nulls to align with original data
     const padding = new Array(period - 1).fill(null);
     trendValues = [...padding, ...trendValues];
@@ -166,7 +180,7 @@ export default function PrimaryEnergyChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -175,14 +189,14 @@ export default function PrimaryEnergyChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             if (context.dataset.label.includes("Target")) {
               return `${context.dataset.label}: ${(context.parsed.y * 1000).toLocaleString()} TJ`;
             }
             return `${context.dataset.label}: ${(context.parsed.y * 1000).toLocaleString()} TJ`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -199,9 +213,9 @@ export default function PrimaryEnergyChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return `${value.toLocaleString()} PJ`;
-          }
+          },
         },
       },
       x: {
@@ -235,7 +249,14 @@ export default function PrimaryEnergyChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

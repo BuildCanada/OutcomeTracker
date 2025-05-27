@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import housingStartsData from "@/metrics/statscan/housing-starts.json";
 
 // Register Chart.js components
@@ -70,8 +70,18 @@ export default function HousingStartsChart({
       const [year, month] = dateStr.split("-");
       // Convert month number to month name
       const monthNames = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ];
       const monthIndex = parseInt(month) - 1;
       return `${year}-${monthNames[monthIndex]}`;
@@ -82,22 +92,26 @@ export default function HousingStartsChart({
   });
 
   // Get housing starts values
-  const housingValues = filteredData.map((dataPoint: [string, number]) => dataPoint[1]);
+  const housingValues = filteredData.map(
+    (dataPoint: [string, number]) => dataPoint[1],
+  );
 
   // Calculate moving average for trend line if requested
   let trendValues: number[] = [];
   if (showTrend) {
     const period = 12; // 12-month moving average
-    trendValues = housingValues.map((_: number, index: number, array: number[]) => {
-      if (index < period - 1) return null;
-      
-      let sum = 0;
-      for (let i = 0; i < period; i++) {
-        sum += array[index - i];
-      }
-      return sum / period;
-    }).filter((val: any) => val !== null) as number[];
-    
+    trendValues = housingValues
+      .map((_: number, index: number, array: number[]) => {
+        if (index < period - 1) return null;
+
+        let sum = 0;
+        for (let i = 0; i < period; i++) {
+          sum += array[index - i];
+        }
+        return sum / period;
+      })
+      .filter((val: any) => val !== null) as number[];
+
     // Pad beginning with nulls to align with original data
     const padding = new Array(period - 1).fill(null);
     trendValues = [...padding, ...trendValues];
@@ -150,7 +164,7 @@ export default function HousingStartsChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -159,11 +173,11 @@ export default function HousingStartsChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} units`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -180,9 +194,9 @@ export default function HousingStartsChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return value.toLocaleString();
-          }
+          },
         },
       },
       x: {
@@ -216,7 +230,14 @@ export default function HousingStartsChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

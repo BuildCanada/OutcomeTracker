@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import nprData from "@/metrics/statscan/non-permanent-residents.json";
 import populationData from "@/metrics/statscan/population.json";
 
@@ -61,41 +61,43 @@ export default function NPRPopulationChart({
   // Build a lookup for total population data
   const populationLookup: Record<string, number> = {};
   // @ts-ignore
-  totalPopulation.forEach(function(item: any) {
+  totalPopulation.forEach(function (item: any) {
     populationLookup[item[0]] = item[1];
   });
 
   // Calculate NPR percentage of total population
   // @ts-ignore
   const percentageData = totalNPR
-    .map(function(item: any) {
+    .map(function (item: any) {
       const dateStr = item[0];
       const nprValue = item[1];
       const totalPopValue = populationLookup[dateStr];
-      
+
       // Skip if we don't have matching population data
       if (!totalPopValue) return null;
-      
+
       // Calculate as percentage
       const percentage = (nprValue / totalPopValue) * 100;
-      
+
       return {
         date: dateStr,
-        value: percentage
+        value: percentage,
       };
     })
-    .filter(function(item: any) { return item !== null; });
+    .filter(function (item: any) {
+      return item !== null;
+    });
 
   // Filter data by year range
   // @ts-ignore
-  const filteredData = percentageData.filter(function(item) {
+  const filteredData = percentageData.filter(function (item) {
     const year = parseInt(item.date.split("-")[0]);
     return year >= startYear && year <= endYear;
   });
 
   // Format dates for display
   // @ts-ignore
-  const labels = filteredData.map(function(item) {
+  const labels = filteredData.map(function (item) {
     if (quarterlyData) {
       const [year, month] = item.date.split("-");
       // Convert month number to quarter (01->Q1, 04->Q2, 07->Q3, 10->Q4)
@@ -108,7 +110,9 @@ export default function NPRPopulationChart({
 
   // Extract values for chart
   // @ts-ignore
-  const chartValues = filteredData.map(function(item) { return item.value; });
+  const chartValues = filteredData.map(function (item) {
+    return item.value;
+  });
 
   const datasets: ChartDataset[] = [
     {
@@ -157,7 +161,7 @@ export default function NPRPopulationChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold' as const,
+          weight: "bold" as const,
         },
         padding: {
           top: 10,
@@ -166,15 +170,15 @@ export default function NPRPopulationChart({
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function (context: any) {
             // Different format for target values
             if (context.dataset.label.includes("Target")) {
               return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
             }
             return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
-          }
-        }
-      }
+          },
+        },
+      },
     },
     scales: {
       y: {
@@ -191,9 +195,9 @@ export default function NPRPopulationChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: any) {
+          callback: function (value: any) {
             return `${value.toFixed(1)}%`;
-          }
+          },
         },
       },
       x: {
@@ -227,7 +231,14 @@ export default function NPRPopulationChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

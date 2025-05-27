@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
+} from "chart.js/auto";
 import balanceSheetsData from "@/metrics/statscan/balance-sheets.json";
 
 ChartJS.register(
@@ -42,7 +42,7 @@ export default function BalanceSheetsChart({
 }: BalanceSheetsChartProps) {
   // Get data for selected category
   const categoryData = balanceSheetsData.data[category] || [];
-  
+
   // Filter data by year range
   const filteredData = categoryData.filter(([dateStr]) => {
     const year = parseInt(dateStr.split("-")[0]);
@@ -70,7 +70,7 @@ export default function BalanceSheetsChart({
   if (showComparison && comparisonCategory) {
     // Get comparison data
     const comparisonData = balanceSheetsData.data[comparisonCategory] || [];
-    
+
     // Filter comparison data by year range
     const filteredComparisonData = comparisonData.filter(([dateStr]) => {
       const year = parseInt(dateStr.split("-")[0]);
@@ -79,8 +79,10 @@ export default function BalanceSheetsChart({
 
     // Only add comparison if there's data available
     if (filteredComparisonData.length > 0) {
-      const comparisonValues = filteredComparisonData.map(([_, value]) => value);
-      
+      const comparisonValues = filteredComparisonData.map(
+        ([_, value]) => value,
+      );
+
       datasets.push({
         label: comparisonCategory,
         data: comparisonValues,
@@ -115,7 +117,7 @@ export default function BalanceSheetsChart({
         text: title,
         font: {
           size: 16,
-          weight: 'bold',
+          weight: "bold",
         },
         padding: {
           top: 10,
@@ -123,26 +125,26 @@ export default function BalanceSheetsChart({
         },
       },
       tooltip: {
-        mode: 'index' as const,
+        mode: "index" as const,
         intersect: false,
         callbacks: {
-          label: function(context: any) {
-            let label = context.dataset.label || '';
+          label: function (context: any) {
+            let label = context.dataset.label || "";
             if (label) {
-              label += ': ';
+              label += ": ";
             }
             if (context.parsed.y !== null) {
-              label += new Intl.NumberFormat('en-CA', {
-                style: 'currency',
-                currency: 'CAD',
-                notation: 'compact',
-                compactDisplay: 'short',
+              label += new Intl.NumberFormat("en-CA", {
+                style: "currency",
+                currency: "CAD",
+                notation: "compact",
+                compactDisplay: "short",
                 maximumFractionDigits: 1,
               }).format(context.parsed.y);
             }
             return label;
-          }
-        }
+          },
+        },
       },
     },
     scales: {
@@ -160,15 +162,15 @@ export default function BalanceSheetsChart({
         },
         ticks: {
           padding: 8,
-          callback: function(value: number) {
-            return new Intl.NumberFormat('en-CA', {
-              style: 'currency',
-              currency: 'CAD',
-              notation: 'compact',
-              compactDisplay: 'short',
+          callback: function (value: number) {
+            return new Intl.NumberFormat("en-CA", {
+              style: "currency",
+              currency: "CAD",
+              notation: "compact",
+              compactDisplay: "short",
               maximumFractionDigits: 1,
             }).format(value);
-          }
+          },
         },
       },
       x: {
@@ -186,11 +188,11 @@ export default function BalanceSheetsChart({
           maxRotation: 45,
           minRotation: 45,
           padding: 5,
-          callback: function(value: any, index: number) {
+          callback: function (value: any, index: number) {
             // Show fewer labels on x-axis for readability
             const label = this.getLabelForValue(value);
-            return index % 4 === 0 ? label : '';
-          }
+            return index % 4 === 0 ? label : "";
+          },
         },
       },
     },
@@ -203,13 +205,20 @@ export default function BalanceSheetsChart({
       },
     },
     interaction: {
-      mode: 'index' as const,
+      mode: "index" as const,
       intersect: false,
     },
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '400px', position: 'relative' }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minHeight: "400px",
+        position: "relative",
+      }}
+    >
       <Line data={chartData} options={options} />
     </div>
   );

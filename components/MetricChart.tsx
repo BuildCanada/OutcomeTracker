@@ -1,5 +1,5 @@
-"use client"
-import { Line } from "react-chartjs-2"
+"use client";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,19 +9,40 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js"
+} from "chart.js/auto";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 interface MetricChartProps {
-  title: string
-  data: number[]
-  goal: number
+  title: string;
+  data: number[];
+  goal: number;
 }
 
 export default function MetricChart({ title, data, goal }: MetricChartProps) {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-  const labels = months.slice(0, data.length)
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const labels = months.slice(0, data.length);
 
   const chartData = {
     labels,
@@ -41,7 +62,7 @@ export default function MetricChart({ title, data, goal }: MetricChartProps) {
         borderDash: [5, 5],
       },
     ],
-  }
+  };
 
   const options = {
     responsive: true,
@@ -58,12 +79,12 @@ export default function MetricChart({ title, data, goal }: MetricChartProps) {
         beginAtZero: false,
       },
     },
-  }
+  };
 
   return (
     <div>
       <h4 className="mb-2 font-medium">{title}</h4>
       <Line data={chartData} options={options} />
     </div>
-  )
-} 
+  );
+}
