@@ -33,20 +33,12 @@ const nextConfig = {
         destination: "/fr/tracker",
       },
       {
-        source: "/tracker/:path*",
-        destination: "/tracker/:path*",
-      },
-      {
         source: "/admin/:path*",
         destination: "/admin/:path*",
       },
       {
         source: "/api/:path*",
         destination: "/api/:path*",
-      },
-      {
-        source: "/:path*",
-        destination: "https://staging-build-canada.webflow.io/:path*",
       },
     ];
   },

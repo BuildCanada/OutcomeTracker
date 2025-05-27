@@ -39,10 +39,8 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
   const [sessions, setSessions] = useState<ParliamentSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoadingSessions, setIsLoadingSessions] = useState<boolean>(true);
-  const [isLoadingCurrentSession, setIsLoadingCurrentSession] = useState<boolean>(true);
+  const [isLoadingCurrentSession, setIsLoadingCurrentSession] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
-  const adminSettingsDocPath = 'admin_settings/global_config';
 
   // Fetch all available parliamentary sessions
   useEffect(() => {
@@ -69,6 +67,15 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
         // Sort by parliament_number descending (e.g., 45, 44, 43)
         fetchedSessions.sort((a, b) => parseInt(b.parliament_number, 10) - parseInt(a.parliament_number, 10));
         setSessions(fetchedSessions);
+        
+        // Set the current session to the one marked as current_for_tracking
+        const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
+        if (currentSession) {
+          setCurrentSessionId(currentSession.id);
+        } else if (fetchedSessions.length > 0) {
+          // Fallback to the most recent session
+          setCurrentSessionId(fetchedSessions[0].id);
+        }
       } catch (e: any) {
         console.error("Error fetching sessions:", e);
         setError(`Failed to fetch sessions: ${e.message}`);
@@ -78,67 +85,17 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
     fetchSessions();
   }, []);
 
-  // Fetch and listen to the current session ID from admin_settings/global_config
-  useEffect(() => {
-    if (!db) {
-      setError("Firestore not initialized. Ensure @/lib/firebase is configured correctly.");
-      setIsLoadingCurrentSession(false);
-      return;
-    }
-    setIsLoadingCurrentSession(true);
-    if (!db) {
-        setError("Firestore instance is not available for snapshot listener.");
-        setIsLoadingCurrentSession(false);
-        return;
-    }
-    const unsub = onSnapshot(doc(db, adminSettingsDocPath), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        // Ensure current_selected_parliament_session is treated as a string for consistency
-        const selectedSession = data.current_selected_parliament_session?.toString() || null;
-        setCurrentSessionId(selectedSession);
-        setError(null); 
-      } else {
-        setError("Global config document not found.");
-        setCurrentSessionId(null); // No config, no current session
-      }
-      setIsLoadingCurrentSession(false);
-    }, (e: any) => {
-      console.error("Error listening to current session ID:", e);
-      setError(`Failed to listen to current session: ${e.message}`);
-      setIsLoadingCurrentSession(false);
-    });
-
-    return () => unsub(); // Cleanup listener on unmount
-  }, []);
-
-  // Function to update the current session ID in Firestore's global_config
+  // Function to update the current session ID (client-side only for now)
   const setCurrentSessionIdAndUpdateGlobal = useCallback(async (newSessionId: string) => {
-    if (!db) {
-      setError("Firestore not initialized. Cannot update session. Ensure @/lib/firebase is configured correctly.");
-      return;
-    }
     if (!newSessionId) {
         setError("Cannot set an empty session ID.");
         return;
     }
     setError(null);
-    try {
-      if (!db) {
-        setError("Firestore instance is not available for update.");
-        return;
-      }
-      const globalConfigRef = doc(db, adminSettingsDocPath);
-      // Convert to number if your Firestore expects a number, otherwise keep as string
-      // Based on your previous info, it's a number in Firestore.
-      await updateDoc(globalConfigRef, { current_selected_parliament_session: parseInt(newSessionId, 10) });
-      // State update will happen via the onSnapshot listener
-      // setCurrentSessionId(newSessionId); // Optional: optimistic update, but listener should catch it
-      console.log(`Global config updated to session: ${newSessionId}`);
-    } catch (e: any) {
-      console.error("Error updating current session ID in Firestore:", e);
-      setError(`Failed to update session in global config: ${e.message}`);
-    }
+    // For now, just update the client-side state
+    // TODO: Implement server-side API to update admin settings
+    setCurrentSessionId(newSessionId);
+    console.log(`Session updated to: ${newSessionId}`);
   }, []);
 
   return (
