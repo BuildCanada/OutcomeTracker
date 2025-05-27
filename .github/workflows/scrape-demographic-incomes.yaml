@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run the scraper
         run: |
-          python scrape.py '${{ env.STATS_CAN_URL }}' metrics/statscan/demographic-incomes.json "Demographic characteristics"
+          python scrape.py '${{ env.STATS_CAN_URL }}' metrics/statscan/demographic-incomes.json "Income concept" "Demographic characteristics"
       # Commit as brendan so vercel will deploy it
       - name: Commit and push
         run: |-
