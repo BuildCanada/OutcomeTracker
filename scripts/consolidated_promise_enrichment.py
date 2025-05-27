@@ -154,31 +154,82 @@ class ConsolidatedPromiseEnricher:
             return []
     
     async def enrich_promise_explanation(self, promise: dict) -> dict:
-        """Generate explanation fields for a promise."""
+        """Generate explanation fields for a promise using the proper prompt structure."""
         try:
             logger.debug(f"Generating explanation for promise {promise['id']}")
             
-            result = self.langchain.enrich_promise_explanation(
-                promise_text=promise['text'],
-                department=promise.get('responsible_department_lead', ''),
-                party=promise.get('party_code', 'LPC'),
-                context=f"Source: {promise.get('source_type', '')}"
+            # Load the proper prompt template
+            import os
+            prompts_dir = os.path.join(os.path.dirname(__file__), "..", "prompts")
+            prompt_file = os.path.join(prompts_dir, "prompt_generate_whatitmeans.md")
+            
+            try:
+                with open(prompt_file, 'r') as f:
+                    base_prompt = f.read()
+            except FileNotFoundError:
+                logger.error(f"Prompt file not found: {prompt_file}")
+                return {"explanation_enrichment_status": "failed", "error": "Prompt file not found"}
+            
+            # Construct the full prompt with the commitment text
+            commitments_section = f"\n\n**Commitments to Process:**\n* {promise['text']}\n"
+            full_prompt = base_prompt + commitments_section
+            
+            # Use Gemini directly for this specific prompt structure
+            import google.generativeai as genai
+            
+            api_key = os.getenv('GEMINI_API_KEY')
+            if not api_key:
+                return {"error": "GEMINI_API_KEY not set"}
+            
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-2.5-flash-preview-05-20",
+                generation_config={
+                    "temperature": 0.7,
+                    "top_p": 0.95,
+                    "top_k": 64,
+                    "max_output_tokens": 65536,
+                    "response_mime_type": "application/json",
+                }
             )
             
-            if 'error' not in result:
-                self.stats['explanations_generated'] += 1
-                return {
-                    "what_it_means_for_canadians": result.get("what_it_means"),
-                    "background_and_context": result.get("background_and_context"),
-                    "description": result.get("key_components", []),
-                    "concise_title": result.get("potential_impact", "")[:100],  # Use first part as title
-                    "explanation_enriched_at": firestore.SERVER_TIMESTAMP,
-                    "explanation_enrichment_model": self.langchain.model_name,
-                    "explanation_enrichment_status": "processed"
-                }
+            response = model.generate_content(full_prompt)
+            
+            # Parse JSON response
+            import json
+            import re
+            
+            raw_response_text = response.text
+            
+            # Clean JSON from markdown if present
+            match = re.search(r"```(?:json)?\s*([\s\S]+?)\s*```", raw_response_text)
+            if match:
+                json_text = match.group(1).strip()
             else:
-                logger.error(f"Error in explanation generation: {result['error']}")
+                json_text = raw_response_text.strip()
+            
+            result = json.loads(json_text)
+            
+            # The response should be an array with one object
+            if isinstance(result, list) and len(result) > 0:
+                explanation_data = result[0]
+            elif isinstance(result, dict):
+                explanation_data = result
+            else:
+                logger.error(f"Unexpected response format: {result}")
                 return {"explanation_enrichment_status": "failed"}
+            
+            self.stats['explanations_generated'] += 1
+            return {
+                "concise_title": explanation_data.get("concise_title", ""),
+                "description": explanation_data.get("description", ""),
+                "what_it_means_for_canadians": explanation_data.get("what_it_means_for_canadians", []),
+                "background_and_context": explanation_data.get("background_and_context", ""),
+                "intended_impact_and_objectives": explanation_data.get("what_it_means_for_canadians", []),  # Using same data for now
+                "explanation_enriched_at": firestore.SERVER_TIMESTAMP,
+                "explanation_enrichment_model": "gemini-2.5-flash-preview-05-20",
+                "explanation_enrichment_status": "processed"
+            }
                 
         except Exception as e:
             logger.error(f"Error enriching explanation for promise {promise['id']}: {e}")
@@ -197,17 +248,31 @@ class ConsolidatedPromiseEnricher:
             if 'error' not in result:
                 self.stats['keywords_extracted'] += 1
                 
-                # Flatten all keywords into a single list
-                all_keywords = []
-                all_keywords.extend(result.get("policy_areas", []))
-                all_keywords.extend(result.get("actions", []))
-                all_keywords.extend(result.get("target_groups", []))
-                all_keywords.extend(result.get("key_concepts", []))
+                # Handle both list and dictionary responses
+                if isinstance(result, list):
+                    # Direct list of keywords
+                    all_keywords = result
+                    policy_areas = []
+                    target_groups = []
+                elif isinstance(result, dict):
+                    # Structured dictionary response
+                    all_keywords = []
+                    all_keywords.extend(result.get("policy_areas", []))
+                    all_keywords.extend(result.get("actions", []))
+                    all_keywords.extend(result.get("target_groups", []))
+                    all_keywords.extend(result.get("key_concepts", []))
+                    policy_areas = result.get("policy_areas", [])
+                    target_groups = result.get("target_groups", [])
+                else:
+                    # Fallback
+                    all_keywords = []
+                    policy_areas = []
+                    target_groups = []
                 
                 return {
                     "extracted_keywords_concepts": all_keywords,
-                    "policy_areas": result.get("policy_areas", []),
-                    "target_groups": result.get("target_groups", []),
+                    "policy_areas": policy_areas,
+                    "target_groups": target_groups,
                     "keywords_extracted_at": firestore.SERVER_TIMESTAMP
                 }
             else:
@@ -246,22 +311,24 @@ class ConsolidatedPromiseEnricher:
         try:
             logger.debug(f"Generating history for promise {promise['id']}")
             
-            # Extract year from source type or use current year
-            year = "2021" if "2021" in promise.get('source_type', '') else "2025"
-            
             result = self.langchain.generate_promise_history(
                 promise_text=promise['text'],
-                party=promise.get('party_code', 'LPC'),
-                year=year,
-                department=promise.get('responsible_department_lead', '')
+                source_type=promise.get('source_type', ''),
+                entity=f"{promise.get('party_code', 'LPC')} Government",
+                date_issued=promise.get('data', {}).get('date_issued', '2021-12-16')
             )
             
             if 'error' not in result:
                 self.stats['history_generated'] += 1
+                # Result should be a timeline array, convert to string for storage
+                timeline = result if isinstance(result, list) else []
+                timeline_text = "\n".join([
+                    f"{item.get('date', 'Unknown date')}: {item.get('action', 'No action')}" 
+                    for item in timeline
+                ]) if timeline else "No relevant historical events found."
+                
                 return {
-                    "commitment_history_rationale": result.get("historical_context"),
-                    "political_significance": result.get("political_significance"),
-                    "implementation_notes": result.get("implementation_notes"),
+                    "commitment_history_rationale": timeline_text,
                     "history_generated_at": firestore.SERVER_TIMESTAMP
                 }
             else:
@@ -294,6 +361,10 @@ class ConsolidatedPromiseEnricher:
                 history_data = await self.generate_commitment_history(promise)
                 update_data.update(history_data)
             
+            if 'priority' in enrichment_types:
+                priority_data = await self.rank_promise_priority(promise)
+                update_data.update(priority_data)
+            
             # Add processing timestamp
             update_data["last_enrichment_at"] = firestore.SERVER_TIMESTAMP
             
@@ -312,6 +383,143 @@ class ConsolidatedPromiseEnricher:
             self.stats['errors'] += 1
             return False
     
+    async def rank_promise_priority(self, promise: dict) -> dict:
+        """Rank promise priority using Build Canada tenets."""
+        try:
+            logger.debug(f"Ranking priority for promise {promise['id']}")
+            
+            # Load ranking templates and context files
+            prompts_dir = os.path.join(os.path.dirname(__file__), "..", "prompts")
+            tenets_path = os.path.join(prompts_dir, "build_canada_tenets.txt")
+            detailed_instructions_path = os.path.join(prompts_dir, "detailed_rating_instructions.md")
+            
+            # Determine economic context based on source type
+            if "2021" in promise.get('source_type', ''):
+                economic_context_file = "2021_mandate.txt"
+                context_name = "2021 Federal Election"
+            else:
+                economic_context_file = "2025_platform.txt"
+                context_name = "2025 Federal Election"
+            
+            economic_context_path = os.path.join(prompts_dir, "economic_contexts", economic_context_file)
+            
+            # Load content files
+            try:
+                with open(tenets_path, 'r') as f:
+                    tenets_text = f.read()
+                with open(detailed_instructions_path, 'r') as f:
+                    detailed_instructions_text = f.read()
+                with open(economic_context_path, 'r') as f:
+                    economic_context_text = f.read()
+            except FileNotFoundError as e:
+                logger.error(f"Missing ranking context file: {e}")
+                return {"error": f"Missing ranking context file: {e}"}
+            
+            # Create ranking prompt
+            ranking_prompt = f"""You will be provided with a government commitment, Build Canada Core Tenets, the Election Economic Context, and detailed scoring instructions.
+
+== Build Canada Core Tenets ==
+{tenets_text}
+
+== Election Economic Context: {context_name} ==
+{economic_context_text}
+
+== Government Commitment to Evaluate ==
+```text
+{promise['text']}
+```
+
+== Detailed Scoring Instructions (Task, Scoring Criteria, Method, Guidance, Examples) ==
+{detailed_instructions_text}
+
+Please respond with ONLY a valid JSON object containing the required evaluation fields."""
+
+            # Use Gemini directly for ranking (since it needs specific JSON format)
+            import google.generativeai as genai
+            
+            api_key = os.getenv('GEMINI_API_KEY')
+            if not api_key:
+                return {"error": "GEMINI_API_KEY not set"}
+            
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-2.5-flash-preview-04-17",
+                generation_config={
+                    "temperature": 0.5,
+                    "top_p": 0.95,
+                    "top_k": 64,
+                    "max_output_tokens": 65536,
+                    "response_mime_type": "application/json",
+                },
+                system_instruction="You are the Build-Canada Mandate Scorer. You are an expert in Canadian policy and economics."
+            )
+            
+            response = model.generate_content(ranking_prompt)
+            
+            # Parse JSON response
+            import json
+            import re
+            
+            raw_response_text = response.text
+            
+            # Try to find JSON within ```json ... ``` if present
+            match = re.search(r"```json\n(.*\n)```", raw_response_text, re.DOTALL)
+            if match:
+                json_text = match.group(1).strip()
+            else:
+                json_text = raw_response_text.strip()
+                # Extract JSON object if it's embedded in other text
+                first_brace = json_text.find('{')
+                last_brace = json_text.rfind('}')
+                if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+                    json_text = json_text[first_brace:last_brace+1]
+            
+            evaluation = json.loads(json_text)
+            
+            # Validate required fields
+            required_fields = ['bc_promise_rank', 'bc_promise_direction', 'bc_promise_rank_rationale']
+            if not all(field in evaluation for field in required_fields):
+                logger.error(f"Missing required fields in ranking response: {evaluation}")
+                return {"error": "Missing required ranking fields"}
+            
+            # Validate values
+            rank_val = evaluation['bc_promise_rank']
+            direction_val = evaluation['bc_promise_direction']
+            
+            if rank_val not in ['strong', 'medium', 'weak']:
+                logger.error(f"Invalid rank value: {rank_val}")
+                return {"error": f"Invalid rank value: {rank_val}"}
+            
+            if direction_val not in ['positive', 'negative', 'neutral']:
+                logger.error(f"Invalid direction value: {direction_val}")
+                return {"error": f"Invalid direction value: {direction_val}"}
+            
+            self.stats['priorities_ranked'] += 1
+            return {
+                "bc_promise_rank": rank_val,
+                "bc_promise_direction": direction_val,
+                "bc_promise_rank_rationale": evaluation['bc_promise_rank_rationale'],
+                "bc_priority_score": self._convert_rank_to_score(rank_val, direction_val),
+                "bc_ranked_at": firestore.SERVER_TIMESTAMP
+            }
+            
+        except Exception as e:
+            logger.error(f"Error ranking promise {promise['id']}: {e}")
+            return {"error": str(e)}
+    
+    def _convert_rank_to_score(self, rank: str, direction: str) -> float:
+        """Convert categorical rank/direction to numerical score for compatibility."""
+        base_scores = {"strong": 85.0, "medium": 65.0, "weak": 35.0}
+        score = base_scores.get(rank, 50.0)
+        
+        if direction == "positive":
+            score += 10.0
+        elif direction == "negative":
+            score -= 10.0
+        # neutral: no adjustment
+        
+        return min(100.0, max(0.0, score))  # Clamp to 0-100
+
     async def run_enrichment_pipeline(self, parliament_session_id: str, enrichment_types: list,
                                     source_type: str = None, limit: int = None, 
                                     force_reprocessing: bool = False, dry_run: bool = False) -> dict:
@@ -385,7 +593,7 @@ async def main():
     parser.add_argument(
         '--enrichment_types',
         nargs='+',
-        choices=['explanation', 'keywords', 'action_type', 'history', 'all'],
+        choices=['explanation', 'keywords', 'action_type', 'history', 'priority', 'all'],
         default=['all'],
         help='Types of enrichment to perform'
     )
@@ -414,7 +622,7 @@ async def main():
     
     # Handle 'all' enrichment type
     if 'all' in args.enrichment_types:
-        enrichment_types = ['explanation', 'keywords', 'action_type', 'history']
+        enrichment_types = ['explanation', 'keywords', 'action_type', 'history', 'priority']
     else:
         enrichment_types = args.enrichment_types
     
