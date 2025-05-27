@@ -105,6 +105,7 @@ export interface PromiseData {
   fullPath?: string; // Full Firestore path for the promise document
   text: string;
   responsible_department_lead: string;
+  category?: string; // Primary policy category (e.g., "Economy", "Healthcare", "Environment")
   source_type?: string; // Made optional as it's not used client-side
   commitment_history_rationale?: RationaleEvent[]; // Added optional field
   date_issued?: string; // Optional

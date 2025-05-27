@@ -5,6 +5,7 @@ import "./globals.css";
 import Header from "@/components/header";
 import clsx from "clsx";
 import { SessionProvider } from "@/context/SessionContext";
+import { Toaster } from "@/components/ui/toaster";
 import Link from "next/link";
 import Image from "next/image";
 import "./globals.css";
@@ -25,6 +26,7 @@ const emojiFaviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10
 const faviconDataUrl = `data:image/svg+xml,${encodeURIComponent(emojiFaviconSvg)}`;
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://buildcanada.ca"),
   title: `Results Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
   description: "Track the progress of Canada's government initiatives",
   icons: {
@@ -79,6 +81,7 @@ export default function RootLayout({
             </footer>
           </SessionProvider>
         </div>
+        <Toaster />
       </body>
     </html>
   );
