@@ -21,6 +21,7 @@ import NPRPopulationChart from "@/components/charts/NPRPopulationChart";
 import AnnualizedHousingChart from "./charts/AnnualizedHousingChart";
 import ProductivityChart from "@/components/charts/ProductivityChart";
 import PrimaryEnergyChart from "@/components/charts/PrimaryEnergyChart";
+import LabourProductivityGrowthChart from "@/components/charts/LabourProductivityGrowthChart";
 
 interface MetricData {
   metric: string;
@@ -338,6 +339,24 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               showTrend={false}
               showTarget={true}
               targetValue={3000000}
+            />
+          </div>
+        </div>
+      );
+
+    case "innovation-science-and-economic-development-canada":
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <div className="h-96 border rounded-lg p-4">
+            <LabourProductivityGrowthChart
+              title="Labour Productivity Growth"
+              sector="Total economy"
+              startYear={2015}
+              endYear={2024}
+              quarterlyData={true}
+              showTarget={true}
+              targetValue={2.0}
+              showProductivityIndex={false}
             />
           </div>
         </div>

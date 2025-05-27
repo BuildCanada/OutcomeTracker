@@ -89,12 +89,13 @@ The component includes real data visualizations for key departments:
 - **Immigration**: NPR Population % chart with target
 - **Government Transformation**: Public Service Productivity chart with 20% increase target
 - **Energy**: Total Primary Energy Production chart with trend analysis
+- **Innovation**: Labour Productivity Growth chart with 2% YoY target
 
 Other departments show "Chart coming soon" placeholders.
 
 ## Future Enhancements
 
-- Add charts for remaining departments (Defence, Innovation, Health)
+- Add charts for remaining departments (Defence, Health)
 - Add real-time data fetching from StatCan APIs
 - Implement metric history tracking
 - Add export functionality for metrics data

@@ -113,6 +113,13 @@ export const Innovation: Story = {
   args: {
     departmentSlug: 'innovation-science-and-economic-development-canada',
   },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Shows labour productivity growth chart with real StatCan data tracking year-over-year growth rates against 2% target for innovation goals.'
+      }
+    }
+  }
 };
 
 export const Health: Story = {
