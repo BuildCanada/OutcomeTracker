@@ -116,7 +116,7 @@ class PromiseTrackerLangchain:
         prompts['evidence_oic'] = self._load_file_template(prompts_dir / 'prompt_oic_evidence.md')
         
         # Evidence-promise linking prompts
-        prompts['evidence_linking'] = self._load_file_template(prompts_dir / 'prompt_add_evidence_items_to_promises.md')
+        # Evidence linking template is created directly in _create_evidence_linking_template()
         
         return prompts
     
@@ -263,6 +263,57 @@ If no events are found, return: []"""
         
         return PromptTemplate.from_template(template)
     
+    def _create_evidence_linking_template(self) -> PromptTemplate:
+        """Create the evidence-promise linking template."""
+        template = """You are an expert Canadian government policy analyst. Your task is to determine whether a piece of evidence should be linked to a specific government promise or commitment.
+
+You will be provided with:
+1. **Evidence Item**: A government action, announcement, bill, regulation, or other official document
+2. **Promise/Commitment**: A government promise or commitment from a mandate letter, platform, or other source
+
+**Evidence Details:**
+- Title: {evidence_title}
+- Content: {evidence_content}
+- Type: {evidence_type}
+- Date: {evidence_date}
+- Source: {evidence_source}
+
+**Promise Details:**
+- Text: {promise_text}
+- Party: {promise_party}
+- Department: {promise_department}
+- Source Type: {promise_source_type}
+- Keywords: {promise_keywords}
+
+**Your Task:**
+Analyze whether this evidence item represents concrete action taken toward fulfilling the given promise. Consider:
+
+1. **Direct Relevance**: Does the evidence directly address the policy area, objective, or specific action mentioned in the promise?
+2. **Substantive Connection**: Is this a meaningful step toward fulfilling the promise (not just tangentially related)?
+3. **Chronological Alignment**: Does the evidence occur at an appropriate time relative to when the promise was made?
+4. **Scope and Scale**: Does the evidence represent a significant enough action to constitute progress on the promise?
+
+**Evaluation Criteria:**
+- **Link**: If the evidence clearly represents concrete action toward fulfilling the promise
+- **No Link**: If the evidence is unrelated, tangentially related, or does not represent meaningful progress
+
+**Output Requirements:**
+Respond with ONLY a valid JSON object containing:
+- "should_link": boolean (true if evidence should be linked to promise, false otherwise)
+- "confidence_score": float between 0.0 and 1.0 indicating confidence in the decision
+- "rationale": string explaining the reasoning for the decision (2-3 sentences)
+
+Example Output:
+{{
+  "should_link": true,
+  "confidence_score": 0.85,
+  "rationale": "The evidence shows the introduction of Bill C-27 which directly addresses the promise to introduce legislation for digital privacy protections. This represents concrete legislative action toward fulfilling the commitment with strong alignment in timing and scope."
+}}
+
+Ensure the output is ONLY the JSON object."""
+        
+        return PromptTemplate.from_template(template)
+    
     def _initialize_chains(self) -> Dict[str, Any]:
         """Initialize all Langchain chains."""
         chains = {}
@@ -279,8 +330,8 @@ If no events are found, return: []"""
         chains['evidence_gazette'] = self.prompts['evidence_gazette'] | self.llm | JsonOutputParser()
         chains['evidence_oic'] = self.prompts['evidence_oic'] | self.llm | JsonOutputParser()
         
-        # Evidence-promise linking chains
-        chains['evidence_linking'] = self.prompts['evidence_linking'] | self.llm | JsonOutputParser()
+        # Evidence-promise linking chains  
+        chains['evidence_linking'] = self._create_evidence_linking_template() | self.llm | JsonOutputParser()
         
         return chains
     
@@ -352,9 +403,18 @@ If no events are found, return: []"""
     def link_evidence_to_promise(self, evidence_data: Dict[str, Any], promise_data: Dict[str, Any]) -> Dict[str, Any]:
         """Determine if evidence should be linked to a promise and generate rationale."""
         try:
+            # Flatten data for template
             combined_data = {
-                'evidence': evidence_data,
-                'promise': promise_data
+                'evidence_title': evidence_data.get('title', ''),
+                'evidence_content': evidence_data.get('content', ''),
+                'evidence_type': evidence_data.get('type', ''),
+                'evidence_date': evidence_data.get('date', ''),
+                'evidence_source': evidence_data.get('source', ''),
+                'promise_text': promise_data.get('text', ''),
+                'promise_party': promise_data.get('party', ''),
+                'promise_department': promise_data.get('department', ''),
+                'promise_source_type': promise_data.get('source_type', ''),
+                'promise_keywords': ', '.join(promise_data.get('keywords', [])) if isinstance(promise_data.get('keywords'), list) else str(promise_data.get('keywords', ''))
             }
             result = self.chains['evidence_linking'].invoke(combined_data)
             return result
