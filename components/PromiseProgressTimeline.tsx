@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { PromiseData, EvidenceItem } from '../lib/types';
 import { Timestamp } from 'firebase/firestore';
