@@ -20,6 +20,7 @@ import HousingStartsChart from "@/components/charts/HousingStartsChart";
 import NPRPopulationChart from "@/components/charts/NPRPopulationChart";
 import AnnualizedHousingChart from "./charts/AnnualizedHousingChart";
 import ProductivityChart from "@/components/charts/ProductivityChart";
+import PrimaryEnergyChart from "@/components/charts/PrimaryEnergyChart";
 
 interface MetricData {
   metric: string;
@@ -246,10 +247,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
       return (
         <div className="col-span-1 lg:col-span-2">
           <div className="h-96 border rounded-lg p-4">
-            <GDPPerCapitaChart
-              title="GDP Per Capita"
-              startYear={2015}
-            />
+            <GDPPerCapitaChart title="GDP Per Capita" startYear={2015} />
           </div>
         </div>
       );
@@ -323,6 +321,23 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               showTarget={true}
               targetValue={120}
               showGrowthRate={false}
+            />
+          </div>
+        </div>
+      );
+
+    case "natural-resources-canada":
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <div className="h-96 border rounded-lg p-4">
+            <PrimaryEnergyChart
+              title="Total Primary Energy Production"
+              category="Primary energy"
+              startYear={2015}
+              monthlyData={true}
+              showTrend={false}
+              showTarget={true}
+              targetValue={3000000}
             />
           </div>
         </div>

@@ -88,12 +88,13 @@ The component includes real data visualizations for key departments:
 - **Housing**: Housing Starts chart with trend line
 - **Immigration**: NPR Population % chart with target
 - **Government Transformation**: Public Service Productivity chart with 20% increase target
+- **Energy**: Total Primary Energy Production chart with trend analysis
 
 Other departments show "Chart coming soon" placeholders.
 
 ## Future Enhancements
 
-- Add charts for remaining departments (Defence, Energy, Innovation, Health)
+- Add charts for remaining departments (Defence, Innovation, Health)
 - Add real-time data fetching from StatCan APIs
 - Implement metric history tracking
 - Add export functionality for metrics data

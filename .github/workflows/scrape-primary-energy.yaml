@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run the scraper
         run: |
-          python scrape.py '${{ env.STATS_CAN_URL }}' metrics/statscan/primary-energy.json "Supply and demand characteristics" "Fuel type"
+          python scrape.py 'https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData-nonTraduit.action?pid=2510007901&latestN=5&startDate=&endDate=&csvLocale=en&selectedMembers=%5B%5B%5D%2C%5B%5D%2C%5B%5D%5D&checkedLevels=0D1%2C1D1%2C1D2%2C1D3%2C2D1' metrics/statscan/primary-energy.json "Fuel type" "Supply and demand characteristics"
       # Commit as brendan so vercel will deploy it
       - name: Commit and push
         run: |-

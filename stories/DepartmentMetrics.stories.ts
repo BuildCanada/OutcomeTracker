@@ -98,6 +98,13 @@ export const Energy: Story = {
   args: {
     departmentSlug: 'natural-resources-canada',
   },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Shows total primary energy production chart with real StatCan data including crude oil, natural gas, and renewable sources with trend analysis.'
+      }
+    }
+  }
 };
 
 
