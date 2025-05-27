@@ -42,8 +42,7 @@ def backup_original_files():
     logger.info("Creating backups of original files...")
     
     backup_mappings = {
-        'lib/data.ts': 'lib/data-legacy-backup.ts',
-        'scripts/common_utils.py': 'scripts/common_utils-legacy-backup.py'
+        'lib/data.ts': 'lib/data-legacy-backup.ts'
     }
     
     for original, backup in backup_mappings.items():
@@ -170,7 +169,7 @@ def verify_replacement():
             success = False
     
     # Check that backup files exist
-    backup_files = ['lib/data-legacy-backup.ts', 'scripts/common_utils-legacy-backup.py']
+    backup_files = ['lib/data-legacy-backup.ts']
     for backup_file in backup_files:
         if not os.path.exists(backup_file):
             logger.warning(f"Backup file not found: {backup_file}")

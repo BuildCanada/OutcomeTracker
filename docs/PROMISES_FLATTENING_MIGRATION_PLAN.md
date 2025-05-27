@@ -191,7 +191,6 @@ python scripts/migration/replace_files_for_production.py
 ```bash
 # Step 1: Backup original files
 cp lib/data.ts lib/data-legacy-backup.ts
-cp scripts/common_utils.py scripts/common_utils-legacy-backup.py
 
 # Step 2: Replace with flat structure files
 mv lib/data-flat.ts lib/data.ts
