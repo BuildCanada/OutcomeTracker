@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import type { PromiseData, EvidenceItem } from "@/lib/types";
 import { Timestamp } from "firebase-admin/firestore";
+import PromiseDetailClient from "@/components/PromiseDetailClient";
 
 interface Props {
   params: Promise<{ promiseId: string }>;
@@ -29,6 +30,71 @@ function serializeFirestoreData(data: any): any {
   }
   
   return data;
+}
+
+// Helper to format Firestore Timestamp or ISO string date
+const formatDate = (date: Timestamp | string | undefined): string => {
+  if (!date) return "Date unknown";
+  try {
+    const jsDate = date instanceof Timestamp ? date.toDate() : new Date(date);
+    return jsDate.toLocaleDateString("en-CA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    console.error("Error formatting date:", date, e);
+    return typeof date === "string" ? date : "Invalid date";
+  }
+};
+
+// Helper to format YYYY-MM-DD date string
+const formatSimpleDate = (dateString: string | undefined): string => {
+  if (!dateString) return "Date unknown";
+  try {
+    const [year, month, day] = dateString.split("-");
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString("en-CA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    console.error("Error formatting simple date:", dateString, e);
+    return dateString;
+  }
+};
+
+// Helper function to get SVG arc path for pie fill
+function getPieArcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return [
+    "M", cx, cy,
+    "L", start.x, start.y,
+    "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+    "Z"
+  ].join(" ");
+}
+
+function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: number): { x: number; y: number } {
+  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+  return {
+    x: cx + (r * Math.cos(angleInRadians)),
+    y: cy + (r * Math.sin(angleInRadians))
+  };
+}
+
+function getPieColor(progressScore: number): string {
+  const colorMap = [
+    '#ef4444', // red-500
+    '#facc15', // yellow-400
+    '#fde047', // yellow-300
+    '#a3e635', // lime-400
+    '#16a34a', // green-600
+  ];
+  return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
 }
 
 async function getPromiseData(promiseId: string): Promise<{
@@ -153,59 +219,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// Simple client component for displaying promise details
-function PromiseDetailView({ promise }: { promise: PromiseData }) {
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              {promise.concise_title || promise.text}
-            </h1>
-            
-            {promise.intended_impact_and_objectives && (
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">Impact and Objectives</h2>
-                <p className="text-gray-700">{promise.intended_impact_and_objectives}</p>
-              </div>
-            )}
-            
-            {promise.what_it_means_for_canadians && (
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">What This Means for Canadians</h2>
-                <div className="text-gray-700">
-                  {Array.isArray(promise.what_it_means_for_canadians) ? (
-                    <ul className="list-disc pl-5 space-y-2">
-                      {promise.what_it_means_for_canadians.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>{promise.what_it_means_for_canadians}</p>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {promise.progress_summary && (
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 mb-2">Progress</h2>
-                <p className="text-gray-700">{promise.progress_summary}</p>
-              </div>
-            )}
-            
-            <div className="text-sm text-gray-500">
-              <p>Department: {promise.responsible_department_lead}</p>
-              {promise.category && <p>Category: {promise.category}</p>}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default async function PromiseDetailPage({ params }: Props) {
   const { promiseId } = await params;
   const { promise, evidence } = await getPromiseData(promiseId);
@@ -220,5 +233,5 @@ export default async function PromiseDetailPage({ params }: Props) {
     evidence,
   };
 
-  return <PromiseDetailView promise={promiseWithEvidence} />;
+  return <PromiseDetailClient promise={promiseWithEvidence} />;
 } 

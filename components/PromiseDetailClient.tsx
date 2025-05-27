@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { ShareIcon, ArrowLeftIcon } from "lucide-react";
-import type { PromiseData } from "@/lib/types";
+import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon, ChevronDownIcon, ChevronRightIcon, ShareIcon } from "lucide-react";
+import type { PromiseData, EvidenceItem, RationaleEvent } from "@/lib/types";
 import PromiseProgressTimeline from "./PromiseProgressTimeline";
-import ShareModal from "./ShareModal";
+import ShareModal from "@/components/ShareModal";
 import { Timestamp } from 'firebase/firestore';
 
 interface PromiseDetailClientProps {
@@ -29,30 +27,66 @@ const formatDate = (date: Timestamp | string | undefined): string => {
   }
 };
 
-export default function PromiseDetailClient({ promise }: PromiseDetailClientProps) {
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const router = useRouter();
+// Helper to format YYYY-MM-DD date string
+const formatSimpleDate = (dateString: string | undefined): string => {
+  if (!dateString) return "Date unknown";
+  try {
+    const [year, month, day] = dateString.split("-");
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return date.toLocaleDateString("en-CA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch (e) {
+    console.error("Error formatting simple date:", dateString, e);
+    return dateString;
+  }
+};
 
-  const {
-    text,
-    concise_title,
-    what_it_means_for_canadians,
-    intended_impact_and_objectives,
-    background_and_context,
-    commitment_history_rationale,
-    progress_score = 0,
-    progress_summary,
-    evidence,
-    responsible_department_lead,
-    category,
-    date_issued,
-  } = promise;
+// Helper function to get SVG arc path for pie fill
+function getPieArcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+  const start = polarToCartesian(cx, cy, r, endAngle);
+  const end = polarToCartesian(cx, cy, r, startAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+  return [
+    "M", cx, cy,
+    "L", start.x, start.y,
+    "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
+    "Z"
+  ].join(" ");
+}
+
+function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: number): { x: number; y: number } {
+  var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+  return {
+    x: cx + (r * Math.cos(angleInRadians)),
+    y: cy + (r * Math.sin(angleInRadians))
+  };
+}
+
+function getPieColor(progressScore: number): string {
+  const colorMap = [
+    '#ef4444', // red-500
+    '#facc15', // yellow-400
+    '#fde047', // yellow-300
+    '#a3e635', // lime-400
+    '#16a34a', // green-600
+  ];
+  return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
+}
+
+export default function PromiseDetailClient({ promise }: PromiseDetailClientProps) {
+  const { text, commitment_history_rationale, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence } = promise;
+
+  const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Get the last updated date from evidence items
   const lastUpdateDate = evidence && evidence.length > 0 
     ? (() => {
         const sorted = [...evidence].sort((a, b) => {
-          const getDateMillis = (dateInput: any): number => {
+          const getDateMillis = (dateInput: EvidenceItem['evidence_date']): number => {
             if (!dateInput) return NaN;
             let d: Date;
             if (dateInput instanceof Timestamp) {
@@ -87,155 +121,177 @@ export default function PromiseDetailClient({ promise }: PromiseDetailClientProp
       })()
     : null;
 
-  const isDelivered = progress_score === 5;
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header with navigation and share button */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => router.back()}
-              className="flex items-center text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeftIcon className="mr-2 h-4 w-4" />
-              Back to Tracker
-            </Button>
-            <Button
-              onClick={() => setIsShareModalOpen(true)}
-              className="flex items-center bg-[#8b2332] hover:bg-[#7a1f2b] text-white"
-            >
-              <ShareIcon className="mr-2 h-4 w-4" />
-              Share this Promise
-            </Button>
-          </div>
-        </div>
-      </div>
+    <>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-3xl mx-auto bg-white border shadow-xl">
+          {/* Header */}
+          <div className="border-b border-[#d3c7b9] p-12 relative">
+            {/* Share button container */}
+            <div className="absolute top-3 right-12 flex items-center">
+              {/* Share button */}
+              <button
+                onClick={() => setIsShareModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                aria-label="Share this promise"
+              >
+                <ShareIcon className="w-4 h-4" />
+                Share
+              </button>
+            </div>
 
-      {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          {/* Promise header */}
-          <div className="border-b border-gray-200 p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4 break-words">
+            {/* Title */}
+            <h1 className="text-2xl font-bold text-[#222222] mb-2 break-words pr-24">
               {concise_title || text}
             </h1>
 
-            {/* Promise metadata */}
-            <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-              {responsible_department_lead && (
-                <div>
-                  <span className="font-medium">Department:</span> {responsible_department_lead}
-                </div>
-              )}
-              {category && (
-                <div>
-                  <span className="font-medium">Category:</span> {category}
-                </div>
-              )}
-              {date_issued && (
-                <div>
-                  <span className="font-medium">Date Issued:</span> {formatDate(date_issued)}
-                </div>
-              )}
-            </div>
-
             {/* Description */}
             {intended_impact_and_objectives && (
-              <div className="text-lg text-gray-700 mb-4 break-words">
+              <div className="text-base text-gray-700 mb-2 break-words">
                 {intended_impact_and_objectives}
               </div>
             )}
 
             {/* Original Text */}
             {concise_title && (
-              <div className="text-sm italic text-gray-500 break-words">
+              <div className="text-sm italic text-gray-500 mb-2 break-words">
                 <span className="font-medium">Original Text:</span> {text}
               </div>
             )}
 
             {/* Last Updated Date */}
             {lastUpdateDate && (
-              <div className="text-xs text-gray-400 mt-4">
+              <div className="text-xs text-gray-400">
                 Last Updated: {lastUpdateDate}
               </div>
             )}
           </div>
 
-          <div className="p-6 space-y-8">
+          <div className="p-6 space-y-8 break-words overflow-x-hidden">
             {/* What this means for Canadians Section */}
             {what_it_means_for_canadians && (
               <section>
-                <h2 className="text-xl font-bold text-gray-900 mb-3">
+                <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
+                  <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
                   What This Means for Canadians
-                </h2>
-                <div className="text-gray-700 leading-relaxed break-words whitespace-pre-line">
+                </h3>
+                <ul className="text-[#333333] leading-relaxed space-y-2 list-disc pl-5 break-words">
                   {Array.isArray(what_it_means_for_canadians) ? (
-                    <ul className="list-disc pl-5 space-y-2">
-                      {what_it_means_for_canadians.map((item, index) => (
-                        <li key={index} className="break-words">
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
+                    what_it_means_for_canadians.map((item, index) => (
+                      <li key={index} className="break-words whitespace-pre-line">
+                        {item}
+                      </li>
+                    ))
                   ) : (
-                    <p>{what_it_means_for_canadians}</p>
+                    <li className="break-words whitespace-pre-line">{what_it_means_for_canadians}</li>
                   )}
-                </div>
+                </ul>
               </section>
             )}
 
             {/* Progress Section */}
             {(progress_score > 0 || progress_summary) && (
-              <section className="border-t border-gray-200 pt-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  Progress Status
-                </h2>
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className={`w-4 h-4 rounded-full ${
-                      progress_score === 0 ? 'bg-gray-400' :
-                      progress_score === 1 ? 'bg-red-500' :
-                      progress_score === 2 ? 'bg-yellow-400' :
-                      progress_score === 3 ? 'bg-yellow-300' :
-                      progress_score === 4 ? 'bg-lime-400' :
-                      'bg-green-600'
-                    }`}></div>
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-900 mb-2">
-                      {progress_score === 0 ? "Not Started" : 
-                       progress_score === 5 ? "Complete" : "In Progress"}
-                    </div>
-                    {progress_summary && (
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-line break-words">
-                        {progress_summary}
-                      </p>
-                    )}
-                  </div>
+              <section className="border-t border-[#d3c7b9] pt-6">
+                <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
+                  {/* Progress SVG indicator as section icon */}
+                  <span className="mr-2 w-6 h-6 inline-flex items-center justify-center">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24">
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill={getPieColor(progress_score)}
+                        stroke={getPieColor(progress_score)}
+                        strokeWidth="2"
+                      />
+                      {progress_score < 5 && progress_score > 0 && (
+                        <path
+                          d={getPieArcPath(12, 12, 10, 0, (1 - progress_score / 5) * 360)}
+                          fill="#fff"
+                        />
+                      )}
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill="none"
+                        stroke={getPieColor(progress_score)}
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  </span>
+                  {progress_score === 0 ? "Not started" : progress_score === 5 ? "Complete" : "In Progress"}
+                </h3>
+                <div className="flex items-start">
+                  <div className="flex flex-col items-center pt-1"></div>
+                  <p className="text-[#333333] leading-relaxed whitespace-pre-line flex-1 break-words">
+                    {progress_summary || ""}
+                  </p>
                 </div>
               </section>
             )}
             
-            {/* Timeline Section */}
-            <section className="border-t border-gray-200 pt-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Timeline of Government Actions
-              </h2>
-              <PromiseProgressTimeline promise={promise} />
+            {/* Timeline and Evidence Details Section */}
+            <section className="border-t border-[#d3c7b9] pt-6">
+               <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
+                  <CalendarIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                  Timeline
+                </h3>
+              <PromiseProgressTimeline promise={promise} /> 
             </section>
 
             {/* Background Section */}
-            {background_and_context && (
-              <section className="border-t border-gray-200 pt-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-3">
+            {(background_and_context || (commitment_history_rationale && commitment_history_rationale.length > 0)) && (
+              <section className="border-t border-[#d3c7b9] pt-6">
+                <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
+                  <FileTextIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
                   Background
-                </h2>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line break-words">
-                  {background_and_context}
-                </p>
+                </h3>
+                {background_and_context && (
+                  <div className="mb-4">
+                    <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
+                      {background_and_context}
+                    </p>
+                  </div>
+                )}
+
+                {commitment_history_rationale && commitment_history_rationale.length > 0 && (
+                  <div>
+                    <button 
+                      onClick={() => setIsRationaleExpanded(!isRationaleExpanded)}
+                      className="flex items-center text-xs text-[#0056b3] hover:underline focus:outline-none mb-2"
+                      aria-expanded={isRationaleExpanded}
+                    >
+                      {isRationaleExpanded ? <ChevronDownIcon className="mr-1 h-4 w-4" /> : <ChevronRightIcon className="mr-1 h-4 w-4" />}
+                      More Details of Preceding Events
+                    </button>
+                    {isRationaleExpanded && (
+                      <div className="space-y-3 pl-2 border-l-2 border-gray-900">
+                        {commitment_history_rationale.map(
+                          (event: RationaleEvent, index: number) => (
+                            <div
+                              key={index}
+                              className="border p-3 bg-gray-50"
+                            >
+                              <p className="text-xs font-medium mb-0.5">
+                                {formatSimpleDate(event.date)}
+                              </p>
+                              <p className="text-sm text-[#333333] mb-1 break-words">{event.action}</p>
+                              <a
+                                href={event.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
+                              >
+                                <LinkIcon className="mr-1 h-3 w-3" /> Source
+                              </a>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </section>
             )}
           </div>
@@ -246,9 +302,9 @@ export default function PromiseDetailClient({ promise }: PromiseDetailClientProp
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        shareUrl={typeof window !== 'undefined' ? window.location.href : ''}
+        shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : ''}
         promiseTitle={concise_title || text}
       />
-    </div>
+    </>
   );
 } 

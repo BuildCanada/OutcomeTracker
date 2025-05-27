@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -58,14 +58,13 @@ export default function ShareModal({ isOpen, onClose, shareUrl, promiseTitle }: 
         shareLink = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
         break;
       case 'facebook':
-        // Facebook sharing - use the sharer.php endpoint with just the URL
-        // Facebook will automatically fetch Open Graph data from the page
-        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+        // Facebook sharing - use the sharer.php endpoint with URL and quote parameter for text
+        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
         break;
       case 'linkedin':
-        // LinkedIn sharing - use the sharing/share-offsite endpoint
-        // LinkedIn will automatically fetch Open Graph data from the page
-        shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+        // LinkedIn sharing - use the sharing/share-offsite endpoint with title and summary
+        const encodedTitle = encodeURIComponent(`Government Promise: ${promiseSnippet}`);
+        shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedText}`;
         break;
     }
     
@@ -79,6 +78,9 @@ export default function ShareModal({ isOpen, onClose, shareUrl, promiseTitle }: 
       <DialogContent className="sm:max-w-md">
         <DialogHeader className="relative">
           <DialogTitle className="text-lg font-semibold text-center">Share to</DialogTitle>
+          <DialogDescription className="text-sm text-gray-600 text-center">
+            Share this promise on social media or copy the link
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6 pt-2">
