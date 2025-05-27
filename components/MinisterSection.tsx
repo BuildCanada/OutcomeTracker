@@ -177,7 +177,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
 
       {/* Key Metrics Section */}
       <div>
-        <h3 className="text-2xl mb-4">Key Performance Indicators & Metrics</h3>
+        <h3 className="text-2xl mb-4">Key Metrics</h3>
         <div className="mb-8">
           {ministerInfo?.guidingMetrics && ministerInfo.guidingMetrics.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

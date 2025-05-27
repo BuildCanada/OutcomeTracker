@@ -97,7 +97,7 @@ export default async function Home() {
   let initialDepartmentPromises: Record<string, any[]> = {}; // Using any[] for now
   let initialEvidenceItems: Record<string, any[]> = {}; // Using any[] for now
   let serverError: string | null = null;
-  let pageTitle = "Outcomes Tracker"; // Default title
+  let pageTitle = "Results Tracker"; // Default title
 
   try {
     const t0 = Date.now();
@@ -218,14 +218,6 @@ export default async function Home() {
       ...config,
       display_order: departmentDisplayOrder[config.id] ?? 999 // Use nullish coalescing for safety
     };
-
-    // Override display names for specific departments
-    if (config.id === 'treasury-board-of-canada-secretariat') {
-      return {
-        ...baseConfig,
-        display_short_name: 'Government'
-      };
-    }
 
     return baseConfig;
   });

@@ -160,7 +160,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
       <rect x="12" y="4" width="2" height="12" rx="1" fill={filledBars >= 3 ? impactBarColor : '#d1d5db'} />
     </svg>
   );
-  const impactTooltip = `${impactLevelLabel}${impactLevelLabel ? ' - ' : ''}${impactRationale}`;
+  const impactTooltip = `${impactLevelLabel}${impactLevelLabel ? ': ' : ''}${impactRationale}`;
 
   // Alignment Indicator
   const alignmentDirection = promise.bc_promise_direction;
@@ -193,7 +193,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
       alignmentBg = "bg-gray-50";
       alignmentIcon = <MinusIcon className="w-4 h-4 text-gray-400" />;
   }
-  const alignmentTooltip = `${alignmentLabel} with building Canada`;
+  const alignmentTooltip = `${alignmentLabel} with Build Canada`;
 
   // Progress dot color scale (red to green)
   const dotColors = [
@@ -286,7 +286,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                   />
                 </svg>
                 {showProgressTooltip && (
-                  <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 left-1/2 -translate-x-1/2 animate-fade-in whitespace-nowrap">
+                  <div className="absolute z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm max-w-xs top-full mt-1 left-1/2 -translate-x-1/2 animate-fade-in whitespace-nowrap">
                     {progressTooltip}
                   </div>
                 )}
@@ -326,7 +326,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                     {impactIcon}
                   </div>
                   {showImpactTooltip && (
-                    <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-md top-full mt-1 right-0 animate-fade-in">
+                    <div className="absolute w-64 z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0 animate-fade-in">
                       {impactTooltip}
                     </div>
                   )}
@@ -346,7 +346,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                   {alignmentIcon}
                 </div>
                 {showAlignmentTooltip && (
-                  <div className="absolute z-20 p-2 bg-white border border-gray-200 rounded shadow-lg text-sm max-w-xs top-full mt-1 right-0 animate-fade-in">
+                  <div className="absolute w-48 z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0 animate-fade-in">
                     {alignmentTooltip}
                   </div>
                 )}
