@@ -36,14 +36,14 @@ const TimelineNode: React.FC<TimelineNodeProps> = ({ event, isSelected, onClick,
   const isFirstMention = isFirst;
   const isMostRecentEvidence = isLast && event.type === 'evidence' && !isFirstMention;
 
-  let boxClasses = "w-full md:w-auto max-w-[300px] md:max-w-none cursor-pointer hover:shadow-md transition-shadow p-3 rounded-md bg-white border border-gray-200";
+  let boxClasses = "w-full md:w-auto max-w-[300px] md:max-w-none cursor-pointer hover:shadow-md transition-shadow p-3 bg-white border border-gray-200";
   let titleClasses = "font-medium line-clamp-3 text-gray-900";
   let dateClasses = "text-xs mt-1 text-gray-700";
-  let pillClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs text-gray-900 border-gray-900";
+  let pillClasses = "inline-flex items-center border px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs text-gray-500 border-gray-200";
 
   // Retaining isSelected styling for accessibility / alternative interaction model
   if (isSelected) {
-     boxClasses +=  " ring-2 ring-offset-2 ring-red-500";
+     boxClasses +=  " ring-2 ring-offset-2 ring-gray-900";
   }
 
   return (

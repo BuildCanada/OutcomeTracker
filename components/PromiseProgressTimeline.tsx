@@ -13,7 +13,8 @@ export interface TimelineDisplayEvent {
   id: string; // Can be promise.id for mandate, or evidence.id for evidence
   type: 'mandate' | 'evidence';
   date: Timestamp | string; // Mandate date_issued is string, evidence_date is Timestamp
-  title: string; // Mandate text (or a snippet), or evidence.title_or_summary
+  title: string; // Truncated for timeline node
+  fullTitle: string; // Full mandate text or evidence.title_or_summary
   fullText: string; // Full mandate text or evidence.description_or_details
   sourceUrl?: string; // Only for evidence items
 }
@@ -78,6 +79,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
         type: 'mandate',
         date: promise.date_issued,
         title: promise.text.substring(0, 70) + (promise.text.length > 70 ? '...' : ''), // Shorter snippet for node
+        fullTitle: promise.text,
         fullText: promise.text,
         // No sourceUrl for mandate letter directly from here, could link to a general mandate letter page if exists
       });
@@ -92,10 +94,11 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
           console.warn(`Evidence item at index ${index} for promise ${promise.id} has a missing ID. Using generated ID for key: ${evidenceId}`);
         }
         return {
-          id: `evidence-${evidenceId}`, // Use the potentially generated ID
+          id: `evidence-${evidenceId}`,
           type: 'evidence',
           date: item.evidence_date,
           title: item.title_or_summary.substring(0, 70) + (item.title_or_summary.length > 70 ? '...' : ''),
+          fullTitle: item.title_or_summary,
           fullText: item.description_or_details || 'No further details provided.',
           sourceUrl: item.source_url,
         };
@@ -135,11 +138,9 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
   }
 
   return (
-    <div className="my-6">
-      <h3 className="text-lg font-semibold text-gray-700 mb-5 px-3">Timeline of progress</h3>
-      
+    <div className="my-6">      
       {/* Horizontal Timeline Section - visible on md screens and up */}
-      <div className="hidden md:block mt-6 px-4 py-4 border border-gray-100 rounded-md bg-gray-50 relative overflow-hidden">
+      <div className="hidden md:block mt-6 px-4 py-4 border border-gray-100 bg-gray-50 relative overflow-hidden">
         <div className="overflow-x-auto pb-2" style={{ maxWidth: "100%", overflowY: "hidden" }} ref={timelineRef}>
           <ul className="timeline md:timeline-horizontal">
             {timelineEvents.map((event, index) => {
@@ -157,9 +158,9 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
 
               return (
                 <li key={event.id} className={`${liClass}`} data-event-id={event.id}>
-                  {!isFirstEvent && <hr className="bg-gray-600 opacity-75" />}
+                  {!isFirstEvent && <hr className="bg-gray-500 opacity-75" />}
                   <div className="timeline-middle">
-                    <div className={`w-4 h-4 rounded-full bg-gray-500`}></div>
+                    <div className={`w-4 h-4 rounded-full bg-gray-500 opacity-75`}></div>
                   </div>
                   <div className={`${positionClass} timeline-box-wrapper`}>
                     <TimelineNode 
@@ -170,7 +171,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
                       isLast={isLastEvent}
                     />
                   </div>
-                  {!isLastEvent && <hr className="bg-gray-600 opacity-75" />} 
+                  {!isLastEvent && <hr className="bg-gray-500 opacity-75" />} 
                 </li>
               );
             })}
@@ -208,17 +209,16 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
 
       {/* Selected Event Details Section - common for both layouts */}
       {selectedEvent && (
-        <div className="p-4 bg-gray-50 rounded-md border border-gray-200 mx-1 md:mx-3 mt-4">
-          <h4 className="font-semibold text-gray-700 mb-2 text-md">{selectedEvent.type === 'mandate' ? 'Mandate Commitment Details' : 'Evidence Details'}</h4>
-          <p className="text-xs text-gray-500 mb-1">Date: {formatDate(selectedEvent.date)}</p>
-          <p className="font-medium text-gray-800 mb-2 text-sm">{selectedEvent.title}</p>
+        <div className="p-4 bg-gray-50 border border-gray-200 mt-4">
+          <p className="text-xs text-gray-500 mb-1">{formatDate(selectedEvent.date)}</p>
+          <p className="font-medium text-gray-800 mb-1 text-md">{selectedEvent.fullTitle}</p>
           <p className="text-gray-600 text-sm whitespace-pre-wrap mb-3">{selectedEvent.fullText}</p>
           {selectedEvent.sourceUrl && (
             <a 
               href={selectedEvent.sourceUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium"
+              className="text-blue-600 hover:text-blue-800 hover:underline text-xs font-mono"
             >
               View Source
             </a>
