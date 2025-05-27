@@ -18,13 +18,6 @@ const staticPrimeMinisterData: PrimeMinister = {
   name: "Justin Trudeau", // Example Name
   title: "Prime Minister, 44th Parliament of Canada",
   avatarUrl: "/placeholder.svg?height=200&width=200", // Example avatar
-  guidingMetrics: [
-    {
-      title: "GDP Per Capita",
-      data: [45000, 44800, 45200, 45600, 45400, 45800, 46000],
-      goal: 48000,
-    },
-  ],
 };
 
 // Define a darker border color, e.g., a dark gray from Tailwind's palette or black
@@ -179,12 +172,10 @@ export default async function Home() {
            `Prime Minister, ${globalSession.session_label || `Parliament ${globalSession.parliament_number}`}` :
            (globalSession.session_label || `Parliament ${globalSession.parliament_number}`),
     avatarUrl: "/placeholder.svg?height=200&width=200", 
-    guidingMetrics: staticPrimeMinisterData.guidingMetrics, 
   } : { 
     name: "N/A", 
     title: "Prime Minister data unavailable", 
     avatarUrl: staticPrimeMinisterData.avatarUrl, 
-    guidingMetrics: staticPrimeMinisterData.guidingMetrics 
   };
 
   // Add Prime Minister as a department
@@ -258,7 +249,6 @@ export default async function Home() {
       positionStart: globalSession?.start_date,
       positionEnd: globalSession?.end_date || undefined,
       effectiveDepartmentOfficialFullName: 'Office of the Prime Minister',
-      guidingMetrics: dynamicPrimeMinisterData.guidingMetrics
     }
   };
 

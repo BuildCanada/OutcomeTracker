@@ -21,7 +21,7 @@ export interface ParliamentSession {
 
 // --- NEW TYPES FOR MINISTER FETCHING ---
 export interface ParliamentaryPosition {
-  title: string;      
+  title: string;
   title_en?: string;
   title_fr?: string;
   from: string;
@@ -29,7 +29,7 @@ export interface ParliamentaryPosition {
 }
 
 export interface Member {
-  id: string;                 
+  id: string;
   firstName?: string;
   lastName?: string;
   party?: string;
@@ -43,8 +43,8 @@ export interface MinisterInfo {
   firstName?: string;
   lastName?: string;
   party?: string;
-  title: string;       
-  avatarUrl?: string;  
+  title: string;
+  avatarUrl?: string;
   positionStart?: string; // ISO date string
   positionEnd?: string | null; // ISO date string or null if ongoing
   effectiveDepartmentOfficialFullName?: string; // Added for remapped department name
@@ -57,7 +57,7 @@ export interface DepartmentConfig {
   official_full_name: string; // New: e.g., "Health Canada"
   official_full_name_en?: string;
   official_full_name_fr?: string;
-  department_slug: string; // New: e.g., "health-canada" (often same as id)
+  department_slug: DepartmentSlug; // New: e.g., "health-canada" (often same as id)
   display_order?: number; // Used for manual ordering of departments
 
   // Optional fields from screenshot and common usage:
@@ -66,9 +66,9 @@ export interface DepartmentConfig {
   notes?: string | null;
   last_updated_at?: Timestamp | string; // Can be Timestamp or serialized string
   last_updated_by?: string;
-  
+
   // Include other fields from your Firestore documents if needed by the application
-  // For example, if 'french_name', 'category_tags', 'priority_score', 
+  // For example, if 'french_name', 'category_tags', 'priority_score',
   // 'alternative_names' from your earlier summary are indeed in Firestore and used:
   french_name?: string | null;
   category_tags?: string[] | null;
@@ -77,7 +77,8 @@ export interface DepartmentConfig {
 
   // Field for historical remapping
   historical_mapping?: {
-    [parliamentSessionId: string]: { // e.g., "44-1"
+    [parliamentSessionId: string]: {
+      // e.g., "44-1"
       minister_lookup_slug: string; // The department_slug to use for minister lookup in that session
       promise_query_department_name: string; // The official_full_name to use for promise queries in that session
       promise_query_slug_override?: string; // Optional: if promise query needs a slug different from minister_lookup_slug
@@ -96,7 +97,7 @@ export interface MinisterDetails {
   standardized_department_or_title?: string | null; // This should match DepartmentConfig.fullName
   letter_url?: string | null;
   // avatarUrl can be added later if available or if we use a placeholder
-  avatarUrl?: string; 
+  avatarUrl?: string;
 }
 
 export interface PromiseData {
@@ -108,7 +109,7 @@ export interface PromiseData {
   commitment_history_rationale?: RationaleEvent[]; // Added optional field
   date_issued?: string; // Optional
   linked_evidence_ids?: string[];
-  evidence?: EvidenceItem[]; 
+  evidence?: EvidenceItem[];
   parliament_session_id?: string; // Ensure this field exists on your promise docs if filtering by it
   progress_score?: number;
   progress_summary?: string;
@@ -119,7 +120,7 @@ export interface PromiseData {
   what_it_means_for_canadians?: string;
   intended_impact_and_objectives?: string;
   background_and_context?: string;
-  
+
   // NEW FIELDS FOR FLAT STRUCTURE MIGRATION
   region_code?: string; // e.g., "Canada" - region identifier
   party_code?: string; // e.g., "LPC", "CPC", "NDP", "BQ" - party identifier
@@ -132,6 +133,41 @@ export interface PromiseData {
     new_id?: string; // New ID if conflict was resolved
   };
 }
+
+export type DepartmentSlug =
+  | "prime-minister"
+  | "agriculture-and-agri-food-canada"
+  | "artificial-intelligence-and-digital-innovation"
+  | "atlantic-canada-opportunities-agency"
+  | "canada-economic-development-for-quebec-regions"
+  | "canada-revenue-agency"
+  | "canadian-heritage"
+  | "crown-indigenous-relations-and-northern-affairs-canada"
+  | "emergency-preparedness-canada"
+  | "employment-and-social-development-canada"
+  | "environment-and-climate-change-canada"
+  | "federal-economic-development-agency-for-southern-ontario"
+  | "finance-canada"
+  | "fisheries-and-oceans-canada"
+  | "global-affairs-canada"
+  | "health-canada"
+  | "immigration-refugees-and-citizenship-canada"
+  | "indigenous-services-canada"
+  | "infrastructure-canada"
+  | "innovation-science-and-economic-development-canada"
+  | "justice-canada"
+  | "multiple-departments-needs-review"
+  | "national-defence"
+  | "natural-resources-canada"
+  | "privy-council-office"
+  | "privy-council-office-intergovernmental-affairs-secretariat"
+  | "public-safety-canada"
+  | "public-services-and-procurement-canada"
+  | "rural-economic-development"
+  | "transport-canada"
+  | "treasury-board-of-canada-secretariat"
+  | "veterans-affairs-canada"
+  | "women-and-gender-equality-canada";
 
 // --- UI-specific data structures ---
 
@@ -156,7 +192,6 @@ export interface PrimeMinister {
   positionStart?: string;
   positionEnd?: string;
   effectiveDepartmentOfficialFullName?: string;
-  guidingMetrics: Metric[];
 }
 
 // Define the structure for the rationale events

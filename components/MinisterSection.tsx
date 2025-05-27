@@ -1,34 +1,57 @@
-'use client'
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { DepartmentPageData, PromiseData, MinisterInfo, EvidenceItem } from "@/lib/types"
-import Image from 'next/image'
-import PromiseCard from "./PromiseCard"
-import PopulationChart from "./charts/PopulationChart"
-import MetricChart from "./MetricChart"
-import { useState } from "react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Timestamp } from "firebase/firestore"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type {
+  DepartmentPageData,
+  PromiseData,
+  MinisterInfo,
+  EvidenceItem,
+  DepartmentSlug,
+} from "@/lib/types";
+import Image from "next/image";
+import PromiseCard from "./PromiseCard";
+import PopulationChart from "./charts/PopulationChart";
+import MetricChart from "./MetricChart";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Timestamp } from "firebase/firestore";
+import DepartmentMetrics from "./DepartmentMetrics";
 
 interface MinisterSectionProps {
-  departmentPageData: DepartmentPageData | null
-  departmentFullName: string
-  departmentShortName?: string
+  departmentPageData: DepartmentPageData | null;
+  departmentSlug: DepartmentSlug;
+  departmentFullName: string;
+  departmentShortName?: string;
 }
 
-const DEFAULT_MINISTER_NAME = "Minister Information Not Available"
-const DEFAULT_MINISTER_TITLE = "Title Not Available"
-const DEFAULT_AVATAR_FALLBACK_INITIALS = "N/A"
+const DEFAULT_MINISTER_NAME = "Minister Information Not Available";
+const DEFAULT_MINISTER_TITLE = "Title Not Available";
+const DEFAULT_AVATAR_FALLBACK_INITIALS = "N/A";
 
 // Helper function to format dates, similar to PromiseCard
 const formatDate = (dateString: string | undefined | null): string | null => {
   if (!dateString) return null;
   const dateObj = new Date(dateString);
   if (isNaN(dateObj.getTime())) return null;
-  return dateObj.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+  return dateObj.toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
-export default function MinisterSection({ departmentPageData, departmentFullName, departmentShortName }: MinisterSectionProps) {
+export default function MinisterSection({
+  departmentPageData,
+  departmentSlug,
+  departmentFullName,
+  departmentShortName,
+}: MinisterSectionProps) {
   // Add filter state
   const [progressFilter, setProgressFilter] = useState<string>("all");
   const [impactFilter, setImpactFilter] = useState<string>("all");
@@ -38,16 +61,18 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   if (!departmentPageData) {
     return (
       <div className="text-center py-10">
-        <p className="text-gray-500">Loading details for {departmentFullName}...</p>
+        <p className="text-gray-500">
+          Loading details for {departmentFullName}...
+        </p>
         {/* You could add a spinner here */}
       </div>
-    )
+    );
   }
 
-  const { ministerInfo, promises, evidenceItems } = departmentPageData!
-  const ministerName = ministerInfo?.name || DEFAULT_MINISTER_NAME
-  const ministerTitle = ministerInfo?.title || DEFAULT_MINISTER_TITLE
-  const avatarUrl = ministerInfo?.avatarUrl
+  const { ministerInfo, promises, evidenceItems } = departmentPageData!;
+  const ministerName = ministerInfo?.name || DEFAULT_MINISTER_NAME;
+  const ministerTitle = ministerInfo?.title || DEFAULT_MINISTER_TITLE;
+  const avatarUrl = ministerInfo?.avatarUrl;
   const positionStart = ministerInfo?.positionStart;
   const positionEnd = ministerInfo?.positionEnd;
 
@@ -60,23 +85,27 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   } else if (formattedStartDate) {
     tenureString = `Since ${formattedStartDate}`;
   }
-  
+
   const getFallbackInitials = (name: string) => {
-    if (name === DEFAULT_MINISTER_NAME) return DEFAULT_AVATAR_FALLBACK_INITIALS
+    if (name === DEFAULT_MINISTER_NAME) return DEFAULT_AVATAR_FALLBACK_INITIALS;
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
-      .toUpperCase()
-  }
+      .toUpperCase();
+  };
 
   // Filter promises based on selected filters
-  const filteredPromises = promises.filter(promise => {
+  const filteredPromises = promises.filter((promise) => {
     // Progress filter
     if (progressFilter !== "all") {
       const progressScore = promise.progress_score || 0;
       if (progressFilter === "complete" && progressScore !== 5) return false;
-      if (progressFilter === "in_progress" && (progressScore === 0 || progressScore === 5)) return false;
+      if (
+        progressFilter === "in_progress" &&
+        (progressScore === 0 || progressScore === 5)
+      )
+        return false;
       if (progressFilter === "not_started" && progressScore !== 0) return false;
     }
 
@@ -84,18 +113,33 @@ export default function MinisterSection({ departmentPageData, departmentFullName
     if (impactFilter !== "all") {
       const impactRank = promise.bc_promise_rank?.toLowerCase() || "";
       const impactNum = Number(promise.bc_promise_rank) || 0;
-      
-      if (impactFilter === "high" && !(impactRank === "strong" || impactNum >= 8)) return false;
-      if (impactFilter === "medium" && !(impactRank === "medium" || (impactNum >= 5 && impactNum < 8))) return false;
-      if (impactFilter === "low" && !(impactRank === "low" || (impactNum > 0 && impactNum < 5))) return false;
+
+      if (
+        impactFilter === "high" &&
+        !(impactRank === "strong" || impactNum >= 8)
+      )
+        return false;
+      if (
+        impactFilter === "medium" &&
+        !(impactRank === "medium" || (impactNum >= 5 && impactNum < 8))
+      )
+        return false;
+      if (
+        impactFilter === "low" &&
+        !(impactRank === "low" || (impactNum > 0 && impactNum < 5))
+      )
+        return false;
     }
 
     // Alignment filter
     if (alignmentFilter !== "all") {
       const direction = promise.bc_promise_direction?.toLowerCase() || "";
-      if (alignmentFilter === "aligned" && direction !== "positive") return false;
-      if (alignmentFilter === "neutral" && direction !== "neutral") return false;
-      if (alignmentFilter === "not_aligned" && direction !== "negative") return false;
+      if (alignmentFilter === "aligned" && direction !== "positive")
+        return false;
+      if (alignmentFilter === "neutral" && direction !== "neutral")
+        return false;
+      if (alignmentFilter === "not_aligned" && direction !== "negative")
+        return false;
     }
 
     return true;
@@ -105,7 +149,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   const getImpactScore = (promise: PromiseData): number => {
     const impactRank = promise.bc_promise_rank?.toLowerCase() || "";
     const impactNum = Number(promise.bc_promise_rank) || 0;
-    
+
     if (impactRank === "strong" || impactNum >= 8) return 3;
     if (impactRank === "medium" || (impactNum >= 5 && impactNum < 8)) return 2;
     if (impactRank === "low" || (impactNum > 0 && impactNum < 5)) return 1;
@@ -115,17 +159,19 @@ export default function MinisterSection({ departmentPageData, departmentFullName
   // Helper function to get last evidence date
   const getLastEvidenceDate = (promise: PromiseData): number => {
     if (!promise.evidence || promise.evidence.length === 0) return 0;
-    
-    return Math.max(...promise.evidence.map(ev => {
-      if (!ev.evidence_date) return 0;
-      if (ev.evidence_date instanceof Timestamp) {
-        return ev.evidence_date.toMillis();
-      }
-      if (typeof ev.evidence_date === 'string') {
-        return new Date(ev.evidence_date).getTime();
-      }
-      return 0;
-    }));
+
+    return Math.max(
+      ...promise.evidence.map((ev) => {
+        if (!ev.evidence_date) return 0;
+        if (ev.evidence_date instanceof Timestamp) {
+          return ev.evidence_date.toMillis();
+        }
+        if (typeof ev.evidence_date === "string") {
+          return new Date(ev.evidence_date).getTime();
+        }
+        return 0;
+      }),
+    );
   };
 
   // Sort promises based on selected sort option
@@ -156,22 +202,26 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       {/* Minister Info Header */}
       <div className="flex items-center mb-8">
         {avatarUrl ? (
-            <Avatar className="h-20 w-20 mr-6 bg-gray-100">
-              <AvatarImage 
-                src={avatarUrl} 
-                alt={`Official portrait of ${ministerName}`} 
-                className="object-cover"
-              />
-              <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
-            </Avatar>
+          <Avatar className="h-20 w-20 mr-6 bg-gray-100">
+            <AvatarImage
+              src={avatarUrl}
+              alt={`Official portrait of ${ministerName}`}
+              className="object-cover"
+            />
+            <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
+          </Avatar>
         ) : (
           <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200">
-            <span className="text-2xl text-gray-500">{getFallbackInitials(ministerName)}</span>
+            <span className="text-2xl text-gray-500">
+              {getFallbackInitials(ministerName)}
+            </span>
           </div>
         )}
         <div>
           <h2 className="text-3xl">{ministerName}</h2>
-          <p className="mt-1 text-sm font-mono">{ministerTitle}, {tenureString}</p>
+          <p className="mt-1 text-sm font-mono">
+            {ministerTitle}, {tenureString}
+          </p>
         </div>
       </div>
 
@@ -179,10 +229,14 @@ export default function MinisterSection({ departmentPageData, departmentFullName
       <div>
         <h3 className="text-2xl mb-4">Key Metrics</h3>
         <div className="mb-8">
-          {ministerInfo?.guidingMetrics && ministerInfo.guidingMetrics.length > 0 ? (
+          {ministerInfo?.guidingMetrics &&
+          ministerInfo.guidingMetrics.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {ministerInfo.guidingMetrics.map((metric, index) => (
-                <div key={index} className="border border-[#d3c7b9] bg-white p-4">
+                <div
+                  key={index}
+                  className="border border-[#d3c7b9] bg-white p-4"
+                >
                   {metric.title === "Population" ? (
                     <PopulationChart />
                   ) : (
@@ -196,9 +250,7 @@ export default function MinisterSection({ departmentPageData, departmentFullName
               ))}
             </div>
           ) : (
-            <div className="bg-gray-50 border border-dashed border-gray-300 p-8 text-center flex items-center justify-center" style={{ minHeight: '20vh' }}>
-              <p className="text-gray-400 italic text-lg">[Placeholder: Charts and key metrics for {ministerInfo?.effectiveDepartmentOfficialFullName || departmentFullName} will be displayed here.]</p>
-            </div>
+              <DepartmentMetrics departmentSlug={departmentSlug} />
           )}
         </div>
 
@@ -231,7 +283,10 @@ export default function MinisterSection({ departmentPageData, departmentFullName
                 </SelectContent>
               </Select>
 
-              <Select value={alignmentFilter} onValueChange={setAlignmentFilter}>
+              <Select
+                value={alignmentFilter}
+                onValueChange={setAlignmentFilter}
+              >
                 <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
                   <SelectValue placeholder="Alignment" />
                 </SelectTrigger>
@@ -258,19 +313,23 @@ export default function MinisterSection({ departmentPageData, departmentFullName
           {sortedPromises && sortedPromises.length > 0 ? (
             <div className="grid grid-cols-1 gap-6">
               {sortedPromises.map((promise: PromiseData) => (
-                <PromiseCard 
-                  key={promise.id} 
-                  promise={promise} 
+                <PromiseCard
+                  key={promise.id}
+                  promise={promise}
                   evidenceItems={evidenceItems || []}
-                  departmentShortName={departmentShortName ? departmentShortName : undefined}
+                  departmentShortName={
+                    departmentShortName ? departmentShortName : undefined
+                  }
                 />
               ))}
             </div>
           ) : (
-            <p className="text-gray-600 italic">No commitments match the selected filters.</p>
+            <p className="text-gray-600 italic">
+              No commitments match the selected filters.
+            </p>
           )}
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

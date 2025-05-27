@@ -243,6 +243,7 @@ export default function HomePageClient({
                   ) : activeDepartmentData && activeDepartmentData.ministerInfo !== undefined ? (
                     <MinisterSection 
                       departmentPageData={activeDepartmentData}
+                      departmentSlug={dept.department_slug}
                       departmentFullName={dept.official_full_name}
                       departmentShortName={dept.display_short_name}
                     />
