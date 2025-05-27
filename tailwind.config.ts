@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: ["class"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -17,7 +16,7 @@ const config: Config = {
         soehne: ['"Soehne Kraftig"', "sans-serif"],
       },
       colors: {
-        background: "hsl(var(--background))",
+        background: "#f6ebe3",
         foreground: "hsl(var(--foreground))",
         card: {
           DEFAULT: "hsl(var(--card))",
@@ -27,18 +26,12 @@ const config: Config = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
+        primary: "#8b2332",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
+        muted: "#f6ebe3",
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
@@ -47,7 +40,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
-        border: "hsl(var(--border))",
+        border: "#d3c7b9",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         chart: {
@@ -67,10 +60,6 @@ const config: Config = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        border: "#d3c7b9",
-        background: "#f6ebe3",
-        primary: "#8b2332",
-        muted: "#f6ebe3",
         "canada-red": "#FF0000",
         "canada-cream": "#FFF8DC",
         "status-inProgress": "#007bff",

@@ -36,14 +36,10 @@ const TimelineNode: React.FC<TimelineNodeProps> = ({ event, isSelected, onClick,
   const isFirstMention = isFirst;
   const isMostRecentEvidence = isLast && event.type === 'evidence' && !isFirstMention;
 
-  let boxClasses = "timeline-box w-full md:w-auto max-w-[300px] md:max-w-none cursor-pointer hover:shadow-md transition-shadow p-3 rounded-md"; // Base from HTML, p-3 added as timeline-box usually has padding
-  let titleClasses = "font-medium line-clamp-3"; // From HTML (font-medium text-gray-900), line-clamp added
-  let dateClasses = "text-xs mt-1"; // From HTML (text-xs mt-1 text-gray-700)
-  let pillClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs text-gray-900 border-gray-900"; // From HTML
-
-  boxClasses += "bg-white border border-gray-200 "; // Regular items from HTML: bg-white, imply border for separation
-  titleClasses += "text-gray-900";
-  dateClasses += "text-gray-700";
+  let boxClasses = "w-full md:w-auto max-w-[300px] md:max-w-none cursor-pointer hover:shadow-md transition-shadow p-3 rounded-md bg-white border border-gray-200";
+  let titleClasses = "font-medium line-clamp-3 text-gray-900";
+  let dateClasses = "text-xs mt-1 text-gray-700";
+  let pillClasses = "inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs text-gray-900 border-gray-900";
 
   // Retaining isSelected styling for accessibility / alternative interaction model
   if (isSelected) {
