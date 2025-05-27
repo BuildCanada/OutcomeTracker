@@ -205,7 +205,7 @@ export default function HomePageClient({
         {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>}
         
         {mainTabConfigs.length > 0 ? (
-          <div className="mt-16">
+          <div>
             {/* Pills Container */}
             <div className="flex flex-wrap gap-2 mb-8">
               {mainTabConfigs.map((dept) => (

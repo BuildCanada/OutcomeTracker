@@ -26,7 +26,7 @@ const emojiFaviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10
 const faviconDataUrl = `data:image/svg+xml,${encodeURIComponent(emojiFaviconSvg)}`;
 
 export const metadata: Metadata = {
-  title: `Outcome Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
+  title: `Results Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
   description: "Track the progress of Canada's government initiatives",
   icons: {
     icon: faviconDataUrl,
@@ -64,26 +64,21 @@ export default function RootLayout({
                 className="mt-16 py-12 text-neutral-300 dark:text-neutral-400"
                 style={{ backgroundColor: "#272727" }} // Directly using the dark footer color from example
               >
-                <div className="container mx-auto text-center">
+                <div className="container mx-auto">
                   <div className="mb-8">
-                    {/* The Build Canada logo can be used here too if desired, or just text */}
                     <h1 className="text-3xl font-semibold text-white">
                       Build Canada
                     </h1>
                   </div>
+                  <div className="mb-8">
+                    <p className="text-white">
+                      A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
+                    </p>
+                  </div>
                   <div className="footprint">
-                    <div className="copyright mb-6">
+                    <div className="copyright text-white mb-6">
                       <div className="text-sm">
-                        🏗️🇨🇦 ️Copyright Build Canada Inc. 2025
-                      </div>
-                    </div>
-                    <div className="quote text-sm italic max-w-2xl mx-auto">
-                      &quot;Whatever our errors are otherwise, we shall not err
-                      for want of boldness... Canada shall be the star towards
-                      which all men who love progress and freedom shall
-                      come.&quot;
-                      <div className="caption not-italic mt-2 text-xs">
-                        — Laurier
+                        🏗️🇨🇦 &copy; Build Canada 2025
                       </div>
                     </div>
                   </div>
