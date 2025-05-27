@@ -135,102 +135,131 @@ class PromiseTrackerLangchain:
             return PromptTemplate.from_template("Error loading template: {input}")
     
     def _create_promise_explanation_template(self) -> PromptTemplate:
-        """Create the promise explanation template."""
-        template = """You are a policy analyst helping to explain Canadian federal government promises.
+        """Create the promise explanation template using tested logic from enrich_promises_with_explanation.py."""
+        template = """You are a highly skilled policy analyst specializing in Canadian federal government commitments.
+        
+Your task is to process government commitments and provide clear, comprehensive explanations for Canadian citizens.
 
-Given the following promise information, provide a clear, comprehensive explanation:
+For the following government commitment, generate:
 
-Promise Text: {promise_text}
-Department: {department}
-Party: {party}
-Context: {context}
+1. **concise_title**: A short, descriptive title (5-8 words) that captures the essence of the commitment
+2. **what_it_means_for_canadians**: A list of 3-5 specific, concrete impacts or outcomes for Canadian citizens, written in clear, accessible language
+3. **description**: A brief summary (1-2 sentences) explaining what the commitment involves  
+4. **background_and_context**: Relevant policy background, context, and significance (2-3 sentences)
 
-Please provide:
-1. **What it means**: A clear explanation of what this promise entails
-2. **Background and context**: Relevant background information and policy context
-3. **Key components**: Main elements or steps involved
-4. **Potential impact**: Who would be affected and how
+**Commitment Text**: {promise_text}
+**Department**: {department}
+**Party**: {party}
+**Source Context**: {context}
 
-Return your response as a JSON object with the following structure:
+**Output Requirements:**
+- Use clear, accessible language that any Canadian can understand
+- Focus on practical impacts and outcomes for citizens
+- Be factual and non-partisan
+- Each "what_it_means_for_canadians" item should be a complete sentence
+- Keep descriptions concise but informative
+
+Return your response as a JSON object:
 {{
-    "what_it_means": "Clear explanation of the promise",
-    "background_and_context": "Relevant background and policy context",
-    "key_components": ["Component 1", "Component 2", "Component 3"],
-    "potential_impact": "Description of potential impact"
+    "concise_title": "Brief descriptive title",
+    "what_it_means_for_canadians": [
+        "Specific impact or outcome 1",
+        "Specific impact or outcome 2", 
+        "Specific impact or outcome 3"
+    ],
+    "description": "Brief summary of what the commitment involves",
+    "background_and_context": "Relevant policy background and context"
 }}"""
         
         return PromptTemplate.from_template(template)
     
     def _create_promise_keywords_template(self) -> PromptTemplate:
-        """Create the promise keywords extraction template."""
-        template = """Extract key concepts and keywords from this Canadian federal government promise.
+        """Create the promise keywords extraction template from enrich_tag_new_promise.py."""
+        template = """From the following government promise text:
 
-Promise Text: {promise_text}
-Department: {department}
+"{promise_text}"
 
-Extract:
-1. Policy areas (e.g., healthcare, environment, economy)
-2. Key actions (e.g., implement, increase, create, reduce)
-3. Target groups (e.g., families, seniors, businesses)
-4. Important concepts and terms
+Extract a list of 5-10 key nouns and specific named entities (e.g., program names, specific laws mentioned, key organizations) that represent the core subjects and significant concepts of this promise.
 
-Return as a JSON object:
-{{
-    "policy_areas": ["area1", "area2"],
-    "actions": ["action1", "action2"],
-    "target_groups": ["group1", "group2"],
-    "key_concepts": ["concept1", "concept2"]
-}}"""
+**Output Requirements**:
+- Format: Respond with ONLY a valid JSON array of strings.
+- Content: Each string should be a distinct keyword or named entity.
+- Quantity: Aim for 5 to 10 items. If fewer are truly relevant, provide those. If many are relevant, prioritize the most important.
+
+Example JSON Output:
+["Affordable Child Care", "National System", "Early Learning", "$10-a-day", "Provinces and Territories"]
+
+If no specific keywords can be extracted, return an empty JSON array `[]`.
+Ensure the output is ONLY the JSON array."""
         
         return PromptTemplate.from_template(template)
     
     def _create_promise_action_type_template(self) -> PromptTemplate:
-        """Create the promise action type classification template."""
-        template = """Classify the type of action required for this Canadian federal government promise.
+        """Create the promise action type classification template from enrich_tag_new_promise.py."""
+        template = """Analyze the following government promise:
 
-Promise Text: {promise_text}
+"{promise_text}"
 
-Classify into one of these categories:
-- legislative: Requires new laws or amendments to existing laws
-- funding_allocation: Requires budget allocation or spending
-- policy_development: Requires new policies or policy changes
-- program_launch: Requires creating new programs or services
-- consultation: Requires stakeholder consultation or engagement
-- international_agreement: Requires international negotiations or agreements
-- appointment: Requires appointments to positions or bodies
-- other: Other types of actions
+What is the primary type of action being committed to? Choose one from the following list: "legislative", "funding_allocation", "policy_development", "program_launch", "consultation", "international_agreement", "appointment", "other".
 
-Return as a JSON object:
+**Output Requirements**:
+- Format: Respond with ONLY a valid JSON object containing a single key "action_type" whose value is one of the provided action types.
+- Content: The value for "action_type" MUST be exactly one of the strings from the list above.
+
+Example JSON Output:
 {{
-    "action_type": "category_name",
-    "confidence": 0.95,
-    "rationale": "Explanation of why this classification was chosen"
-}}"""
+  "action_type": "legislative"
+}}
+
+Ensure the output is ONLY the JSON object."""
         
         return PromptTemplate.from_template(template)
     
     def _create_promise_history_template(self) -> PromptTemplate:
-        """Create the promise commitment history template."""
-        template = """Analyze the commitment history and context for this Canadian federal government promise.
+        """Create the commitment history rationale template from enrich_tag_new_promise.py."""
+        template = """You are a meticulous AI research assistant specializing in Canadian federal government policy and history.
 
-Promise Text: {promise_text}
-Party: {party}
-Election/Mandate Year: {year}
-Department: {department}
+Your task is to analyze Canadian government commitments and construct a factual timeline of key preceding events.
 
-Please provide:
-1. Historical context of similar commitments
-2. Past attempts or related initiatives
-3. Political significance
-4. Implementation challenges or considerations
+Given the following Canadian government commitment:
 
-Return as a JSON object:
-{{
-    "historical_context": "Background on similar past commitments",
-    "past_initiatives": "Related previous initiatives or attempts",
-    "political_significance": "Why this commitment is politically important",
-    "implementation_notes": "Key considerations for implementation"
-}}"""
+**Commitment Text**: "{promise_text}"
+**Source Type**: {source_type}
+**Announced By**: {entity}
+**Date Commitment Announced**: {date_issued}
+
+**Task**:
+Construct a timeline of key Canadian federal policies, legislative actions, official announcements, significant public reports, or court decisions that *preceded* and *directly contributed to or motivated* this specific commitment.
+
+Prioritize the **top 2-4 most directly relevant and impactful** federal-level events that demonstrate the context and motivation for this commitment.
+
+For every distinct event in the timeline, provide:
+1. The exact date (YYYY-MM-DD) of its publication, announcement, or decision.
+2. A concise description of the 'Action' or event.
+3. A verifiable 'Source URL' pointing to an official government document, parliamentary record, press release, or a reputable news article about the event.
+
+**Output Requirements**:
+- Format: Respond with ONLY a valid JSON array of objects, containing **0 to 4** timeline event objects.
+- If no relevant preceding events are found, return an empty array `[]`.
+- Object Structure: Each object MUST contain the keys "date" (string, "YYYY-MM-DD"), "action" (string), and "source_url" (string).
+- Content: Focus only on concrete, verifiable federal-level events.
+- Chronology: Present timeline events chronologically (earliest first), all preceding the 'Date Commitment Announced'.
+
+Example JSON Output:
+[
+  {{
+    "date": "YYYY-MM-DD",
+    "action": "Description of a key preceding policy, legislative action, or official announcement.",
+    "source_url": "https://example.com/official-source-link1"
+  }},
+  {{
+    "date": "YYYY-MM-DD", 
+    "action": "Description of another relevant preceding event.",
+    "source_url": "https://example.com/official-source-link2"
+  }}
+]
+
+If no events are found, return: []"""
         
         return PromptTemplate.from_template(template)
     
@@ -292,14 +321,14 @@ Return as a JSON object:
             logger.error(f"Error classifying promise action type: {e}")
             return {'error': str(e)}
     
-    def generate_promise_history(self, promise_text: str, party: str, year: str, department: str) -> Dict[str, Any]:
+    def generate_promise_history(self, promise_text: str, source_type: str, entity: str, date_issued: str) -> Dict[str, Any]:
         """Generate commitment history for a promise."""
         try:
             result = self.chains['promise_history'].invoke({
                 'promise_text': promise_text,
-                'party': party,
-                'year': year,
-                'department': department
+                'source_type': source_type,
+                'entity': entity,
+                'date_issued': date_issued
             })
             return result
         except Exception as e:
