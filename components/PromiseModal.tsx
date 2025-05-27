@@ -151,7 +151,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border border-[#d3c7b9] shadow-xl rounded-lg z-50">
+      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border shadow-xl z-50">
         {/* Header */}
         <DialogHeader className="border-b border-[#d3c7b9] p-6">
           {/* Title */}
@@ -234,7 +234,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                     />
                   </svg>
                 </span>
-                Progress
+                {progress_score === 0 ? "Not started" : progress_score === 5 ? "Complete" : "In Progress"}
               </h3>
               <div className="flex items-start">
                 {/* No status label here anymore */}
@@ -264,7 +264,6 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
               </h3>
               {background_and_context && (
                 <div className="mb-4">
-                  <h4 className="text-md font-semibold text-[#555555] mb-1">Why This Was Needed:</h4>
                   <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
                     {background_and_context}
                   </p>
@@ -279,7 +278,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                     aria-expanded={isRationaleExpanded}
                   >
                     {isRationaleExpanded ? <ChevronDownIcon className="mr-1 h-4 w-4" /> : <ChevronRightIcon className="mr-1 h-4 w-4" />}
-                    More Details: Preceding Events
+                    More Details of Preceding Events
                   </button>
                   {isRationaleExpanded && (
                     <div className="space-y-3 pl-2 border-l-2 border-gray-900">

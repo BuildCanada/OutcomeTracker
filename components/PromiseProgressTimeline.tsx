@@ -209,7 +209,7 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
 
       {/* Selected Event Details Section - common for both layouts */}
       {selectedEvent && (
-        <div className="p-4 bg-gray-50 border border-gray-200 mt-4">
+        <div className="mt-4">
           <p className="text-xs text-gray-500 mb-1">{formatDate(selectedEvent.date)}</p>
           <p className="font-medium text-gray-800 mb-1 text-md">{selectedEvent.fullTitle}</p>
           <p className="text-gray-600 text-sm whitespace-pre-wrap mb-3">{selectedEvent.fullText}</p>
@@ -218,8 +218,11 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
               href={selectedEvent.sourceUrl} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline text-xs font-mono"
+              className="text-blue-600 hover:text-blue-800 hover:underline text-xs font-mono inline-flex items-center gap-1"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m5-3h3m0 0v6m0-6L10 14" />
+              </svg>
               View Source
             </a>
           )}
