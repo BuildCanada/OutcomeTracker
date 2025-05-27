@@ -2,9 +2,10 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import type { PromiseData, RationaleEvent, EvidenceItem } from "@/lib/types"
-import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon, TrendingUpIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2Icon, XIcon } from "lucide-react"
+import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon, TrendingUpIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2Icon, XIcon, ShareIcon } from "lucide-react"
 import { Timestamp } from 'firebase/firestore';
 import PromiseProgressTimeline from './PromiseProgressTimeline';
+import ShareModal from './ShareModal';
 import React, { useState } from 'react';
 
 interface PromiseModalProps {
@@ -91,6 +92,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
   const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence } = promise;
 
   const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Get the last updated date from evidence items
   const lastUpdateDate = evidence && evidence.length > 0 
@@ -150,168 +152,191 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
   const isDelivered = progress_score === 5;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border shadow-xl z-50">
-        {/* Header */}
-        <DialogHeader className="border-b border-[#d3c7b9] p-6">
-          {/* Title */}
-          <DialogTitle className="text-2xl font-bold text-[#222222] mb-2 break-words">
-            {concise_title || text}
-          </DialogTitle>
-
-          {/* Description */}
-          {intended_impact_and_objectives && (
-            <div className="text-base text-gray-700 mb-2 break-words">
-              {intended_impact_and_objectives}
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border shadow-xl z-50">
+          {/* Header */}
+          <DialogHeader className="border-b border-[#d3c7b9] p-12 relative">
+            {/* Share button container */}
+            <div className="absolute top-3 right-12 flex items-center">
+              {/* Share button */}
+              <button
+                onClick={() => setIsShareModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                aria-label="Share this promise"
+              >
+                <ShareIcon className="w-4 h-4" />
+                Share
+              </button>
             </div>
-          )}
 
-          {/* Original Text */}
-          {concise_title && (
-            <div className="text-sm italic text-gray-500 mb-2 break-words">
-              <span className="font-medium">Original Text:</span> {text}
-            </div>
-          )}
+            {/* Title */}
+            <DialogTitle className="text-2xl font-bold text-[#222222] mb-2 break-words pr-24">
+              {concise_title || text}
+            </DialogTitle>
 
-          {/* Last Updated Date */}
-          {lastUpdateDate && (
-            <DialogDescription className="text-xs text-gray-400">
-              Last Updated: {lastUpdateDate}
-            </DialogDescription>
-          )}
-        </DialogHeader>
-
-        <div className="p-6 space-y-8 break-words overflow-x-hidden">
-          {/* What this means for Canadians Section */}
-          {what_it_means_for_canadians && (
-            <section>
-              <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
-                <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
-                What This Means for Canadians
-              </h3>
-              <ul className="text-[#333333] leading-relaxed space-y-2 list-disc pl-5 break-words">
-                {Array.isArray(what_it_means_for_canadians) ? (
-                  what_it_means_for_canadians.map((item, index) => (
-                    <li key={index} className="break-words whitespace-pre-line">
-                      {item}
-                    </li>
-                  ))
-                ) : (
-                  <li className="break-words whitespace-pre-line">{what_it_means_for_canadians}</li>
-                )}
-              </ul>
-            </section>
-          )}
-
-          {/* Progress Section */}
-          {(progress_score > 0 || progress_summary) && (
-            <section className="border-t border-[#d3c7b9] pt-6">
-              <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
-                {/* Progress SVG indicator as section icon */}
-                <span className="mr-2 w-6 h-6 inline-flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      fill={getPieColor(progress_score)}
-                      stroke={getPieColor(progress_score)}
-                      strokeWidth="2"
-                    />
-                    {progress_score < 5 && progress_score > 0 && (
-                      <path
-                        d={getPieArcPath(12, 12, 10, 0, (1 - progress_score / 5) * 360)}
-                        fill="#fff"
-                      />
-                    )}
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      fill="none"
-                      stroke={getPieColor(progress_score)}
-                      strokeWidth="2"
-                    />
-                  </svg>
-                </span>
-                {progress_score === 0 ? "Not started" : progress_score === 5 ? "Complete" : "In Progress"}
-              </h3>
-              <div className="flex items-start">
-                {/* No status label here anymore */}
-                <div className="flex flex-col items-center pt-1"></div>
-                <p className="text-[#333333] leading-relaxed whitespace-pre-line flex-1 break-words">
-                  {progress_summary || ""}
-                </p>
+            {/* Description */}
+            {intended_impact_and_objectives && (
+              <div className="text-base text-gray-700 mb-2 break-words">
+                {intended_impact_and_objectives}
               </div>
-            </section>
-          )}
-          
-          {/* Timeline and Evidence Details Section - Existing Component */}
-          <section className="border-t border-[#d3c7b9] pt-6">
-             <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
-                <CalendarIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
-                Timeline
-              </h3>
-            <PromiseProgressTimeline promise={promise} /> 
-          </section>
+            )}
 
-          {/* Background Section */}
-          {(background_and_context || (commitment_history_rationale && commitment_history_rationale.length > 0)) && (
-            <section className="border-t border-[#d3c7b9] pt-6">
-              <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
-                <FileTextIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
-                Background
-              </h3>
-              {background_and_context && (
-                <div className="mb-4">
-                  <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
-                    {background_and_context}
+            {/* Original Text */}
+            {concise_title && (
+              <div className="text-sm italic text-gray-500 mb-2 break-words">
+                <span className="font-medium">Original Text:</span> {text}
+              </div>
+            )}
+
+            {/* Last Updated Date */}
+            {lastUpdateDate && (
+              <DialogDescription className="text-xs text-gray-400">
+                Last Updated: {lastUpdateDate}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+
+          <div className="p-6 space-y-8 break-words overflow-x-hidden">
+            {/* What this means for Canadians Section */}
+            {what_it_means_for_canadians && (
+              <section>
+                <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
+                  <UsersIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                  What This Means for Canadians
+                </h3>
+                <ul className="text-[#333333] leading-relaxed space-y-2 list-disc pl-5 break-words">
+                  {Array.isArray(what_it_means_for_canadians) ? (
+                    what_it_means_for_canadians.map((item, index) => (
+                      <li key={index} className="break-words whitespace-pre-line">
+                        {item}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="break-words whitespace-pre-line">{what_it_means_for_canadians}</li>
+                  )}
+                </ul>
+              </section>
+            )}
+
+            {/* Progress Section */}
+            {(progress_score > 0 || progress_summary) && (
+              <section className="border-t border-[#d3c7b9] pt-6">
+                <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
+                  {/* Progress SVG indicator as section icon */}
+                  <span className="mr-2 w-6 h-6 inline-flex items-center justify-center">
+                    <svg className="w-6 h-6" viewBox="0 0 24 24">
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill={getPieColor(progress_score)}
+                        stroke={getPieColor(progress_score)}
+                        strokeWidth="2"
+                      />
+                      {progress_score < 5 && progress_score > 0 && (
+                        <path
+                          d={getPieArcPath(12, 12, 10, 0, (1 - progress_score / 5) * 360)}
+                          fill="#fff"
+                        />
+                      )}
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill="none"
+                        stroke={getPieColor(progress_score)}
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  </span>
+                  {progress_score === 0 ? "Not started" : progress_score === 5 ? "Complete" : "In Progress"}
+                </h3>
+                <div className="flex items-start">
+                  {/* No status label here anymore */}
+                  <div className="flex flex-col items-center pt-1"></div>
+                  <p className="text-[#333333] leading-relaxed whitespace-pre-line flex-1 break-words">
+                    {progress_summary || ""}
                   </p>
                 </div>
-              )}
-
-              {commitment_history_rationale && commitment_history_rationale.length > 0 && (
-                <div>
-                  <button 
-                    onClick={() => setIsRationaleExpanded(!isRationaleExpanded)}
-                    className="flex items-center text-xs text-[#0056b3] hover:underline focus:outline-none mb-2"
-                    aria-expanded={isRationaleExpanded}
-                  >
-                    {isRationaleExpanded ? <ChevronDownIcon className="mr-1 h-4 w-4" /> : <ChevronRightIcon className="mr-1 h-4 w-4" />}
-                    More Details of Preceding Events
-                  </button>
-                  {isRationaleExpanded && (
-                    <div className="space-y-3 pl-2 border-l-2 border-gray-900">
-                      {commitment_history_rationale.map(
-                        (event: RationaleEvent, index: number) => (
-                          <div
-                            key={index}
-                            className="border p-3 bg-gray-50"
-                          >
-                            <p className="text-xs font-medium mb-0.5">
-                              {formatSimpleDate(event.date)}
-                            </p>
-                            <p className="text-sm text-[#333333] mb-1 break-words">{event.action}</p>
-                            <a
-                              href={event.source_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
-                            >
-                              <LinkIcon className="mr-1 h-3 w-3" /> Source
-                            </a>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              </section>
+            )}
+            
+            {/* Timeline and Evidence Details Section - Existing Component */}
+            <section className="border-t border-[#d3c7b9] pt-6">
+               <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
+                  <CalendarIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                  Timeline
+                </h3>
+              <PromiseProgressTimeline promise={promise} /> 
             </section>
-          )}
 
-        </div>
-      </DialogContent>
-    </Dialog>
+            {/* Background Section */}
+            {(background_and_context || (commitment_history_rationale && commitment_history_rationale.length > 0)) && (
+              <section className="border-t border-[#d3c7b9] pt-6">
+                <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
+                  <FileTextIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                  Background
+                </h3>
+                {background_and_context && (
+                  <div className="mb-4">
+                    <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
+                      {background_and_context}
+                    </p>
+                  </div>
+                )}
+
+                {commitment_history_rationale && commitment_history_rationale.length > 0 && (
+                  <div>
+                    <button 
+                      onClick={() => setIsRationaleExpanded(!isRationaleExpanded)}
+                      className="flex items-center text-xs text-[#0056b3] hover:underline focus:outline-none mb-2"
+                      aria-expanded={isRationaleExpanded}
+                    >
+                      {isRationaleExpanded ? <ChevronDownIcon className="mr-1 h-4 w-4" /> : <ChevronRightIcon className="mr-1 h-4 w-4" />}
+                      More Details of Preceding Events
+                    </button>
+                    {isRationaleExpanded && (
+                      <div className="space-y-3 pl-2 border-l-2 border-gray-900">
+                        {commitment_history_rationale.map(
+                          (event: RationaleEvent, index: number) => (
+                            <div
+                              key={index}
+                              className="border p-3 bg-gray-50"
+                            >
+                              <p className="text-xs font-medium mb-0.5">
+                                {formatSimpleDate(event.date)}
+                              </p>
+                              <p className="text-sm text-[#333333] mb-1 break-words">{event.action}</p>
+                              <a
+                                href={event.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
+                              >
+                                <LinkIcon className="mr-1 h-3 w-3" /> Source
+                              </a>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : ''}
+        promiseTitle={concise_title || text}
+      />
+    </>
   );
 }
