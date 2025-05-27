@@ -100,11 +100,7 @@ export const Energy: Story = {
   },
 };
 
-export const GovernmentTransformation: Story = {
-  args: {
-    departmentSlug: 'treasury-board-of-canada-secretariat',
-  },
-};
+
 
 export const Innovation: Story = {
   args: {
@@ -116,6 +112,19 @@ export const Health: Story = {
   args: {
     departmentSlug: 'health-canada',
   },
+};
+
+export const GovernmentTransformation: Story = {
+  args: {
+    departmentSlug: 'treasury-board-of-canada-secretariat',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Shows public service productivity chart with real labour productivity data for the non-business sector and 20% increase target.'
+      }
+    }
+  }
 };
 
 export const NoDepartmentData: Story = {

@@ -19,6 +19,7 @@ import BalanceSheetChart from "@/components/charts/BalanceSheetChart";
 import HousingStartsChart from "@/components/charts/HousingStartsChart";
 import NPRPopulationChart from "@/components/charts/NPRPopulationChart";
 import AnnualizedHousingChart from "./charts/AnnualizedHousingChart";
+import ProductivityChart from "@/components/charts/ProductivityChart";
 
 interface MetricData {
   metric: string;
@@ -308,6 +309,23 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             </div>
           </div>
         </>
+      );
+
+    case "treasury-board-of-canada-secretariat":
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <div className="h-96 border rounded-lg p-4">
+            <ProductivityChart
+              title="Public Service Productivity"
+              sector="Non-business sector and others"
+              startYear={2015}
+              endYear={2024}
+              showTarget={true}
+              targetValue={120}
+              showGrowthRate={false}
+            />
+          </div>
+        </div>
       );
 
     default:

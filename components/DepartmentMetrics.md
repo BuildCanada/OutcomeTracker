@@ -87,6 +87,7 @@ The component includes real data visualizations for key departments:
 - **Finance**: Capital Formation % of GDP and Operating Balance charts
 - **Housing**: Housing Starts chart with trend line
 - **Immigration**: NPR Population % chart with target
+- **Government Transformation**: Public Service Productivity chart with 20% increase target
 
 Other departments show "Chart coming soon" placeholders.
 
