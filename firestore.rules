@@ -89,7 +89,7 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
     
-    match /potential_links_dev/{devId} {
+    match /potential_links/{linkId} {
       allow read, write: if isAdmin();
     }
     

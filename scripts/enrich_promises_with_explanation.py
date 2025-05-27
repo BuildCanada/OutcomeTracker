@@ -353,9 +353,9 @@ async def store_explanations(
             "what_it_means_for_canadians": llm_item.get("what_it_means_for_canadians"),
             "description": llm_item.get("description"),
             "background_and_context": llm_item.get("background_and_context"),
-            "dev_explanation_enriched_at": firestore.SERVER_TIMESTAMP,
-            "dev_explanation_enrichment_model": LLM_MODEL_NAME,
-            "dev_explanation_enrichment_status": "processed"
+            "explanation_enriched_at": firestore.SERVER_TIMESTAMP,
+            "explanation_enrichment_model": LLM_MODEL_NAME,
+            "explanation_enrichment_status": "processed"
         }
 
         if not dry_run:
@@ -489,8 +489,8 @@ async def main_async_entrypoint():
                     try:
                         await asyncio.to_thread(
                             p_fail['doc_ref'].update, {
-                                "dev_explanation_enrichment_status": "failed_llm_generation",
-                                "dev_explanation_enriched_at": firestore.SERVER_TIMESTAMP,
+                                "explanation_enrichment_status": "failed_llm_generation",
+                                "explanation_enriched_at": firestore.SERVER_TIMESTAMP,
                             }
                         )
                     except Exception as e_mark_fail:

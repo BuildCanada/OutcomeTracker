@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # PromiseTracker/scripts/linking_jobs/link_evidence_to_promises.py
+# Enhanced version with comprehensive JSON output for quality monitoring
 # Links existing evidence_items to relevant promises in promises_dev collection
 # using hybrid approach: departmental matching, keyword overlap, and LLM assessment
 
@@ -18,6 +19,7 @@ import argparse
 from datetime import datetime, timezone
 import uuid
 import re
+from pathlib import Path
 
 # --- Load Environment Variables ---
 load_dotenv()
@@ -76,7 +78,7 @@ if not GEMINI_API_KEY:
 if "GOOGLE_API_KEY" not in os.environ and GEMINI_API_KEY:
     os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 
-LLM_MODEL_NAME = os.getenv("GEMINI_MODEL_EVIDENCE_LINKING", "models/gemini-2.5-pro-preview-05-20")
+LLM_MODEL_NAME = os.getenv("GEMINI_MODEL_EVIDENCE_LINKING", "models/gemini-1.5-pro")
 GENERATION_CONFIG_DICT = {
     "temperature": 0.1,
     "top_p": 0.95,
@@ -95,9 +97,9 @@ except Exception as e:
 # --- End Gemini Configuration ---
 
 # --- Constants ---
-PROMISES_COLLECTION = 'promises_dev'
+PROMISES_COLLECTION = 'promises'
 EVIDENCE_ITEMS_COLLECTION = 'evidence_items_test'  # or evidence_items
-POTENTIAL_LINKS_COLLECTION = 'potential_links_dev'
+POTENTIAL_LINKS_COLLECTION = 'potential_links'
 
 # Threshold values for pre-LLM filtering
 KEYWORD_JACCARD_THRESHOLD = 0.1
@@ -108,6 +110,10 @@ MAX_CANDIDATE_PROMISES_FOR_LLM = 10
 RATE_LIMIT_DELAY_SECONDS = 2
 LLM_RETRY_DELAY = 5
 MAX_LLM_RETRIES = 2
+
+# JSON Output Configuration
+JSON_OUTPUT_DIR = None
+RUN_TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
 # --- End Constants ---
 
 # Government platform context for LLM prompts
@@ -117,6 +123,43 @@ This analysis focuses on linking government evidence items (bills, announcements
 to specific promises made during the 44th Parliament session.
 """
 
+# JSON Output Helper Functions
+def setup_json_output_dir(base_dir: str = None) -> str:
+    """Setup and return the JSON output directory path."""
+    global JSON_OUTPUT_DIR
+    if base_dir is None:
+        base_dir = os.path.join("scripts", "linking_jobs", "output")
+    
+    JSON_OUTPUT_DIR = os.path.join(base_dir, f"linking_run_{RUN_TIMESTAMP}")
+    Path(JSON_OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"JSON outputs will be saved to: {JSON_OUTPUT_DIR}")
+    return JSON_OUTPUT_DIR
+
+def save_json_output(data: dict, filename: str, step_name: str) -> None:
+    """Save data to JSON file with proper formatting."""
+    if JSON_OUTPUT_DIR is None:
+        return
+    
+    filepath = os.path.join(JSON_OUTPUT_DIR, filename)
+    
+    # Add metadata
+    output_data = {
+        "metadata": {
+            "step": step_name,
+            "timestamp": datetime.now().isoformat(),
+            "run_id": RUN_TIMESTAMP,
+            "script_version": "enhanced_with_json_output"
+        },
+        "data": data
+    }
+    
+    try:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(output_data, f, indent=2, ensure_ascii=False, default=str)
+        logger.info(f"✅ JSON output saved: {filename} ({step_name})")
+    except Exception as e:
+        logger.error(f"Failed to save JSON output {filename}: {e}")
 
 def calculate_keyword_overlap(evidence_keywords: list, promise_keywords: list) -> dict:
     """
@@ -161,19 +204,20 @@ def check_departmental_match(evidence_departments: list, promise_responsible_dep
 
 
 async def fetch_unlinked_evidence_items(parliament_session_target: str, evidence_source_type_filter: str = None, 
-                                       limit: int = None) -> list[firestore.DocumentSnapshot]:
+                                       limit: int = None, output_json: bool = False) -> list[firestore.DocumentSnapshot]:
     """
     Fetches evidence items that need linking processing.
     """
     logger.info(f"Fetching unlinked evidence items for parliament session: {parliament_session_target}")
     
     try:
-        # Build base query
+        # Build base query - First filter by parliament session
         query = db.collection(EVIDENCE_ITEMS_COLLECTION).where(
             filter=firestore.FieldFilter("parliament_session_id", "==", parliament_session_target)
-        ).where(
-            filter=firestore.FieldFilter("dev_linking_status", "in", [None, "pending_linking"])
         )
+        
+        # Note: Firestore doesn't handle None/null values well in 'in' queries
+        # We'll fetch all items and filter client-side for null linking_status
         
         # Add source type filter if specified
         if evidence_source_type_filter:
@@ -186,8 +230,36 @@ async def fetch_unlinked_evidence_items(parliament_session_target: str, evidence
             query = query.limit(limit)
         
         # Execute query
-        evidence_docs = list(await asyncio.to_thread(query.stream))
-        logger.info(f"Found {len(evidence_docs)} evidence items to process")
+        all_evidence_docs = list(await asyncio.to_thread(query.stream))
+        
+        # Filter client-side for items needing linking (null or "pending" status)
+        evidence_docs = []
+        for doc in all_evidence_docs:
+            promise_linking_status = doc.to_dict().get('promise_linking_status')
+            if promise_linking_status is None or promise_linking_status == "pending":
+                evidence_docs.append(doc)
+        
+        logger.info(f"Found {len(evidence_docs)} evidence items to process (out of {len(all_evidence_docs)} total)")
+        
+        # Output JSON if requested
+        if output_json and evidence_docs:
+            evidence_data = []
+            for doc in evidence_docs:
+                data = doc.to_dict()
+                data['document_id'] = doc.id
+                evidence_data.append(data)
+            
+            output_data = {
+                "query_parameters": {
+                    "parliament_session_target": parliament_session_target,
+                    "evidence_source_type_filter": evidence_source_type_filter,
+                    "limit": limit
+                },
+                "results_count": len(evidence_docs),
+                "evidence_items": evidence_data
+            }
+            
+            save_json_output(output_data, "01_evidence_items_fetched.json", "Evidence Items Fetched")
         
         return evidence_docs
         
@@ -196,12 +268,13 @@ async def fetch_unlinked_evidence_items(parliament_session_target: str, evidence
         return []
 
 
-async def fetch_candidate_promises(evidence_data: dict, parliament_session_id: str) -> list[dict]:
+async def fetch_candidate_promises(evidence_data: dict, parliament_session_id: str, output_json: bool = False) -> list[dict]:
     """
     Fetches candidate promises based on departmental matching and keyword overlap.
     Returns list of promise candidates with scores.
     """
     evidence_departments = evidence_data.get('linked_departments', [])
+    evidence_id = evidence_data.get('evidence_id', 'N/A')
     
     # Get evidence keywords based on type
     evidence_keywords = []
@@ -213,15 +286,27 @@ async def fetch_candidate_promises(evidence_data: dict, parliament_session_id: s
     logger.debug(f"Fetching candidate promises for parliament session: {parliament_session_id}")
     
     try:
-        # Query promises for the parliament session
+        # Query promises for the parliament session - only mandate letters
         promises_query = db.collection(PROMISES_COLLECTION).where(
             filter=firestore.FieldFilter("parliament_session_id", "==", parliament_session_id)
+        ).where(
+            filter=firestore.FieldFilter("source_type", "==", "2021 LPC Mandate Letters")
         )
         
         promise_docs = list(await asyncio.to_thread(promises_query.stream))
         logger.info(f"Found {len(promise_docs)} total promises for session {parliament_session_id}")
         
         candidates = []
+        filtering_details = {
+            "evidence_id": evidence_id,
+            "evidence_departments": evidence_departments,
+            "evidence_keywords": evidence_keywords,
+            "total_promises_checked": len(promise_docs),
+            "departmental_matches": 0,
+            "keyword_matches": 0,
+            "combined_matches": 0,
+            "detailed_results": []
+        }
         
         for promise_doc in promise_docs:
             promise_data = promise_doc.to_dict()
@@ -234,8 +319,19 @@ async def fetch_candidate_promises(evidence_data: dict, parliament_session_id: s
                 promise_data.get('relevant_departments', [])
             )
             
+            if dept_match:
+                filtering_details["departmental_matches"] += 1
+            
             # If evidence has specific departments but no match, skip
             if not dept_match and evidence_departments:
+                if output_json:
+                    filtering_details["detailed_results"].append({
+                        "promise_id": promise_doc.id,
+                        "promise_text_snippet": promise_data.get('text', '')[:100],
+                        "dept_match": False,
+                        "reason": "No departmental match",
+                        "selected": False
+                    })
                 continue
             
             # B. Keyword/Concept Overlap
@@ -251,6 +347,9 @@ async def fetch_candidate_promises(evidence_data: dict, parliament_session_id: s
                 common_count >= KEYWORD_COMMON_COUNT_THRESHOLD
             )
             
+            if jaccard_score > 0 or common_count > 0:
+                filtering_details["keyword_matches"] += 1
+            
             if is_candidate:
                 combined_score = jaccard_score + (common_count * 0.1)
                 candidates.append({
@@ -258,13 +357,52 @@ async def fetch_candidate_promises(evidence_data: dict, parliament_session_id: s
                     'keyword_overlap': keyword_overlap,
                     'combined_score': combined_score
                 })
+                filtering_details["combined_matches"] += 1
+                
+                if output_json:
+                    filtering_details["detailed_results"].append({
+                        "promise_id": promise_doc.id,
+                        "promise_text_snippet": promise_data.get('text', '')[:100],
+                        "dept_match": dept_match,
+                        "keyword_overlap": keyword_overlap,
+                        "combined_score": combined_score,
+                        "selected": True
+                    })
+            elif output_json:
+                filtering_details["detailed_results"].append({
+                    "promise_id": promise_doc.id,
+                    "promise_text_snippet": promise_data.get('text', '')[:100],
+                    "dept_match": dept_match,
+                    "keyword_overlap": keyword_overlap,
+                    "reason": f"Below threshold (jaccard: {jaccard_score:.3f}, common: {common_count})",
+                    "selected": False
+                })
         
         # Sort by combined score and limit to top candidates
         candidates.sort(key=lambda x: x['combined_score'], reverse=True)
-        candidates = candidates[:MAX_CANDIDATE_PROMISES_FOR_LLM]
+        top_candidates = candidates[:MAX_CANDIDATE_PROMISES_FOR_LLM]
         
-        logger.info(f"Found {len(candidates)} candidate promises after filtering")
-        return candidates
+        # Output JSON if requested
+        if output_json:
+            filtering_details["final_candidates_count"] = len(top_candidates)
+            filtering_details["candidates_truncated"] = len(candidates) > MAX_CANDIDATE_PROMISES_FOR_LLM
+            
+            # Add final candidates details
+            filtering_details["final_candidates"] = []
+            for candidate in top_candidates:
+                filtering_details["final_candidates"].append({
+                    "promise_id": candidate['promise_data']['promise_id'],
+                    "promise_text_snippet": candidate['promise_data'].get('text', '')[:150],
+                    "keyword_overlap": candidate['keyword_overlap'],
+                    "combined_score": candidate['combined_score'],
+                    "responsible_department": candidate['promise_data'].get('responsible_department_lead'),
+                    "relevant_departments": candidate['promise_data'].get('relevant_departments', [])
+                })
+            
+            save_json_output(filtering_details, f"02_candidate_promises_{evidence_id}.json", "Candidate Promises")
+        
+        logger.info(f"Found {len(top_candidates)} candidate promises after filtering")
+        return top_candidates
         
     except Exception as e:
         logger.error(f"Error fetching candidate promises: {e}", exc_info=True)
@@ -325,7 +463,7 @@ Respond with a JSON object containing exactly these fields:
             response = await client.aio.models.generate_content(
                 model=LLM_MODEL_NAME,
                 contents=prompt,
-                config=GenerationConfig(**GENERATION_CONFIG_DICT)
+                config=GENERATION_CONFIG_DICT
             )
             
             # Parse the JSON response
@@ -373,7 +511,7 @@ Respond with a JSON object containing exactly these fields:
 async def create_potential_link(evidence_data: dict, promise_data: dict, keyword_overlap: dict, 
                                llm_assessment: dict, parliament_session_id: str) -> str | None:
     """
-    Creates a potential link document in the potential_links_dev collection.
+    Creates a potential link document in the potential_links collection.
     Returns the created link ID or None on failure.
     """
     try:
@@ -410,7 +548,8 @@ async def create_potential_link(evidence_data: dict, promise_data: dict, keyword
         return None
 
 
-async def process_single_evidence_item(evidence_doc: firestore.DocumentSnapshot, parliament_session_id: str, dry_run: bool = False) -> dict:
+async def process_single_evidence_item(evidence_doc: firestore.DocumentSnapshot, parliament_session_id: str, 
+                                     dry_run: bool = False, output_json: bool = False) -> dict:
     """
     Processes a single evidence item for linking to promises.
     Returns processing statistics.
@@ -428,11 +567,15 @@ async def process_single_evidence_item(evidence_doc: firestore.DocumentSnapshot,
         'error': None
     }
     
+    # For JSON output
+    llm_assessments = []
+    created_links = []
+    
     logger.info(f"Processing evidence item: {evidence_id} ({evidence_data.get('evidence_source_type')})")
     
     try:
         # A. Fetch Candidate Promises (Pre-LLM Filtering)
-        candidates = await fetch_candidate_promises(evidence_data, parliament_session_id)
+        candidates = await fetch_candidate_promises(evidence_data, parliament_session_id, output_json)
         stats['candidates_found'] = len(candidates)
         
         if not candidates:
@@ -451,7 +594,28 @@ async def process_single_evidence_item(evidence_doc: firestore.DocumentSnapshot,
             
             if llm_assessment is None:
                 logger.warning(f"LLM assessment failed for {evidence_id} <-> {promise_data.get('promise_id')}")
+                if output_json:
+                    llm_assessments.append({
+                        "evidence_id": evidence_id,
+                        "promise_id": promise_data.get('promise_id'),
+                        "promise_text_snippet": promise_data.get('text', '')[:150],
+                        "keyword_overlap": keyword_overlap,
+                        "llm_assessment": None,
+                        "assessment_status": "failed",
+                        "link_created": False
+                    })
                 continue
+            
+            # Record assessment for JSON output
+            if output_json:
+                assessment_record = {
+                    "evidence_id": evidence_id,
+                    "promise_id": promise_data.get('promise_id'),
+                    "promise_text_snippet": promise_data.get('text', '')[:150],
+                    "keyword_overlap": keyword_overlap,
+                    "llm_assessment": llm_assessment,
+                    "assessment_status": "success"
+                }
             
             # C. Store Potential Links (only if directly related and High/Medium relevance)
             if (llm_assessment.get('is_directly_related') and 
@@ -465,12 +629,69 @@ async def process_single_evidence_item(evidence_doc: firestore.DocumentSnapshot,
                     
                     if link_id:
                         stats['potential_links_created'] += 1
+                        if output_json:
+                            created_links.append({
+                                "link_id": link_id,
+                                "evidence_id": evidence_id,
+                                "promise_id": promise_data.get('promise_id'),
+                                "relevance_score": llm_assessment.get('relevance_score'),
+                                "explanation": llm_assessment.get('explanation'),
+                                "link_type_suggestion": llm_assessment.get('link_type_suggestion'),
+                                "status_impact_suggestion": llm_assessment.get('status_impact_suggestion'),
+                                "keyword_overlap": keyword_overlap,
+                                "dry_run": False
+                            })
+                        assessment_record["link_created"] = True if output_json else None
                 else:
                     logger.info(f"[DRY RUN] Would create link: {evidence_id} <-> {promise_data.get('promise_id')} ({llm_assessment.get('relevance_score')})")
                     stats['potential_links_created'] += 1
+                    if output_json:
+                        created_links.append({
+                            "link_id": "DRY_RUN",
+                            "evidence_id": evidence_id,
+                            "promise_id": promise_data.get('promise_id'),
+                            "relevance_score": llm_assessment.get('relevance_score'),
+                            "explanation": llm_assessment.get('explanation'),
+                            "link_type_suggestion": llm_assessment.get('link_type_suggestion'),
+                            "status_impact_suggestion": llm_assessment.get('status_impact_suggestion'),
+                            "keyword_overlap": keyword_overlap,
+                            "dry_run": True
+                        })
+                    assessment_record["link_created"] = True if output_json else None
+            else:
+                if output_json:
+                    assessment_record["link_created"] = False
+            
+            if output_json:
+                llm_assessments.append(assessment_record)
             
             # Rate limiting between LLM calls
             await asyncio.sleep(1)
+        
+        # Output JSON for LLM assessments
+        if output_json and llm_assessments:
+            assessment_data = {
+                "evidence_id": evidence_id,
+                "evidence_summary": {
+                    "source_type": evidence_data.get('evidence_source_type'),
+                    "title": evidence_data.get('title_or_summary', ''),
+                    "date": str(evidence_data.get('evidence_date', ''))
+                },
+                "total_assessments": len(llm_assessments),
+                "successful_assessments": len([a for a in llm_assessments if a["assessment_status"] == "success"]),
+                "links_created": len([a for a in llm_assessments if a.get("link_created")]),
+                "assessments": llm_assessments
+            }
+            save_json_output(assessment_data, f"03_llm_assessments_{evidence_id}.json", "LLM Assessments")
+        
+        # Output JSON for created links
+        if output_json and created_links:
+            links_data = {
+                "evidence_id": evidence_id,
+                "total_links_created": len(created_links),
+                "links": created_links
+            }
+            save_json_output(links_data, f"04_created_links_{evidence_id}.json", "Created Links")
         
         logger.info(f"Completed processing {evidence_id}: {stats['potential_links_created']} links created from {stats['candidates_found']} candidates")
         
@@ -484,16 +705,16 @@ async def process_single_evidence_item(evidence_doc: firestore.DocumentSnapshot,
 
 async def update_evidence_linking_status(evidence_id: str, status: str, error_message: str = None, dry_run: bool = False):
     """
-    Updates the linking status of an evidence item.
+    Updates the promise linking status of an evidence item.
     """
     try:
         update_data = {
-            'dev_linking_status': status,
-            'dev_linking_processed_at': firestore.SERVER_TIMESTAMP
+            'promise_linking_status': status,
+            'promise_linking_processed_at': firestore.SERVER_TIMESTAMP
         }
         
         if error_message:
-            update_data['dev_linking_error_message'] = error_message[:500]
+            update_data['promise_linking_error_message'] = error_message[:500]
         
         if not dry_run:
             doc_ref = db.collection(EVIDENCE_ITEMS_COLLECTION).document(evidence_id)
@@ -507,7 +728,7 @@ async def update_evidence_linking_status(evidence_id: str, status: str, error_me
 
 
 async def main_linking_process(parliament_session_target: str, evidence_source_type_filter: str = None,
-                              limit: int = None, dry_run: bool = False):
+                              limit: int = None, dry_run: bool = False, output_json: bool = False):
     """
     Main process for linking evidence items to promises.
     """
@@ -516,14 +737,19 @@ async def main_linking_process(parliament_session_target: str, evidence_source_t
     logger.info(f"Evidence Source Filter: {evidence_source_type_filter or 'None'}")
     logger.info(f"Limit: {limit or 'None'}")
     logger.info(f"Dry Run: {dry_run}")
+    logger.info(f"Output JSON: {output_json}")
     logger.info(f"Collections: {EVIDENCE_ITEMS_COLLECTION} -> {PROMISES_COLLECTION} -> {POTENTIAL_LINKS_COLLECTION}")
     
     if dry_run:
         logger.warning("*** DRY RUN MODE: No changes will be written to Firestore ***")
     
+    if output_json:
+        setup_json_output_dir()
+        logger.info("📊 JSON output enabled - detailed results will be saved at each step")
+    
     # Fetch Unlinked Evidence Items
     evidence_docs = await fetch_unlinked_evidence_items(
-        parliament_session_target, evidence_source_type_filter, limit
+        parliament_session_target, evidence_source_type_filter, limit, output_json
     )
     
     if not evidence_docs:
@@ -547,7 +773,7 @@ async def main_linking_process(parliament_session_target: str, evidence_source_t
         
         try:
             # Process the evidence item
-            stats = await process_single_evidence_item(evidence_doc, parliament_session_target, dry_run)
+            stats = await process_single_evidence_item(evidence_doc, parliament_session_target, dry_run, output_json)
             
             # Update totals
             total_stats['total_processed'] += 1
@@ -560,12 +786,15 @@ async def main_linking_process(parliament_session_target: str, evidence_source_t
             elif stats['status'] == 'no_candidates_found':
                 total_stats['no_candidates_found'] += 1
             
-            # D. Update Evidence Item Status
-            final_status = 'linking_processed'
-            if stats['status'] == 'no_candidates_found':
-                final_status = 'linking_completed_no_candidates_found'
-            elif stats['status'] == 'error':
-                final_status = 'linking_error'
+            # D. Update Evidence Item Status  
+            if stats['status'] == 'error':
+                final_status = 'error_processing_item'
+            elif stats['status'] == 'no_candidates_found':
+                final_status = 'completed_no_links_found'
+            elif stats['potential_links_created'] > 0:
+                final_status = 'completed_links_created'
+            else:
+                final_status = 'completed_no_links_found'
             
             await update_evidence_linking_status(
                 evidence_id, final_status, stats.get('error'), dry_run
@@ -576,7 +805,7 @@ async def main_linking_process(parliament_session_target: str, evidence_source_t
             total_stats['errors'] += 1
             
             await update_evidence_linking_status(
-                evidence_id, 'linking_error', str(e), dry_run
+                evidence_id, 'error_processing_item', str(e), dry_run
             )
         
         # Rate limiting between evidence items
@@ -591,10 +820,37 @@ async def main_linking_process(parliament_session_target: str, evidence_source_t
     logger.info(f"Total potential links created: {total_stats['total_links_created']}")
     logger.info(f"Items with no candidates found: {total_stats['no_candidates_found']}")
     logger.info(f"Errors encountered: {total_stats['errors']}")
+    
+    # Output final statistics to JSON
+    if output_json:
+        final_stats = {
+            "run_parameters": {
+                "parliament_session_target": parliament_session_target,
+                "evidence_source_type_filter": evidence_source_type_filter,
+                "limit": limit,
+                "dry_run": dry_run
+            },
+            "processing_summary": total_stats,
+            "performance_metrics": {
+                "avg_candidates_per_evidence": total_stats['total_candidates_found'] / max(total_stats['total_processed'], 1),
+                "avg_assessments_per_evidence": total_stats['total_llm_assessments'] / max(total_stats['total_processed'], 1),
+                "avg_links_per_evidence": total_stats['total_links_created'] / max(total_stats['total_processed'], 1),
+                "link_success_rate": total_stats['total_links_created'] / max(total_stats['total_llm_assessments'], 1),
+                "processing_success_rate": (total_stats['total_processed'] - total_stats['errors']) / max(total_stats['total_processed'], 1)
+            },
+            "collection_info": {
+                "evidence_collection": EVIDENCE_ITEMS_COLLECTION,
+                "promises_collection": PROMISES_COLLECTION,
+                "links_collection": POTENTIAL_LINKS_COLLECTION
+            }
+        }
+        save_json_output(final_stats, "05_final_statistics.json", "Final Statistics")
+        
+        logger.info(f"📊 All JSON outputs saved to: {JSON_OUTPUT_DIR}")
 
 
 async def main_async_entrypoint():
-    parser = argparse.ArgumentParser(description='Link existing evidence items to promises using hybrid approach.')
+    parser = argparse.ArgumentParser(description='Enhanced evidence linking script with comprehensive JSON output for quality monitoring.')
     parser.add_argument(
         '--parliament_session_target',
         type=str,
@@ -618,6 +874,11 @@ async def main_async_entrypoint():
         action='store_true',
         help='Perform dry run without making changes to Firestore'
     )
+    parser.add_argument(
+        '--json',
+        action='store_true',
+        help='Output detailed JSON results at each major step for quality monitoring'
+    )
     
     args = parser.parse_args()
     
@@ -625,7 +886,8 @@ async def main_async_entrypoint():
         parliament_session_target=args.parliament_session_target,
         evidence_source_type_filter=args.evidence_source_type_filter,
         limit=args.limit,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
+        output_json=args.json
     )
 
 

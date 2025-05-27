@@ -89,7 +89,7 @@ GENERATION_CONFIG_DICT = {
     "temperature": 0.3,
     "top_p": 0.95,
     "top_k": 64,
-    "max_output_tokens": 8192, # Adjusted based on typical model limits, was 65536, flash might be 8k
+    "max_output_tokens": 65536, 
     "response_mime_type": "application/json",
 }
 

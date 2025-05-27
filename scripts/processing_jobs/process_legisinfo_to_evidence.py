@@ -89,7 +89,7 @@ logger.info(f"Using Gemini model: {LLM_MODEL_NAME}")
 GENERATION_CONFIG_DICT = {
     "response_mime_type": "application/json",
     "temperature": 0.1,
-    "max_output_tokens": 1000
+    "max_output_tokens": 65536
 }
 
 client = None
