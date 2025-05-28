@@ -283,7 +283,7 @@ export default function HomePageClient({
                     <button
                       key={dept.id}
                       onClick={() => setActiveTabId(dept.id)}
-                      className={`px-4 py-2 text-sm font-medium transition-colors
+                      className={`px-4 py-2 text-sm font-mono transition-colors
                         ${activeTabId === dept.id 
                           ? 'bg-[#8b2332] text-white' 
                           : 'bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50'
