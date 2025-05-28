@@ -252,7 +252,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
         <div className="p-6">
           <div className="flex flex-row items-center justify-between gap-4">
             {/* Progress Indicator - Column 1 */}
-            <div className="flex-shrink-0 flex flex-row items-center gap-2" style={{ minWidth: '2.5rem' }}>
+            <div className="flex-shrink-0 flex flex-row items-center gap-2 w-[170px]">
               <div
                 className="relative w-6 h-6 cursor-pointer focus:outline-none"
                 onMouseEnter={() => setShowProgressTooltip(true)}

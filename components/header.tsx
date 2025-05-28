@@ -30,7 +30,7 @@ export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
               href="/en/tracker"
               className="flex-1 flex items-center justify-center text-[16px] tracking-wide uppercase hover:bg-[#eae0d8] h-full first:border-l-0 border-l-2 border-black"
             >
-              Promise Tracker
+              Outcomes Tracker
             </Link>
             <Link
               href="/about"
