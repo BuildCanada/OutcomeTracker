@@ -234,6 +234,12 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
     return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
   }
 
+  // Check if the promise is overdue (more than 90 days since 2025-05-27)
+  const targetDate = new Date('2025-05-27');
+  const today = new Date();
+  const daysSinceTarget = Math.floor((today.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24));
+  const isOverdue = daysSinceTarget > 90;
+
   return (
     <>
       <div
@@ -259,15 +265,17 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setShowProgressModal(true); } }}
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
-                  {/* Full colored circle as background */}
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    fill={getPieColor(progressScore)}
-                    stroke={getPieColor(progressScore)}
-                    strokeWidth="2"
-                  />
+                  {/* Full colored circle as background - only if progress > 0 */}
+                  {progressScore > 0 && (
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      fill={getPieColor(progressScore)}
+                      stroke={getPieColor(progressScore)}
+                      strokeWidth="2"
+                    />
+                  )}
                   {/* White arc for incomplete portion (only if not complete) */}
                   {progressScore < 5 && progressScore > 0 && (
                     <path
@@ -275,13 +283,13 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                       fill="#fff"
                     />
                   )}
-                  {/* Outline circle (same color as fill) */}
+                  {/* Outline circle */}
                   <circle
                     cx="12"
                     cy="12"
                     r="10"
                     fill="none"
-                    stroke={getPieColor(progressScore)}
+                    stroke={progressScore === 0 ? (isOverdue ? '#ef4444' : '#d3c7b9') : getPieColor(progressScore)}
                     strokeWidth="2"
                   />
                 </svg>
@@ -296,7 +304,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                   {progressScore === 0 ? 'Not started' : progressScore === 5 ? 'Complete' : 'In Progress'}
                 </span>
                 <span className="text-xs text-gray-400">
-                  Last update {lastUpdateDate || 'N/A'}
+                  {lastUpdateDate ? `Last update ${lastUpdateDate}` : 'No update yet'}
                 </span>
               </div>
             </div>
