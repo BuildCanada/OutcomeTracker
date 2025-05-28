@@ -254,81 +254,83 @@ export default function MinisterSection({
           )}
         </div>
 
-        {/* Promises Section */}
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
-            <h3 className="text-2xl font-semibold">Commitments</h3>
-            <div className="flex flex-wrap gap-4">
-              <Select value={progressFilter} onValueChange={setProgressFilter}>
-                <SelectTrigger className="w-[180px] text-xs rounded-none">
-                  <SelectValue placeholder="Progress" />
-                </SelectTrigger>
-                <SelectContent className="rounded-none">
-                  <SelectItem value="all">All Progress</SelectItem>
-                  <SelectItem value="complete">Complete</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="not_started">Not Started</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Promises Section - Only show if not Prime Minister */}
+        {departmentSlug !== 'prime-minister' && (
+          <div className="mb-8">
+            <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
+              <h3 className="text-2xl font-semibold">Commitments</h3>
+              <div className="flex flex-wrap gap-4">
+                <Select value={progressFilter} onValueChange={setProgressFilter}>
+                  <SelectTrigger className="w-[180px] text-xs rounded-none">
+                    <SelectValue placeholder="Progress" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-none">
+                    <SelectItem value="all">All Progress</SelectItem>
+                    <SelectItem value="complete">Complete</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="not_started">Not Started</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={impactFilter} onValueChange={setImpactFilter}>
-                <SelectTrigger className="w-[180px] text-xs rounded-none">
-                  <SelectValue placeholder="Impact" />
-                </SelectTrigger>
-                <SelectContent className="rounded-none">
-                  <SelectItem value="all">All Impact</SelectItem>
-                  <SelectItem value="high">High Impact</SelectItem>
-                  <SelectItem value="medium">Medium Impact</SelectItem>
-                  <SelectItem value="low">Low Impact</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={impactFilter} onValueChange={setImpactFilter}>
+                  <SelectTrigger className="w-[180px] text-xs rounded-none">
+                    <SelectValue placeholder="Impact" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-none">
+                    <SelectItem value="all">All Impact</SelectItem>
+                    <SelectItem value="high">High Impact</SelectItem>
+                    <SelectItem value="medium">Medium Impact</SelectItem>
+                    <SelectItem value="low">Low Impact</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select
-                value={alignmentFilter}
-                onValueChange={setAlignmentFilter}
-              >
-                <SelectTrigger className="w-[180px] text-xs rounded-none">
-                  <SelectValue placeholder="Alignment" />
-                </SelectTrigger>
-                <SelectContent className="rounded-none">
-                  <SelectItem value="all">All Alignment</SelectItem>
-                  <SelectItem value="aligned">Aligned</SelectItem>
-                  <SelectItem value="neutral">Neutral</SelectItem>
-                  <SelectItem value="not_aligned">Not Aligned</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select
+                  value={alignmentFilter}
+                  onValueChange={setAlignmentFilter}
+                >
+                  <SelectTrigger className="w-[180px] text-xs rounded-none">
+                    <SelectValue placeholder="Alignment" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-none">
+                    <SelectItem value="all">All Alignment</SelectItem>
+                    <SelectItem value="aligned">Aligned</SelectItem>
+                    <SelectItem value="neutral">Neutral</SelectItem>
+                    <SelectItem value="not_aligned">Not Aligned</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px] text-xs rounded-none">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent className="rounded-none">
-                  <SelectItem value="default">Default Sort</SelectItem>
-                  <SelectItem value="last_updated">Last Updated</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px] text-xs rounded-none">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-none">
+                    <SelectItem value="default">Default Sort</SelectItem>
+                    <SelectItem value="last_updated">Last Updated</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            {sortedPromises && sortedPromises.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {sortedPromises.map((promise: PromiseData) => (
+                  <PromiseCard
+                    key={promise.id}
+                    promise={promise}
+                    evidenceItems={evidenceItems || []}
+                    departmentShortName={
+                      departmentShortName ? departmentShortName : undefined
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-600 italic">
+                No commitments match the selected filters.
+              </p>
+            )}
           </div>
-
-          {sortedPromises && sortedPromises.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6">
-              {sortedPromises.map((promise: PromiseData) => (
-                <PromiseCard
-                  key={promise.id}
-                  promise={promise}
-                  evidenceItems={evidenceItems || []}
-                  departmentShortName={
-                    departmentShortName ? departmentShortName : undefined
-                  }
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-600 italic">
-              No commitments match the selected filters.
-            </p>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
