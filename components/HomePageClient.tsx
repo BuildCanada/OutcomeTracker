@@ -262,9 +262,9 @@ export default function HomePageClient({
   return (
     <div className="min-h-screen">
       <div className="container px-4 py-12">
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="col-span-1">
-            <h1 className="text-4xl md:text-5xl font-bold mb-8">{pageTitle}</h1>
+            <h1 className="text-4xl md:text-6xl font-bold mb-8">{pageTitle}</h1>
             <div className="mb-8">
               <p className="text-gray-900">
                 A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
@@ -283,7 +283,7 @@ export default function HomePageClient({
                     <button
                       key={dept.id}
                       onClick={() => setActiveTabId(dept.id)}
-                      className={`px-4 py-2 text-sm font-medium transition-colors
+                      className={`px-4 py-2 text-sm font-mono transition-colors
                         ${activeTabId === dept.id 
                           ? 'bg-[#8b2332] text-white' 
                           : 'bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50'
@@ -325,13 +325,10 @@ export default function HomePageClient({
                               <button
                                 onClick={loadFullData}
                                 disabled={isLoadingFullData}
-                                className="px-6 py-3 bg-[#8b2332] text-white font-medium hover:bg-[#7a1f2b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="px-6 py-3 border font-mono text-sm hover:bg-[#7a1f2b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               >
                                 {isLoadingFullData ? 'Loading Full Data...' : 'LOAD MORE'}
                               </button>
-                              <p className="text-sm text-gray-600 mt-2">
-                                Showing {activeDepartmentData.promises.length} recent promises. Click to load all promises with evidence.
-                              </p>
                             </div>
                           )}
                         </>
