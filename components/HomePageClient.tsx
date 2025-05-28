@@ -262,9 +262,9 @@ export default function HomePageClient({
   return (
     <div className="min-h-screen">
       <div className="container px-4 py-12">
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="col-span-1">
-            <h1 className="text-4xl md:text-5xl font-bold mb-8">{pageTitle}</h1>
+            <h1 className="text-4xl md:text-6xl font-bold mb-8">{pageTitle}</h1>
             <div className="mb-8">
               <p className="text-gray-900">
                 A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
