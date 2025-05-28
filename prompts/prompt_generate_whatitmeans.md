@@ -5,8 +5,7 @@ For each provided government commitment, you will produce a structured JSON outp
 
 **Contextual Platform Documents (Primary Sources):**
 You MUST base your analysis and assignments on the following documents:
-1.  **2021 Liberal Platform "Forward For Everyone":** `https://liberal.ca/wp-content/uploads/sites/292/2021/09/Platform-Forward-For-Everyone.pdf`
-2.  **2025 Liberal Platform "Canada Strong" `https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf` 
+-  **2025 Liberal Platform "Canada Strong" `https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf` 
 
 **Input:**
 You will receive a list of government "commitment_text" strings to process.
@@ -20,12 +19,12 @@ For *each* `commitment_text` provided, you must generate the following fields:
 
 2.  `description`:
     *   **Content:** 
-        1.  A **One-Sentence Description** (30-80 words), explaining the core idea of the commitment, including definitions for any key terms or concepts. 
+        1.  A **One-Sentence Description** (10-30 words), explaining the core idea of the commitment, including definitions for any key terms or concepts. 
     *   **Source:** Identify context within the platform documents related to this commitment.
 
 3.  `what_it_means_for_canadians`:
-    *   **Content:** An array of 3-5 bullet points (approx. 25-50 words each bullet point), explain what the commitment means for Canadians. Describe the practical implications, direct benefits, potential trade-offs or challenges, and any potential negative consequences for citizens, specific groups, or the country as a whole. Focus on the tangible changes or experiences. Do not include background information or the 'why' here; focus on the 'what' and its direct effects.
-    *   **Source:** Use your own reasoning. Use external sources and opinions from notable policy experts if needed.
+    *   **Content:** An array of 3-5 bullet points (approx. 10-30 words each bullet point), explain what the commitment means for Canadians. Describe the practical implications, direct benefits, potential trade-offs or challenges, and any potential negative consequences for citizens, specific groups, or the country as a whole. Focus on the tangible changes or experiences. Do not include background information or the 'why' here; focus on the 'what' and its direct effects.
+    *   **Source:** Use your own reasoning. Leverage core tenets from build_canada_tenets.txt to frame your policy positions.
 
 4.  `background_and_context`:
     *   **Content:** A brief overview of the situation, existing issues, or reasons that likely led to this commitment being made by the party. Why was this promise included in the platform? What broader policy discussions or societal needs does it relate to?
@@ -42,7 +41,7 @@ Return the information as a single JSON array. Each element in the array is an o
     "commitment_text": "The original text of the commitment as provided in the input.",
     "concise_title": "Improve Healthcare Access",
     "description": "Enhance healthcare availability across Canada by reducing wait times and expanding services.",
-    "what_it_means_for_canadians": ["This will mean X for Canadians by providing Y.", "It may present challenges such as Z.", "Specific groups like A will benefit from B", "Critics worry for the long-term financial burden"],
+    "what_it_means_for_canadians": ["Canadians will see X by providing Y.", "It may present challenges such as Z.", "Specific groups like A will benefit from B", "Critics worry for the long-term financial burden"],
     "background_and_context": "This commitment was made in response to growing concerns about A and B, as highlighted in the platform document's section on C..."
   }
   // ... more commitment objects if multiple commitments are processed in a batch
