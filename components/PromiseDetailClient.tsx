@@ -132,7 +132,7 @@ export default function PromiseDetailClient({ promise }: PromiseDetailClientProp
               {/* Share button */}
               <button
                 onClick={() => setIsShareModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-sm font-mono text-gray-700 hover:bg-gray-50 transition-colors"
                 aria-label="Share this promise"
               >
                 <ShareIcon className="w-4 h-4" />
