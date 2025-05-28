@@ -95,7 +95,7 @@ function getPieColor(progressScore: number): string {
 }
 
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
-  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence, linked_evidence_ids } = promise;
+  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, background_and_context, progress_score = 0, progress_summary, evidence, linked_evidence_ids } = promise;
 
   const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
   const [isSharePopoverOpen, setIsSharePopoverOpen] = useState(false);
@@ -232,9 +232,9 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
             </DialogTitle>
 
             {/* Description */}
-            {intended_impact_and_objectives && (
+            {background_and_context && (
               <div className="text-base text-gray-700 mb-2 break-words">
-                {intended_impact_and_objectives}
+                {background_and_context}
               </div>
             )}
 
