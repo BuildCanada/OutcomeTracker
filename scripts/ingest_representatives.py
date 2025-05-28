@@ -324,7 +324,6 @@ def build_department_ministers(representatives_data, variant_to_dept, dept_id_to
         full_name = f"{first_name} {last_name}".strip() if first_name or last_name else rep.get('name', '')
         party = rep.get('party')
         api_unique_id = rep.get('uniqueID') # This is the original uniqueID from API, may not be member_id
-        avatar_url = rep.get('avatarUrl') if rep.get('avatarUrl') else None
         parliamentary_positions = rep.get('parliamentaryPositions', [])
         
         if not parliamentary_positions:
@@ -434,7 +433,6 @@ def build_department_ministers(representatives_data, variant_to_dept, dept_id_to
                 "fullName": full_name,
                 "party": party,
                 "apiUniqueID": api_unique_id, # Store the original uniqueID from API
-                "avatarUrl": avatar_url,
                 "title": title,
                 "positionStart": final_position_start,
                 "positionEnd": final_position_end,
