@@ -154,10 +154,10 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
   }
   // SVG for network bars
   impactIcon = (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="2" y="10" width="2" height="6" rx="1" fill={filledBars >= 1 ? impactBarColor : '#d1d5db'} />
-      <rect x="7" y="7" width="2" height="9" rx="1" fill={filledBars >= 2 ? impactBarColor : '#d1d5db'} />
-      <rect x="12" y="4" width="2" height="12" rx="1" fill={filledBars >= 3 ? impactBarColor : '#d1d5db'} />
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1.5" y="8" width="1.5" height="4.5" rx="0.75" fill={filledBars >= 1 ? impactBarColor : '#d1d5db'} />
+      <rect x="5.5" y="5.5" width="1.5" height="7" rx="0.75" fill={filledBars >= 2 ? impactBarColor : '#d1d5db'} />
+      <rect x="9.5" y="3" width="1.5" height="9.5" rx="0.75" fill={filledBars >= 3 ? impactBarColor : '#d1d5db'} />
     </svg>
   );
   const impactTooltip = `${impactLevelLabel}${impactLevelLabel ? ': ' : ''}${impactRationale}`;
@@ -173,25 +173,25 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
       alignmentLabel = "Aligned";
       alignmentColor = "text-green-700";
       alignmentBg = "bg-green-50";
-      alignmentIcon = <TrendingUpIcon className="w-4 h-4 text-green-600" />;
+      alignmentIcon = <TrendingUpIcon className="w-3.5 h-3.5 text-green-600" />;
       break;
     case "neutral":
       alignmentLabel = "Neutral";
       alignmentColor = "text-gray-600";
       alignmentBg = "bg-gray-100";
-      alignmentIcon = <MinusIcon className="w-4 h-4 text-gray-400" />;
+      alignmentIcon = <MinusIcon className="w-3.5 h-3.5 text-gray-400" />;
       break;
     case "negative":
       alignmentLabel = "Not Aligned";
       alignmentColor = "text-red-700";
       alignmentBg = "bg-red-50";
-      alignmentIcon = <TrendingUpIcon className="w-4 h-4 text-red-600" style={{ transform: 'scaleY(-1)' }} />;
+      alignmentIcon = <TrendingUpIcon className="w-3.5 h-3.5 text-red-600" style={{ transform: 'scaleY(-1)' }} />;
       break;
     default:
       alignmentLabel = "Unknown";
       alignmentColor = "text-gray-400";
       alignmentBg = "bg-gray-50";
-      alignmentIcon = <MinusIcon className="w-4 h-4 text-gray-400" />;
+      alignmentIcon = <MinusIcon className="w-3.5 h-3.5 text-gray-400" />;
   }
   const alignmentTooltip = `${alignmentLabel} with Build Canada`;
 
@@ -246,7 +246,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
         <div className="p-6">
           <div className="flex flex-row items-center justify-between gap-4">
             {/* Progress Indicator - Column 1 */}
-            <div className="flex-shrink-0 flex flex-row items-start gap-2" style={{ minWidth: '2.5rem' }}>
+            <div className="flex-shrink-0 flex flex-row items-center gap-2" style={{ minWidth: '2.5rem' }}>
               <div
                 className="relative w-6 h-6 cursor-pointer focus:outline-none"
                 onMouseEnter={() => setShowProgressTooltip(true)}
@@ -310,12 +310,12 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               </div>
             </div>
             {/* Impact and Alignment - Column 3 */}
-            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+            <div className="flex gap-2 flex-shrink-0">
               {/* Impact pill */}
               {impactIcon && (
                 <div className="relative">
                   <div
-                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${impactPillBg} cursor-help`}
+                    className={`flex items-center justify-center w-6 h-6 rounded-full ${impactPillBg} cursor-help`}
                     onMouseEnter={() => setShowImpactTooltip(true)}
                     onMouseLeave={() => setShowImpactTooltip(false)}
                     onFocus={() => setShowImpactTooltip(true)}
@@ -335,7 +335,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               {/* Alignment pill */}
               <div className="relative">
                 <div
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${alignmentBg} ${alignmentColor} cursor-help`}
+                  className={`flex items-center justify-center w-6 h-6 rounded-full ${alignmentBg} ${alignmentColor} cursor-help`}
                   onMouseEnter={() => setShowAlignmentTooltip(true)}
                   onMouseLeave={() => setShowAlignmentTooltip(false)}
                   onFocus={() => setShowAlignmentTooltip(true)}

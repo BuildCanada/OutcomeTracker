@@ -325,13 +325,10 @@ export default function HomePageClient({
                               <button
                                 onClick={loadFullData}
                                 disabled={isLoadingFullData}
-                                className="px-6 py-3 bg-[#8b2332] text-white font-medium hover:bg-[#7a1f2b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="px-6 py-3 border font-mono text-sm hover:bg-[#7a1f2b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               >
                                 {isLoadingFullData ? 'Loading Full Data...' : 'LOAD MORE'}
                               </button>
-                              <p className="text-sm text-gray-600 mt-2">
-                                Showing {activeDepartmentData.promises.length} recent promises. Click to load all promises with evidence.
-                              </p>
                             </div>
                           )}
                         </>
