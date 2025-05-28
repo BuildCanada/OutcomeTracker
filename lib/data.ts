@@ -192,14 +192,23 @@ export async function fetchPromisesForDepartment(
 
         for (const docSnapshot of querySnapshot.docs) {
           const promise = docSnapshot.data(); // Use the converted data directly
+          const rawData = docSnapshot.data({ serverTimestamps: 'estimate' }); // Get raw data to access linked_evidence
 
-          if (includeEvidence && promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
-            // Pass session dates to the evidence fetching function
-            promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids, sessionStartDate, sessionEndDate);
+          // Check if this promise has linked evidence and fetch it
+          if (rawData.linked_evidence && Array.isArray(rawData.linked_evidence)) {
+            // Extract evidence IDs from the linked_evidence array
+            const evidenceIds = rawData.linked_evidence.map((item: any) => item.evidence_id).filter(Boolean);
+            
+            if (evidenceIds.length > 0) {
+              // Fetch the actual evidence content using the evidence IDs
+              promise.evidence = await fetchEvidenceItemsByIds(evidenceIds, sessionStartDate, sessionEndDate);
+            } else {
+              promise.evidence = [];
+            }
           } else {
-            // Don't load evidence by default for better performance
             promise.evidence = [];
           }
+
           promisesWithEvidence.push(promise);
         }
         
@@ -808,9 +817,29 @@ export async function fetchPromisesSummary(
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.docs.length > 0) {
-        const summaries = querySnapshot.docs.map(doc => {
+        const promises: Partial<PromiseData>[] = [];
+        
+        // Get session dates for evidence filtering
+        const sessionDates = await fetchParliamentSessionDates(parliamentSessionId);
+        const sessionStartDate = sessionDates?.sessionStartDate || null;
+        const sessionEndDate = sessionDates?.sessionEndDate || null;
+        
+        for (const doc of querySnapshot.docs) {
           const data = doc.data();
-          return {
+          
+          // Check if this promise has linked evidence and fetch it
+          let evidence: any[] = [];
+          if (data.linked_evidence && Array.isArray(data.linked_evidence)) {
+            // Extract evidence IDs from the linked_evidence array
+            const evidenceIds = data.linked_evidence.map((item: any) => item.evidence_id).filter(Boolean);
+            
+            if (evidenceIds.length > 0) {
+              // Fetch the actual evidence content using the evidence IDs
+              evidence = await fetchEvidenceItemsByIds(evidenceIds, sessionStartDate, sessionEndDate);
+            }
+          }
+          
+          promises.push({
             id: doc.id,
             text: data.text || '',
             responsible_department_lead: data.responsible_department_lead || '',
@@ -830,12 +859,12 @@ export async function fetchPromisesSummary(
             parliament_session_id: data.parliament_session_id,
             party_code: data.party_code,
             region_code: data.region_code,
-            evidence: [] // Empty for performance
-          };
-        });
+            evidence: evidence // Use the fetched evidence data
+          });
+        }
         
-        console.log(`[fetchPromisesSummary] Found ${summaries.length} promise summaries for ${departmentFullName}`);
-        return summaries;
+        console.log(`[fetchPromisesSummary] Found ${promises.length} promise summaries for ${departmentFullName}`);
+        return promises;
       }
     }
     

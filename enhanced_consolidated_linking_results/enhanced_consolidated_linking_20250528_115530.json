@@ -1,0 +1,3874 @@
+{
+  "timestamp": "20250528_115530",
+  "confidence_threshold": "medium_confidence",
+  "threshold_value": 0.15,
+  "processing_stats": {
+    "promises_processed": 0,
+    "evidence_processed": 6693,
+    "links_created": 0,
+    "links_updated": 0,
+    "errors": 0
+  },
+  "links_found": 1542274,
+  "links": [
+    {
+      "promise_id": "LPC_20211216_MANDL_02ba985f",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.10377358490566038,
+        "weighted_jaccard": 0.8037735849056604,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "related",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Introduce Canada Disability Benefit Act",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_02f46616",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09322033898305085,
+        "weighted_jaccard": 0.8932203389830509,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "benefits",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "New EI Benefit for Self-Employed Workers",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_0b97a297",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11320754716981132,
+        "weighted_jaccard": 0.9132075471698113,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "into",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "benefits",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "New 15-Week Benefit for Adoptive Parents",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_0baaf233",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08849557522123894,
+        "weighted_jaccard": 0.788495575221239,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Expert Panel for Aging at Home Benefit",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_1cdb5f4f",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07964601769911504,
+        "weighted_jaccard": 0.7796460176991151,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Empowering Disability Organizations for Inclusion",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_2326b165",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.1111111111111111,
+        "weighted_jaccard": 0.8111111111111111,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "such",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Canada Disability Benefit for Low-Income Canadians",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_28000cbb",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11428571428571428,
+        "weighted_jaccard": 0.7142857142857144,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "such",
+          "development",
+          "employment",
+          "social",
+          "amend",
+          "recovery",
+          "social_important",
+          "employment_important",
+          "benefits",
+          "provisions"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhanced Labour Code Support for Pregnant and Breastfeeding Workers",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_42480e49",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07894736842105263,
+        "weighted_jaccard": 0.7789473684210527,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Eradicating Forced Labour in Supply Chains",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_48a15e48",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08695652173913043,
+        "weighted_jaccard": 0.7869565217391306,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Improved Skills Training for Canadian Workers",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_4d567095",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.14,
+        "weighted_jaccard": 0.9400000000000001,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "crb",
+          "benefit",
+          "dept_employment",
+          "programs",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "recovery",
+          "social_important",
+          "employment_important",
+          "benefits",
+          "which",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Protect Seniors' GIS from Emergency Benefit Impact",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_74f59885",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09482758620689655,
+        "weighted_jaccard": 0.7948275862068966,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "such",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "EI Career Insurance for Long-Tenured Workers",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_8a13e0f7",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09803921568627451,
+        "weighted_jaccard": 0.7980392156862746,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhance Seniors' Guaranteed Income Supplement",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_942f6dbf",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09174311926605505,
+        "weighted_jaccard": 0.7917431192660551,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "such",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "National Employment Strategy for Persons with Disabilities",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_a31b2859",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07627118644067797,
+        "weighted_jaccard": 0.876271186440678,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "benefits"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Modernize Government Services Delivery",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_be2cdf03",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07692307692307693,
+        "weighted_jaccard": 0.776923076923077,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "which"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Deliver National Poverty Strategy",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_eae372ca",
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09433962264150944,
+        "weighted_jaccard": 0.7943396226415095,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "programs",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "benefit",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Canada Worker Lockdown Benefit Introduction",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_23de576e",
+      "evidence_id": "20211124_44_S-223_event_senate_42aa9918",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.05921052631578947,
+        "weighted_jaccard": 0.8592105263157895,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "border",
+          "refugee",
+          "immigration_important",
+          "address",
+          "refugee_important",
+          "first_important",
+          "immigration",
+          "first",
+          "border_important"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "immigration",
+          "first",
+          "border",
+          "refugee"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Modernize Safe Third Country Agreement",
+      "evidence_title": "Bill S-223: Introduction and first reading in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_02ba985f",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09734513274336283,
+        "weighted_jaccard": 0.7973451327433629,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "individuals",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Introduce Canada Disability Benefit Act",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_02f46616",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.13333333333333333,
+        "weighted_jaccard": 1.0333333333333334,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "during",
+          "benefit",
+          "dept_employment",
+          "individuals",
+          "benefit_important",
+          "development",
+          "economic_important",
+          "employment",
+          "emergency",
+          "financial",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "New EI Benefit for Self-Employed Workers",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_046dfbba",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07692307692307693,
+        "weighted_jaccard": 0.776923076923077,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "financial",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "National Plan to Legislate Sick Leave",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_061a8aa4",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.0703125,
+        "weighted_jaccard": 0.7703125000000001,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Indigenous Before & After School Child Care",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_0b97a297",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09649122807017543,
+        "weighted_jaccard": 0.7964912280701755,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "during",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "New 15-Week Benefit for Adoptive Parents",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_0baaf233",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09243697478991597,
+        "weighted_jaccard": 0.792436974789916,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "help",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Expert Panel for Aging at Home Benefit",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_121fdc07",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07692307692307693,
+        "weighted_jaccard": 0.776923076923077,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "challenges"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Finalize and Release Disability Inclusion Plan",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_1cdb5f4f",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.075,
+        "weighted_jaccard": 0.775,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Empowering Disability Organizations for Inclusion",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_2326b165",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11428571428571428,
+        "weighted_jaccard": 0.8142857142857144,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "payment",
+          "employment",
+          "alleviate",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Canada Disability Benefit for Low-Income Canadians",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_37cc5a01",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.0990990990990991,
+        "weighted_jaccard": 0.7990990990990992,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "providing",
+          "economic",
+          "social_important",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "National Advisory Council for Early Learning and Child Care",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_3e67c033",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09803921568627451,
+        "weighted_jaccard": 0.7980392156862746,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "challenges"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Trusted Employer System for Foreign Worker Hiring",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_42480e49",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09243697478991597,
+        "weighted_jaccard": 0.992436974789916,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Eradicating Forced Labour in Supply Chains",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_48a15e48",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11864406779661017,
+        "weighted_jaccard": 0.8186440677966103,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "during",
+          "benefit",
+          "dept_employment",
+          "individuals",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "providing",
+          "help",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Improved Skills Training for Canadian Workers",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_4d567095",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.14150943396226415,
+        "weighted_jaccard": 0.8415094339622642,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "response",
+          "during",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "emergency",
+          "financial",
+          "social",
+          "social_important",
+          "cerb",
+          "aid",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Protect Seniors' GIS from Emergency Benefit Impact",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_51f3a576",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.075,
+        "weighted_jaccard": 0.775,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Promote Skilled Trades as Top Career Choice",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_5de615dc",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.058823529411764705,
+        "weighted_jaccard": 0.7588235294117648,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Mandating Wrap-Around Supports for Workforce Program Participants",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_5f5ce590",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08,
+        "weighted_jaccard": 0.78,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Operationalize Federal Child Care Secretariat",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_60456439",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07246376811594203,
+        "weighted_jaccard": 0.7724637681159421,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "National $10-a-Day Child Care Plan",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_6b7755e2",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08771929824561403,
+        "weighted_jaccard": 0.787719298245614,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "alleviate",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Eliminate Federal Interest on Student and Apprentice Loans",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_6f86cb34",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07246376811594203,
+        "weighted_jaccard": 0.7724637681159421,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "providing",
+          "economic",
+          "help",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Clean Jobs Training Centre for Green Economy Skills",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_737aa3d6",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09243697478991597,
+        "weighted_jaccard": 0.792436974789916,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "advance",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Affordable Before and After School Care",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_74f59885",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.12605042016806722,
+        "weighted_jaccard": 1.0260504201680671,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "economic_important",
+          "employment",
+          "financial",
+          "social",
+          "providing",
+          "economic",
+          "social_important",
+          "employment_important",
+          "challenges",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "EI Career Insurance for Long-Tenured Workers",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_7d7ccb2f",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07317073170731707,
+        "weighted_jaccard": 0.7731707317073171,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Expand Union Training and Innovation for Diversity",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_83d018d2",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11403508771929824,
+        "weighted_jaccard": 0.8140350877192983,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "during",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "financial",
+          "social",
+          "providing",
+          "economic",
+          "social_important",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Modernize Employment Insurance System",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_83d502e8",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.0847457627118644,
+        "weighted_jaccard": 0.7847457627118645,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Canada-Wide Affordable Child Care System",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_8a13e0f7",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.10185185185185185,
+        "weighted_jaccard": 0.8018518518518519,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "alleviate",
+          "social",
+          "social_important",
+          "employment_important",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhance Seniors' Guaranteed Income Supplement",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_93754592",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07894736842105263,
+        "weighted_jaccard": 0.7789473684210527,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "challenges"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Improve Foreign Credential Recognition",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_942f6dbf",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.125,
+        "weighted_jaccard": 1.025,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "providing",
+          "economic",
+          "help",
+          "social_important",
+          "employment_important",
+          "challenges"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "National Employment Strategy for Persons with Disabilities",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_a123c646",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08064516129032258,
+        "weighted_jaccard": 0.7806451612903227,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "during",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Mandatory 10 Paid Sick Days for Federal Workers",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_a31b2859",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08064516129032258,
+        "weighted_jaccard": 0.7806451612903227,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "during",
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Modernize Government Services Delivery",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_be2cdf03",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08130081300813008,
+        "weighted_jaccard": 0.9813008130081301,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "benefit",
+          "dept_employment",
+          "benefit_important",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Deliver National Poverty Strategy",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_d8251bdf",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07563025210084033,
+        "weighted_jaccard": 0.7756302521008404,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "challenges"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Modernizing the Employment Equity Act Review",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_dc86e421",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07964601769911504,
+        "weighted_jaccard": 0.7796460176991151,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Expand Child Care Spaces and Educators",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_e65ed6e9",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08333333333333333,
+        "weighted_jaccard": 0.7833333333333334,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "challenges",
+          "financial"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "50% Reduction in Child Care Fees by 2022",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_eae372ca",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.12844036697247707,
+        "weighted_jaccard": 1.028440366972477,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "eligible",
+          "benefit",
+          "dept_employment",
+          "individuals",
+          "benefit_important",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important",
+          "pandemic"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Canada Worker Lockdown Benefit Introduction",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_eafa6398",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.06349206349206349,
+        "weighted_jaccard": 0.7634920634920636,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Skills Training for Battery Industry Jobs",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_fac69cf5",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07563025210084033,
+        "weighted_jaccard": 0.7756302521008404,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "dept_employment",
+          "development",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Modernize Federal Contractor Minimum Wage",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20250419_OTHER_f684582d",
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08620689655172414,
+        "weighted_jaccard": 0.8862068965517242,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "benefit",
+          "individuals",
+          "benefit_important",
+          "economic_important",
+          "employment",
+          "social",
+          "economic",
+          "social_important",
+          "employment_important"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "economic",
+          "employment",
+          "benefit",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Safeguard Federal Transfers and Social Programs",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_046dfbba",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11194029850746269,
+        "weighted_jaccard": 0.8119402985074627,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "leave",
+          "dept_employment",
+          "employees",
+          "development",
+          "protection",
+          "employment",
+          "days",
+          "paid",
+          "social",
+          "create",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "National Plan to Legislate Sick Leave",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_061a8aa4",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08148148148148149,
+        "weighted_jaccard": 0.7814814814814816,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "establish",
+          "employment",
+          "services",
+          "social",
+          "social_important",
+          "employment_important",
+          "first_important",
+          "first",
+          "access"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "first",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Indigenous Before & After School Child Care",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_0b97a297",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08943089430894309,
+        "weighted_jaccard": 0.8894308943089432,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "leave",
+          "dept_employment",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "first_important",
+          "benefits",
+          "first",
+          "event"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "first",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "New 15-Week Benefit for Adoptive Parents",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_27264693",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07971014492753623,
+        "weighted_jaccard": 0.7797101449275363,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "employees",
+          "development",
+          "employment",
+          "services",
+          "social",
+          "create",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Federal Workplace Vaccine Enforcement",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_28000cbb",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09917355371900827,
+        "weighted_jaccard": 0.8991735537190083,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "code",
+          "dept_employment",
+          "development",
+          "employment",
+          "while",
+          "social",
+          "labour",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "benefits",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhanced Labour Code Support for Pregnant and Breastfeeding Workers",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_51f3a576",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.06976744186046512,
+        "weighted_jaccard": 0.7697674418604652,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "first_important",
+          "first",
+          "labour"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "first",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Promote Skilled Trades as Top Career Choice",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_5bf1716f",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.088,
+        "weighted_jaccard": 0.788,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "employees",
+          "development",
+          "employment",
+          "social",
+          "health",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "access"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Free Menstrual Products in Federal Workplaces",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_6108e2e9",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.06474820143884892,
+        "weighted_jaccard": 0.764748201438849,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "social",
+          "social_important",
+          "employment_important",
+          "first_important",
+          "first",
+          "professionals"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "first",
+          "employment",
+          "social"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhance Apprenticeship Work Experience",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_8576117d",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08661417322834646,
+        "weighted_jaccard": 0.7866141732283465,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "code",
+          "dept_employment",
+          "development",
+          "employment",
+          "social",
+          "labour",
+          "create",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Strengthen Labour Code for Workplace Mental Health",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_89e8b35f",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07971014492753623,
+        "weighted_jaccard": 0.7797101449275363,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "worker",
+          "while",
+          "social",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "introduction",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Sector-Based Work Permits for TFW Safety",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_90bc6371",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.0738255033557047,
+        "weighted_jaccard": 0.8738255033557047,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "worker",
+          "social",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "benefits",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Extend EI Sickness Benefits to 26 Weeks",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_a123c646",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.144,
+        "weighted_jaccard": 0.8440000000000001,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "leave",
+          "code",
+          "dept_employment",
+          "development",
+          "protection",
+          "employment",
+          "days",
+          "paid",
+          "while",
+          "annually",
+          "social",
+          "labour",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Mandatory 10 Paid Sick Days for Federal Workers",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_bdb789db",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.10071942446043165,
+        "weighted_jaccard": 1.0007194244604316,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "professionals",
+          "medical",
+          "dept_employment",
+          "amendments",
+          "development",
+          "employment",
+          "services",
+          "social",
+          "health",
+          "medical_important",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "access"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "medical",
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Student Loan Forgiveness for Rural Medical Professionals",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_eae372ca",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09090909090909091,
+        "weighted_jaccard": 0.790909090909091,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "worker",
+          "social",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "introduction",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Canada Worker Lockdown Benefit Introduction",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_ede376c2",
+      "evidence_id": "20211126_44_C-3_event_houseofcommons_50a19a39",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07913669064748201,
+        "weighted_jaccard": 0.779136690647482,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "protection",
+          "employment",
+          "social",
+          "labour",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhanced Safety Inspections for Temporary Foreign Workers",
+      "evidence_title": "Bill C-3: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_116b8e1c",
+      "evidence_id": "20211126_44_News_ad8bb901d6",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.12307692307692308,
+        "weighted_jaccard": 0.8230769230769232,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "during",
+          "resilience",
+          "pandemic",
+          "economic_important",
+          "workers",
+          "finance",
+          "workers_important",
+          "public",
+          "associated",
+          "dept_finance",
+          "businesses",
+          "covid",
+          "economic",
+          "health_important",
+          "health"
+        ],
+        "common_departments": [
+          "dept_finance"
+        ],
+        "common_important_terms": [
+          "workers",
+          "economic",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Small Business Ventilation Tax Credit",
+      "evidence_title": "Deputy Prime Minister and Minister of Finance introduces Bill C-2 to continue broad-based economic support for Canadian workers and businesses during the pandemic.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_cb12ae04",
+      "evidence_id": "20211126_44_News_ad8bb901d6",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.13043478260869565,
+        "weighted_jaccard": 0.8304347826086957,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "support",
+          "introduced",
+          "programs",
+          "pandemic",
+          "economic_important",
+          "workers",
+          "finance",
+          "workers_important",
+          "public",
+          "associated",
+          "dept_finance",
+          "extend",
+          "businesses",
+          "covid",
+          "economic",
+          "health_important",
+          "introduces",
+          "health"
+        ],
+        "common_departments": [
+          "dept_finance"
+        ],
+        "common_important_terms": [
+          "workers",
+          "economic",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Extend Pandemic Business and Worker Aid",
+      "evidence_title": "Deputy Prime Minister and Minister of Finance introduces Bill C-2 to continue broad-based economic support for Canadian workers and businesses during the pandemic.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_5232dc42",
+      "evidence_id": "20211129_44_C-203_event_houseofcommons_31c2904b",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.16964285714285715,
+        "weighted_jaccard": 0.9696428571428573,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ecological",
+          "protection",
+          "practices",
+          "sustainable",
+          "agricultural",
+          "health",
+          "sustainable_important",
+          "framework",
+          "promote",
+          "aims",
+          "enhancing",
+          "environmental",
+          "agriculture",
+          "across",
+          "concept_climate_action",
+          "agriculture_important",
+          "health_important",
+          "long",
+          "term"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "agriculture",
+          "sustainable",
+          "health"
+        ],
+        "common_concepts": [
+          "concept_climate_action"
+        ]
+      },
+      "promise_title": "Strengthen Pest Control Products Act",
+      "evidence_title": "Bill C-203: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_b77155c9",
+      "evidence_id": "20211129_44_C-203_event_houseofcommons_31c2904b",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11627906976744186,
+        "weighted_jaccard": 0.8162790697674419,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.1,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "management",
+          "long",
+          "sustainable_important",
+          "soil",
+          "agriculture_important",
+          "practices",
+          "sustainable",
+          "aims",
+          "agricultural",
+          "environmental",
+          "stewardship",
+          "term",
+          "vital",
+          "agriculture",
+          "concept_climate_action"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "agriculture",
+          "sustainable"
+        ],
+        "common_concepts": [
+          "concept_climate_action"
+        ]
+      },
+      "promise_title": "Support Farmers for Green Agriculture and Emissions Reduction",
+      "evidence_title": "Bill C-203: Introduction and first reading in House of Commons",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_046dfbba",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11194029850746269,
+        "weighted_jaccard": 0.8119402985074627,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "leave",
+          "dept_employment",
+          "employees",
+          "development",
+          "protection",
+          "employment",
+          "days",
+          "paid",
+          "social",
+          "create",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "National Plan to Legislate Sick Leave",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_27264693",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07971014492753623,
+        "weighted_jaccard": 0.7797101449275363,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "employees",
+          "development",
+          "employment",
+          "services",
+          "social",
+          "create",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Federal Workplace Vaccine Enforcement",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_28000cbb",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09917355371900827,
+        "weighted_jaccard": 0.8991735537190083,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "code",
+          "dept_employment",
+          "development",
+          "employment",
+          "while",
+          "social",
+          "labour",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "benefits",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhanced Labour Code Support for Pregnant and Breastfeeding Workers",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_5bf1716f",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.088,
+        "weighted_jaccard": 0.788,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "employees",
+          "development",
+          "employment",
+          "social",
+          "health",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "access"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Free Menstrual Products in Federal Workplaces",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_8576117d",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08661417322834646,
+        "weighted_jaccard": 0.7866141732283465,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "code",
+          "dept_employment",
+          "development",
+          "employment",
+          "social",
+          "labour",
+          "create",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Strengthen Labour Code for Workplace Mental Health",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_89e8b35f",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07194244604316546,
+        "weighted_jaccard": 0.7719424460431655,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "while",
+          "social",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Sector-Based Work Permits for TFW Safety",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_90bc6371",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.0738255033557047,
+        "weighted_jaccard": 0.8738255033557047,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "worker",
+          "social",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "benefits",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Extend EI Sickness Benefits to 26 Weeks",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_a123c646",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.144,
+        "weighted_jaccard": 0.8440000000000001,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "leave",
+          "code",
+          "dept_employment",
+          "development",
+          "protection",
+          "employment",
+          "days",
+          "paid",
+          "while",
+          "annually",
+          "social",
+          "labour",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Mandatory 10 Paid Sick Days for Federal Workers",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_bdb789db",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.10071942446043165,
+        "weighted_jaccard": 1.0007194244604316,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "professionals",
+          "medical",
+          "dept_employment",
+          "amendments",
+          "development",
+          "employment",
+          "services",
+          "social",
+          "health",
+          "medical_important",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "access"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "medical",
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Student Loan Forgiveness for Rural Medical Professionals",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_eae372ca",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08196721311475409,
+        "weighted_jaccard": 0.7819672131147541,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "employment",
+          "social",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "provide",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Canada Worker Lockdown Benefit Introduction",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_ede376c2",
+      "evidence_id": "20211202_44_C-3_event_senate_74749d7f",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07913669064748201,
+        "weighted_jaccard": 0.779136690647482,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.0,
+        "final_score": 1.0,
+        "common_keywords": [
+          "dept_employment",
+          "development",
+          "protection",
+          "employment",
+          "social",
+          "labour",
+          "health_important",
+          "social_important",
+          "employment_important",
+          "worker",
+          "health"
+        ],
+        "common_departments": [
+          "dept_employment"
+        ],
+        "common_important_terms": [
+          "employment",
+          "social",
+          "health"
+        ],
+        "common_concepts": []
+      },
+      "promise_title": "Enhanced Safety Inspections for Temporary Foreign Workers",
+      "evidence_title": "Bill C-3: Pre-study of House bill in Senate",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_03a8ac26",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.06976744186046512,
+        "weighted_jaccard": 0.7697674418604652,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ensuring",
+          "concept_indigenous_reconciliation",
+          "indigenous_important",
+          "communities",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Support MMIWG and 2SLGBTQI+ Action Plans",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_061a8aa4",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09230769230769231,
+        "weighted_jaccard": 0.8923076923076924,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ensuring",
+          "concept_indigenous_reconciliation",
+          "services",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "reserves"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Indigenous Before & After School Child Care",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_11159c7e",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.10077519379844961,
+        "weighted_jaccard": 1.0007751937984497,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ensuring",
+          "safe",
+          "concept_indigenous_reconciliation",
+          "services",
+          "dept_indigenous",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Indigenous Health Legislation Guided by Joyce's Principle",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_241534b4",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.15,
+        "weighted_jaccard": 1.25,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "infrastructure",
+          "ensuring",
+          "safe",
+          "concept_indigenous_reconciliation",
+          "services",
+          "reserves",
+          "dept_indigenous",
+          "drinking",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "infrastructure_important",
+          "water"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "infrastructure",
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "End All Long-Term Drinking Water Advisories on Reserves",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_242ddbc7",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08547008547008547,
+        "weighted_jaccard": 0.6854700854700856,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ensuring",
+          "safe",
+          "services",
+          "dept_indigenous",
+          "communities",
+          "indigenous_important",
+          "concept_indigenous_reconciliation",
+          "commitment",
+          "communities_important",
+          "indigenous"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Strengthen Indigenous Health Navigators",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_28d6fbdc",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.08695652173913043,
+        "weighted_jaccard": 0.7869565217391306,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "concept_indigenous_reconciliation",
+          "services",
+          "funding",
+          "dept_indigenous",
+          "indigenous_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "first",
+          "indigenous"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Fully Fund Inuit Child First Initiative",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_358b8a17",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11864406779661017,
+        "weighted_jaccard": 1.2186440677966102,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "infrastructure",
+          "ensuring",
+          "concept_indigenous_reconciliation",
+          "services",
+          "dept_indigenous",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "infrastructure_important"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "infrastructure",
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Strengthening First Nations Emergency Services and Governance",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_45c8682b",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.0873015873015873,
+        "weighted_jaccard": 0.8873015873015874,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ensuring",
+          "concept_indigenous_reconciliation",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "reserves"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Accelerate Just Resolution of Reserve Land Additions",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_4aacc5f4",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07874015748031496,
+        "weighted_jaccard": 0.878740157480315,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "infrastructure",
+          "concept_indigenous_reconciliation",
+          "reserves",
+          "indigenous_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "infrastructure_important"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "infrastructure",
+          "first",
+          "indigenous"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Co-develop Indigenous Urban, Rural, Northern Housing Strategy",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_4c72a321",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11864406779661017,
+        "weighted_jaccard": 1.2186440677966102,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "infrastructure",
+          "ensuring",
+          "concept_indigenous_reconciliation",
+          "services",
+          "dept_indigenous",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "infrastructure_important"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "infrastructure",
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Indigenous Long-term Care Framework Development",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_5a126d73",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.07913669064748201,
+        "weighted_jaccard": 1.079136690647482,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "infrastructure",
+          "concept_indigenous_reconciliation",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "infrastructure_important"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "infrastructure",
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Advance Arctic and Northern Policy with Indigenous Partners",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_5eb50304",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.06201550387596899,
+        "weighted_jaccard": 0.6620155038759691,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "services",
+          "dept_indigenous",
+          "indigenous_important",
+          "communities",
+          "concept_indigenous_reconciliation",
+          "commitment",
+          "communities_important",
+          "indigenous"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Indigenous Entrepreneur Navigator",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_69380c3d",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.11382113821138211,
+        "weighted_jaccard": 1.0138211382113822,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ensuring",
+          "concept_indigenous_reconciliation",
+          "services",
+          "funding",
+          "dept_indigenous",
+          "communities",
+          "indigenous_important",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "reserves"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Fair Compensation for First Nations Child Services Harms",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_71b19cac",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.09848484848484848,
+        "weighted_jaccard": 1.0984848484848484,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.2,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "infrastructure",
+          "concept_indigenous_reconciliation",
+          "communities",
+          "indigenous_important",
+          "clean",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations",
+          "infrastructure_important",
+          "water"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "infrastructure",
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "Establish Indigenous-Led Institutions for Housing and Infrastructure",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_833dd5ef",
+      "evidence_id": "20211202_44_News_85ae97c996",
+      "similarity_score": 1.0,
+      "similarity_breakdown": {
+        "jaccard": 0.06944444444444445,
+        "weighted_jaccard": 0.8694444444444445,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.15000000000000002,
+        "conceptual_boost": 0.15,
+        "final_score": 1.0,
+        "common_keywords": [
+          "ensuring",
+          "concept_indigenous_reconciliation",
+          "indigenous_important",
+          "communities",
+          "communities_important",
+          "first_important",
+          "commitment",
+          "first",
+          "indigenous",
+          "nations"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "first",
+          "indigenous",
+          "communities"
+        ],
+        "common_concepts": [
+          "concept_indigenous_reconciliation"
+        ]
+      },
+      "promise_title": "B.C. Old Growth Forest Protection Fund and Partnerships",
+      "evidence_title": "Indigenous Services Canada welcomed the Parliamentary Budget Officer's report on funding for safe drinking water in First Nations communities.",
+      "confidence_level": "high_confidence"
+    }
+  ]
+}

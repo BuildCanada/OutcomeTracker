@@ -35,12 +35,17 @@ async function getGlobalSessionData(): Promise<ParliamentSession | null> {
     if (globalConfigDoc.exists && globalConfigDoc.data()?.current_selected_parliament_session) {
       currentSessionNumberString = String(globalConfigDoc.data()?.current_selected_parliament_session);
     } else {
-      console.warn("[Server] Global config or current_selected_parliament_session not found, attempting to use 'is_current_for_tracking'.");
-      const fallbackSessionQuery = await firestoreAdmin.collection('parliament_session').where('is_current_for_tracking', '==', true).limit(1).get();
-      if (!fallbackSessionQuery.empty) {
-        currentSessionNumberString = fallbackSessionQuery.docs[0].id;
+      console.warn("[Server] Global config or current_selected_parliament_session not found, using most recent session as fallback.");
+      // Fallback to the most recent session (highest parliament_number)
+      const recentSessionQuery = await firestoreAdmin.collection('parliament_session')
+        .orderBy('parliament_number', 'desc')
+        .limit(1)
+        .get();
+      
+      if (!recentSessionQuery.empty) {
+        currentSessionNumberString = recentSessionQuery.docs[0].id;
       } else {
-        console.error("[Server] No default or fallback session found.");
+        console.error("[Server] No parliament sessions found.");
         return null;
       }
     }
