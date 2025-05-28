@@ -61,7 +61,7 @@
   }
 
   .font-mono {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; /* System monospace fallback */
+    font-family: 'Founders Grotesk Mono', 'Menlo', 'Ubuntu Mono', monospace;
     letter-spacing: .07em;
     line-height: 150%;
     text-transform: uppercase;
