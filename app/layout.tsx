@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import Link from "next/link";
 import Image from "next/image";
 import "./globals.css";
+import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -44,9 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">
-      <body
-        className={`text-neutral-800 bg-background`}
-      >
+      <body className={`text-neutral-800 bg-background`}>
         <div className="border-2 border-black m-5">
           <SessionProvider>
             <Header />
@@ -65,11 +64,15 @@ export default function RootLayout({
                     Build Canada
                   </h1>
                 </div>
+                <div className="mb-8">
+                  <p className="text-white">
+                    A non-partisan platform tracking progress of key commitments
+                    during the 45th Parliament of Canada.
+                  </p>
+                </div>
                 <div className="footprint">
                   <div className="copyright text-white mb-6">
-                    <div className="text-sm">
-                      🏗️🇨🇦 &copy; Build Canada 2025
-                    </div>
+                    <div className="text-sm">🏗️🇨🇦 &copy; Build Canada 2025</div>
                   </div>
                 </div>
               </div>
@@ -77,6 +80,7 @@ export default function RootLayout({
           </SessionProvider>
         </div>
         <Toaster />
+        <SimpleAnalytics />
       </body>
     </html>
   );
