@@ -31,37 +31,79 @@ const formatDateForNode = (dateInput: Timestamp | string): string => {
   return dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };
 
+// Function to map raw evidence source types to shorter, more readable forms
+const formatEvidenceSourceType = (rawSourceType: string): string => {
+  const mappings: Record<string, string> = {
+    'OrderInCouncil (PCO)': 'ORDER IN COUNCIL',
+    'ORDERINCOUNCIL (PCO)': 'ORDER IN COUNCIL',
+    'Bill Event (LEGISinfo)': 'BILL',
+    'REGULATION (CANADA GAZETTE P2)': 'CANADA GAZETTE',
+    'Regulation (Canada Gazette P2)': 'CANADA GAZETTE',
+    'NEWS RELEASE (CANADA.CA)': 'NEWS RELEASE',
+    'News Release (Canada.ca)': 'NEWS RELEASE'
+  };
+  
+  return mappings[rawSourceType] || rawSourceType.toUpperCase();
+};
+
 const TimelineNode: React.FC<TimelineNodeProps> = ({ event, isSelected, onClick, isFirst, isLast }) => {
   const isMandate = event.type === 'mandate';
   const isFirstMention = isFirst;
   const isMostRecentEvidence = isLast && event.type === 'evidence' && !isFirstMention;
 
-  let boxClasses = "w-full md:w-auto max-w-[300px] md:max-w-none cursor-pointer hover:shadow-md transition-shadow p-3 border border-gray-200 text-gray-900";
-  let titleClasses = "font-medium line-clamp-3";
-  let dateClasses = "text-xs mt-1";
+  let boxClasses = "w-full md:w-auto max-w-[150px] md:max-w-[200px] cursor-pointer hover:shadow-md transition-shadow p-3 border border-gray-200 text-gray-900";
+  let titleClasses = "font-medium line-clamp-2 text-sm";
+  let descriptionClasses = "text-xs text-gray-600 mt-1 line-clamp-2";
+  let dateClasses = "text-xs mt-2 text-gray-500 font-mono";
   let pillClasses = "inline-flex items-center border px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs border-gray-200";
 
   // Retaining isSelected styling for accessibility / alternative interaction model
   if (isSelected) {
-    boxClasses += " ring-2 ring-offset-2 ring-gray-900 bg-gray-300";
+    boxClasses += " ring-2 ring-offset-2 ring-blue-500 bg-blue-50";
   } else {
     boxClasses += " bg-white";
   }
 
+  // For evidence items, show a brief description from the title_or_summary
+  // For mandate items, show the truncated text
+  const displayDescription = event.type === 'evidence' 
+    ? event.title // This is already truncated to 60 chars in the timeline setup
+    : event.title; // For mandate, this is also the truncated text
+
+  // Get the evidence source type for display
+  const evidenceTypeDisplay = event.type === 'evidence' && event.evidenceSourceType 
+    ? formatEvidenceSourceType(event.evidenceSourceType)
+    : 'EVIDENCE';
+
   return (
-    // The parent <li> will handle timeline-start/end. This component is the content box.
     <div className={boxClasses} onClick={onClick}>
       {isFirstMention && (
-        <div className={pillClasses}>
+        <div className={`${pillClasses} bg-green-50 text-green-700 border-green-200`}>
           First mention
         </div>
       )}
-      {isLast && event.type === 'evidence' && !isFirstMention && ( // Show "Most recent" only on the last *evidence* item, if it's not also the first mandate
-        <div className={pillClasses}>
+      {isLast && event.type === 'evidence' && !isFirstMention && (
+        <div className={`${pillClasses} bg-blue-50 text-blue-700 border-blue-200`}>
           Most recent
         </div>
       )}
-      <div className={titleClasses}>{event.title}</div>
+      
+      {/* Evidence type indicator */}
+      {event.type === 'evidence' && (
+        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
+          {evidenceTypeDisplay}
+        </div>
+      )}
+      {event.type === 'mandate' && (
+        <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide">
+          Mandate
+        </div>
+      )}
+      
+      {/* Main content */}
+      <div className={titleClasses}>{displayDescription}</div>
+      
+      {/* Date */}
       <div className={dateClasses}>{formatDateForNode(event.date)}</div>
     </div>
   );

@@ -55,7 +55,7 @@ YT_DLP_PATH = "yt-dlp"
 # --- End YT-DLP Path ---
 
 # --- Helper function to get Parliament Session ID (copied from process_yt_transcripts.py) ---
-def get_session_id_for_date(target_date, db_client, default_session_id="44"):
+def get_session_id_for_date(target_date, db_client, default_session_id="45"):
     """Queries Firestore to find the parliament_session_id for a given date."""
     if not target_date or not db_client:
         logger.warning("get_session_id_for_date: Missing target_date or db_client. Returning default.")
@@ -64,52 +64,51 @@ def get_session_id_for_date(target_date, db_client, default_session_id="44"):
     try:
         sessions_ref = db_client.collection('parliament_session')
         sessions = sessions_ref.stream()
-        matching_session = None
 
         for session_doc in sessions:
             session_data = session_doc.to_dict()
-            parliament_number = session_data.get('parliament_number')
-            start_date_str = session_data.get('election_called_date')
-            end_date_str = session_data.get('end_date')
-
-            if not parliament_number or not start_date_str or not end_date_str:
-                logger.debug(f"Session {session_doc.id} missing key date fields or parliament_number. Skipping.")
-                continue
-
-            try:
-                session_start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
-                session_end_date = None
-                if end_date_str.lower() == "current":
-                    pass 
-                else:
-                    session_end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            
+            # Check if the date falls within this session's range
+            start_date = session_data.get('start_date')
+            end_date = session_data.get('end_date')
+            
+            if start_date:
+                if isinstance(start_date, str):
+                    start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                elif hasattr(start_date, 'timestamp'):
+                    start_date = start_date.to_datetime()
                 
-                if session_end_date:
-                    if session_start_date <= target_date < session_end_date:
-                        logger.info(f"Date {target_date} matches session {parliament_number} ({start_date_str} to {end_date_str})")
-                        return parliament_number 
-                else:
-                    if session_start_date <= target_date:
-                        if session_data.get('is_current_for_tracking', False):
-                            matching_session = parliament_number
-                        elif not matching_session:
-                            matching_session = parliament_number
-                            
-            except ValueError as ve:
-                logger.warning(f"Could not parse dates for session {parliament_number} (ID: {session_doc.id}): {ve}. Skipping this session.")
-                continue
-        
-        if matching_session:
-            logger.info(f"Date {target_date} best matches session {matching_session} (current or fallback).")
-            return matching_session
+                # Check if target_date is after start_date
+                if target_date >= start_date:
+                    # If no end_date, this is the current session
+                    if not end_date:
+                        return session_doc.id
+                    
+                    # If end_date exists, check if target_date is before it
+                    if isinstance(end_date, str):
+                        end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                    elif hasattr(end_date, 'timestamp'):
+                        end_date = end_date.to_datetime()
+                    
+                    if target_date <= end_date:
+                        return session_doc.id
 
-        logger.warning(f"No specific session range matched for {target_date}. Looking for 'is_current_for_tracking'.")
-        sessions_again = db_client.collection('parliament_session').where('is_current_for_tracking', '==', True).limit(1).stream()
-        for sess_doc in sessions_again:
-            logger.info(f"Falling back to default tracking session: {sess_doc.to_dict().get('parliament_number')}")
-            return sess_doc.to_dict().get('parliament_number')
+        # If no session range matched, try to get current session from admin settings
+        logger.warning(f"No specific session range matched for {target_date}. Checking admin settings for current session.")
+        try:
+            admin_config_ref = db_client.document('admin_settings/global_config')
+            admin_config = admin_config_ref.get()
+            if admin_config.exists:
+                config_data = admin_config.to_dict()
+                current_session = config_data.get('current_selected_parliament_session')
+                if current_session:
+                    logger.info(f"Using current session from admin settings: {current_session}")
+                    return str(current_session)
+        except Exception as e:
+            logger.error(f"Error fetching admin settings: {e}")
 
-        logger.error(f"No session for {target_date}, and no default 'is_current_for_tracking' found. Returning provided default: {default_session_id}")
+        # Final fallback to provided default
+        logger.error(f"No session for {target_date}, and no admin settings found. Returning provided default: {default_session_id}")
         return default_session_id
 
     except Exception as e:

@@ -5,17 +5,16 @@ import { Timestamp } from "firebase/firestore";
 // --- Data structures from Firestore ---
 
 export interface ParliamentSession {
-  id: string; // parliament_number as string, e.g., "44"
-  parliament_number: string; // e.g., "44"
-  session_label: string; // e.g., "44th Parliament (2021-Present)"
-  start_date: string; // ISO Date string e.g., "2021-11-22"
-  end_date?: string | null; // ISO Date string or null if ongoing
+  id: string; // parliament_number, e.g., "44"
+  parliament_number: string;
+  session_label: string;
+  start_date: string;
+  end_date?: string | null;
   prime_minister_name?: string;
   governing_party?: string;
-  governing_party_code?: string | null;
-  election_date_preceding?: string | null; // ISO Date string
-  election_called_date?: string | null; // ISO Date string for the election that ENDS this session
-  is_current_for_tracking?: boolean;
+  governing_party_code?: string;
+  election_date_preceding?: string | null;
+  election_called_date?: string | null;
   notes?: string | null;
 }
 
@@ -121,6 +120,7 @@ export interface PromiseData {
   what_it_means_for_canadians?: string;
   intended_impact_and_objectives?: string;
   background_and_context?: string;
+  description?: string;
 
   // NEW FIELDS FOR FLAT STRUCTURE MIGRATION
   region_code?: string; // e.g., "Canada" - region identifier

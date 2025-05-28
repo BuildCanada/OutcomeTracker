@@ -95,7 +95,7 @@ function getPieColor(progressScore: number): string {
 }
 
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
-  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence, linked_evidence_ids } = promise;
+  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, description, progress_score = 0, progress_summary, evidence, linked_evidence_ids } = promise;
 
   const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
   const [isSharePopoverOpen, setIsSharePopoverOpen] = useState(false);
@@ -210,6 +210,15 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
         return formatDate(sorted[0].evidence_date);
       })()
     : null;
+
+  // ADDED: Log the received promise object, especially its evidence array
+  console.log("[PromiseModal Debug] Received promise:", promise);
+  if (promise && loadedEvidence) {
+    console.log("[PromiseModal Debug] Promise evidence array:", loadedEvidence);
+    console.log(`[PromiseModal Debug] Number of evidence items in modal: ${loadedEvidence.length}`);
+  } else {
+    console.log("[PromiseModal Debug] Promise evidence array is missing or empty.");
+  }
 
   // Ensure promise object and its nested evidence array are available
   if (!promise) {
@@ -327,29 +336,25 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                     <span className="ml-2 text-sm text-gray-500 italic">Loading evidence...</span>
                   )}
                 </h3>
-              {(() => {
-                return (
-                  <PromiseProgressTimeline 
-                    promise={{
-                      ...promise,
-                      evidence: loadedEvidence
-                    }} 
-                  />
-                );
-              })()}
+              <PromiseProgressTimeline 
+                promise={{
+                  ...promise,
+                  evidence: loadedEvidence
+                }} 
+              /> 
             </section>
 
             {/* Background Section */}
-            {(background_and_context || (commitment_history_rationale && commitment_history_rationale.length > 0)) && (
+            {(description || (commitment_history_rationale && commitment_history_rationale.length > 0)) && (
               <section className="border-t border-[#d3c7b9] pt-6">
                 <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
                   <FileTextIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
                   Background
                 </h3>
-                {background_and_context && (
+                {description && (
                   <div className="mb-4">
                     <p className="text-[#333333] leading-relaxed whitespace-pre-line break-words">
-                      {background_and_context}
+                      {description}
                     </p>
                   </div>
                 )}
@@ -366,38 +371,8 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                     </button>
                     {isRationaleExpanded && (
                       <div className="space-y-3 pl-2 border-l-2 border-gray-900">
-                        {(() => {
-                          // Handle both string and array formats during migration
-                          let events: RationaleEvent[] = [];
-                          
-                          if (typeof commitment_history_rationale === 'string') {
-                            // Parse string format: "2017-06-07: Action\n2019-09-10: Another action"
-                            const lines = (commitment_history_rationale as string).split('\n');
-                            events = lines
-                              .map((line: string) => line.trim())
-                              .filter((line: string) => line.length > 0)
-                              .map((line: string) => {
-                                const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2}):\s*(.+)$/);
-                                if (dateMatch) {
-                                  return {
-                                    date: dateMatch[1],
-                                    action: dateMatch[2].trim(),
-                                    source_url: ''
-                                  };
-                                } else {
-                                  return {
-                                    date: 'Unknown date',
-                                    action: line,
-                                    source_url: ''
-                                  };
-                                }
-                              });
-                          } else if (Array.isArray(commitment_history_rationale)) {
-                            // Already in correct array format
-                            events = commitment_history_rationale;
-                          }
-                          
-                          return events.map((event: RationaleEvent, index: number) => (
+                        {commitment_history_rationale.map(
+                          (event: RationaleEvent, index: number) => (
                             <div
                               key={index}
                               className="border p-3 bg-gray-50"
@@ -406,19 +381,17 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                                 {formatSimpleDate(event.date)}
                               </p>
                               <p className="text-sm text-[#333333] mb-1 break-words">{event.action}</p>
-                              {event.source_url && (
-                                <a
-                                  href={event.source_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
-                                >
-                                  <LinkIcon className="mr-1 h-3 w-3" /> Source
-                                </a>
-                              )}
+                              <a
+                                href={event.source_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
+                              >
+                                <LinkIcon className="mr-1 h-3 w-3" /> Source
+                              </a>
                             </div>
-                          ));
-                        })()}
+                          ),
+                        )}
                       </div>
                     )}
                   </div>

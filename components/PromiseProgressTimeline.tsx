@@ -19,6 +19,7 @@ export interface TimelineDisplayEvent {
   fullTitle: string; // Full mandate text or evidence.title_or_summary
   fullText: string; // Full mandate text or evidence.description_or_details
   sourceUrl?: string; // Only for evidence items
+  evidenceSourceType?: string; // Optional evidence source type
 }
 
 const formatDate = (dateInput: Timestamp | string): string => {
@@ -95,14 +96,21 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({ promi
         if (!item.id) {
           console.warn(`Evidence item at index ${index} for promise ${promise.id} has a missing ID. Using generated ID for key: ${evidenceId}`);
         }
+        
+        // Create a brief description for the timeline node (max 60 chars)
+        const briefDescription = item.title_or_summary 
+          ? (item.title_or_summary.length > 60 ? item.title_or_summary.substring(0, 60) + '...' : item.title_or_summary)
+          : 'Evidence item';
+        
         return {
-          id: `evidence-${evidenceId}`,
-          type: 'evidence',
-          date: item.evidence_date,
-          title: item.title_or_summary.substring(0, 70) + (item.title_or_summary.length > 70 ? '...' : ''),
-          fullTitle: item.title_or_summary,
-          fullText: item.description_or_details || 'No further details provided.',
-          sourceUrl: item.source_url,
+          id: evidenceId,
+          type: 'evidence' as const,
+          date: item.evidence_date || new Date().toISOString(),
+          title: briefDescription, // Brief description for the node
+          fullTitle: item.title_or_summary || 'Evidence item', // Full title for selected details
+          fullText: item.description_or_details || 'No further details provided.', // Required field
+          sourceUrl: item.source_url || '',
+          evidenceSourceType: item.evidence_source_type || 'Evidence' // Pass the source type
         };
       });
       events.push(...evidenceEvents);

@@ -1,25 +1,26 @@
 [
   {
+    "parliament_number": "45",
+    "session_label": "45th Parliament (2025-Present)",
+    "start_date": "2025-05-27",
+    "end_date": "2050-05-26",
+    "prime_minister_name": "Mark Carney",
+    "governing_party": "Liberal Party of Canada",
+    "governing_party_code": "LPC",
+    "election_date_preceding": "2025-04-28",
+    "election_called_date": "2025-03-23",
+    "notes": null
+  },
+  {
     "parliament_number": "44",
     "session_label": "44th Parliament (2021-2025)",
     "start_date": "2021-11-22",
     "end_date": "2025-03-23",
     "prime_minister_name": "Justin Trudeau",
     "governing_party": "Liberal Party of Canada",
+    "governing_party_code": "LPC",
     "election_date_preceding": "2021-09-20",
-    "is_current_for_tracking": true,
-    "notes": null
-  },
-
-  {
-    "parliament_number": "45",
-    "session_label": "45th Parliament (2025-Present)",
-    "start_date": "2025-05-27",
-    "end_date": "current",
-    "prime_minister_name": "Mark Carney",
-    "governing_party": "Liberal Party of Canada",
-    "election_date_preceding": "2025-04-28", 
-    "is_current_for_tracking": false,
+    "election_called_date": "2021-08-15",
     "notes": null
   }
 ]

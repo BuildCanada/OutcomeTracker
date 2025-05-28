@@ -119,7 +119,6 @@ def load_parliament_sessions(db_client):
                     'start_date': parsed_start_date,
                     'end_date': parsed_end_date,
                     'election_called_date': parsed_election_called_date, # Store parsed date
-                    'is_current_for_tracking': data.get('is_current_for_tracking', False)
                 })
             except Exception as e:
                 logger.error(f"Error parsing session data for doc {doc.id}: {e}", exc_info=True)

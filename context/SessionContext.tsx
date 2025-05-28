@@ -16,7 +16,6 @@ export interface ParliamentSession {
   prime_minister_name?: string;
   governing_party?: string;
   election_date_preceding?: string | null;
-  is_current_for_tracking?: boolean;
   notes?: string | null;
 }
 
@@ -79,15 +78,10 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
               setCurrentSessionId(data.currentSessionId);
               console.log(`[SessionContext] Loaded current session from API: ${data.currentSessionId}`);
             } else {
-              // Fallback to the session marked as current_for_tracking
-              const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
-              if (currentSession) {
-                setCurrentSessionId(currentSession.id);
-                console.log(`[SessionContext] Fallback to is_current_for_tracking session: ${currentSession.id}`);
-              } else if (fetchedSessions.length > 0) {
-                // Final fallback to the most recent session
+              // Fallback to the most recent session if no admin config is set
+              if (fetchedSessions.length > 0) {
                 setCurrentSessionId(fetchedSessions[0].id);
-                console.log(`[SessionContext] Final fallback to most recent session: ${fetchedSessions[0].id}`);
+                console.log(`[SessionContext] Fallback to most recent session: ${fetchedSessions[0].id}`);
               }
             }
           } else {
@@ -95,13 +89,10 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
           }
         } catch (apiError: any) {
           console.warn("[SessionContext] Error fetching current session from API, using fallback:", apiError);
-          // Fallback to the session marked as current_for_tracking
-          const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
-          if (currentSession) {
-            setCurrentSessionId(currentSession.id);
-          } else if (fetchedSessions.length > 0) {
-            // Final fallback to the most recent session
+          // Fallback to the most recent session
+          if (fetchedSessions.length > 0) {
             setCurrentSessionId(fetchedSessions[0].id);
+            console.log(`[SessionContext] Final fallback to most recent session: ${fetchedSessions[0].id}`);
           }
         }
       } catch (e: any) {
