@@ -72,7 +72,6 @@ export async function fetchPromisesForDepartment(
     
     let q = query(
       promisesCol,
-      where('responsible_department_lead', '==', departmentNameToQuery),
       where('parliament_session_id', '==', parliamentSessionId),
       where('party_code', '==', governingPartyCode),
       where('region_code', '==', regionCode),
@@ -123,11 +122,108 @@ export async function fetchPromisesForDepartment(
     });
 
     const querySnapshot = await getDocs(finalQuery);
-    const promisesWithEvidence: PromiseData[] = [];
+    const allPromises: PromiseData[] = [];
 
     for (const docSnapshot of querySnapshot.docs) {
       const promise = docSnapshot.data(); // Use the converted data directly
+      allPromises.push(promise);
+    }
 
+    console.log(`Found ${allPromises.length} total promises for session ${parliamentSessionId}, party ${governingPartyCode}, region ${regionCode}`);
+
+    // Now filter by department on the client side to handle minister titles
+    const departmentFilteredPromises = allPromises.filter(promise => {
+      const responsibleDept = promise.responsible_department_lead || '';
+      
+      // Direct match with department name
+      if (responsibleDept === departmentNameToQuery) {
+        return true;
+      }
+      
+      // Check if it's a minister title that should map to this department
+      // This mapping uses the exact official_full_name values from department_config
+      const ministerTitleMappings: Record<string, string[]> = {
+        "Finance Canada": [
+          "Minister of Finance",
+          "Deputy Prime Minister and Minister of Finance"
+        ],
+        "Environment and Climate Change Canada": [
+          "Minister of Environment and Climate Change"
+        ],
+        "Health Canada": [
+          "Minister of Health"
+        ],
+        "Innovation, Science and Economic Development Canada": [
+          "Minister of Innovation, Science and Industry",
+          "Minister of Industry"
+        ],
+        "Artificial Intelligence and Digital Innovation": [
+          "Minister of Artificial Intelligence and Digital Innovation"
+        ],
+        "Canadian Heritage": [
+          "Minister of Canadian Identity and Culture"
+        ],
+        "Fisheries and Oceans Canada": [
+          "Minister of Fisheries"
+        ],
+        "Transport Canada": [
+          "Minister of Transport",
+          "Minister of Transport and Internal Trade"
+        ],
+        "Natural Resources Canada": [
+          "Minister of Natural Resources",
+          "Minister of Energy and Natural Resources"
+        ],
+        "Employment and Social Development Canada": [
+          "Minister of Employment, Workforce Development and Official Languages",
+          "Minister of Jobs and Families"
+        ],
+        "National Defence": [
+          "Minister of National Defence"
+        ],
+        "Immigration, Refugees and Citizenship Canada": [
+          "Minister of Immigration, Refugees and Citizenship"
+        ],
+        "Public Safety Canada": [
+          "Minister of Public Safety"
+        ],
+        "Infrastructure Canada": [
+          "Minister of Housing and Infrastructure",
+          "Minister of Housing and Diversity and Inclusion",
+          "Minister of Intergovernmental Affairs, Infrastructure and Communities"
+        ],
+        "Public Works and Government Services Canada": [
+          "Minister of Government Transformation, Public Works and Procurement"
+        ],
+        "Crown-Indigenous Relations and Northern Affairs Canada": [
+          "Minister of Crown-Indigenous Relations"
+        ],
+        "Indigenous Services Canada": [
+          "Minister of Indigenous Services"
+        ],
+        "Global Affairs Canada": [
+          "Minister of Foreign Affairs"
+        ],
+        "Justice Canada": [
+          "Minister of Justice and Attorney General of Canada"
+        ],
+        "Agriculture and Agri-Food Canada": [
+          "Minister of Agriculture and Agri-Food"
+        ],
+        "Treasury Board of Canada Secretariat": [
+          "President of the Treasury Board"
+        ]
+      };
+      
+      const mappedTitles = ministerTitleMappings[departmentNameToQuery] || [];
+      return mappedTitles.includes(responsibleDept);
+    });
+
+    console.log(`After department filtering: ${departmentFilteredPromises.length} promises for ${departmentNameToQuery}`);
+
+    // Add evidence to the filtered promises
+    const promisesWithEvidence: PromiseData[] = [];
+    for (const promise of departmentFilteredPromises) {
       if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
         // Pass session dates to the evidence fetching function
         promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids, sessionStartDate, sessionEndDate);
