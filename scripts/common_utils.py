@@ -38,6 +38,7 @@ SOURCE_TYPE_TO_ID_CODE_MAPPING = {
     "Mandate Letter Commitment (Structured)": "MANDL",
     "2021 LPC Mandate Letters": "MANDL",
     "2025 LPC Platform": "PLTFM",
+    "2025 LPC Consolidated": "PLTFM",
     "DEFAULT_SOURCE_ID_CODE": "OTHER"
 }
 
