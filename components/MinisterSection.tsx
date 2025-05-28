@@ -260,7 +260,7 @@ export default function MinisterSection({
             <h3 className="text-2xl font-semibold">Commitments</h3>
             <div className="flex flex-wrap gap-4">
               <Select value={progressFilter} onValueChange={setProgressFilter}>
-                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                <SelectTrigger className="w-[180px] text-xs rounded-none">
                   <SelectValue placeholder="Progress" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -272,7 +272,7 @@ export default function MinisterSection({
               </Select>
 
               <Select value={impactFilter} onValueChange={setImpactFilter}>
-                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                <SelectTrigger className="w-[180px] text-xs rounded-none">
                   <SelectValue placeholder="Impact" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -287,7 +287,7 @@ export default function MinisterSection({
                 value={alignmentFilter}
                 onValueChange={setAlignmentFilter}
               >
-                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                <SelectTrigger className="w-[180px] text-xs rounded-none">
                   <SelectValue placeholder="Alignment" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
@@ -299,7 +299,7 @@ export default function MinisterSection({
               </Select>
 
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
+                <SelectTrigger className="w-[180px] text-xs rounded-none">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="rounded-none">
