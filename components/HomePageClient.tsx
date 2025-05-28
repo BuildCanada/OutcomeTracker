@@ -200,63 +200,75 @@ export default function HomePageClient({
   // Actual JSX rendering for the client component
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto max-w-5xl px-4 py-12">
-        <h1 className="mb-12 text-center text-5xl">{pageTitle}</h1>
-        {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>}
-        
-        {mainTabConfigs.length > 0 ? (
-          <div>
-            {/* Pills Container */}
-            <div className="flex flex-wrap gap-2 mb-8">
-              {mainTabConfigs.map((dept) => (
-                <button
-                  key={dept.id}
-                  onClick={() => setActiveTabId(dept.id)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors
-                    ${activeTabId === dept.id 
-                      ? 'bg-[#8b2332] text-white' 
-                      : 'bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50'
-                    }`}
-                >
-                  {dept.display_short_name}
-                </button>
-              ))}
-            </div>
-
-            {/* Content Container */}
-            <div>
-              {mainTabConfigs.map((dept) => (
-                <div
-                  key={dept.id}
-                  className={activeTabId === dept.id ? 'block' : 'hidden'}
-                >
-                  {isLoadingTabData ? (
-                    <div className="space-y-4">
-                      <Skeleton className="h-20 w-1/2 bg-gray-200" /> 
-                      <Skeleton className="h-8 w-1/3 bg-gray-200" />
-                      <Skeleton className="h-40 w-full bg-gray-200" />
-                    </div>
-                  ) : error ? (
-                    <div className="text-center py-10 text-red-600 bg-red-100 border border-red-400 p-4">
-                      {`Error loading data for ${dept.display_short_name}: ${error}`}
-                    </div>
-                  ) : activeDepartmentData && activeDepartmentData.ministerInfo !== undefined ? (
-                    <MinisterSection 
-                      departmentPageData={activeDepartmentData}
-                      departmentSlug={dept.department_slug}
-                      departmentFullName={dept.official_full_name}
-                      departmentShortName={dept.display_short_name}
-                    />
-                  ) : (
-                    <div className="text-center py-10 text-gray-500">Select a department to view details.</div>
-                  )}
-                </div>
-              ))}
+      <div className="container px-4 py-12">
+        <div className="grid grid-cols-4 gap-6">
+          <div className="col-span-1">
+            <h1 className="text-4xl md:text-5xl font-bold mb-8">{pageTitle}</h1>
+            <div className="mb-8">
+              <p className="text-gray-900">
+                A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
+              </p>
             </div>
           </div>
-        ) : (
-          !initialError && <div className="text-center my-4">No priority departments configured or found.</div>
-        )}
+
+          <div className="col-span-3">
+            {error && !isLoadingTabData && activeDepartmentData?.promises.length === 0 && <div className="text-red-500 text-center my-4">Error: {error}</div>}
+            
+            {mainTabConfigs.length > 0 ? (
+              <div>
+                {/* Pills Container */}
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {mainTabConfigs.map((dept) => (
+                    <button
+                      key={dept.id}
+                      onClick={() => setActiveTabId(dept.id)}
+                      className={`px-4 py-2 text-sm font-medium transition-colors
+                        ${activeTabId === dept.id 
+                          ? 'bg-[#8b2332] text-white' 
+                          : 'bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50'
+                        }`}
+                    >
+                      {dept.display_short_name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Content Container */}
+                <div>
+                  {mainTabConfigs.map((dept) => (
+                    <div
+                      key={dept.id}
+                      className={activeTabId === dept.id ? 'block' : 'hidden'}
+                    >
+                      {isLoadingTabData ? (
+                        <div className="space-y-4">
+                          <Skeleton className="h-20 w-1/2 bg-gray-200" /> 
+                          <Skeleton className="h-8 w-1/3 bg-gray-200" />
+                          <Skeleton className="h-40 w-full bg-gray-200" />
+                        </div>
+                      ) : error ? (
+                        <div className="text-center py-10 text-red-600 bg-red-100 border border-red-400 p-4">
+                          {`Error loading data for ${dept.display_short_name}: ${error}`}
+                        </div>
+                      ) : activeDepartmentData && activeDepartmentData.ministerInfo !== undefined ? (
+                        <MinisterSection 
+                          departmentPageData={activeDepartmentData}
+                          departmentSlug={dept.department_slug}
+                          departmentFullName={dept.official_full_name}
+                          departmentShortName={dept.display_short_name}
+                        />
+                      ) : (
+                        <div className="text-center py-10 text-gray-500">Select a department to view details.</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              !initialError && <div className="text-center my-4">No priority departments configured or found.</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

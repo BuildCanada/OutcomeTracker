@@ -19,8 +19,6 @@
   font-display: swap;
 }
 
-/* Temporarily commented out problematic fonts - using fallbacks instead */
-/*
 @font-face {
   font-family: 'Soehne';
   src: url('/fonts/soehne-kraftig.woff2') format('woff2');
@@ -44,7 +42,6 @@
   font-style: normal;
   font-display: swap;
 }
-*/
 
 :root {
   --foreground-rgb: 0, 0, 0;

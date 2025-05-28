@@ -247,7 +247,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "prime-minister":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="h-96 border rounded-lg p-4">
+          <div className="border">
             <GDPPerCapitaChart title="GDP Per Capita" startYear={2015} />
           </div>
         </div>
@@ -256,7 +256,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "finance-canada":
       return (
         <>
-          <div className="h-96 border rounded-lg p-4">
+          <div className="border">
             <CapitalFormationChart
               title="% of GDP in capital-focused investment"
               startYear={2015}
@@ -264,7 +264,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={17}
             />
           </div>
-          <div className="h-96 border rounded-lg p-4">
+          <div className="border">
             <BalanceSheetChart
               title="Operating Balance"
               categories={["Net operating balance"]}
@@ -277,7 +277,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "infrastructure-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="h-96 border rounded-lg p-4 bg-white">
+          <div className="border">
             <AnnualizedHousingChart
               category="Total units"
               endYear={2029}
@@ -293,7 +293,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "immigration-refugees-and-citizenship-canada":
       return (
         <>
-          <div className="h-96 border rounded-lg p-4">
+          <div className="border">
             <NPRPopulationChart
               title="NPR % of Population"
               startYear={2015}
@@ -301,7 +301,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={5}
             />
           </div>
-          <div className="h-96 border rounded-lg p-4 flex items-center justify-center text-muted-foreground">
+          <div className="border flex items-center justify-center text-muted-foreground">
             <div className="text-center">
               <h4 className="font-medium mb-2">PR Admissions Chart</h4>
               <p>Chart coming soon</p>
@@ -313,7 +313,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "treasury-board-of-canada-secretariat":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="h-96 border rounded-lg p-4">
+          <div className="border">
             <ProductivityChart
               title="Public Service Productivity"
               sector="Non-business sector and others"
@@ -330,7 +330,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "natural-resources-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="h-96 border rounded-lg p-4">
+          <div className="border">
             <PrimaryEnergyChart
               title="Total Primary Energy Production"
               category="Primary energy"
@@ -347,7 +347,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "innovation-science-and-economic-development-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="h-96 border rounded-lg p-4">
+          <div className="border">
             <LabourProductivityGrowthChart
               title="Labour Productivity Growth"
               sector="Total economy"
@@ -368,7 +368,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
         deptData?.metrics.map((metric, index) => (
           <div
             key={index}
-            className="h-96 border rounded-lg p-4 flex items-center justify-center text-muted-foreground"
+            className="border flex items-center justify-center text-muted-foreground"
           >
             <div className="text-center">
               <h4 className="font-medium mb-2">{metric.metric}</h4>

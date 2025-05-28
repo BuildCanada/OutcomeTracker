@@ -227,7 +227,7 @@ export default function MinisterSection({
 
       {/* Key Metrics Section */}
       <div>
-        <h3 className="text-2xl mb-4">Key Metrics</h3>
+        <h3 className="text-2xl">Key Metrics</h3>
         <div className="mb-8">
           {ministerInfo?.guidingMetrics &&
           ministerInfo.guidingMetrics.length > 0 ? (
@@ -256,9 +256,9 @@ export default function MinisterSection({
 
         {/* Promises Section */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
             <h3 className="text-2xl font-semibold">Commitments</h3>
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <Select value={progressFilter} onValueChange={setProgressFilter}>
                 <SelectTrigger className="w-[180px] text-xs border-gray-400 rounded-none">
                   <SelectValue placeholder="Progress" />

@@ -5,7 +5,11 @@ import type { PromiseData, RationaleEvent, EvidenceItem } from "@/lib/types"
 import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon, TrendingUpIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2Icon, XIcon, ShareIcon } from "lucide-react"
 import { Timestamp } from 'firebase/firestore';
 import PromiseProgressTimeline from './PromiseProgressTimeline';
-import ShareModal from './ShareModal';
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { CopyIcon } from "lucide-react";
 import React, { useState } from 'react';
 
 interface PromiseModalProps {
@@ -92,7 +96,9 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
   const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence } = promise;
 
   const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isSharePopoverOpen, setIsSharePopoverOpen] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+  const { toast } = useToast();
 
   // Get the last updated date from evidence items
   const lastUpdateDate = evidence && evidence.length > 0 
@@ -156,20 +162,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-3xl w-full max-h-[90vh] overflow-y-auto overflow-x-hidden bg-white p-0 border shadow-xl z-50">
           {/* Header */}
-          <DialogHeader className="border-b border-[#d3c7b9] p-12 relative">
-            {/* Share button container */}
-            <div className="absolute top-3 right-12 flex items-center">
-              {/* Share button */}
-              <button
-                onClick={() => setIsShareModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                aria-label="Share this promise"
-              >
-                <ShareIcon className="w-4 h-4" />
-                Share
-              </button>
-            </div>
-
+          <DialogHeader className="border-b border-[#d3c7b9] p-6 relative">
             {/* Title */}
             <DialogTitle className="text-2xl font-bold text-[#222222] mb-2 break-words pr-24">
               {concise_title || text}
@@ -327,16 +320,122 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
             )}
 
           </div>
+          {/* Modal Footer */}
+          <div className="border-t border-[#d3c7b9] px-6 py-4 bg-white flex justify-end sticky bottom-0 z-10">
+            <Popover open={isSharePopoverOpen} onOpenChange={setIsSharePopoverOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  aria-label="Share this promise"
+                >
+                  <ShareIcon className="w-4 h-4" />
+                  Share
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="bg-white shadow-lg border w-80 p-4 z-50">
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="text-lg font-semibold text-gray-900">Share to</div>
+                  {/* Social Media Buttons */}
+                  <div className="flex flex-row gap-3 justify-between">
+                    {/* Twitter/X Button */}
+                    <button
+                      onClick={() => {
+                        const shareText = (typeof concise_title !== 'undefined' && concise_title) ? concise_title : (typeof text !== 'undefined' && text) ? text : (promise && promise.text ? promise.text : '');
+                        const url = encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : '');
+                        const tweetText = encodeURIComponent(`Check out this promise: ${shareText.slice(0, 100)}`);
+                        window.open(`https://twitter.com/intent/tweet?url=${url}&text=${tweetText}`, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="flex flex-col items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <div className="w-10 h-10 flex items-center justify-center">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                      </div>
+                      <span className="text-xs font-medium mt-1">X</span>
+                    </button>
+                    {/* Facebook Button */}
+                    <button
+                      onClick={() => {
+                        const shareText = (typeof concise_title !== 'undefined' && concise_title) ? concise_title : (typeof text !== 'undefined' && text) ? text : (promise && promise.text ? promise.text : '');
+                        const url = encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : '');
+                        const fbText = encodeURIComponent(`Check out this promise: ${shareText.slice(0, 100)}`);
+                        window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${fbText}`, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="flex flex-col items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <div className="w-10 h-10 flex items-center justify-center">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                      </div>
+                      <span className="text-xs font-medium mt-1">Facebook</span>
+                    </button>
+                    {/* LinkedIn Button */}
+                    <button
+                      onClick={() => {
+                        const shareText = (typeof concise_title !== 'undefined' && concise_title) ? concise_title : (typeof text !== 'undefined' && text) ? text : (promise && promise.text ? promise.text : '');
+                        const url = encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : '');
+                        const title = encodeURIComponent(`Government Promise: ${shareText.slice(0, 100)}`);
+                        const summary = encodeURIComponent(`Check out this promise: ${shareText.slice(0, 100)}`);
+                        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}&title=${title}&summary=${summary}`, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="flex flex-col items-center p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      <div className="w-10 h-10 flex items-center justify-center">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                      </div>
+                      <span className="text-xs font-medium mt-1">LinkedIn</span>
+                    </button>
+                  </div>
+                  {/* Copy Link Section */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">Copy link</div>
+                    <div className="flex space-x-2">
+                      <Input
+                        value={typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : ''}
+                        readOnly
+                        className="flex-1 text-sm bg-gray-50 border-gray-200"
+                        placeholder="Loading..."
+                      />
+                      <Button
+                        onClick={async () => {
+                          const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : '';
+                          setIsCopying(true);
+                          try {
+                            await navigator.clipboard.writeText(shareUrl);
+                            toast({
+                              title: "Link copied!",
+                              description: "The promise link has been copied to your clipboard.",
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Copy failed",
+                              description: "Failed to copy the link. Please try again.",
+                              variant: "destructive",
+                            });
+                          } finally {
+                            setIsCopying(false);
+                          }
+                        }}
+                        disabled={isCopying}
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0 px-3"
+                      >
+                        <CopyIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
         </DialogContent>
       </Dialog>
-
-      {/* Share Modal */}
-      <ShareModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        shareUrl={typeof window !== 'undefined' ? `${window.location.origin}/promise/${promise.id}` : ''}
-        promiseTitle={concise_title || text}
-      />
     </>
   );
 }

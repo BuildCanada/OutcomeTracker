@@ -65,11 +65,6 @@ export default function RootLayout({
                     Build Canada
                   </h1>
                 </div>
-                <div className="mb-8">
-                  <p className="text-white">
-                    A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
-                  </p>
-                </div>
                 <div className="footprint">
                   <div className="copyright text-white mb-6">
                     <div className="text-sm">
