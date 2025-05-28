@@ -49,7 +49,7 @@ logger = logging.getLogger("process_raw_legisinfo_to_evidence")
 
 # --- Constants ---
 RAW_LEGISINFO_BILLS_COLLECTION = "raw_legisinfo_bill_details"
-EVIDENCE_ITEMS_COLLECTION = "evidence_items"
+EVIDENCE_ITEMS_COLLECTION = "evidence_items_test"
 DEFAULT_JSON_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'JSON_outputs', 'bill_processing')
 PROMPT_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'prompts', 'prompt_bill_evidence.md'))
 # --- End Constants ---

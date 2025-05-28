@@ -98,7 +98,7 @@ except Exception as e:
 
 # --- Constants ---
 PROMISES_COLLECTION = 'promises'
-EVIDENCE_ITEMS_COLLECTION = 'evidence_items'  # or evidence_items
+EVIDENCE_ITEMS_COLLECTION = 'evidence_items_test'  # or evidence_items
 POTENTIAL_LINKS_COLLECTION = 'potential_links'
 
 # Threshold values for pre-LLM filtering

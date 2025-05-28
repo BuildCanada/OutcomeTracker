@@ -168,7 +168,7 @@ async def demo_query_enriched_promises():
         pipeline = PromisePipeline(use_test_collection=True)
         
         # Query promises from test collection
-        collection_ref = pipeline.firebase_manager.db.collection("promises")
+        collection_ref = pipeline.firebase_manager.db.collection("promises_test")
         docs = await asyncio.to_thread(list, collection_ref.limit(5).stream())
         
         print(f"📋 Found {len(docs)} promises in test collection:")

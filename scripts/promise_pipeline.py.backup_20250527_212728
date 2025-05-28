@@ -135,7 +135,7 @@ class FirebaseManager:
     
     def __init__(self, use_test_collection: bool = False):
         self.use_test_collection = use_test_collection
-        self.collection_name = "promises" if use_test_collection else "promises"
+        self.collection_name = "promises_test" if use_test_collection else "promises"
         self.db = self._init_firebase()
         
     def _init_firebase(self):

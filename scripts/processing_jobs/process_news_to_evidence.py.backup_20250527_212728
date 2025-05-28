@@ -46,7 +46,7 @@ logger = logging.getLogger("process_raw_news_to_evidence")
 
 # --- Constants ---
 RAW_NEWS_RELEASES_COLLECTION = "raw_news_releases"
-EVIDENCE_ITEMS_COLLECTION = "evidence_items" # Using test collection
+EVIDENCE_ITEMS_COLLECTION = "evidence_items_test" # Using test collection
 DEPARTMENT_CONFIG_COLLECTION = "department_config" # For standardizing department names
 DEFAULT_JSON_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'JSON_outputs', 'news_processing')
 PROMPT_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'prompts', 'prompt_news_evidence.md'))
@@ -150,13 +150,9 @@ def load_gemini_prompt_template(prompt_file: str) -> str:
 def build_news_gemini_prompt(raw_item_data, prompt_template: str) -> str:
     pub_date = raw_item_data.get('publication_date')
     pub_date_str = pub_date.isoformat() if isinstance(pub_date, datetime) else str(pub_date or '')
-    # Handle both field naming conventions
-    title_value = raw_item_data.get('title') or raw_item_data.get('title_raw', '')
-    description_value = raw_item_data.get('description') or raw_item_data.get('summary_or_snippet_raw', '')
-    
     return prompt_template.format(
-        news_title=title_value,
-        news_summary_snippet=description_value[:2000],
+        news_title=raw_item_data.get('title_raw', ''),
+        news_summary_snippet=raw_item_data.get('summary_or_snippet_raw', '')[:2000],
         publication_date=pub_date_str,
         parliament_session_id=raw_item_data.get('parliament_session_id_assigned', '')
     )
@@ -281,11 +277,8 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
         if force_reprocessing:
             logger.info("Force reprocessing enabled. Processing all items in date range.")
         else:
-            logger.info("Querying for 'pending_evidence_creation' and error status items in date range.")
-            # Query for pending items and error items that can be retried
-            error_statuses = ["error_missing_fields", "error_llm_processing", "error_llm_missing_summary", "error_processing_script"]
-            all_target_statuses = ["pending_evidence_creation"] + error_statuses
-            query = query.where(filter=firestore.FieldFilter("evidence_processing_status", "in", all_target_statuses))
+            logger.info("Querying for 'pending_evidence_creation' items in date range.")
+            query = query.where(filter=firestore.FieldFilter("evidence_processing_status", "==", "pending_evidence_creation"))
         
         if limit:
             query = query.limit(limit)
@@ -318,21 +311,14 @@ async def process_pending_raw_news(db_client, dry_run=False, output_to_json=Fals
                 logger.warning(f"Could not determine parliament session ID for item {raw_item_id} with pub date {pub_date_obj_for_session}. Will use existing or None.")
                 calculated_parliament_session_id = raw_item_data.get('parliament_session_id_assigned') # Fallback
 
-            # Check if item should be processed (pending or error statuses)
-            current_status = raw_item_data.get("evidence_processing_status")
-            processable_statuses = ["pending_evidence_creation", "error_missing_fields", "error_llm_processing", "error_llm_missing_summary", "error_processing_script"]
-            
-            if not force_reprocessing and current_status not in processable_statuses:
-                logger.info(f"Item {raw_item_id} status is '{current_status}'. Skipping.")
+            if not force_reprocessing and raw_item_data.get("evidence_processing_status") != "pending_evidence_creation":
+                logger.info(f"Item {raw_item_id} status is '{raw_item_data.get('evidence_processing_status')}'. Skipping.")
                 continue
-            title_for_log = raw_item_data.get('title') or raw_item_data.get('title_raw', '')
-            logger.info(f"Processing raw news item: {raw_item_id} - {title_for_log}")
+            logger.info(f"Processing raw news item: {raw_item_id} - {raw_item_data.get('title_raw', '')}")
             processed_count +=1
 
             try:
-                # Check for title in either field name
-                title_value = raw_item_data.get("title") or raw_item_data.get("title_raw")
-                if not title_value or not raw_item_data.get("publication_date") or not raw_item_data.get("source_url"):
+                if not raw_item_data.get("title_raw") or not raw_item_data.get("publication_date") or not raw_item_data.get("source_url"):
                     logger.error(f"Skipping item {raw_item_id} due to missing critical fields.")
                     if not dry_run:
                         await asyncio.to_thread(db_client.collection(RAW_NEWS_RELEASES_COLLECTION).document(raw_item_id).update, {

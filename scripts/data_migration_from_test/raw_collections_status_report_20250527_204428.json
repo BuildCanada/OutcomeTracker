@@ -1,0 +1,229 @@
+{
+  "check_timestamp": "20250527_204428",
+  "check_date": "2025-05-27T20:44:28.392901",
+  "collections_status": {
+    "raw_gazette_p2_notices": {
+      "collection_name": "raw_gazette_p2_notices",
+      "total_documents": 1336,
+      "status_breakdown": {
+        "pending_evidence_creation": 47,
+        "evidence_created": 935,
+        "skipped_low_relevance_score": 354
+      },
+      "unprocessed_count": 47,
+      "error_count": 0,
+      "issues": [
+        "47 unprocessed items"
+      ],
+      "status": "has_unprocessed",
+      "ingestion_script": "ingest_canada_gazette_p2.py",
+      "processing_script": "process_gazette_p2_to_evidence.py",
+      "sample_documents": {
+        "pending_evidence_creation": [
+          {
+            "id": "CGP2_20211013_ab3b1c486581",
+            "data": {
+              "publication_date": "2021-10-13T14:00:00+00:00",
+              "regulation_title": "Canadian Egg Marketing Agency Quota Regulations, 1986\u00a0\u2014\u00a0Regulations Amending theFarm Products Agenci",
+              "ingested_at": "2025-05-26T18:07:17.241000+00:00"
+            }
+          },
+          {
+            "id": "CGP2_20211013_bb0de6953630",
+            "data": {
+              "publication_date": "2021-10-13T14:00:00+00:00",
+              "regulation_title": "Canadian Chicken Marketing Quota Regulations\u00a0\u2014\u00a0Regulations Amending theFarm Products Agencies Act",
+              "ingested_at": "2025-05-26T18:07:17.049000+00:00"
+            }
+          },
+          {
+            "id": "CGP2_20211027_0646d5bdae49",
+            "data": {
+              "publication_date": "2021-10-27T14:00:00+00:00",
+              "regulation_title": "Canadian Pork Promotion-Research Levies OrderFarm Products Agencies Act",
+              "ingested_at": "2025-05-26T18:07:16.577000+00:00"
+            }
+          }
+        ]
+      }
+    },
+    "raw_legisinfo_bill_details": {
+      "collection_name": "raw_legisinfo_bill_details",
+      "total_documents": 412,
+      "status_breakdown": {
+        "processed": 411,
+        "error_llm_processing": 1
+      },
+      "unprocessed_count": 0,
+      "error_count": 1,
+      "issues": [
+        "1 items with errors"
+      ],
+      "status": "has_issues",
+      "ingestion_script": "ingest_legisinfo_bills.py",
+      "processing_script": "process_legisinfo_to_evidence.py",
+      "sample_documents": {
+        "error_llm_processing": [
+          {
+            "id": "44-1_C-291",
+            "data": {
+              "ingested_at": "2025-05-26T01:12:08.477000+00:00",
+              "bill_number_code_feed": "C-291"
+            }
+          }
+        ]
+      }
+    },
+    "raw_news_releases": {
+      "collection_name": "raw_news_releases",
+      "total_documents": 8713,
+      "status_breakdown": {
+        "missing_status_field": 2146,
+        "evidence_created": 2011,
+        "pending_evidence_creation": 3474,
+        "skipped_low_relevance_score": 1080,
+        "error_llm_processing": 1,
+        "error_processing_script": 1
+      },
+      "unprocessed_count": 3474,
+      "error_count": 2,
+      "issues": [
+        "3474 unprocessed items",
+        "2 items with errors",
+        "2146 items missing status field"
+      ],
+      "status": "has_issues",
+      "ingestion_script": "ingest_canada_news.py",
+      "processing_script": "process_news_to_evidence.py",
+      "sample_documents": {
+        "pending_evidence_creation": [
+          {
+            "id": "20170206_CANADANEWS_8f868c567ca7",
+            "data": {
+              "publication_date": "2017-02-06T16:31:55+00:00",
+              "title_raw": "Jean-Pierre Blais at the public hearing on the Wireless Code review",
+              "ingested_at": "2025-05-27T07:00:51.627000+00:00"
+            }
+          },
+          {
+            "id": "20170209_CANADANEWS_295dd14a7435",
+            "data": {
+              "publication_date": "2017-02-09T20:05:15+00:00",
+              "title_raw": "Backgrounder: Canada and Quebec fund three projects to improve water and wastewater systems across t",
+              "ingested_at": "2025-05-27T06:28:11.687000+00:00"
+            }
+          },
+          {
+            "id": "20170210_CANADANEWS_367fc8fedd1c",
+            "data": {
+              "publication_date": "2017-02-10T17:52:22+00:00",
+              "title_raw": "Backgrounder: Canada and Ontario announce funding for 29 public transit projects across Ontario",
+              "ingested_at": "2025-05-27T06:28:10.364000+00:00"
+            }
+          }
+        ],
+        "error_llm_processing": [
+          {
+            "id": "20220208_CANADANEWS_392df614d701",
+            "data": {
+              "publication_date": "2022-02-08T20:57:02+00:00",
+              "title_raw": "Ian Scott to the Standing Committee on Industry and Technology",
+              "ingested_at": "2025-05-27T06:45:20.603000+00:00"
+            }
+          }
+        ],
+        "error_processing_script": [
+          {
+            "id": "20241019_CANADANEWS_c953ed715ce1",
+            "data": {
+              "publication_date": "2024-10-19T18:45:36+00:00",
+              "processing_error_message": "400 Nested arrays are not allowed",
+              "title_raw": "Minister Ng and Minister MacAulay statement on Canada\u2019s CPTPP dairy tariff rate quota dispute with N",
+              "ingested_at": "2025-05-27T07:11:22.664000+00:00"
+            }
+          }
+        ],
+        "missing_status_field": [
+          {
+            "id": "007bbf594f3454ac775e28aef2f79cb1219144e3d95680730fbb4b392a3af364",
+            "data": {
+              "publication_date": "2021-06-11T19:59:33+00:00",
+              "ingested_at": "2025-05-27T03:53:16.220000+00:00"
+            }
+          },
+          {
+            "id": "00ad18f7d6201249e7ab54ad5571de6954c9f2b0dca3910d986980f02a6c4c95",
+            "data": {
+              "publication_date": "2021-06-03T18:31:49+00:00",
+              "ingested_at": "2025-05-27T03:53:56.661000+00:00"
+            }
+          },
+          {
+            "id": "01d51f47141e6f4f63ad11791108844af54a28fac057a0b24ee73102f8288977",
+            "data": {
+              "publication_date": "2021-05-13T17:09:35+00:00",
+              "ingested_at": "2025-05-27T03:56:27.941000+00:00"
+            }
+          }
+        ]
+      }
+    },
+    "raw_orders_in_council": {
+      "collection_name": "raw_orders_in_council",
+      "total_documents": 3200,
+      "status_breakdown": {
+        "pending_evidence_creation": 3070,
+        "evidence_created": 48,
+        "skipped_low_relevance_score": 82
+      },
+      "unprocessed_count": 3070,
+      "error_count": 0,
+      "issues": [
+        "3070 unprocessed items"
+      ],
+      "status": "has_unprocessed",
+      "ingestion_script": "ingest_oic.py",
+      "processing_script": "process_oic_to_evidence.py",
+      "sample_documents": {
+        "pending_evidence_creation": [
+          {
+            "id": "2003-0305",
+            "data": {
+              "ingested_at": "2025-05-26T19:46:51.477000+00:00"
+            }
+          },
+          {
+            "id": "2010-0666",
+            "data": {
+              "ingested_at": "2025-05-26T18:14:43.283000+00:00"
+            }
+          },
+          {
+            "id": "2013-0792",
+            "data": {
+              "ingested_at": "2025-05-26T20:06:18.496000+00:00"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "overall_summary": {
+    "total_collections_checked": 4,
+    "healthy_collections": 0,
+    "collections_with_issues": 4,
+    "ready_for_migration": false
+  },
+  "recommendations": [
+    "\u26a0\ufe0f Found issues in 4 collections before migration",
+    "\u26a0\ufe0f raw_gazette_p2_notices: 47 unprocessed items - run process_gazette_p2_to_evidence.py to process them",
+    "\ud83d\udd27 raw_legisinfo_bill_details: 1 items with errors - investigate and potentially reprocess with --force_reprocessing",
+    "\u26a0\ufe0f raw_news_releases: 3474 unprocessed items - run process_news_to_evidence.py to process them",
+    "\ud83d\udd27 raw_news_releases: 2 items with errors - investigate and potentially reprocess with --force_reprocessing",
+    "\ud83d\udd0d raw_news_releases: 2146 items missing status field - may need data cleanup or script updates",
+    "\u26a0\ufe0f raw_orders_in_council: 3070 unprocessed items - run process_oic_to_evidence.py to process them",
+    "\ud83d\udcca Total unprocessed items across all collections: 6591",
+    "\ud83d\udea8 Total error items across all collections: 3",
+    "\ud83c\udfaf Recommendation: Address these issues before proceeding with migration"
+  ]
+}
