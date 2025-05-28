@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
 """
+DEPRECATED: Enhanced Evidence-Promise Linking Script
+
+⚠️  DEPRECATION NOTICE ⚠️
+This script has been DEPRECATED as of 2025-05-28.
+The enhanced evidence-promise linking algorithm has been fully integrated into:
+- PromiseTracker/scripts/consolidated_evidence_linking.py
+
+Please use the consolidated script instead for all evidence linking operations.
+
+This file is kept for reference only and will be removed in a future version.
+
+---
+
 Enhanced Evidence-Promise Linking Script
 
 This script implements the enhanced evidence-promise linking algorithm with:
@@ -48,6 +61,9 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger("enhanced_evidence_linking")
+
+# Show deprecation warning
+logger.warning("⚠️  DEPRECATION WARNING: This script is deprecated. Use consolidated_evidence_linking.py instead.")
 
 # Firebase Configuration
 db = None
