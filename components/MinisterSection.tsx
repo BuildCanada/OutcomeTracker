@@ -73,18 +73,6 @@ export default function MinisterSection({
   const ministerName = ministerInfo?.name || DEFAULT_MINISTER_NAME;
   const ministerTitle = ministerInfo?.title || DEFAULT_MINISTER_TITLE;
   const avatarUrl = ministerInfo?.avatarUrl;
-  const positionStart = ministerInfo?.positionStart;
-  const positionEnd = ministerInfo?.positionEnd;
-
-  let tenureString = "";
-  const formattedStartDate = formatDate(positionStart);
-  const formattedEndDate = formatDate(positionEnd);
-
-  if (formattedStartDate && formattedEndDate) {
-    tenureString = `${formattedStartDate} - ${formattedEndDate}`;
-  } else if (formattedStartDate) {
-    tenureString = `Since ${formattedStartDate}`;
-  }
 
   const getFallbackInitials = (name: string) => {
     if (name === DEFAULT_MINISTER_NAME) return DEFAULT_AVATAR_FALLBACK_INITIALS;
@@ -220,7 +208,7 @@ export default function MinisterSection({
         <div>
           <h2 className="text-3xl">{ministerName}</h2>
           <p className="mt-1 text-sm font-mono">
-            {ministerTitle}, {tenureString}
+            {ministerTitle}
           </p>
         </div>
       </div>
