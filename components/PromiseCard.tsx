@@ -306,7 +306,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                 {promise.concise_title}
               </div>
               <div className="text-sm text-gray-600 line-clamp-2">
-                {promise.background_and_context}
+                {promise.description}
               </div>
             </div>
             {/* Impact and Alignment - Column 3 */}

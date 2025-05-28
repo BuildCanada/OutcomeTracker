@@ -118,6 +118,7 @@ export interface PromiseData {
   bc_promise_rank_rationale?: string;
   bc_promise_direction?: string;
   concise_title?: string;
+  description?: string;
   what_it_means_for_canadians?: string;
   intended_impact_and_objectives?: string;
   background_and_context?: string;

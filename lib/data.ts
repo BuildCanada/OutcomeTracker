@@ -174,6 +174,7 @@ export async function fetchPromisesForDepartment(
             
             // Explanation fields
             concise_title: data.concise_title ?? undefined,
+            description: data.description ?? undefined,
             what_it_means_for_canadians: data.what_it_means_for_canadians ?? undefined,
             intended_impact_and_objectives: data.intended_impact_and_objectives ?? undefined,
             background_and_context: data.background_and_context ?? undefined,
@@ -818,6 +819,7 @@ export async function fetchPromisesSummary(
             bc_promise_rank: data.bc_promise_rank,
             bc_promise_direction: data.bc_promise_direction,
             concise_title: data.concise_title,
+            description: data.description,
             linked_evidence_ids: data.linked_evidence_ids || [],
             source_type: data.source_type,
             commitment_history_rationale: data.commitment_history_rationale || [],
