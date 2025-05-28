@@ -173,7 +173,7 @@ def create_consolidated_promise_record(promise_data, source_type, base_release_d
     
     return promise_record
 
-def process_csv_file(csv_file_path, source_type, base_release_date, collection_name="promises", dry_run=False):
+def process_csv_file(csv_file_path, source_type, base_release_date, collection_name="promises_test", dry_run=False):
     """Process a CSV file containing consolidated promise data."""
     
     # Note: Parliament session will be determined per promise based on actual release date
@@ -312,7 +312,7 @@ def main():
     parser.add_argument('--csv_file', required=True, help='Path to CSV file containing consolidated promise data')
     parser.add_argument('--source_type', required=True, help='Source type (e.g., "2025 LPC Consolidated")')
     parser.add_argument('--release_date', required=True, help='Release date in YYYY-MM-DD format')
-    parser.add_argument('--collection_name', default='promises', help='Firestore collection name (default: promises_test)')
+    parser.add_argument('--collection_name', default='promises_test', help='Firestore collection name (default: promises_test)')
     parser.add_argument('--dry_run', action='store_true', help='Run without making changes to Firestore')
     
     args = parser.parse_args()

@@ -51,7 +51,7 @@ RSS_FEEDS_TO_MONITOR = {
 
 RAW_NEWS_RELEASES_COLLECTION = "raw_news_releases"
 DEFAULT_PAGE_SIZE = 100
-DEFAULT_START_DATE_STR = "2025-03-14"
+DEFAULT_START_DATE_STR = "2021-11-21"  # Start of 44th Parliament
 # Define JSON_OUTPUT_DIR relative to the script's location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 JSON_OUTPUT_DIR = os.path.join(SCRIPT_DIR, "..", "JSON_outputs") # Corrected path

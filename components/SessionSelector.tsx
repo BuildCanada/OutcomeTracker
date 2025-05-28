@@ -46,7 +46,7 @@ const SessionSelector: React.FC = () => {
       >
         {currentSessionId === null && !isLoadingCurrentSession && <option value="" disabled>Select a session</option>}
         {sessions.map((session) => (
-          <option key={session.id} value={session.parliament_number}>
+          <option key={session.id} value={session.id}>
             {session.session_label} (Parl: {session.parliament_number})
           </option>
         ))}

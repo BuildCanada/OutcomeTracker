@@ -45,7 +45,7 @@ logger = logging.getLogger("process_raw_gazette_to_evidence")
 
 # --- Constants ---
 RAW_GAZETTE_P2_NOTICES_COLLECTION = "raw_gazette_p2_notices"
-EVIDENCE_ITEMS_COLLECTION = "evidence_items"
+EVIDENCE_ITEMS_COLLECTION = "evidence_items_test"
 DEFAULT_PROCESS_LIMIT = 10
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 DEFAULT_JSON_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'JSON_outputs', 'gazette_p2_processing')

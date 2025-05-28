@@ -81,8 +81,8 @@ if db is None:
     exit("Exiting: Firestore client not available.")
 
 # Constants
-PROMISES_COLLECTION_ROOT = os.getenv("TARGET_PROMISES_COLLECTION", "promises")
-EVIDENCE_COLLECTION_ROOT = os.getenv("TARGET_EVIDENCE_COLLECTION", "evidence_items")
+PROMISES_COLLECTION_ROOT = os.getenv("TARGET_PROMISES_COLLECTION", "promises_test")
+EVIDENCE_COLLECTION_ROOT = os.getenv("TARGET_EVIDENCE_COLLECTION", "evidence_items_test")
 RATE_LIMIT_DELAY_SECONDS = 1
 
 class ConsolidatedEvidenceLinking:

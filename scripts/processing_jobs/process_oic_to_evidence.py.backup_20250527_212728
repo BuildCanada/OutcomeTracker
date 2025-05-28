@@ -40,7 +40,7 @@ logger = logging.getLogger("process_raw_oic_to_evidence")
 
 # --- Constants ---
 RAW_OIC_COLLECTION = "raw_orders_in_council"
-EVIDENCE_ITEMS_COLLECTION = "evidence_items" # Target evidence collection
+EVIDENCE_ITEMS_COLLECTION = "evidence_items_test" # Target evidence collection
 DEPARTMENT_CONFIG_COLLECTION = "department_config"
 DEFAULT_JSON_OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'JSON_outputs', 'oic_processing')
 PROMPT_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'prompts', 'prompt_oic_evidence.md'))
@@ -325,8 +325,7 @@ async def process_pending_raw_oics(db_client, dry_run=False, output_to_json=Fals
                     raw_oic_data['parliament_session_id_assigned'] = current_parliament_session_id
             # If still no session ID, it will be None or empty in the prompt
 
-            title_preview = raw_oic_data.get('title_or_summary_raw') or ''
-            logger.info(f"Processing raw OIC: {raw_oic_id} - Title: {title_preview[:50]}...")
+            logger.info(f"Processing raw OIC: {raw_oic_id} - Title: {raw_oic_data.get('title_or_summary_raw', '')[:50]}...")
             processed_count += 1
 
             try:

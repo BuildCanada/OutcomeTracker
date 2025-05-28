@@ -42,14 +42,14 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
   const [isLoadingCurrentSession, setIsLoadingCurrentSession] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all available parliamentary sessions
+  // Fetch all available parliamentary sessions and current session from global config
   useEffect(() => {
     if (!db) {
       setError("Firestore not initialized. Ensure @/lib/firebase is configured correctly.");
       setIsLoadingSessions(false);
       return;
     }
-    const fetchSessions = async () => {
+    const fetchSessionsAndCurrentConfig = async () => {
       setIsLoadingSessions(true);
       setError(null);
       try {
@@ -58,6 +58,8 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
             setIsLoadingSessions(false);
             return;
         }
+        
+        // Fetch all sessions
         const sessionsCollection = collection(db, 'parliament_session');
         const snapshot = await getDocs(sessionsCollection);
         const fetchedSessions: ParliamentSession[] = snapshot.docs.map(docSnap => ({
@@ -68,13 +70,35 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
         fetchedSessions.sort((a, b) => parseInt(b.parliament_number, 10) - parseInt(a.parliament_number, 10));
         setSessions(fetchedSessions);
         
-        // Set the current session to the one marked as current_for_tracking
-        const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
-        if (currentSession) {
-          setCurrentSessionId(currentSession.id);
-        } else if (fetchedSessions.length > 0) {
-          // Fallback to the most recent session
-          setCurrentSessionId(fetchedSessions[0].id);
+        // Try to get current session from global config first
+        try {
+          const globalConfigDoc = await getDoc(doc(db, 'admin_settings', 'global_config'));
+          if (globalConfigDoc.exists() && globalConfigDoc.data()?.current_selected_parliament_session) {
+            const configSessionId = String(globalConfigDoc.data()?.current_selected_parliament_session);
+            setCurrentSessionId(configSessionId);
+            console.log(`[SessionContext] Loaded current session from global config: ${configSessionId}`);
+          } else {
+            // Fallback to the session marked as current_for_tracking
+            const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
+            if (currentSession) {
+              setCurrentSessionId(currentSession.id);
+              console.log(`[SessionContext] Fallback to is_current_for_tracking session: ${currentSession.id}`);
+            } else if (fetchedSessions.length > 0) {
+              // Final fallback to the most recent session
+              setCurrentSessionId(fetchedSessions[0].id);
+              console.log(`[SessionContext] Final fallback to most recent session: ${fetchedSessions[0].id}`);
+            }
+          }
+        } catch (configError: any) {
+          console.warn("[SessionContext] Error fetching global config, using fallback:", configError);
+          // Fallback to the session marked as current_for_tracking
+          const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
+          if (currentSession) {
+            setCurrentSessionId(currentSession.id);
+          } else if (fetchedSessions.length > 0) {
+            // Final fallback to the most recent session
+            setCurrentSessionId(fetchedSessions[0].id);
+          }
         }
       } catch (e: any) {
         console.error("Error fetching sessions:", e);
@@ -82,20 +106,46 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
       }
       setIsLoadingSessions(false);
     };
-    fetchSessions();
+    fetchSessionsAndCurrentConfig();
   }, []);
 
-  // Function to update the current session ID (client-side only for now)
+  // Function to update the current session ID and persist to global config
   const setCurrentSessionIdAndUpdateGlobal = useCallback(async (newSessionId: string) => {
     if (!newSessionId) {
         setError("Cannot set an empty session ID.");
         return;
     }
+    
+    setIsLoadingCurrentSession(true);
     setError(null);
-    // For now, just update the client-side state
-    // TODO: Implement server-side API to update admin settings
-    setCurrentSessionId(newSessionId);
-    console.log(`Session updated to: ${newSessionId}`);
+    
+    try {
+      // Call the API to update the global config
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          current_selected_parliament_session: newSessionId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to update session: ${response.statusText}`);
+      }
+
+      // Update the client-side state only after successful API call
+      setCurrentSessionId(newSessionId);
+      console.log(`[SessionContext] Session successfully updated to: ${newSessionId}`);
+      
+    } catch (e: any) {
+      console.error("[SessionContext] Error updating session:", e);
+      setError(`Failed to update session: ${e.message}`);
+    } finally {
+      setIsLoadingCurrentSession(false);
+    }
   }, []);
 
   return (
