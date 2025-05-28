@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import {
-  collection, getDocs, doc, getDoc, updateDoc, onSnapshot, DocumentData, Firestore
+  collection, getDocs, doc, updateDoc, onSnapshot, DocumentData, Firestore
 } from 'firebase/firestore';
 import { db, firebaseApp } from '@/lib/firebase'; // Import shared instance
 
@@ -70,27 +70,31 @@ export const SessionProvider: React.FC<SessionProviderProps> = ({ children }) =>
         fetchedSessions.sort((a, b) => parseInt(b.parliament_number, 10) - parseInt(a.parliament_number, 10));
         setSessions(fetchedSessions);
         
-        // Try to get current session from global config first
+        // Get current session from API endpoint instead of direct Firestore access
         try {
-          const globalConfigDoc = await getDoc(doc(db, 'admin_settings', 'global_config'));
-          if (globalConfigDoc.exists() && globalConfigDoc.data()?.current_selected_parliament_session) {
-            const configSessionId = String(globalConfigDoc.data()?.current_selected_parliament_session);
-            setCurrentSessionId(configSessionId);
-            console.log(`[SessionContext] Loaded current session from global config: ${configSessionId}`);
-          } else {
-            // Fallback to the session marked as current_for_tracking
-            const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
-            if (currentSession) {
-              setCurrentSessionId(currentSession.id);
-              console.log(`[SessionContext] Fallback to is_current_for_tracking session: ${currentSession.id}`);
-            } else if (fetchedSessions.length > 0) {
-              // Final fallback to the most recent session
-              setCurrentSessionId(fetchedSessions[0].id);
-              console.log(`[SessionContext] Final fallback to most recent session: ${fetchedSessions[0].id}`);
+          const response = await fetch('/api/admin/current-session');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.currentSessionId) {
+              setCurrentSessionId(data.currentSessionId);
+              console.log(`[SessionContext] Loaded current session from API: ${data.currentSessionId}`);
+            } else {
+              // Fallback to the session marked as current_for_tracking
+              const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
+              if (currentSession) {
+                setCurrentSessionId(currentSession.id);
+                console.log(`[SessionContext] Fallback to is_current_for_tracking session: ${currentSession.id}`);
+              } else if (fetchedSessions.length > 0) {
+                // Final fallback to the most recent session
+                setCurrentSessionId(fetchedSessions[0].id);
+                console.log(`[SessionContext] Final fallback to most recent session: ${fetchedSessions[0].id}`);
+              }
             }
+          } else {
+            throw new Error(`API request failed: ${response.statusText}`);
           }
-        } catch (configError: any) {
-          console.warn("[SessionContext] Error fetching global config, using fallback:", configError);
+        } catch (apiError: any) {
+          console.warn("[SessionContext] Error fetching current session from API, using fallback:", apiError);
           // Fallback to the session marked as current_for_tracking
           const currentSession = fetchedSessions.find(session => session.is_current_for_tracking);
           if (currentSession) {

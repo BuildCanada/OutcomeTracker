@@ -320,15 +320,29 @@ class ConsolidatedPromiseEnricher:
             
             if 'error' not in result:
                 self.stats['history_generated'] += 1
-                # Result should be a timeline array, convert to string for storage
+                # Store the timeline as an array of objects, not as a string
                 timeline = result if isinstance(result, list) else []
-                timeline_text = "\n".join([
-                    f"{item.get('date', 'Unknown date')}: {item.get('action', 'No action')}" 
-                    for item in timeline
-                ]) if timeline else "No relevant historical events found."
+                
+                # Ensure each timeline item has the required structure
+                formatted_timeline = []
+                for item in timeline:
+                    if isinstance(item, dict):
+                        formatted_timeline.append({
+                            "date": item.get('date', 'Unknown date'),
+                            "action": item.get('action', 'No action'),
+                            "source_url": item.get('source_url', '')
+                        })
+                    else:
+                        # Handle case where item might be a string or other format
+                        logger.warning(f"Unexpected timeline item format: {item}")
+                        formatted_timeline.append({
+                            "date": "Unknown date",
+                            "action": str(item),
+                            "source_url": ""
+                        })
                 
                 return {
-                    "commitment_history_rationale": timeline_text,
+                    "commitment_history_rationale": formatted_timeline,
                     "history_generated_at": firestore.SERVER_TIMESTAMP
                 }
             else:

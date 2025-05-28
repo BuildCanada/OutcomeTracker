@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { CopyIcon } from "lucide-react";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSession } from '@/context/SessionContext';
+import { fetchParliamentSessionDates } from '@/lib/data';
 
 interface PromiseModalProps {
   promise: PromiseData;
@@ -93,17 +95,87 @@ function getPieColor(progressScore: number): string {
 }
 
 export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalProps) {
-  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence } = promise;
+  const { text, commitment_history_rationale, date_issued, concise_title, what_it_means_for_canadians, intended_impact_and_objectives, background_and_context, progress_score = 0, progress_summary, evidence, linked_evidence_ids } = promise;
 
   const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
   const [isSharePopoverOpen, setIsSharePopoverOpen] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
+  const [loadedEvidence, setLoadedEvidence] = useState<EvidenceItem[]>(evidence || []);
+  const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
+  const [sessionStartDate, setSessionStartDate] = useState<string | null>(null);
+  const [sessionEndDate, setSessionEndDate] = useState<string | null>(null);
   const { toast } = useToast();
+  const { currentSessionId } = useSession();
+
+  // Fetch session dates when modal opens
+  useEffect(() => {
+    const fetchSessionDates = async () => {
+      if (!isOpen || !currentSessionId) return;
+      
+      try {
+        const sessionDates = await fetchParliamentSessionDates(currentSessionId);
+        if (sessionDates) {
+          setSessionStartDate(sessionDates.sessionStartDate);
+          setSessionEndDate(sessionDates.sessionEndDate);
+        }
+      } catch (error) {
+        console.error('Error fetching session dates:', error);
+      }
+    };
+
+    fetchSessionDates();
+  }, [isOpen, currentSessionId]);
+
+  // Load evidence when modal opens if not already loaded
+  useEffect(() => {
+    const loadEvidence = async () => {
+      if (!isOpen || !linked_evidence_ids || linked_evidence_ids.length === 0) {
+        return;
+      }
+
+      // If evidence is already loaded, use it
+      if (evidence && evidence.length > 0) {
+        setLoadedEvidence(evidence);
+        return;
+      }
+
+      // Otherwise, load evidence via API
+      setIsLoadingEvidence(true);
+      try {
+        const response = await fetch('/api/evidence', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            evidenceIds: linked_evidence_ids,
+            sessionStartDate,
+            sessionEndDate
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load evidence');
+        }
+
+        const data = await response.json();
+        setLoadedEvidence(data.evidenceItems || []);
+        console.log(`[PromiseModal] Loaded ${data.evidenceItems?.length || 0} evidence items for promise ${promise.id}`);
+      } catch (error) {
+        console.error('Error loading evidence:', error);
+        setLoadedEvidence([]);
+      } finally {
+        setIsLoadingEvidence(false);
+      }
+    };
+
+    loadEvidence();
+  }, [isOpen, linked_evidence_ids, evidence, sessionStartDate, sessionEndDate, promise.id]);
 
   // Get the last updated date from evidence items
-  const lastUpdateDate = evidence && evidence.length > 0 
+  const lastUpdateDate = loadedEvidence && loadedEvidence.length > 0 
     ? (() => {
-        const sorted = [...evidence].sort((a, b) => {
+        const sorted = [...loadedEvidence].sort((a, b) => {
           const getDateMillis = (dateInput: EvidenceItem['evidence_date']): number => {
             if (!dateInput) return NaN;
             let d: Date;
@@ -138,15 +210,6 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
         return formatDate(sorted[0].evidence_date);
       })()
     : null;
-
-  // ADDED: Log the received promise object, especially its evidence array
-  console.log("[PromiseModal Debug] Received promise:", promise);
-  if (promise && promise.evidence) {
-    console.log("[PromiseModal Debug] Promise evidence array:", promise.evidence);
-    console.log(`[PromiseModal Debug] Number of evidence items in modal: ${promise.evidence.length}`);
-  } else {
-    console.log("[PromiseModal Debug] Promise evidence array is missing or empty.");
-  }
 
   // Ensure promise object and its nested evidence array are available
   if (!promise) {
@@ -260,8 +323,20 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                <h3 className="text-xl font-bold text-[#222222] mb-4 flex items-center">
                   <CalendarIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
                   Timeline
+                  {isLoadingEvidence && (
+                    <span className="ml-2 text-sm text-gray-500 italic">Loading evidence...</span>
+                  )}
                 </h3>
-              <PromiseProgressTimeline promise={promise} /> 
+              {(() => {
+                return (
+                  <PromiseProgressTimeline 
+                    promise={{
+                      ...promise,
+                      evidence: loadedEvidence
+                    }} 
+                  />
+                );
+              })()}
             </section>
 
             {/* Background Section */}
@@ -291,8 +366,38 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                     </button>
                     {isRationaleExpanded && (
                       <div className="space-y-3 pl-2 border-l-2 border-gray-900">
-                        {commitment_history_rationale.map(
-                          (event: RationaleEvent, index: number) => (
+                        {(() => {
+                          // Handle both string and array formats during migration
+                          let events: RationaleEvent[] = [];
+                          
+                          if (typeof commitment_history_rationale === 'string') {
+                            // Parse string format: "2017-06-07: Action\n2019-09-10: Another action"
+                            const lines = (commitment_history_rationale as string).split('\n');
+                            events = lines
+                              .map((line: string) => line.trim())
+                              .filter((line: string) => line.length > 0)
+                              .map((line: string) => {
+                                const dateMatch = line.match(/^(\d{4}-\d{2}-\d{2}):\s*(.+)$/);
+                                if (dateMatch) {
+                                  return {
+                                    date: dateMatch[1],
+                                    action: dateMatch[2].trim(),
+                                    source_url: ''
+                                  };
+                                } else {
+                                  return {
+                                    date: 'Unknown date',
+                                    action: line,
+                                    source_url: ''
+                                  };
+                                }
+                              });
+                          } else if (Array.isArray(commitment_history_rationale)) {
+                            // Already in correct array format
+                            events = commitment_history_rationale;
+                          }
+                          
+                          return events.map((event: RationaleEvent, index: number) => (
                             <div
                               key={index}
                               className="border p-3 bg-gray-50"
@@ -301,17 +406,19 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                                 {formatSimpleDate(event.date)}
                               </p>
                               <p className="text-sm text-[#333333] mb-1 break-words">{event.action}</p>
-                              <a
-                                href={event.source_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
-                              >
-                                <LinkIcon className="mr-1 h-3 w-3" /> Source
-                              </a>
+                              {event.source_url && (
+                                <a
+                                  href={event.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-[#0056b3] font-mono hover:underline inline-flex items-center"
+                                >
+                                  <LinkIcon className="mr-1 h-3 w-3" /> Source
+                                </a>
+                              )}
                             </div>
-                          ),
-                        )}
+                          ));
+                        })()}
                       </div>
                     )}
                   </div>

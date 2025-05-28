@@ -33,6 +33,7 @@ import type {
  * @param governingPartyCode The party code (e.g., "LPC", "CPC")
  * @param regionCode The region code (default: "Canada")
  * @param effectiveDepartmentFullNameOverride Override for department name matching
+ * @param options Optional parameters for pagination and performance
  * @returns An array of PromiseData objects, with linked evidence included.
  */
 export async function fetchPromisesForDepartment(
@@ -40,7 +41,12 @@ export async function fetchPromisesForDepartment(
   parliamentSessionId: string | null,
   governingPartyCode: string | null,
   regionCode: string = "Canada",
-  effectiveDepartmentFullNameOverride?: string
+  effectiveDepartmentFullNameOverride?: string,
+  options: {
+    limit?: number;
+    includeEvidence?: boolean;
+    offset?: number;
+  } = {}
 ): Promise<PromiseData[]> {
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchPromisesForDepartment.");
@@ -64,79 +70,148 @@ export async function fetchPromisesForDepartment(
 
   const departmentNameToQuery = effectiveDepartmentFullNameOverride || departmentFullName;
 
+  // Try to find the ministerial title from department configs
+  let ministerialTitle = departmentNameToQuery;
+  let nameVariantsToTry: string[] = [departmentNameToQuery];
+  
+  try {
+    const departmentConfigs = await fetchDepartmentConfigs();
+    const matchingConfig = departmentConfigs.find(config => 
+      config.official_full_name === departmentNameToQuery
+    );
+    
+    if (matchingConfig && matchingConfig.name_variants && matchingConfig.name_variants.length > 0) {
+      // Add all name variants to try, including different cases
+      nameVariantsToTry = [
+        departmentNameToQuery,
+        ...matchingConfig.name_variants,
+        // Try title case versions (proper title case with lowercase articles/prepositions)
+        ...matchingConfig.name_variants.map(variant => 
+          variant.split(' ').map(word => {
+            // Handle special cases for proper title casing
+            if (word.toLowerCase() === 'and' || word.toLowerCase() === 'of' || word.toLowerCase() === 'the') {
+              return word.toLowerCase();
+            }
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          }).join(' ')
+        ),
+        // Also try versions where ALL words are capitalized (in case the above doesn't work)
+        ...matchingConfig.name_variants.map(variant => 
+          variant.split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          ).join(' ')
+        )
+      ];
+      console.log(`[fetchPromisesForDepartment] Will try these ministerial titles for "${departmentNameToQuery}":`, nameVariantsToTry);
+    }
+  } catch (error) {
+    console.error(`[fetchPromisesForDepartment] Error fetching department configs:`, error);
+    // Continue with original name if config fetch fails
+  }
+
   console.log(`Fetching promises for department: ${departmentNameToQuery}, session: ${parliamentSessionId}, party: ${governingPartyCode}, region: ${regionCode}`);
+  
+  const { limit: queryLimit = 20, includeEvidence = false, offset = 0 } = options;
+  console.log(`[fetchPromisesForDepartment] Options: limit=${queryLimit}, includeEvidence=${includeEvidence}, offset=${offset}`);
   
   try {
     // Query the flat promises collection with filters
     const promisesCol = collection(db, "promises");
     
-    let q = query(
-      promisesCol,
-      where('responsible_department_lead', '==', departmentNameToQuery),
-      where('parliament_session_id', '==', parliamentSessionId),
-      where('party_code', '==', governingPartyCode),
-      where('region_code', '==', regionCode),
-      where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"])
-    );
+    // Try each name variant until we find results
+    for (const titleToTry of nameVariantsToTry) {
+      console.log(`[fetchPromisesForDepartment] Trying ministerial title: "${titleToTry}"`);
+      
+      let q = query(
+        promisesCol,
+        where('responsible_department_lead', '==', titleToTry),
+        where('parliament_session_id', '==', parliamentSessionId),
+        where('party_code', '==', governingPartyCode),
+        where('region_code', '==', regionCode),
+        where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"])
+      );
 
-    // Apply date filters if session dates are available
-    if (sessionStartDate) {
-      q = query(q, where('date_issued', '>=', sessionStartDate));
-      console.log(`Applied start date filter: date_issued >= ${sessionStartDate}`);
-    }
-    if (sessionEndDate) {
-      q = query(q, where('date_issued', '<=', sessionEndDate));
-      console.log(`Applied end date filter: date_issued <= ${sessionEndDate}`);
-    }
-
-    const finalQuery = q.withConverter<PromiseData>({
-      toFirestore: (data: PromiseData) => data, // Not used for reads
-      fromFirestore: (snapshot, options) => {
-        const data = snapshot.data(options);
-        return {
-          id: snapshot.id,
-          text: data.text || '',
-          responsible_department_lead: data.responsible_department_lead || '',
-          commitment_history_rationale: data.commitment_history_rationale || [],
-          date_issued: data.date_issued || undefined,
-          linked_evidence_ids: data.linked_evidence_ids || [],
-          parliament_session_id: data.parliament_session_id || undefined,
-          progress_score: data.progress_score ?? undefined,
-          progress_summary: data.progress_summary ?? undefined,
-          bc_promise_rank: data.bc_promise_rank ?? undefined,
-          bc_promise_rank_rationale: data.bc_promise_rank_rationale ?? undefined,
-          bc_promise_direction: data.bc_promise_direction ?? undefined,
-          evidence: [], // Will be populated later
-          
-          // New flat structure fields
-          region_code: data.region_code || undefined,
-          party_code: data.party_code || undefined,
-          migration_metadata: data.migration_metadata || undefined,
-          
-          // Explanation fields
-          concise_title: data.concise_title ?? undefined,
-          what_it_means_for_canadians: data.what_it_means_for_canadians ?? undefined,
-          intended_impact_and_objectives: data.intended_impact_and_objectives ?? undefined,
-          background_and_context: data.background_and_context ?? undefined,
-        } as PromiseData;
+      // Apply date filters if session dates are available
+      if (sessionStartDate) {
+        q = query(q, where('date_issued', '>=', sessionStartDate));
+        console.log(`Applied start date filter: date_issued >= ${sessionStartDate}`);
       }
-    });
-
-    const querySnapshot = await getDocs(finalQuery);
-    const promisesWithEvidence: PromiseData[] = [];
-
-    for (const docSnapshot of querySnapshot.docs) {
-      const promise = docSnapshot.data(); // Use the converted data directly
-
-      if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
-        // Pass session dates to the evidence fetching function
-        promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids, sessionStartDate, sessionEndDate);
+      if (sessionEndDate) {
+        q = query(q, where('date_issued', '<=', sessionEndDate));
+        console.log(`Applied end date filter: date_issued <= ${sessionEndDate}`);
       }
-      promisesWithEvidence.push(promise);
+
+      // Add ordering and pagination
+      q = query(q, orderBy('date_issued', 'desc'), limit(queryLimit));
+      
+      // Note: Firestore doesn't support offset directly, we'd need to use cursor-based pagination
+      // For now, we'll implement a simple limit-based approach
+
+      const finalQuery = q.withConverter<PromiseData>({
+        toFirestore: (data: PromiseData) => data, // Not used for reads
+        fromFirestore: (snapshot, options) => {
+          const data = snapshot.data(options);
+          return {
+            id: snapshot.id,
+            text: data.text || '',
+            responsible_department_lead: data.responsible_department_lead || '',
+            commitment_history_rationale: data.commitment_history_rationale || [],
+            date_issued: data.date_issued || undefined,
+            linked_evidence_ids: data.linked_evidence_ids || [],
+            parliament_session_id: data.parliament_session_id || undefined,
+            progress_score: data.progress_score ?? undefined,
+            progress_summary: data.progress_summary ?? undefined,
+            bc_promise_rank: data.bc_promise_rank ?? undefined,
+            bc_promise_rank_rationale: data.bc_promise_rank_rationale ?? undefined,
+            bc_promise_direction: data.bc_promise_direction ?? undefined,
+            evidence: [], // Will be populated later
+            
+            // New flat structure fields
+            region_code: data.region_code || undefined,
+            party_code: data.party_code || undefined,
+            migration_metadata: data.migration_metadata || undefined,
+            source_type: data.source_type || undefined,
+            
+            // Explanation fields
+            concise_title: data.concise_title ?? undefined,
+            what_it_means_for_canadians: data.what_it_means_for_canadians ?? undefined,
+            intended_impact_and_objectives: data.intended_impact_and_objectives ?? undefined,
+            background_and_context: data.background_and_context ?? undefined,
+          } as PromiseData;
+        }
+      });
+
+      const querySnapshot = await getDocs(finalQuery);
+      
+      if (querySnapshot.docs.length > 0) {
+        console.log(`[fetchPromisesForDepartment] Found ${querySnapshot.docs.length} promises using title: "${titleToTry}"`);
+        ministerialTitle = titleToTry; // Remember which title worked
+        
+        const promisesWithEvidence: PromiseData[] = [];
+
+        for (const docSnapshot of querySnapshot.docs) {
+          const promise = docSnapshot.data(); // Use the converted data directly
+
+          if (includeEvidence && promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
+            // Pass session dates to the evidence fetching function
+            promise.evidence = await fetchEvidenceItemsByIds(promise.linked_evidence_ids, sessionStartDate, sessionEndDate);
+          } else {
+            // Don't load evidence by default for better performance
+            promise.evidence = [];
+          }
+          promisesWithEvidence.push(promise);
+        }
+        
+        console.log(`Found ${promisesWithEvidence.length} promises for ${departmentNameToQuery} using ministerial title: ${ministerialTitle}`);
+        return promisesWithEvidence;
+      } else {
+        console.log(`[fetchPromisesForDepartment] No promises found using title: "${titleToTry}"`);
+      }
     }
     
-    console.log(`Found ${promisesWithEvidence.length} promises for ${departmentNameToQuery}`);
-    return promisesWithEvidence;
+    // If we get here, none of the variants returned results
+    console.warn(`No promises found for ${departmentNameToQuery} using any of the tried ministerial titles:`, nameVariantsToTry);
+    return [];
   } catch (error) {
     console.error(`Error fetching promises for ${departmentFullName}:`, error);
     if (error instanceof FirestoreError) {
@@ -403,7 +478,20 @@ const sanitizeFullNameForDocId = (name: string): string => {
  * Fetches the list of department configurations from Firestore.
  * These are used to populate the main navigation tabs.
  */
+
+// Simple in-memory cache for department configs
+let departmentConfigsCache: DepartmentConfig[] | null = null;
+let departmentConfigsCacheTime: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export const fetchDepartmentConfigs = async (): Promise<DepartmentConfig[]> => {
+  // Check cache first
+  const now = Date.now();
+  if (departmentConfigsCache && (now - departmentConfigsCacheTime) < CACHE_DURATION) {
+    console.log("Returning cached department configs");
+    return departmentConfigsCache;
+  }
+
   if (!db) {
     console.error("Firestore instance (db) is not available in fetchDepartmentConfigs.");
     return [];
@@ -415,13 +503,20 @@ export const fetchDepartmentConfigs = async (): Promise<DepartmentConfig[]> => {
       id: doc.id,
       ...(doc.data() as Omit<DepartmentConfig, "id">),
     }));
-    console.log("Fetched department configs:", departments);
-    return departments.sort((a, b) => {
+    
+    const sortedDepartments = departments.sort((a, b) => {
       // Ensure properties exist and are strings, providing a fallback.
       const nameA = (a && typeof a.display_short_name === 'string') ? a.display_short_name : "";
       const nameB = (b && typeof b.display_short_name === 'string') ? b.display_short_name : "";
       return nameA.localeCompare(nameB);
     });
+    
+    // Update cache
+    departmentConfigsCache = sortedDepartments;
+    departmentConfigsCacheTime = now;
+    
+    console.log("Fetched and cached department configs:", sortedDepartments.length);
+    return sortedDepartments;
   } catch (error) {
     console.error("Error fetching department configs:", error);
     if (error instanceof FirestoreError) {
@@ -651,4 +746,100 @@ export const fetchEvidenceItemsByIds = async (
     }
     return [];
   }
-}; 
+};
+
+/**
+ * Fetches a lightweight summary of promises for faster initial page loads.
+ * Only includes essential fields, no evidence items.
+ * @param departmentFullName The full name of the department
+ * @param parliamentSessionId The parliament session ID
+ * @param governingPartyCode The party code
+ * @param regionCode The region code
+ * @param maxResults Maximum number of promises to return
+ * @returns Array of lightweight PromiseData objects
+ */
+export async function fetchPromisesSummary(
+  departmentFullName: string,
+  parliamentSessionId: string | null,
+  governingPartyCode: string | null,
+  regionCode: string = "Canada",
+  maxResults: number = 10
+): Promise<Partial<PromiseData>[]> {
+  if (!db || !parliamentSessionId || !governingPartyCode) {
+    return [];
+  }
+
+  try {
+    const departmentConfigs = await fetchDepartmentConfigs();
+    const matchingConfig = departmentConfigs.find(config => 
+      config.official_full_name === departmentFullName
+    );
+    
+    let nameVariantsToTry: string[] = [departmentFullName];
+    if (matchingConfig?.name_variants) {
+      nameVariantsToTry = [
+        departmentFullName,
+        ...matchingConfig.name_variants.map(variant => 
+          variant.split(' ').map(word => {
+            if (word.toLowerCase() === 'and' || word.toLowerCase() === 'of' || word.toLowerCase() === 'the') {
+              return word.toLowerCase();
+            }
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          }).join(' ')
+        )
+      ];
+    }
+
+    const promisesCol = collection(db, "promises");
+    
+    for (const titleToTry of nameVariantsToTry) {
+      const q = query(
+        promisesCol,
+        where('responsible_department_lead', '==', titleToTry),
+        where('parliament_session_id', '==', parliamentSessionId),
+        where('party_code', '==', governingPartyCode),
+        where('region_code', '==', regionCode),
+        where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"]),
+        orderBy('date_issued', 'desc'),
+        limit(maxResults)
+      );
+
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.docs.length > 0) {
+        const summaries = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            text: data.text || '',
+            responsible_department_lead: data.responsible_department_lead || '',
+            date_issued: data.date_issued,
+            progress_score: data.progress_score,
+            bc_promise_rank: data.bc_promise_rank,
+            bc_promise_direction: data.bc_promise_direction,
+            concise_title: data.concise_title,
+            linked_evidence_ids: data.linked_evidence_ids || [],
+            source_type: data.source_type,
+            commitment_history_rationale: data.commitment_history_rationale || [],
+            background_and_context: data.background_and_context,
+            what_it_means_for_canadians: data.what_it_means_for_canadians,
+            intended_impact_and_objectives: data.intended_impact_and_objectives,
+            progress_summary: data.progress_summary,
+            parliament_session_id: data.parliament_session_id,
+            party_code: data.party_code,
+            region_code: data.region_code,
+            evidence: [] // Empty for performance
+          };
+        });
+        
+        console.log(`[fetchPromisesSummary] Found ${summaries.length} promise summaries for ${departmentFullName}`);
+        return summaries;
+      }
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`Error fetching promise summaries for ${departmentFullName}:`, error);
+    return [];
+  }
+} 

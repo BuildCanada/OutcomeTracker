@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MinisterSection from "@/components/MinisterSection";
 import {
   fetchPromisesForDepartment,
+  fetchPromisesSummary,
   // fetchEvidenceItemsForPromises // This seems unused now, consider removing if not needed elsewhere
 } from "@/lib/data";
 import type {
@@ -54,6 +55,10 @@ export default function HomePageClient({
   // isLoadingConfig is effectively handled by server component rendering or suspense
   const [isLoadingTabData, setIsLoadingTabData] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(initialError || null);
+  
+  // New state for performance optimization
+  const [isShowingSummary, setIsShowingSummary] = useState<boolean>(true);
+  const [isLoadingFullData, setIsLoadingFullData] = useState<boolean>(false);
 
   // Effect to set currentMinisterInfo based on activeTabId and cached ministerInfos
   useEffect(() => {
@@ -157,31 +162,26 @@ export default function HomePageClient({
             effectiveDepartmentFullNameOverride = finalMinisterInfoToUse.effectiveDepartmentOfficialFullName;
         }
         
-        console.log(`[HomePageClient] Fetching promises for dept: ${departmentFullName}, session: ${currentSessionId}, party: ${currentGoverningPartyCode}, override: ${effectiveDepartmentFullNameOverride}`);
-        const promisesForDept = await fetchPromisesForDepartment(
-          departmentFullName, 
+        console.log(`[HomePageClient] Fetching promise summary for dept: ${departmentFullName}, session: ${currentSessionId}, party: ${currentGoverningPartyCode}, override: ${effectiveDepartmentFullNameOverride}`);
+        
+        // First, load a lightweight summary for faster initial page load
+        const promiseSummaries = await fetchPromisesSummary(
+          effectiveDepartmentFullNameOverride || departmentFullName, 
           currentSessionId, 
           currentGoverningPartyCode,
-          effectiveDepartmentFullNameOverride
+          "Canada",
+          10 // Initial limit for fast loading
         );
         
-        const allEvidenceItemsForDeptFlat = promisesForDept.reduce((acc, promise) => {
-          if (promise.evidence) {
-            promise.evidence.forEach(ev => {
-              if (!acc.find(existingEv => existingEv.id === ev.id)) acc.push(ev);
-            });
-          }
-          return acc;
-        }, [] as EvidenceItem[]);
+        if (activeTabId !== thisTabId) return; // Tab changed during fetch, abort
 
-        if (activeTabId !== thisTabId) return; // Tab changed during promise fetch, abort
-
-        console.log(`[HomePageClient] Setting active department data for ${thisTabId} with minister:`, finalMinisterInfoToUse?.name, `and ${promisesForDept.length} promises.`);
+        console.log(`[HomePageClient] Setting active department data for ${thisTabId} with minister:`, finalMinisterInfoToUse?.name, `and ${promiseSummaries.length} promise summaries.`);
         setActiveDepartmentData({
           ministerInfo: finalMinisterInfoToUse,
-          promises: promisesForDept,
-          evidenceItems: allEvidenceItemsForDeptFlat
+          promises: promiseSummaries as PromiseData[], // Type assertion since we know the structure
+          evidenceItems: [] // Empty for performance, will load on demand
         });
+        setIsShowingSummary(true); // Mark that we're showing summary data
 
       } catch (err: any) {
         if (activeTabId !== thisTabId) return; // Tab changed
@@ -196,6 +196,67 @@ export default function HomePageClient({
 
     loadDataForActiveTab();
   }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, error]);
+
+  // Function to load full data with evidence when needed
+  const loadFullData = useCallback(async () => {
+    if (!activeTabId || !currentSessionId || !currentGoverningPartyCode || isLoadingFullData) {
+      return;
+    }
+
+    const selectedConfig = allDepartmentConfigs.find(c => c.id === activeTabId);
+    if (!selectedConfig || selectedConfig.is_prime_minister) {
+      return; // No promises for PM
+    }
+
+    setIsLoadingFullData(true);
+    
+    try {
+      const departmentFullName = selectedConfig.official_full_name;
+      let effectiveDepartmentFullNameOverride: string | undefined = undefined;
+      
+      const ministerInfo = ministerInfos[activeTabId];
+      if (ministerInfo && 
+          ministerInfo.effectiveDepartmentOfficialFullName &&
+          ministerInfo.effectiveDepartmentId !== selectedConfig.id) {
+          effectiveDepartmentFullNameOverride = ministerInfo.effectiveDepartmentOfficialFullName;
+      }
+      
+      console.log(`[HomePageClient] Loading full promise data for ${departmentFullName}`);
+      const fullPromises = await fetchPromisesForDepartment(
+        departmentFullName,
+        currentSessionId,
+        currentGoverningPartyCode,
+        "Canada",
+        effectiveDepartmentFullNameOverride,
+        {
+          limit: 50, // Load more promises
+          includeEvidence: true, // Include evidence
+          offset: 0
+        }
+      );
+      
+      const allEvidenceItemsFlat = fullPromises.reduce((acc, promise) => {
+        if (promise.evidence) {
+          promise.evidence.forEach(ev => {
+            if (!acc.find(existingEv => existingEv.id === ev.id)) acc.push(ev);
+          });
+        }
+        return acc;
+      }, [] as EvidenceItem[]);
+
+      setActiveDepartmentData(prev => prev ? {
+        ...prev,
+        promises: fullPromises,
+        evidenceItems: allEvidenceItemsFlat
+      } : null);
+      setIsShowingSummary(false);
+      
+    } catch (error) {
+      console.error('Error loading full data:', error);
+    } finally {
+      setIsLoadingFullData(false);
+    }
+  }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, isLoadingFullData]);
 
   // Actual JSX rendering for the client component
   return (
@@ -251,12 +312,29 @@ export default function HomePageClient({
                           {`Error loading data for ${dept.display_short_name}: ${error}`}
                         </div>
                       ) : activeDepartmentData && activeDepartmentData.ministerInfo !== undefined ? (
-                        <MinisterSection 
-                          departmentPageData={activeDepartmentData}
-                          departmentSlug={dept.department_slug}
-                          departmentFullName={dept.official_full_name}
-                          departmentShortName={dept.display_short_name}
-                        />
+                        <>
+                          <MinisterSection 
+                            departmentPageData={activeDepartmentData}
+                            departmentSlug={dept.department_slug}
+                            departmentFullName={dept.official_full_name}
+                            departmentShortName={dept.display_short_name}
+                          />
+                          {/* Load More Button for Summary Data */}
+                          {isShowingSummary && !dept.is_prime_minister && activeDepartmentData.promises.length >= 10 && (
+                            <div className="mt-6 text-center">
+                              <button
+                                onClick={loadFullData}
+                                disabled={isLoadingFullData}
+                                className="px-6 py-3 bg-[#8b2332] text-white font-medium hover:bg-[#7a1f2b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              >
+                                {isLoadingFullData ? 'Loading Full Data...' : 'LOAD MORE'}
+                              </button>
+                              <p className="text-sm text-gray-600 mt-2">
+                                Showing {activeDepartmentData.promises.length} recent promises. Click to load all promises with evidence.
+                              </p>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <div className="text-center py-10 text-gray-500">Select a department to view details.</div>
                       )}
