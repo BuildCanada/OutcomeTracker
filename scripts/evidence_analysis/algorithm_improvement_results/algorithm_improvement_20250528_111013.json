@@ -1,0 +1,369 @@
+{
+  "current_algorithm": {
+    "avg_similarity": 0.013154834889016444,
+    "max_similarity": 0.1111111111111111,
+    "pairs_above_01": 2,
+    "pairs_above_015": 0,
+    "total_comparisons": 1000
+  },
+  "improved_algorithm": {
+    "avg_similarity": 0.05334997935303465,
+    "max_similarity": 0.864,
+    "pairs_above_01": 162,
+    "pairs_above_015": 162,
+    "total_comparisons": 1000,
+    "high_potential_pairs": 162
+  },
+  "improvements": {
+    "avg_similarity_improvement": 0.0401951444640182,
+    "max_similarity_improvement": 0.7528888888888889,
+    "pairs_above_01_improvement": 160,
+    "pairs_above_015_improvement": 162
+  },
+  "detailed_high_potential_pairs": [
+    {
+      "evidence_id": "20250326_45_Gazette2_0ccbc73c6d",
+      "promise_id": "LPC_20250419_OTHER_0d59ce6a",
+      "evidence_title": "Order transfers powers, duties, and functions related to the Federal Economic Development Agency for",
+      "promise_text": "Accelerate funding for access to post-secondary education so more First Nations, Inuit, and M\\u00e9t",
+      "current_score": 0.06666666666666667,
+      "improved_score": 0.864,
+      "improvement": 0.7973333333333333,
+      "similarity_breakdown": {
+        "jaccard": 0.064,
+        "weighted_jaccard": 0.5640000000000001,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "final_score": 0.864,
+        "common_keywords": [
+          "from",
+          "economic",
+          "economic_important",
+          "indigenous",
+          "services",
+          "related",
+          "dept_indigenous",
+          "indigenous_important"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "economic",
+          "indigenous"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250326_45_Gazette2_0ccbc73c6d",
+      "promise_id": "LPC_20250419_OTHER_0cb6b26a",
+      "evidence_title": "Order transfers powers, duties, and functions related to the Federal Economic Development Agency for",
+      "promise_text": "Continue to fund Jordan's Principle.",
+      "current_score": 0.1111111111111111,
+      "improved_score": 0.8573770491803278,
+      "improvement": 0.7462659380692167,
+      "similarity_breakdown": {
+        "jaccard": 0.05737704918032787,
+        "weighted_jaccard": 0.5573770491803278,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "final_score": 0.8573770491803278,
+        "common_keywords": [
+          "from",
+          "economic",
+          "economic_important",
+          "indigenous",
+          "services",
+          "dept_indigenous",
+          "indigenous_important"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "economic",
+          "indigenous"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250326_45_Gazette2_0ccbc73c6d",
+      "promise_id": "LPC_20250419_OTHER_14c467c8",
+      "evidence_title": "Order transfers powers, duties, and functions related to the Federal Economic Development Agency for",
+      "promise_text": "Build critical Indigenous infrastructure by: Determining the best path forward towards First Nations",
+      "current_score": 0.08823529411764706,
+      "improved_score": 0.8542635658914729,
+      "improvement": 0.7660282717738258,
+      "similarity_breakdown": {
+        "jaccard": 0.05426356589147287,
+        "weighted_jaccard": 0.5542635658914729,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "final_score": 0.8542635658914729,
+        "common_keywords": [
+          "from",
+          "economic",
+          "economic_important",
+          "indigenous",
+          "services",
+          "dept_indigenous",
+          "indigenous_important"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "economic",
+          "indigenous"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250324_45_News_f7595ff184",
+      "promise_id": "LPC_20250419_OTHER_0cb6b26a",
+      "evidence_title": "Public Health Agency and Indigenous Services Canada issue joint statement on World Tuberculosis Day.",
+      "promise_text": "Continue to fund Jordan's Principle.",
+      "current_score": 0.06896551724137931,
+      "improved_score": 0.8514705882352941,
+      "improvement": 0.7825050709939148,
+      "similarity_breakdown": {
+        "jaccard": 0.051470588235294115,
+        "weighted_jaccard": 0.5514705882352942,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.1,
+        "final_score": 0.8514705882352941,
+        "common_keywords": [
+          "indigenous",
+          "services",
+          "dept_indigenous",
+          "public",
+          "health",
+          "indigenous_important",
+          "health_important"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "indigenous",
+          "health"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250326_45_Gazette2_372ddf4ad1",
+      "promise_id": "LPC_20250419_OTHER_15dfa57f",
+      "evidence_title": "Regulations amend Real Property (GST/HST) Regulations to implement New Brunswick's temporary full re",
+      "promise_text": "Reintroduce a tax incentive for home builders known as the Multi-Unit Rental Building (MURB), which,",
+      "current_score": 0.0851063829787234,
+      "improved_score": 0.6476190476190476,
+      "improvement": 0.5625126646403242,
+      "similarity_breakdown": {
+        "jaccard": 0.047619047619047616,
+        "weighted_jaccard": 0.5476190476190477,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.1,
+        "final_score": 0.6476190476190476,
+        "common_keywords": [
+          "which",
+          "housing_important",
+          "tax",
+          "tax_important",
+          "rental",
+          "housing"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "tax",
+          "housing"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250326_45_Gazette2_22618c1022",
+      "promise_id": "LPC_20250419_OTHER_18f32bd9",
+      "evidence_title": "Canada amends Special Economic Measures (Burma) Regulations due to the Myanmar military regime's ong",
+      "promise_text": "Buy Canadian-made airborne early warning and control aircraft, supporting our domestic aerospace ind",
+      "current_score": 0.0,
+      "improved_score": 0.6458015267175572,
+      "improvement": 0.6458015267175572,
+      "similarity_breakdown": {
+        "jaccard": 0.04580152671755725,
+        "weighted_jaccard": 0.5458015267175572,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.1,
+        "final_score": 0.6458015267175572,
+        "common_keywords": [
+          "economic",
+          "economic_important",
+          "military",
+          "military_important",
+          "global",
+          "international"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "economic",
+          "military"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250324_45_News_f7595ff184",
+      "promise_id": "LPC_20250419_OTHER_0d59ce6a",
+      "evidence_title": "Public Health Agency and Indigenous Services Canada issue joint statement on World Tuberculosis Day.",
+      "promise_text": "Accelerate funding for access to post-secondary education so more First Nations, Inuit, and M\\u00e9t",
+      "current_score": 0.0425531914893617,
+      "improved_score": 0.6000000000000001,
+      "improvement": 0.5574468085106384,
+      "similarity_breakdown": {
+        "jaccard": 0.05,
+        "weighted_jaccard": 0.35000000000000003,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.05,
+        "final_score": 0.6000000000000001,
+        "common_keywords": [
+          "indigenous",
+          "communities",
+          "services",
+          "dept_indigenous",
+          "ongoing",
+          "indigenous_important",
+          "efforts"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "indigenous"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250324_45_News_f7595ff184",
+      "promise_id": "LPC_20250419_OTHER_14c467c8",
+      "evidence_title": "Public Health Agency and Indigenous Services Canada issue joint statement on World Tuberculosis Day.",
+      "promise_text": "Build critical Indigenous infrastructure by: Determining the best path forward towards First Nations",
+      "current_score": 0.05555555555555555,
+      "improved_score": 0.598951048951049,
+      "improvement": 0.5433954933954934,
+      "similarity_breakdown": {
+        "jaccard": 0.04895104895104895,
+        "weighted_jaccard": 0.348951048951049,
+        "department_boost": 0.2,
+        "important_terms_boost": 0.05,
+        "final_score": 0.598951048951049,
+        "common_keywords": [
+          "emphasizing",
+          "indigenous",
+          "communities",
+          "services",
+          "dept_indigenous",
+          "ongoing",
+          "indigenous_important"
+        ],
+        "common_departments": [
+          "dept_indigenous"
+        ],
+        "common_important_terms": [
+          "indigenous"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250326_45_Gazette2_0ccbc73c6d",
+      "promise_id": "LPC_20250419_OTHER_150ea6e1",
+      "evidence_title": "Order transfers powers, duties, and functions related to the Federal Economic Development Agency for",
+      "promise_text": "Expand the Indigenous Loan Guarantee Program from $5 billion to $10 billion and increase the sectora",
+      "current_score": 0.0967741935483871,
+      "improved_score": 0.5540540540540541,
+      "improvement": 0.45727986050566694,
+      "similarity_breakdown": {
+        "jaccard": 0.05405405405405406,
+        "weighted_jaccard": 0.4540540540540541,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.1,
+        "final_score": 0.5540540540540541,
+        "common_keywords": [
+          "from",
+          "economic",
+          "economic_important",
+          "indigenous",
+          "indigenous_important",
+          "development"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "economic",
+          "indigenous"
+        ]
+      }
+    },
+    {
+      "evidence_id": "20250326_45_Gazette2_0ccbc73c6d",
+      "promise_id": "LPC_20250419_OTHER_101056b0",
+      "evidence_title": "Order transfers powers, duties, and functions related to the Federal Economic Development Agency for",
+      "promise_text": "Continue to support Indigenous Early Learning and Child Care.",
+      "current_score": 0.06666666666666667,
+      "improved_score": 0.5530973451327433,
+      "improvement": 0.4864306784660767,
+      "similarity_breakdown": {
+        "jaccard": 0.05309734513274336,
+        "weighted_jaccard": 0.45309734513274336,
+        "department_boost": 0.0,
+        "important_terms_boost": 0.1,
+        "final_score": 0.5530973451327433,
+        "common_keywords": [
+          "from",
+          "economic",
+          "economic_important",
+          "indigenous",
+          "services",
+          "indigenous_important"
+        ],
+        "common_departments": [],
+        "common_important_terms": [
+          "economic",
+          "indigenous"
+        ]
+      }
+    }
+  ],
+  "implementation_recommendations": [
+    {
+      "category": "Algorithm Performance",
+      "priority": "High",
+      "recommendation": "Implement enhanced keyword extraction with domain-specific terms",
+      "expected_impact": "Average similarity improvement: +0.0402",
+      "implementation": "Replace current keyword extraction with _extract_enhanced_keywords method"
+    },
+    {
+      "category": "High-Quality Links",
+      "priority": "High",
+      "recommendation": "Deploy improved similarity calculation with multiple metrics",
+      "expected_impact": "High-potential pairs increase: +162",
+      "implementation": "Replace Jaccard similarity with _calculate_enhanced_similarity method"
+    },
+    {
+      "category": "Department Alignment",
+      "priority": "Critical",
+      "recommendation": "Implement department standardization and mapping system",
+      "expected_impact": "Enable department-based filtering and boost matching accuracy",
+      "implementation": "Deploy department_mappings and _standardize_department methods"
+    },
+    {
+      "category": "Content Processing",
+      "priority": "Medium",
+      "recommendation": "Expand content field usage for both promises and evidence",
+      "expected_impact": "Increase keyword coverage and matching opportunities",
+      "implementation": "Use all available text fields instead of limiting to primary fields"
+    },
+    {
+      "category": "LLM Integration",
+      "priority": "Medium",
+      "recommendation": "Focus LLM evaluation on improved algorithm candidates",
+      "expected_impact": "Reduce LLM calls while focusing on 10 high-potential pairs",
+      "implementation": "Use improved algorithm for prefiltering before LLM evaluation"
+    }
+  ]
+}

@@ -81,7 +81,7 @@ if db is None:
 
 # Constants
 PROMISES_COLLECTION_ROOT = os.getenv("TARGET_PROMISES_COLLECTION", "promises")
-TARGET_SOURCE_TYPES = ["2021 LPC Mandate Letters", "2025 LPC Platform"]
+TARGET_SOURCE_TYPES = ["2021 LPC Mandate Letters", "2025 LPC Platform", "2025 LPC Consolidated"]
 RATE_LIMIT_DELAY_SECONDS = 2
 
 class ConsolidatedPromiseEnricher:
@@ -101,9 +101,10 @@ class ConsolidatedPromiseEnricher:
         }
     
     async def query_promises_for_enrichment(self, parliament_session_id: str, source_type: str = None, 
-                                          limit: int = None, force_reprocessing: bool = False) -> list[dict]:
+                                          limit: int = None, force_reprocessing: bool = False,
+                                          enrichment_types: list = None) -> list[dict]:
         """Query promises that need enrichment."""
-        logger.info(f"Querying promises for enrichment: session '{parliament_session_id}', source_type: '{source_type}', limit: {limit}, force: {force_reprocessing}")
+        logger.info(f"Querying promises for enrichment: session '{parliament_session_id}', source_type: '{source_type}', limit: {limit}, force: {force_reprocessing}, types: {enrichment_types}")
         
         try:
             # Build query for LPC promises
@@ -119,9 +120,20 @@ class ConsolidatedPromiseEnricher:
                 query = query.where(filter=firestore.FieldFilter("source_type", "in", TARGET_SOURCE_TYPES))
             
             # Filter for promises needing enrichment (unless force reprocessing)
-            if not force_reprocessing:
-                # Check if any enrichment fields are missing
-                # For simplicity, check one key field as proxy
+            if not force_reprocessing and enrichment_types:
+                # Check specific enrichment types
+                if 'keywords' in enrichment_types and len(enrichment_types) == 1:
+                    # For keyword-only enrichment, look for promises that have explanations but missing keywords
+                    # We'll filter this in the results processing since Firestore doesn't support complex OR queries
+                    pass
+                elif 'explanation' in enrichment_types:
+                    # For explanation enrichment, check if explanation fields are missing
+                    query = query.where(filter=firestore.FieldFilter("what_it_means_for_canadians", "==", None))
+                else:
+                    # For other enrichments, use a general check
+                    query = query.where(filter=firestore.FieldFilter("last_enrichment_at", "==", None))
+            elif not force_reprocessing:
+                # Default: check if any enrichment fields are missing
                 query = query.where(filter=firestore.FieldFilter("what_it_means_for_canadians", "==", None))
             
             if limit:
@@ -134,15 +146,34 @@ class ConsolidatedPromiseEnricher:
             for doc in promise_docs:
                 data = doc.to_dict()
                 if data and data.get("text"):
-                    promises.append({
-                        "id": doc.id,
-                        "text": data["text"],
-                        "responsible_department_lead": data.get("responsible_department_lead"),
-                        "source_type": data.get("source_type"),
-                        "party_code": data.get("party_code"),
-                        "doc_ref": doc.reference,
-                        "data": data
-                    })
+                    # Additional filtering for specific enrichment types
+                    should_include = True
+                    
+                    if not force_reprocessing and enrichment_types:
+                        if 'keywords' in enrichment_types and len(enrichment_types) == 1:
+                            # For keyword-only re-enrichment: include if has explanation but missing/outdated keywords
+                            has_explanation = data.get('background_and_context') or data.get('description')
+                            has_keywords = data.get('extracted_keywords_concepts')
+                            has_enhanced_keywords = data.get('keywords_context_used') == 'enhanced_with_background_and_description'
+                            
+                            # Include if: has explanation AND (no keywords OR keywords not enhanced)
+                            should_include = has_explanation and (not has_keywords or not has_enhanced_keywords)
+                            
+                            if should_include:
+                                logger.debug(f"Including promise {doc.id} for keyword re-enrichment (has explanation: {bool(has_explanation)}, has keywords: {bool(has_keywords)}, enhanced: {has_enhanced_keywords})")
+                    
+                    if should_include:
+                        promises.append({
+                            "id": doc.id,
+                            "text": data["text"],
+                            "responsible_department_lead": data.get("responsible_department_lead"),
+                            "source_type": data.get("source_type"),
+                            "party_code": data.get("party_code"),
+                            "doc_ref": doc.reference,
+                            "data": data
+                        })
+                    else:
+                        logger.debug(f"Skipping promise {doc.id} - doesn't need specified enrichment types")
                 else:
                     logger.warning(f"Promise {doc.id} missing 'text' field, skipping.")
             
@@ -236,13 +267,34 @@ class ConsolidatedPromiseEnricher:
             return {"explanation_enrichment_status": "failed"}
     
     async def extract_promise_keywords(self, promise: dict) -> dict:
-        """Extract keywords and concepts from a promise."""
+        """Extract keywords and concepts from a promise with enhanced context."""
         try:
             logger.debug(f"Extracting keywords for promise {promise['id']}")
             
+            # Gather all available context for keyword extraction
+            promise_text = promise['text']
+            department = promise.get('responsible_department_lead', '')
+            
+            # Get additional context from enriched fields if available
+            background_context = promise.get('data', {}).get('background_and_context', '')
+            description = promise.get('data', {}).get('description', '')
+            
+            # If description is a list (from enrichment), join it
+            if isinstance(description, list):
+                description = ' '.join(str(item) for item in description if item)
+            
+            # Combine all context for richer keyword extraction
+            full_context = promise_text
+            if background_context:
+                full_context += f"\n\nBackground and Context: {background_context}"
+            if description:
+                full_context += f"\n\nDescription: {description}"
+            
+            logger.debug(f"Using enhanced context for keyword extraction (length: {len(full_context)} chars)")
+            
             result = self.langchain.extract_promise_keywords(
-                promise_text=promise['text'],
-                department=promise.get('responsible_department_lead', '')
+                promise_text=full_context,  # Use enhanced context instead of just promise text
+                department=department
             )
             
             if 'error' not in result:
@@ -273,7 +325,8 @@ class ConsolidatedPromiseEnricher:
                     "extracted_keywords_concepts": all_keywords,
                     "policy_areas": policy_areas,
                     "target_groups": target_groups,
-                    "keywords_extracted_at": firestore.SERVER_TIMESTAMP
+                    "keywords_extracted_at": firestore.SERVER_TIMESTAMP,
+                    "keywords_context_used": "enhanced_with_background_and_description"
                 }
             else:
                 logger.error(f"Error in keyword extraction: {result['error']}")
@@ -354,19 +407,29 @@ class ConsolidatedPromiseEnricher:
             return {}
     
     async def enrich_single_promise(self, promise: dict, enrichment_types: list, dry_run: bool = False) -> bool:
-        """Enrich a single promise with specified enrichment types."""
+        """Enrich a single promise with specified enrichment types in proper sequence."""
         try:
             update_data = {}
             
-            # Generate each type of enrichment
+            # PHASE 1: Generate explanation first (provides context for other enrichments)
             if 'explanation' in enrichment_types:
                 explanation_data = await self.enrich_promise_explanation(promise)
                 update_data.update(explanation_data)
+                
+                # Update the promise data with explanation fields for subsequent enrichments
+                if explanation_data and not dry_run:
+                    # Apply explanation data immediately so it's available for keyword extraction
+                    await asyncio.to_thread(promise['doc_ref'].update, explanation_data)
+                    # Update local promise data for keyword extraction
+                    promise['data'].update(explanation_data)
+                    logger.debug(f"Applied explanation data for promise {promise['id']} to enable enhanced keyword extraction")
             
+            # PHASE 2: Extract keywords (now with enhanced context from explanation)
             if 'keywords' in enrichment_types:
                 keywords_data = await self.extract_promise_keywords(promise)
                 update_data.update(keywords_data)
             
+            # PHASE 3: Other enrichments (can run in any order)
             if 'action_type' in enrichment_types:
                 action_data = await self.classify_action_type(promise)
                 update_data.update(action_data)
@@ -382,10 +445,13 @@ class ConsolidatedPromiseEnricher:
             # Add processing timestamp
             update_data["last_enrichment_at"] = firestore.SERVER_TIMESTAMP
             
-            # Update promise in Firestore
-            if update_data and not dry_run:
-                await asyncio.to_thread(promise['doc_ref'].update, update_data)
-                logger.info(f"Successfully enriched promise {promise['id']} with {len(update_data)} fields")
+            # Update promise in Firestore (final update for non-explanation fields)
+            remaining_data = {k: v for k, v in update_data.items() 
+                            if not k.startswith('explanation_') and k not in ['concise_title', 'description', 'what_it_means_for_canadians', 'background_and_context', 'intended_impact_and_objectives']}
+            
+            if remaining_data and not dry_run:
+                await asyncio.to_thread(promise['doc_ref'].update, remaining_data)
+                logger.info(f"Successfully enriched promise {promise['id']} with {len(update_data)} total fields")
             elif update_data and dry_run:
                 logger.info(f"[DRY RUN] Would update promise {promise['id']} with {len(update_data)} fields")
             
@@ -554,7 +620,8 @@ Please respond with ONLY a valid JSON object containing the required evaluation 
             parliament_session_id=parliament_session_id,
             source_type=source_type,
             limit=limit,
-            force_reprocessing=force_reprocessing
+            force_reprocessing=force_reprocessing,
+            enrichment_types=enrichment_types
         )
         
         if not promises:

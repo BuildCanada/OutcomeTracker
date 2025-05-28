@@ -120,28 +120,197 @@ class ConsolidatedEvidenceLinking:
         
         return list(set(variants))  # Remove duplicates
     
-    def _extract_keywords_from_text(self, text: str) -> Set[str]:
-        """Extract keywords from text for similarity matching."""
+    def _extract_keywords_from_text(self, text: str, boost_important: bool = True) -> Set[str]:
+        """Enhanced keyword extraction with domain-specific improvements."""
         if not text:
             return set()
         
-        # Convert to lowercase and split into words
-        words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
-        
-        # Filter out common stop words
+        # Enhanced stop words for government content
         stop_words = {
             'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had', 'has', 'have',
             'her', 'was', 'one', 'our', 'out', 'day', 'get', 'use', 'man', 'new', 'now', 'old',
             'see', 'him', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she',
             'too', 'use', 'will', 'with', 'that', 'this', 'they', 'them', 'there', 'their',
-            'would', 'could', 'should', 'government', 'canada', 'canadian', 'federal'
+            'would', 'could', 'should', 'government', 'canada', 'canadian', 'federal', 'act',
+            'order', 'under', 'these', 'minister', 'including', 'also', 'may', 'shall', 'must',
+            'bill', 'house', 'commons', 'parliament', 'reading', 'committee', 'royal', 'assent'
         }
         
+        # Government-specific important terms
+        important_terms = {
+            'healthcare', 'health', 'medical', 'hospital', 'doctor', 'nurse', 'patient',
+            'education', 'school', 'student', 'teacher', 'university', 'college',
+            'housing', 'affordable', 'rent', 'mortgage', 'home', 'shelter',
+            'infrastructure', 'transit', 'transportation', 'road', 'bridge', 'highway',
+            'environment', 'climate', 'carbon', 'emission', 'green', 'renewable',
+            'economy', 'economic', 'job', 'employment', 'business', 'trade',
+            'indigenous', 'first', 'nation', 'metis', 'inuit', 'aboriginal',
+            'immigration', 'refugee', 'citizenship', 'border', 'visa',
+            'defense', 'defence', 'military', 'security', 'police', 'safety',
+            'tax', 'taxation', 'budget', 'spending', 'revenue', 'fiscal',
+            'social', 'welfare', 'benefit', 'pension', 'disability', 'senior',
+            'sustainable', 'jobs', 'transition', 'workers', 'communities', 'legislation',
+            'energy', 'oil', 'gas', 'mining', 'forestry', 'agriculture', 'fisheries'
+        }
+        
+        # Conceptual synonym mappings
+        conceptual_synonyms = {
+            'just_transition': ['sustainable jobs', 'green transition', 'clean economy transition'],
+            'climate_action': ['environmental protection', 'carbon reduction', 'emissions reduction'],
+            'affordable_housing': ['housing affordability', 'housing crisis', 'housing support'],
+            'healthcare_access': ['health services', 'medical care', 'healthcare delivery'],
+            'economic_growth': ['economic development', 'job creation', 'business support'],
+            'indigenous_reconciliation': ['indigenous rights', 'first nations', 'reconciliation'],
+            'immigration_support': ['newcomer services', 'refugee support', 'citizenship services']
+        }
+        
+        # Convert to lowercase and extract words
+        words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+        
+        # Filter stop words
         keywords = {word for word in words if word not in stop_words and len(word) > 2}
+        
+        # Boost important government terms
+        if boost_important:
+            boosted_keywords = set()
+            for keyword in keywords:
+                if keyword in important_terms:
+                    # Add the term multiple times to boost its weight
+                    boosted_keywords.add(keyword)
+                    boosted_keywords.add(f"{keyword}_important")
+                else:
+                    boosted_keywords.add(keyword)
+            keywords = boosted_keywords
+        
+        # Add conceptual synonyms
+        for concept, synonyms in conceptual_synonyms.items():
+            for synonym in synonyms:
+                if synonym.lower() in text.lower():
+                    keywords.add(f"concept_{concept}")
+                    break
+        
         return keywords
     
+    def _standardize_department(self, department: str) -> Optional[str]:
+        """Standardize department names for better matching."""
+        if not department:
+            return None
+            
+        dept_lower = department.lower()
+        
+        # Department mapping for standardization
+        department_mappings = {
+            'natural_resources': [
+                'Natural Resources Canada', 'Minister of Natural Resources', 'NRCan',
+                'natural resources canada', 'minister of natural resources'
+            ],
+            'employment': [
+                'Employment and Social Development Canada', 'ESDC', 'Minister of Employment',
+                'employment and social development canada', 'minister of employment'
+            ],
+            'indigenous': [
+                'Indigenous Services Canada', 'ISC', 'Minister of Indigenous Services',
+                'indigenous services canada', 'minister of indigenous services'
+            ],
+            'economic_development': [
+                'Federal Economic Development Agency for Southern Ontario', 'FedDev Ontario',
+                'Innovation, Science and Economic Development Canada', 'ISED'
+            ],
+            'heritage': [
+                'Canadian Heritage', 'Minister of Canadian Heritage',
+                'canadian heritage', 'minister of canadian heritage'
+            ],
+            'global_affairs': [
+                'Global Affairs Canada', 'GAC', 'Minister of Foreign Affairs',
+                'global affairs canada', 'minister of foreign affairs'
+            ],
+            'crown_indigenous': [
+                'Crown-Indigenous Relations and Northern Affairs Canada', 'CIRNAC',
+                'crown-indigenous relations and northern affairs canada'
+            ],
+            'finance': [
+                'Department of Finance Canada', 'Minister of Finance',
+                'department of finance canada', 'minister of finance'
+            ],
+            'health': [
+                'Health Canada', 'Minister of Health',
+                'health canada', 'minister of health'
+            ],
+            'transport': [
+                'Transport Canada', 'Minister of Transport',
+                'transport canada', 'minister of transport'
+            ]
+        }
+        
+        for standard_name, variations in department_mappings.items():
+            for variation in variations:
+                if variation.lower() in dept_lower or dept_lower in variation.lower():
+                    return standard_name
+        
+        return None
+    
+    def _calculate_enhanced_similarity(self, evidence_keywords: Set[str], promise_keywords: Set[str]) -> Dict[str, float]:
+        """Calculate multiple similarity metrics for better matching."""
+        if not evidence_keywords or not promise_keywords:
+            return {
+                'jaccard': 0.0,
+                'weighted_jaccard': 0.0,
+                'department_boost': 0.0,
+                'important_terms_boost': 0.0,
+                'conceptual_boost': 0.0,
+                'final_score': 0.0,
+                'common_keywords': [],
+                'common_departments': [],
+                'common_important_terms': [],
+                'common_concepts': []
+            }
+        
+        # Basic Jaccard similarity
+        intersection = evidence_keywords.intersection(promise_keywords)
+        union = evidence_keywords.union(promise_keywords)
+        jaccard = len(intersection) / len(union) if union else 0.0
+        
+        # Weighted Jaccard (boost important terms)
+        important_intersection = {kw for kw in intersection if '_important' in kw or any(term in kw for term in ['healthcare', 'health', 'education', 'housing', 'infrastructure', 'environment', 'climate', 'economy', 'economic', 'indigenous', 'immigration', 'defense', 'defence', 'tax', 'social', 'sustainable', 'jobs', 'transition', 'energy'])}
+        weighted_jaccard = jaccard + (len(important_intersection) * 0.1)  # 10% boost per important term
+        
+        # Department alignment boost
+        evidence_depts = {kw for kw in evidence_keywords if kw.startswith('dept_')}
+        promise_depts = {kw for kw in promise_keywords if kw.startswith('dept_')}
+        dept_overlap = evidence_depts.intersection(promise_depts)
+        department_boost = len(dept_overlap) * 0.2  # 20% boost per matching department
+        
+        # Important terms boost
+        important_terms = {'healthcare', 'health', 'education', 'housing', 'infrastructure', 'environment', 'climate', 'economy', 'economic', 'indigenous', 'immigration', 'defense', 'defence', 'tax', 'social', 'sustainable', 'jobs', 'transition', 'energy'}
+        evidence_important = {kw for kw in evidence_keywords if kw in important_terms}
+        promise_important = {kw for kw in promise_keywords if kw in important_terms}
+        important_overlap = evidence_important.intersection(promise_important)
+        important_terms_boost = len(important_overlap) * 0.05  # 5% boost per important term
+        
+        # Conceptual similarity boost
+        evidence_concepts = {kw for kw in evidence_keywords if kw.startswith('concept_')}
+        promise_concepts = {kw for kw in promise_keywords if kw.startswith('concept_')}
+        concept_overlap = evidence_concepts.intersection(promise_concepts)
+        conceptual_boost = len(concept_overlap) * 0.15  # 15% boost per conceptual match
+        
+        # Final combined score
+        final_score = min(1.0, weighted_jaccard + department_boost + important_terms_boost + conceptual_boost)
+        
+        return {
+            'jaccard': jaccard,
+            'weighted_jaccard': weighted_jaccard,
+            'department_boost': department_boost,
+            'important_terms_boost': important_terms_boost,
+            'conceptual_boost': conceptual_boost,
+            'final_score': final_score,
+            'common_keywords': list(intersection),
+            'common_departments': list(dept_overlap),
+            'common_important_terms': list(important_overlap),
+            'common_concepts': list(concept_overlap)
+        }
+    
     def _calculate_jaccard_similarity(self, set1: Set[str], set2: Set[str]) -> float:
-        """Calculate Jaccard similarity between two sets."""
+        """Calculate basic Jaccard similarity between two sets (legacy method)."""
         if not set1 and not set2:
             return 0.0
         if not set1 or not set2:
@@ -153,44 +322,107 @@ class ConsolidatedEvidenceLinking:
         return intersection / union if union > 0 else 0.0
     
     def _get_evidence_keywords(self, evidence_data: Dict[str, Any]) -> Set[str]:
-        """Extract keywords from evidence item."""
+        """Enhanced evidence keyword extraction with content analysis."""
         keywords = set()
         
-        # Extract from title
+        # Extract from title with full content
         title = evidence_data.get('title_or_summary', '')
         keywords.update(self._extract_keywords_from_text(title))
         
-        # Extract from content (first 500 chars to avoid noise)
-        content = evidence_data.get('description_or_details', '')[:500]
+        # Extract from description/details
+        content = evidence_data.get('description_or_details', '')
         keywords.update(self._extract_keywords_from_text(content))
+        
+        # Extract from bill-specific fields
+        bill_summary = evidence_data.get('bill_timeline_summary_llm', '')
+        keywords.update(self._extract_keywords_from_text(bill_summary))
+        
+        bill_description = evidence_data.get('bill_one_sentence_description_llm', '')
+        keywords.update(self._extract_keywords_from_text(bill_description))
+        
+        # Extract from bill keywords
+        bill_keywords = evidence_data.get('bill_extracted_keywords_concepts', [])
+        if bill_keywords:
+            for keyword in bill_keywords:
+                if isinstance(keyword, str):
+                    keywords.update(self._extract_keywords_from_text(keyword))
+        
+        # Extract from source URL for additional context
+        source_url = evidence_data.get('source_url', '')
+        if source_url:
+            # Extract meaningful terms from URL
+            url_terms = re.findall(r'[a-zA-Z]{4,}', source_url.lower())
+            for term in url_terms:
+                if term not in {'http', 'https', 'www', 'com', 'org', 'gov', 'html', 'php'} and len(term) > 3:
+                    keywords.add(f"url_{term}")
+        
+        # Add evidence type information
+        evidence_type = evidence_data.get('evidence_source_type', '')
+        if evidence_type:
+            keywords.add(f"type_{evidence_type.lower().replace(' ', '_')}")
+        
+        # Add department information with standardization
+        linked_departments = evidence_data.get('linked_departments', [])
+        if linked_departments:
+            for dept in linked_departments:
+                if dept:
+                    keywords.update(self._extract_keywords_from_text(dept))
+                    standardized_dept = self._standardize_department(dept)
+                    if standardized_dept:
+                        keywords.add(f"dept_{standardized_dept}")
         
         return keywords
     
     def _get_promise_keywords(self, promise_data: Dict[str, Any]) -> Set[str]:
-        """Extract keywords from promise item."""
+        """Enhanced promise keyword extraction using multiple content fields."""
         keywords = set()
         
-        # Use existing extracted keywords if available
+        # Extract from all relevant text fields
+        text_fields = [
+            'text',
+            'description', 
+            'background_and_context',
+            'concise_title'
+        ]
+        
+        for field in text_fields:
+            content = promise_data.get(field, '')
+            if content:
+                if isinstance(content, list):
+                    # Handle list fields like description
+                    for item in content:
+                        if isinstance(item, str):
+                            keywords.update(self._extract_keywords_from_text(item))
+                else:
+                    keywords.update(self._extract_keywords_from_text(content))
+        
+        # Add department keywords with standardization
+        department = promise_data.get('responsible_department_lead', '')
+        if department:
+            # Add original department
+            keywords.update(self._extract_keywords_from_text(department))
+            
+            # Add standardized department terms
+            standardized_dept = self._standardize_department(department)
+            if standardized_dept:
+                keywords.add(f"dept_{standardized_dept}")
+        
+        # Add party information
+        party = promise_data.get('party_code', '')
+        if party:
+            keywords.add(f"party_{party.lower()}")
+        
+        # Use existing extracted keywords if available (with null check)
         extracted_keywords = promise_data.get('extracted_keywords_concepts', [])
         if extracted_keywords:
-            # Handle both list and dict formats
             if isinstance(extracted_keywords, list):
                 for item in extracted_keywords:
                     if isinstance(item, str):
                         keywords.update(self._extract_keywords_from_text(item))
                     elif isinstance(item, dict) and 'keyword' in item:
-                        keywords.update(self._extract_keywords_from_text(item['keyword']))
-            elif isinstance(extracted_keywords, dict):
-                for key, value in extracted_keywords.items():
-                    keywords.update(self._extract_keywords_from_text(str(value)))
-        
-        # Also extract from promise text
-        promise_text = promise_data.get('text', '')
-        keywords.update(self._extract_keywords_from_text(promise_text))
-        
-        # Add department keywords
-        department = promise_data.get('responsible_department_lead', '')
-        keywords.update(self._extract_keywords_from_text(department))
+                        keyword_value = item['keyword']
+                        if keyword_value:  # Check if not None or empty
+                            keywords.update(self._extract_keywords_from_text(keyword_value))
         
         return keywords
     
@@ -297,7 +529,7 @@ class ConsolidatedEvidenceLinking:
         candidates = []
         for promise in promises:
             promise_keywords = self._get_promise_keywords(promise['data'])
-            similarity = self._calculate_jaccard_similarity(evidence_keywords, promise_keywords)
+            similarity = self._calculate_enhanced_similarity(evidence_keywords, promise_keywords)['final_score']
             
             if similarity >= min_similarity:
                 candidates.append({

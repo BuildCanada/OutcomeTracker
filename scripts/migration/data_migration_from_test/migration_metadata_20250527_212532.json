@@ -1,0 +1,41 @@
+{
+  "migration_timestamp": "20250527_212532",
+  "migration_date": "2025-05-27T21:25:32.945914",
+  "collections_migrated": {
+    "promises_test": {
+      "target_collection": "promises",
+      "clear_result": {
+        "collection": "promises",
+        "documents_deleted": 1374,
+        "errors": [],
+        "status": "completed"
+      },
+      "copy_result": {
+        "source_collection": "promises_test",
+        "target_collection": "promises",
+        "documents_copied": 1110,
+        "errors": [],
+        "status": "completed"
+      },
+      "verified": true
+    },
+    "evidence_items_test": {
+      "target_collection": "evidence_items",
+      "clear_result": {
+        "collection": "evidence_items",
+        "documents_deleted": 2992,
+        "errors": [],
+        "status": "completed"
+      },
+      "copy_result": {
+        "source_collection": "evidence_items_test",
+        "target_collection": "evidence_items",
+        "documents_copied": 4946,
+        "errors": [],
+        "status": "completed"
+      },
+      "verified": true
+    }
+  },
+  "migration_status": "completed"
+}

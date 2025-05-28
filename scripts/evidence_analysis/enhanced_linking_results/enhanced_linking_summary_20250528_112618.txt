@@ -1,0 +1,50 @@
+Enhanced Evidence Linking Results Summary
+==================================================
+
+Timestamp: 20250528_112618
+Threshold: 0.1500 (medium_confidence)
+Total Comparisons: 1,000
+Links Found: 214
+
+Top 10 Links:
+------------------------------
+1. Score: 1.0000 (high_confidence)
+   Promise: Introduce Canada Disability Benefit Act
+   Evidence: Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.
+
+2. Score: 1.0000 (high_confidence)
+   Promise: New EI Benefit for Self-Employed Workers
+   Evidence: Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.
+
+3. Score: 0.9500 (high_confidence)
+   Promise: Support MMIWG and 2SLGBTQI+ Action Plans
+   Evidence: Bill S-219: Introduction and first reading in Senate
+
+4. Score: 0.9263 (high_confidence)
+   Promise: National Action Plan for First Responders' Mental Health
+   Evidence: Bill S-209: Introduction and first reading in Senate
+
+5. Score: 0.9209 (high_confidence)
+   Promise: Indigenous Before & After School Child Care
+   Evidence: Bill S-219: Introduction and first reading in Senate
+
+6. Score: 0.8656 (high_confidence)
+   Promise: Indigenous Before & After School Child Care
+   Evidence: Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.
+
+7. Score: 0.8631 (high_confidence)
+   Promise: Student Loan Repayment Pause for New Parents
+   Evidence: Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.
+
+8. Score: 0.8556 (high_confidence)
+   Promise: National Plan to Legislate Sick Leave
+   Evidence: Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.
+
+9. Score: 0.6580 (high_confidence)
+   Promise: National Plan to Legislate Sick Leave
+   Evidence: Bill S-209: Introduction and first reading in Senate
+
+10. Score: 0.5938 (high_confidence)
+   Promise: National Action Plan for First Responders' Mental Health
+   Evidence: Bill S-203: Introduction and first reading in Senate
+

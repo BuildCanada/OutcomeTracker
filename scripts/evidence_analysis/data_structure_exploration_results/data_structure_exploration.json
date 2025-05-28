@@ -1,0 +1,1330 @@
+{
+  "timestamp": "2025-05-28T14:52:49.054077+00:00",
+  "promises_structure": {
+    "total_sample_size": 20,
+    "field_statistics": {
+      "keywords_enrichment_status": {
+        "usage_count": 4,
+        "usage_percentage": 20.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "processed",
+          "processed",
+          "processed"
+        ]
+      },
+      "policy_areas": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "explanation_enrichment_model": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "gemini-2.5-flash-preview-05-20",
+          "gemini-2.5-flash-preview-05-20",
+          "gemini-2.5-flash-preview-05-20"
+        ]
+      },
+      "commitment_history_rationale": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "commitment_history_timeline": {
+        "usage_count": 1,
+        "usage_percentage": 5.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "last_enrichment_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "text": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Strengthen Canada's partnerhips with the United States.",
+          "Develop a plan to phase out public financing of the fossil fuel sector.",
+          "Provide grants of up to $5,000 for home retrofits through the Canada Greener Homes Grants Program."
+        ]
+      },
+      "last_updated_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "bc_promise_direction": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "positive",
+          "negative",
+          "positive"
+        ]
+      },
+      "party": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Liberal Party of Canada",
+          "Liberal Party of Canada",
+          "Liberal Party of Canada"
+        ]
+      },
+      "implied_action_type": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "policy_development",
+          "policy_development",
+          "funding_allocation"
+        ]
+      },
+      "party_code": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "LPC",
+          "LPC",
+          "LPC"
+        ]
+      },
+      "keywords_extracted_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "concise_title": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Strengthening Canada-US Partnerships",
+          "End Public Funding for Fossil Fuel Sector",
+          "Home Retrofit Grants for Greener Homes"
+        ]
+      },
+      "explanation_enriched_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "source_type": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "2021 LPC Mandate Letters",
+          "2021 LPC Mandate Letters",
+          "2021 LPC Mandate Letters"
+        ]
+      },
+      "description": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "This commitment aims to enhance the multifaceted bilateral relationship between Canada and the Unite...",
+          "The commitment is to cease government financial support to the fossil fuel industry. \"Public financi...",
+          "The Canada Greener Homes Grant offers homeowners up to $5,000 in financial support for energy-effici..."
+        ]
+      },
+      "date_issued": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "2021-12-16",
+          "2021-12-16",
+          "2021-12-16"
+        ]
+      },
+      "bc_ranked_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "extracted_keywords_concepts": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "region_code": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Canada",
+          "Canada",
+          "Canada"
+        ]
+      },
+      "linked_evidence_ids": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "explanation_enrichment_status": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "processed",
+          "processed",
+          "processed"
+        ]
+      },
+      "keywords_enriched_at": {
+        "usage_count": 4,
+        "usage_percentage": 20.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "bc_promise_rank": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "strong",
+          "strong",
+          "weak"
+        ]
+      },
+      "source_document_url": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": []
+      },
+      "action_type_confidence": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "float"
+        ],
+        "content_samples": []
+      },
+      "background_and_context": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "The commitment to strengthen Canada's partnership with the United States is rooted in the fundamenta...",
+          "This commitment arises from Canada's broader climate change agenda, including its commitment to achi...",
+          "The Canada Greener Homes Grant was a key component of the Liberal Party's 2021 platform, \"Forward Fo..."
+        ]
+      },
+      "what_it_means_for_canadians": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "promise_id": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "1101",
+          "2508",
+          "2533"
+        ]
+      },
+      "parliament_session_id": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "44",
+          "44",
+          "44"
+        ]
+      },
+      "intended_impact_and_objectives": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "action_type_classified_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "target_groups": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "action_type_rationale": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "NoneType"
+        ],
+        "content_samples": []
+      },
+      "linking_preprocessing_done_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "NoneType"
+        ],
+        "content_samples": []
+      },
+      "candidate_or_government": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Liberal Party of Canada (2021 Platform)",
+          "Liberal Party of Canada (2021 Platform)",
+          "Liberal Party of Canada (2021 Platform)"
+        ]
+      },
+      "category": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "NoneType"
+        ],
+        "content_samples": []
+      },
+      "bc_priority_score": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "float"
+        ],
+        "content_samples": []
+      },
+      "responsible_department_lead": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "NoneType",
+          "str"
+        ],
+        "content_samples": [
+          "Global Affairs Canada",
+          "Natural Resources Canada",
+          "Natural Resources Canada"
+        ]
+      },
+      "relevant_departments": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "rationale_format_fixed_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "ingested_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "bc_promise_rank_rationale": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Strengthening ties with Canada's largest partner directly impacts trade, investment, and competitive...",
+          "Impacts investment and exports in a major resource sector, with potentially significant scale, negat...",
+          "Supports residential investment and efficiency with moderate scale, but has limited direct impact on..."
+        ]
+      },
+      "history_generated_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "key_points": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "id": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "LPC_20211216_MANDL_002f9cde",
+          "LPC_20211216_MANDL_00b95752",
+          "LPC_20211216_MANDL_025ac14d"
+        ]
+      }
+    },
+    "sample_documents": [
+      {
+        "keywords_enrichment_status": "processed",
+        "policy_areas": [],
+        "explanation_enrichment_model": "gemini-2.5-flash-preview-05-20",
+        "commitment_history_rationale": [
+          {
+            "date": "2020-03-20",
+            "source_url": "",
+            "action": "Prime Minister Justin Trudeau announced an agreement with the United States to temporarily close the Canada-U.S. border to non-essential travel, an unprecedented measure to curb the spread of COVID-19 that significantly impacted cross-border movement and economic activity."
+          },
+          {
+            "date": "2020-07-01",
+            "source_url": "",
+            "action": "The Canada-United States-Mexico Agreement (CUSMA/USMCA) officially entered into force, replacing NAFTA after years of renegotiation. This marked a new era for North American trade relations following a period of significant uncertainty and tension."
+          },
+          {
+            "date": "2021-02-23",
+            "source_url": "",
+            "action": "Prime Minister Justin Trudeau and U.S. President Joe Biden issued a joint statement, the 'Roadmap for a Renewed U.S.-Canada Partnership,' outlining shared priorities and a framework for cooperation on areas including COVID-19, climate change, economic recovery, and global security."
+          }
+        ],
+        "commitment_history_timeline": [
+          {
+            "date": "2018-05-31",
+            "source_url": "https://pm.gc.ca/en/news/statements/2018/05/31/statement-prime-minister-canada-us-tariffs-steel-and-aluminum",
+            "action": "The Government of Canada announces retaliatory tariffs on up to $16.6 billion worth of U.S. imports in response to the U.S. imposition of tariffs on Canadian steel and aluminum, highlighting a period of significant trade tension."
+          },
+          {
+            "date": "2020-07-01",
+            "source_url": "https://www.canada.ca/en/global-affairs/news/2020/07/canada-united-states-mexico-agreement-cusma-enters-into-force.html",
+            "action": "The Canada-United States-Mexico Agreement (CUSMA) enters into force, replacing NAFTA and establishing a modernized free trade agreement between the three countries after a period of intense renegotiation."
+          },
+          {
+            "date": "2021-02-23",
+            "source_url": "https://pm.gc.ca/en/news/news-releases/2021/02/23/roadmap-renewed-us-canada-partnership",
+            "action": "Prime Minister Justin Trudeau and U.S. President Joe Biden issue a 'Roadmap for a Renewed U.S.-Canada Partnership,' outlining shared commitments on climate change, COVID-19, economic recovery, and global cooperation, signaling a desire to reset and strengthen bilateral ties."
+          }
+        ],
+        "last_enrichment_at": "2025-05-27 12:02:25.407000+00:00",
+        "text": "Strengthen Canada's partnerhips with the United States.",
+        "last_updated_at": "2025-05-27 10:34:49.090000+00:00",
+        "bc_promise_direction": "positive",
+        "party": "Liberal Party of Canada",
+        "implied_action_type": "policy_development",
+        "party_code": "LPC",
+        "keywords_extracted_at": "2025-05-27 12:02:25.407000+00:00",
+        "concise_title": "Strengthening Canada-US Partnerships",
+        "explanation_enriched_at": "2025-05-27 12:02:25.407000+00:00",
+        "source_type": "2021 LPC Mandate Letters",
+        "description": "This commitment aims to enhance the multifaceted bilateral relationship between Canada and the United States, focusing on deeply integrated economic ties, trade, climate action, supply chain resilience, and security cooperation.",
+        "date_issued": "2021-12-16",
+        "bc_ranked_at": "2025-05-27 12:02:25.407000+00:00",
+        "extracted_keywords_concepts": [
+          "Canada",
+          "United States",
+          "partnerships"
+        ],
+        "region_code": "Canada",
+        "linked_evidence_ids": [],
+        "explanation_enrichment_status": "processed",
+        "keywords_enriched_at": "2025-05-27 11:06:24.878000+00:00",
+        "bc_promise_rank": "strong",
+        "source_document_url": "",
+        "action_type_confidence": 0.0,
+        "background_and_context": "The commitment to strengthen Canada's partnership with the United States is rooted in the fundamental importance of this relationship, recognized as Canada's most critical bilateral tie due to the longest undefended border and deeply integrated economies. Both Liberal platforms underscore that this partnership underpins shared prosperity and security. Key drivers for this commitment include addressing global challenges such as supply chain vulnerabilities, particularly evident during the pandemic, the urgency of climate action, and the need to counter rising protectionism to ensure fair market access for Canadian businesses. The commitment reflects a strategic imperative to collaborate on shared priorities like critical minerals, clean energy, and Arctic security, while continuously advocating for Canadian interests in an evolving global landscape.",
+        "what_it_means_for_canadians": [
+          "Canadians will benefit from enhanced economic stability and growth due to smoother trade flows and more resilient supply chains, potentially leading to increased job opportunities and a wider availability of goods.",
+          "National security will be strengthened through coordinated efforts on border management, continental defense, and critical infrastructure protection, contributing to a safer and more secure environment for citizens.",
+          "Closer collaboration on climate action and clean energy initiatives could accelerate Canada's transition to a green economy, fostering innovation and creating new industries and jobs in sustainable sectors.",
+          "While beneficial, increased economic integration could also make Canada more susceptible to US economic downturns or protectionist policies, potentially impacting Canadian businesses and employment.",
+          "The commitment implies ongoing diplomatic engagement, which may involve navigating complex trade disputes or policy differences, potentially leading to temporary disruptions or adjustments for specific Canadian industries."
+        ],
+        "promise_id": "1101",
+        "parliament_session_id": "44",
+        "intended_impact_and_objectives": [
+          "Canadians will benefit from enhanced economic stability and growth due to smoother trade flows and more resilient supply chains, potentially leading to increased job opportunities and a wider availability of goods.",
+          "National security will be strengthened through coordinated efforts on border management, continental defense, and critical infrastructure protection, contributing to a safer and more secure environment for citizens.",
+          "Closer collaboration on climate action and clean energy initiatives could accelerate Canada's transition to a green economy, fostering innovation and creating new industries and jobs in sustainable sectors.",
+          "While beneficial, increased economic integration could also make Canada more susceptible to US economic downturns or protectionist policies, potentially impacting Canadian businesses and employment.",
+          "The commitment implies ongoing diplomatic engagement, which may involve navigating complex trade disputes or policy differences, potentially leading to temporary disruptions or adjustments for specific Canadian industries."
+        ],
+        "action_type_classified_at": "2025-05-27 12:02:25.407000+00:00",
+        "target_groups": [],
+        "action_type_rationale": null,
+        "linking_preprocessing_done_at": null,
+        "candidate_or_government": "Liberal Party of Canada (2021 Platform)",
+        "category": null,
+        "bc_priority_score": 95.0,
+        "responsible_department_lead": "Global Affairs Canada",
+        "relevant_departments": [
+          "Global Affairs Canada",
+          "Finance Canada",
+          "National Defence",
+          "Artificial Intelligence and Digital Innovation",
+          "Public Safety Canada"
+        ],
+        "rationale_format_fixed_at": "2025-05-28 05:04:41.219000+00:00",
+        "ingested_at": "2025-05-27 10:34:49.090000+00:00",
+        "bc_promise_rank_rationale": "Strengthening ties with Canada's largest partner directly impacts trade, investment, and competitiveness, aligning strongly with multiple core economic tenets for national prosperity.",
+        "history_generated_at": "2025-05-27 12:02:25.407000+00:00",
+        "key_points": [],
+        "id": "LPC_20211216_MANDL_002f9cde"
+      },
+      {
+        "keywords_enrichment_status": "processed",
+        "policy_areas": [],
+        "explanation_enrichment_model": "gemini-2.5-flash-preview-05-20",
+        "commitment_history_rationale": [
+          {
+            "date": "2009-09-25",
+            "source_url": "",
+            "action": "At the G20 Pittsburgh Summit, leaders, including Canada, committed to phase out inefficient fossil fuel subsidies over the medium term."
+          },
+          {
+            "date": "2015-06-08",
+            "source_url": "",
+            "action": "At the G7 Elmau Summit, leaders, including Canada, reiterated their commitment to eliminate inefficient fossil fuel subsidies and encouraged all countries to do so by 2025."
+          },
+          {
+            "date": "2016-12-09",
+            "source_url": "",
+            "action": "The Pan-Canadian Framework on Clean Growth and Climate Change, Canada's national climate plan, reiterated the commitment to phase out inefficient fossil fuel subsidies."
+          },
+          {
+            "date": "2020-11-19",
+            "source_url": "",
+            "action": "The Speech from the Throne formally committed the Government of Canada to legislate its goal of achieving net-zero emissions by 2050."
+          }
+        ],
+        "last_enrichment_at": "2025-05-27 12:03:05.170000+00:00",
+        "text": "Develop a plan to phase out public financing of the fossil fuel sector.",
+        "last_updated_at": "2025-05-27 10:35:23.567000+00:00",
+        "bc_promise_direction": "negative",
+        "party": "Liberal Party of Canada",
+        "implied_action_type": "policy_development",
+        "party_code": "LPC",
+        "keywords_extracted_at": "2025-05-27 12:03:05.170000+00:00",
+        "concise_title": "End Public Funding for Fossil Fuel Sector",
+        "explanation_enriched_at": "2025-05-27 12:03:05.170000+00:00",
+        "source_type": "2021 LPC Mandate Letters",
+        "description": "The commitment is to cease government financial support to the fossil fuel industry. \"Public financing\" refers to direct and indirect financial aid from federal government entities, including Crown corporations, to companies involved in oil, gas, and coal extraction, production, or transportation. This aims to shift investment away from carbon-intensive industries.",
+        "date_issued": "2021-12-16",
+        "bc_ranked_at": "2025-05-27 12:03:05.170000+00:00",
+        "extracted_keywords_concepts": [
+          "Plan",
+          "Phase out",
+          "Public financing",
+          "Fossil fuel sector",
+          "Financing",
+          "Fossil fuels"
+        ],
+        "region_code": "Canada",
+        "linked_evidence_ids": [],
+        "explanation_enrichment_status": "processed",
+        "keywords_enriched_at": "2025-05-27 11:06:59.015000+00:00",
+        "bc_promise_rank": "strong",
+        "source_document_url": "",
+        "action_type_confidence": 0.0,
+        "background_and_context": "This commitment arises from Canada's broader climate change agenda, including its commitment to achieving net-zero emissions by 2050 and the Paris Agreement. The Liberal platforms (2021 and 2025) explicitly state the urgency of tackling the climate crisis and building a clean economy. Public financing of fossil fuels is seen as counterproductive to these goals, as it can perpetuate reliance on high-carbon energy sources. The intent is to align federal investments with climate targets, shifting away from industries that contribute to greenhouse gas emissions towards a more sustainable and green future. This also relates to international efforts to phase out inefficient fossil fuel subsidies.",
+        "what_it_means_for_canadians": [
+          "Reduced government support for traditional energy sources could redirect public funds towards renewable energy projects and clean technologies, fostering innovation and new job opportunities in green sectors.",
+          "This transition might lead to shifts in employment, potentially challenging workers and communities heavily reliant on the fossil fuel industry, necessitating robust retraining and diversification programs.",
+          "Over time, it could contribute to improved air quality and reduced greenhouse gas emissions, aligning Canada with global climate goals and mitigating environmental impacts for future generations.",
+          "There could be concerns about energy security and affordability during the transition, as traditional energy supply chains are reconfigured and new, cleaner alternatives scale up.",
+          "This policy signals Canada's commitment to a global clean economy, potentially enhancing its international reputation and attracting foreign investment in sustainable industries."
+        ],
+        "promise_id": "2508",
+        "parliament_session_id": "44",
+        "intended_impact_and_objectives": [
+          "Reduced government support for traditional energy sources could redirect public funds towards renewable energy projects and clean technologies, fostering innovation and new job opportunities in green sectors.",
+          "This transition might lead to shifts in employment, potentially challenging workers and communities heavily reliant on the fossil fuel industry, necessitating robust retraining and diversification programs.",
+          "Over time, it could contribute to improved air quality and reduced greenhouse gas emissions, aligning Canada with global climate goals and mitigating environmental impacts for future generations.",
+          "There could be concerns about energy security and affordability during the transition, as traditional energy supply chains are reconfigured and new, cleaner alternatives scale up.",
+          "This policy signals Canada's commitment to a global clean economy, potentially enhancing its international reputation and attracting foreign investment in sustainable industries."
+        ],
+        "action_type_classified_at": "2025-05-27 12:03:05.170000+00:00",
+        "target_groups": [],
+        "action_type_rationale": null,
+        "linking_preprocessing_done_at": null,
+        "candidate_or_government": "Liberal Party of Canada (2021 Platform)",
+        "category": null,
+        "bc_priority_score": 75.0,
+        "responsible_department_lead": "Natural Resources Canada",
+        "relevant_departments": [
+          "Natural Resources Canada",
+          "Finance Canada",
+          "Environment and Climate Change Canada",
+          "Global Affairs Canada",
+          "Artificial Intelligence and Digital Innovation"
+        ],
+        "rationale_format_fixed_at": "2025-05-28 05:03:26.112000+00:00",
+        "ingested_at": "2025-05-27 10:35:23.567000+00:00",
+        "bc_promise_rank_rationale": "Impacts investment and exports in a major resource sector, with potentially significant scale, negatively aligning with tenets promoting resource development and exports.",
+        "history_generated_at": "2025-05-27 12:03:05.170000+00:00",
+        "key_points": [],
+        "id": "LPC_20211216_MANDL_00b95752"
+      },
+      {
+        "keywords_enrichment_status": "processed",
+        "policy_areas": [],
+        "explanation_enrichment_model": "gemini-2.5-flash-preview-05-20",
+        "commitment_history_rationale": [
+          {
+            "date": "2016-12-09",
+            "source_url": "",
+            "action": "The Pan-Canadian Framework on Clean Growth and Climate Change was released, outlining Canada's national climate change strategy, including commitments to improve energy efficiency in buildings and homes, setting the policy foundation for future retrofit programs."
+          },
+          {
+            "date": "2020-11-30",
+            "source_url": "",
+            "action": "The Fall Economic Statement 2020 announced the creation of the Canada Greener Homes Grant, committing $2.6 billion over seven years to help homeowners improve energy efficiency through retrofits."
+          },
+          {
+            "date": "2020-12-11",
+            "source_url": "",
+            "action": "The Government of Canada released 'A Healthy Environment and a Healthy Economy,' Canada's strengthened climate plan, which reiterated and provided further details on the Canada Greener Homes Grant as a key measure to help Canadians make their homes more energy efficient and reduce emissions."
+          }
+        ],
+        "last_enrichment_at": "2025-05-27 12:03:49.480000+00:00",
+        "text": "Provide grants of up to $5,000 for home retrofits through the Canada Greener Homes Grants Program.",
+        "last_updated_at": "2025-05-27 10:35:25.803000+00:00",
+        "bc_promise_direction": "positive",
+        "party": "Liberal Party of Canada",
+        "implied_action_type": "funding_allocation",
+        "party_code": "LPC",
+        "keywords_extracted_at": "2025-05-27 12:03:49.480000+00:00",
+        "concise_title": "Home Retrofit Grants for Greener Homes",
+        "explanation_enriched_at": "2025-05-27 12:03:49.480000+00:00",
+        "source_type": "2021 LPC Mandate Letters",
+        "description": "The Canada Greener Homes Grant offers homeowners up to $5,000 in financial support for energy-efficient home retrofits, such as improved insulation or updated heating systems, aiming to lower energy consumption and reduce greenhouse gas emissions from residential properties.",
+        "date_issued": "2021-12-16",
+        "bc_ranked_at": "2025-05-27 12:03:49.480000+00:00",
+        "extracted_keywords_concepts": [
+          "Canada Greener Homes Grants Program",
+          "Grants",
+          "Home retrofits",
+          "$5,000",
+          "Greener Homes"
+        ],
+        "region_code": "Canada",
+        "linked_evidence_ids": [],
+        "explanation_enrichment_status": "processed",
+        "keywords_enriched_at": "2025-05-27 11:07:27.373000+00:00",
+        "bc_promise_rank": "weak",
+        "source_document_url": "",
+        "action_type_confidence": 0.0,
+        "background_and_context": "The Canada Greener Homes Grant was a key component of the Liberal Party's 2021 platform, \"Forward For Everyone,\" specifically within the \"Fighting Climate Change and Building a Clean Economy\" section. It was developed to address the substantial greenhouse gas emissions from buildings in Canada and to provide tangible support for homeowners to contribute to climate action. The initiative also aimed to stimulate economic recovery and create jobs in the green sector following the COVID-19 pandemic. By encouraging energy-efficient renovations, the program aligns with broader goals of making homes more affordable to live in and more environmentally sustainable, directly supporting Canada's commitments to net-zero emissions.",
+        "what_it_means_for_canadians": [
+          "Canadians can save money on energy bills by making their homes more efficient, leading to long-term financial benefits and increased comfort through better insulation and updated systems.",
+          "The program helps reduce Canada's overall carbon footprint, allowing homeowners to directly contribute to environmental sustainability and the fight against climate change.",
+          "It fosters job growth and economic activity in the green construction and renovation sectors, supporting skilled trades and local businesses across the country.",
+          "Homeowners must navigate an application process, including energy assessments and selecting approved contractors, which can be time-consuming and require some upfront financial outlay before reimbursement."
+        ],
+        "promise_id": "2533",
+        "parliament_session_id": "44",
+        "intended_impact_and_objectives": [
+          "Canadians can save money on energy bills by making their homes more efficient, leading to long-term financial benefits and increased comfort through better insulation and updated systems.",
+          "The program helps reduce Canada's overall carbon footprint, allowing homeowners to directly contribute to environmental sustainability and the fight against climate change.",
+          "It fosters job growth and economic activity in the green construction and renovation sectors, supporting skilled trades and local businesses across the country.",
+          "Homeowners must navigate an application process, including energy assessments and selecting approved contractors, which can be time-consuming and require some upfront financial outlay before reimbursement."
+        ],
+        "action_type_classified_at": "2025-05-27 12:03:49.480000+00:00",
+        "target_groups": [],
+        "action_type_rationale": null,
+        "linking_preprocessing_done_at": null,
+        "candidate_or_government": "Liberal Party of Canada (2021 Platform)",
+        "category": null,
+        "bc_priority_score": 45.0,
+        "responsible_department_lead": "Natural Resources Canada",
+        "relevant_departments": [
+          "Natural Resources Canada"
+        ],
+        "rationale_format_fixed_at": "2025-05-28 05:03:59.334000+00:00",
+        "ingested_at": "2025-05-27 10:35:25.803000+00:00",
+        "bc_promise_rank_rationale": "Supports residential investment and efficiency with moderate scale, but has limited direct impact on national productivity or core economic competitiveness tenets.",
+        "history_generated_at": "2025-05-27 12:03:49.480000+00:00",
+        "key_points": [],
+        "id": "LPC_20211216_MANDL_025ac14d"
+      }
+    ]
+  },
+  "evidence_structure": {
+    "total_sample_size": 20,
+    "field_statistics": {
+      "source_document_raw_id": {
+        "usage_count": 13,
+        "usage_percentage": 65.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "SOR/2021-215",
+          "SOR/2021-219",
+          "SI/2021-94"
+        ]
+      },
+      "key_concepts": {
+        "usage_count": 17,
+        "usage_percentage": 85.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "source_url": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "https://gazette.gc.ca/rp-pr/p2/2021/2021-10-13/html/sor-dors215-eng.html",
+          "https://gazette.gc.ca/rp-pr/p2/2021/2021-11-10/html/sor-dors219-eng.html",
+          "https://gazette.gc.ca/rp-pr/p2/2021/2021-11-10/html/si-tr94-eng.html"
+        ]
+      },
+      "description_or_details": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "These Regulations amend the Canadian Chicken Marketing Quota Regulations under the Farm Products Age...",
+          "These regulations amend the Canada Recovery Benefits Act, which establishes federal financial suppor...",
+          "This Order designates the Minister of Housing and Diversity and Inclusion as the responsible ministe..."
+        ]
+      },
+      "evidence_source_type": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Regulation (Canada Gazette P2)",
+          "Regulation (Canada Gazette P2)",
+          "Regulation (Canada Gazette P2)"
+        ]
+      },
+      "promise_ids": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "linked_departments": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "NoneType",
+          "list"
+        ],
+        "content_samples": []
+      },
+      "promise_linking_status": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "pending",
+          "pending",
+          "pending"
+        ]
+      },
+      "parliament_session_id": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "44",
+          "44",
+          "44"
+        ]
+      },
+      "additional_metadata": {
+        "usage_count": 17,
+        "usage_percentage": 85.0,
+        "data_types": [
+          "dict"
+        ],
+        "content_samples": []
+      },
+      "potential_relevance_score": {
+        "usage_count": 17,
+        "usage_percentage": 85.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Medium",
+          "High",
+          "High"
+        ]
+      },
+      "evidence_date": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "evidence_id": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "20211013_44_Gazette2_bd7ed6d0b3",
+          "20211110_44_Gazette2_03b68d9d80",
+          "20211110_44_Gazette2_2719d4bd5e"
+        ]
+      },
+      "llm_analysis_raw": {
+        "usage_count": 10,
+        "usage_percentage": 50.0,
+        "data_types": [
+          "dict"
+        ],
+        "content_samples": []
+      },
+      "ingested_at": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      },
+      "title_or_summary": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Regulations amending the Farm Products Agencies Act come into force, impacting Canadian chicken mark...",
+          "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related ...",
+          "Order designates Minister of Housing and Diversity and Inclusion as the Minister for National Housin..."
+        ]
+      },
+      "id": {
+        "usage_count": 20,
+        "usage_percentage": 100.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "20211013_44_Gazette2_bd7ed6d0b3",
+          "20211110_44_Gazette2_03b68d9d80",
+          "20211110_44_Gazette2_2719d4bd5e"
+        ]
+      },
+      "additional_information": {
+        "usage_count": 3,
+        "usage_percentage": 15.0,
+        "data_types": [
+          "dict"
+        ],
+        "content_samples": []
+      },
+      "bill_extracted_keywords_concepts": {
+        "usage_count": 3,
+        "usage_percentage": 15.0,
+        "data_types": [
+          "list"
+        ],
+        "content_samples": []
+      },
+      "bill_parl_id": {
+        "usage_count": 3,
+        "usage_percentage": 15.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "44-1_C-1",
+          "44-1_S-1",
+          "44-1_C-2"
+        ]
+      },
+      "bill_one_sentence_description_llm": {
+        "usage_count": 3,
+        "usage_percentage": 15.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "This Act establishes the legal framework for the proper administration of oaths of office, ensuring ...",
+          "This bill seeks to establish or amend legislative provisions concerning the operation, safety, and r...",
+          "Bill C-2 extends Canada Emergency Wage Subsidy (CEWS) and Canada Emergency Rent Subsidy (CERS) for t..."
+        ]
+      },
+      "bill_timeline_summary_llm": {
+        "usage_count": 3,
+        "usage_percentage": 15.0,
+        "data_types": [
+          "str"
+        ],
+        "content_samples": [
+          "Bill respects the administration of oaths of office, outlining procedures for officials to formally ...",
+          "Bill proposes an act relating to railways, addressing various aspects of railway operations and gove...",
+          "Bill C-2 extends COVID-19 wage and rent subsidies, introduces a worker lockdown benefit, and enhance..."
+        ]
+      },
+      "promise_linking_processed_at": {
+        "usage_count": 2,
+        "usage_percentage": 10.0,
+        "data_types": [
+          "DatetimeWithNanoseconds"
+        ],
+        "content_samples": []
+      }
+    },
+    "sample_documents": [
+      {
+        "source_document_raw_id": "SOR/2021-215",
+        "key_concepts": [
+          "Canadian Chicken Marketing Quota",
+          "Farm Products Agencies Act",
+          "chicken production",
+          "chicken marketing",
+          "agricultural regulations",
+          "quota limits"
+        ],
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2021/2021-10-13/html/sor-dors215-eng.html",
+        "description_or_details": "These Regulations amend the Canadian Chicken Marketing Quota Regulations under the Farm Products Agencies Act, establishing limits for the production and marketing of chicken to manage supply within the Canadian agricultural sector.",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "promise_ids": [],
+        "linked_departments": [
+          "Agriculture and Agri-Food Canada"
+        ],
+        "promise_linking_status": "pending",
+        "parliament_session_id": "44",
+        "additional_metadata": {
+          "raw_gazette_notice_id": "CGP2_20211013_bb0de6953630",
+          "rias_summary": ""
+        },
+        "potential_relevance_score": "Medium",
+        "evidence_date": "2021-10-13 14:00:00+00:00",
+        "evidence_id": "20211013_44_Gazette2_bd7ed6d0b3",
+        "llm_analysis_raw": {
+          "potential_relevance_score": "Medium",
+          "one_sentence_description": "These Regulations amend the Canadian Chicken Marketing Quota Regulations under the Farm Products Agencies Act, establishing limits for the production and marketing of chicken to manage supply within the Canadian agricultural sector.",
+          "key_concepts": [
+            "Canadian Chicken Marketing Quota",
+            "Farm Products Agencies Act",
+            "chicken production",
+            "chicken marketing",
+            "agricultural regulations",
+            "quota limits"
+          ],
+          "rias_summary": "",
+          "sponsoring_department_standardized": "Agriculture and Agri-Food Canada",
+          "timeline_summary": "Regulations amending the Farm Products Agencies Act come into force, impacting Canadian chicken marketing quotas for production and marketing."
+        },
+        "ingested_at": "2025-05-28 00:45:21.053460+00:00",
+        "title_or_summary": "Regulations amending the Farm Products Agencies Act come into force, impacting Canadian chicken marketing quotas for production and marketing.",
+        "id": "20211013_44_Gazette2_bd7ed6d0b3"
+      },
+      {
+        "source_document_raw_id": "SOR/2021-219",
+        "key_concepts": [
+          "Canada Recovery Benefits Act",
+          "Recovery benefits",
+          "Regulations amending",
+          "Financial support",
+          "Economic recovery"
+        ],
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2021/2021-11-10/html/sor-dors219-eng.html",
+        "description_or_details": "These regulations amend the Canada Recovery Benefits Act, which establishes federal financial support programs such as the Canada Recovery Benefit (CRB), to adjust their operational provisions.",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "promise_ids": [],
+        "linked_departments": [
+          "Employment and Social Development Canada"
+        ],
+        "promise_linking_status": "pending",
+        "parliament_session_id": "44",
+        "additional_metadata": {
+          "raw_gazette_notice_id": "CGP2_20211110_0dec79e06c6a",
+          "rias_summary": ""
+        },
+        "potential_relevance_score": "High",
+        "evidence_date": "2021-11-10 14:00:00+00:00",
+        "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+        "llm_analysis_raw": {
+          "potential_relevance_score": "High",
+          "one_sentence_description": "These regulations amend the Canada Recovery Benefits Act, which establishes federal financial support programs such as the Canada Recovery Benefit (CRB), to adjust their operational provisions.",
+          "key_concepts": [
+            "Canada Recovery Benefits Act",
+            "Recovery benefits",
+            "Regulations amending",
+            "Financial support",
+            "Economic recovery"
+          ],
+          "rias_summary": "",
+          "sponsoring_department_standardized": "Employment and Social Development Canada",
+          "timeline_summary": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits."
+        },
+        "ingested_at": "2025-05-28 00:46:02.547631+00:00",
+        "title_or_summary": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+        "id": "20211110_44_Gazette2_03b68d9d80"
+      },
+      {
+        "source_document_raw_id": "SI/2021-94",
+        "key_concepts": [
+          "Minister of Housing and Diversity and Inclusion",
+          "National Housing Act",
+          "Ministerial designation",
+          "Housing policy",
+          "Federal housing initiatives"
+        ],
+        "source_url": "https://gazette.gc.ca/rp-pr/p2/2021/2021-11-10/html/si-tr94-eng.html",
+        "description_or_details": "This Order designates the Minister of Housing and Diversity and Inclusion as the responsible minister for the National Housing Act, clarifying ministerial oversight for federal housing initiatives and related programs.",
+        "evidence_source_type": "Regulation (Canada Gazette P2)",
+        "promise_ids": [],
+        "linked_departments": [
+          "Infrastructure Canada"
+        ],
+        "promise_linking_status": "pending",
+        "parliament_session_id": "44",
+        "additional_metadata": {
+          "raw_gazette_notice_id": "CGP2_20211110_aa472994e750",
+          "rias_summary": ""
+        },
+        "potential_relevance_score": "High",
+        "evidence_date": "2021-11-10 14:00:00+00:00",
+        "evidence_id": "20211110_44_Gazette2_2719d4bd5e",
+        "llm_analysis_raw": {
+          "potential_relevance_score": "High",
+          "one_sentence_description": "This Order designates the Minister of Housing and Diversity and Inclusion as the responsible minister for the National Housing Act, clarifying ministerial oversight for federal housing initiatives and related programs.",
+          "key_concepts": [
+            "Minister of Housing and Diversity and Inclusion",
+            "National Housing Act",
+            "Ministerial designation",
+            "Housing policy",
+            "Federal housing initiatives"
+          ],
+          "rias_summary": "",
+          "sponsoring_department_standardized": "Infrastructure Canada",
+          "timeline_summary": "Order designates Minister of Housing and Diversity and Inclusion as the Minister for National Housing Act purposes."
+        },
+        "ingested_at": "2025-05-28 00:48:01.848551+00:00",
+        "title_or_summary": "Order designates Minister of Housing and Diversity and Inclusion as the Minister for National Housing Act purposes.",
+        "id": "20211110_44_Gazette2_2719d4bd5e"
+      }
+    ]
+  },
+  "usable_fields": {
+    "promises": {
+      "primary_content": [
+        {
+          "field": "text",
+          "usage_percentage": 100.0,
+          "avg_content_length": 74.66666666666667,
+          "sample": "Strengthen Canada's partnerhips with the United States."
+        },
+        {
+          "field": "description",
+          "usage_percentage": 100.0,
+          "avg_content_length": 103.0,
+          "sample": "This commitment aims to enhance the multifaceted bilateral relationship between Canada and the Unite..."
+        },
+        {
+          "field": "background_and_context",
+          "usage_percentage": 100.0,
+          "avg_content_length": 103.0,
+          "sample": "The commitment to strengthen Canada's partnership with the United States is rooted in the fundamenta..."
+        },
+        {
+          "field": "bc_promise_rank_rationale",
+          "usage_percentage": 100.0,
+          "avg_content_length": 103.0,
+          "sample": "Strengthening ties with Canada's largest partner directly impacts trade, investment, and competitive..."
+        }
+      ],
+      "secondary_content": [
+        {
+          "field": "explanation_enrichment_model",
+          "usage_percentage": 100.0,
+          "avg_content_length": 30.0,
+          "sample": "gemini-2.5-flash-preview-05-20"
+        },
+        {
+          "field": "party",
+          "usage_percentage": 100.0,
+          "avg_content_length": 23.0,
+          "sample": "Liberal Party of Canada"
+        },
+        {
+          "field": "concise_title",
+          "usage_percentage": 100.0,
+          "avg_content_length": 38.333333333333336,
+          "sample": "Strengthening Canada-US Partnerships"
+        },
+        {
+          "field": "source_type",
+          "usage_percentage": 100.0,
+          "avg_content_length": 24.0,
+          "sample": "2021 LPC Mandate Letters"
+        },
+        {
+          "field": "candidate_or_government",
+          "usage_percentage": 100.0,
+          "avg_content_length": 39.0,
+          "sample": "Liberal Party of Canada (2021 Platform)"
+        },
+        {
+          "field": "responsible_department_lead",
+          "usage_percentage": 100.0,
+          "avg_content_length": 23.0,
+          "sample": "Global Affairs Canada"
+        },
+        {
+          "field": "id",
+          "usage_percentage": 100.0,
+          "avg_content_length": 27.0,
+          "sample": "LPC_20211216_MANDL_002f9cde"
+        }
+      ],
+      "metadata": [
+        {
+          "field": "bc_promise_direction",
+          "usage_percentage": 100.0,
+          "avg_content_length": 8.0,
+          "sample": "positive"
+        },
+        {
+          "field": "implied_action_type",
+          "usage_percentage": 100.0,
+          "avg_content_length": 18.0,
+          "sample": "policy_development"
+        },
+        {
+          "field": "party_code",
+          "usage_percentage": 100.0,
+          "avg_content_length": 3.0,
+          "sample": "LPC"
+        },
+        {
+          "field": "date_issued",
+          "usage_percentage": 100.0,
+          "avg_content_length": 10.0,
+          "sample": "2021-12-16"
+        },
+        {
+          "field": "region_code",
+          "usage_percentage": 100.0,
+          "avg_content_length": 6.0,
+          "sample": "Canada"
+        },
+        {
+          "field": "explanation_enrichment_status",
+          "usage_percentage": 100.0,
+          "avg_content_length": 9.0,
+          "sample": "processed"
+        },
+        {
+          "field": "bc_promise_rank",
+          "usage_percentage": 100.0,
+          "avg_content_length": 5.333333333333333,
+          "sample": "strong"
+        },
+        {
+          "field": "promise_id",
+          "usage_percentage": 100.0,
+          "avg_content_length": 4.0,
+          "sample": "1101"
+        },
+        {
+          "field": "parliament_session_id",
+          "usage_percentage": 100.0,
+          "avg_content_length": 2.0,
+          "sample": "44"
+        }
+      ]
+    },
+    "evidence": {
+      "primary_content": [
+        {
+          "field": "source_url",
+          "usage_percentage": 100.0,
+          "avg_content_length": 70.66666666666667,
+          "sample": "https://gazette.gc.ca/rp-pr/p2/2021/2021-10-13/html/sor-dors215-eng.html"
+        },
+        {
+          "field": "description_or_details",
+          "usage_percentage": 100.0,
+          "avg_content_length": 103.0,
+          "sample": "These Regulations amend the Canadian Chicken Marketing Quota Regulations under the Farm Products Age..."
+        },
+        {
+          "field": "title_or_summary",
+          "usage_percentage": 100.0,
+          "avg_content_length": 103.0,
+          "sample": "Regulations amending the Farm Products Agencies Act come into force, impacting Canadian chicken mark..."
+        }
+      ],
+      "secondary_content": [
+        {
+          "field": "evidence_source_type",
+          "usage_percentage": 100.0,
+          "avg_content_length": 30.0,
+          "sample": "Regulation (Canada Gazette P2)"
+        },
+        {
+          "field": "evidence_id",
+          "usage_percentage": 100.0,
+          "avg_content_length": 31.0,
+          "sample": "20211013_44_Gazette2_bd7ed6d0b3"
+        },
+        {
+          "field": "id",
+          "usage_percentage": 100.0,
+          "avg_content_length": 31.0,
+          "sample": "20211013_44_Gazette2_bd7ed6d0b3"
+        }
+      ],
+      "metadata": [
+        {
+          "field": "promise_linking_status",
+          "usage_percentage": 100.0,
+          "avg_content_length": 7.0,
+          "sample": "pending"
+        },
+        {
+          "field": "parliament_session_id",
+          "usage_percentage": 100.0,
+          "avg_content_length": 2.0,
+          "sample": "44"
+        },
+        {
+          "field": "potential_relevance_score",
+          "usage_percentage": 85.0,
+          "avg_content_length": 4.666666666666667,
+          "sample": "Medium"
+        },
+        {
+          "field": "source_document_raw_id",
+          "usage_percentage": 65.0,
+          "avg_content_length": 11.333333333333334,
+          "sample": "SOR/2021-215"
+        }
+      ]
+    }
+  },
+  "recommendations": [
+    "Use primary promise fields: text, description, background_and_context",
+    "Use primary evidence fields: source_url, description_or_details, title_or_summary",
+    "Implement multi-field text extraction combining primary and secondary content.",
+    "Use semantic similarity algorithms due to sufficient text content.",
+    "Leverage metadata fields for department/category-based pre-filtering."
+  ]
+}

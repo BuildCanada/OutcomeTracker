@@ -1,0 +1,23 @@
+{
+  "backup_timestamp": "20250527_212346",
+  "backup_date": "2025-05-27T21:23:46.582311",
+  "collections_backed_up": {
+    "promises": {
+      "source_collection": "promises",
+      "backup_collection": "promises_backup_20250527_212346",
+      "documents_processed": 1374,
+      "errors": [],
+      "status": "completed",
+      "verified": true
+    },
+    "evidence_items": {
+      "source_collection": "evidence_items",
+      "backup_collection": "evidence_items_backup_20250527_212346",
+      "documents_processed": 2992,
+      "errors": [],
+      "status": "completed",
+      "verified": true
+    }
+  },
+  "backup_status": "completed"
+}
