@@ -36,6 +36,24 @@ export const metadata: Metadata = {
     // apple: faviconDataUrl, // For Apple touch icon
     // shortcut: faviconDataUrl, // For older browsers
   },
+  openGraph: {
+    title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
+    description: "Track the progress of Canada's government initiatives",
+    images: [
+      {
+        url: "/outcomes-tracker-seo-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Build Canada Outcomes Tracker",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
+    description: "Track the progress of Canada's government initiatives",
+    images: ["/outcomes-tracker-seo-image.png"],
+  },
 };
 
 export default function RootLayout({
