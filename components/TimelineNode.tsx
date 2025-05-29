@@ -10,11 +10,17 @@ interface TimelineNodeProps {
   isLast: boolean;  // To potentially style the last event as "Most Recent"
 }
 
-const formatDateForNode = (dateInput: Timestamp | string): string => {
+const formatDateForNode = (dateInput: Timestamp | string | any): string => {
   if (!dateInput) return 'Date N/A';
   let dateObj: Date;
+  
   if (dateInput instanceof Timestamp) {
     dateObj = dateInput.toDate();
+  } else if (typeof dateInput === 'object' && dateInput !== null && 
+             typeof dateInput.seconds === 'number' && 
+             typeof dateInput.nanoseconds === 'number') {
+    // Handle serialized Timestamp objects from API
+    dateObj = new Date(dateInput.seconds * 1000);
   } else if (typeof dateInput === 'string') {
     dateObj = new Date(dateInput);
     if (isNaN(dateObj.getTime())) {
@@ -25,8 +31,15 @@ const formatDateForNode = (dateInput: Timestamp | string): string => {
         if (isNaN(dateObj.getTime())) return 'Invalid Date';
     }
   } else {
+    console.warn('[TimelineNode] Unknown date format:', dateInput);
     return 'Unknown Date';
   }
+  
+  if (isNaN(dateObj.getTime())) {
+    console.warn('[TimelineNode] Invalid date created from:', dateInput);
+    return 'Invalid Date';
+  }
+  
   // Format from user HTML: April 4, 2025
   return dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 };

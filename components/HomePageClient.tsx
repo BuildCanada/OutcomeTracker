@@ -17,10 +17,7 @@ import type {
   PrimeMinister
 } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Define Department IDs as constants
-const ISED_DEPARTMENT_ID = 'innovation-science-and-economic-development-canada';
-const AIDI_DEPARTMENT_ID = 'artificial-intelligence-and-digital-innovation';
+import FAQModal from "@/components/FAQModal";
 
 // Client-side component to handle the dynamic parts that need state and effects
 export default function HomePageClient({ 
@@ -56,9 +53,14 @@ export default function HomePageClient({
   const [isLoadingTabData, setIsLoadingTabData] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(initialError || null);
   
-  // New state for performance optimization
-  const [isShowingSummary, setIsShowingSummary] = useState<boolean>(true);
-  const [isLoadingFullData, setIsLoadingFullData] = useState<boolean>(false);
+  // New state for pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [allPromises, setAllPromises] = useState<PromiseData[]>([]);
+  const [totalPromises, setTotalPromises] = useState<number>(0);
+  const [promisesPerPage] = useState<number>(10);
+
+  // FAQ modal state
+  const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
 
   // Effect to set currentMinisterInfo based on activeTabId and cached ministerInfos
   useEffect(() => {
@@ -72,6 +74,10 @@ export default function HomePageClient({
       setCurrentMinisterInfo(null); // No active tab
       setActiveDepartmentData(null); // Clear department data if no tab is active
     }
+    // Reset pagination when tab changes
+    setCurrentPage(1);
+    setTotalPromises(0);
+    setAllPromises([]);
   }, [activeTabId, ministerInfos]);
 
   // Combined effect for fetching ALL data (minister and promises) for the active tab
@@ -95,7 +101,6 @@ export default function HomePageClient({
 
       // 1. Fetch Minister Info if not cached for THIS tab ID
       if (!ministerInfos.hasOwnProperty(thisTabId)) {
-        console.log(`[HomePageClient] Minister info for ${thisTabId} not cached. Fetching...`);
         try {
           const response = await fetch(`/api/minister-info?departmentId=${thisTabId}&sessionId=${currentSessionId}`);
           if (!response.ok) {
@@ -117,8 +122,6 @@ export default function HomePageClient({
           setActiveDepartmentData({ ministerInfo: null, promises: [], evidenceItems: [] }); // Show error state for promises too
           return; // Stop if minister fetch fails
         }
-      } else {
-        console.log(`[HomePageClient] Minister info for ${thisTabId} found in cache.`);
       }
       
       const finalMinisterInfoToUse = ministerInfos.hasOwnProperty(thisTabId) ? ministerInfos[thisTabId] : ministerInfoForThisTab;
@@ -144,7 +147,7 @@ export default function HomePageClient({
         return;
       }
 
-      // For other departments, fetch promises as usual
+      // For other departments, fetch promises and total count
       const departmentFullName = selectedConfig.official_full_name;
       if (!departmentFullName || typeof departmentFullName !== 'string') {
         if (activeTabId !== thisTabId) return; // Tab changed
@@ -162,26 +165,30 @@ export default function HomePageClient({
             effectiveDepartmentFullNameOverride = finalMinisterInfoToUse.effectiveDepartmentOfficialFullName;
         }
         
-        console.log(`[HomePageClient] Fetching promise summary for dept: ${departmentFullName}, session: ${currentSessionId}, party: ${currentGoverningPartyCode}, override: ${effectiveDepartmentFullNameOverride}`);
-        
-        // First, load a lightweight summary for faster initial page load
-        const promiseSummaries = await fetchPromisesSummary(
+        // Get total count and all promises for pagination
+        const allPromiseSummaries = await fetchPromisesSummary(
           effectiveDepartmentFullNameOverride || departmentFullName, 
           currentSessionId, 
           currentGoverningPartyCode,
           "Canada",
-          10 // Initial limit for fast loading
+          1000 // Fetch all promises
         );
+        
+        setAllPromises(allPromiseSummaries as PromiseData[]);
+        setTotalPromises(allPromiseSummaries.length);
+        
+        // Calculate current page promises
+        const startIndex = (currentPage - 1) * promisesPerPage;
+        const endIndex = startIndex + promisesPerPage;
+        const currentPagePromises = allPromiseSummaries.slice(startIndex, endIndex);
         
         if (activeTabId !== thisTabId) return; // Tab changed during fetch, abort
 
-        console.log(`[HomePageClient] Setting active department data for ${thisTabId} with minister:`, finalMinisterInfoToUse?.name, `and ${promiseSummaries.length} promise summaries.`);
         setActiveDepartmentData({
           ministerInfo: finalMinisterInfoToUse,
-          promises: promiseSummaries as PromiseData[], // Type assertion since we know the structure
+          promises: currentPagePromises,
           evidenceItems: [] // Empty for performance, will load on demand
         });
-        setIsShowingSummary(true); // Mark that we're showing summary data
 
       } catch (err: any) {
         if (activeTabId !== thisTabId) return; // Tab changed
@@ -195,68 +202,26 @@ export default function HomePageClient({
     };
 
     loadDataForActiveTab();
-  }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, error]);
+  }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, error, currentPage, promisesPerPage]);
 
-  // Function to load full data with evidence when needed
-  const loadFullData = useCallback(async () => {
-    if (!activeTabId || !currentSessionId || !currentGoverningPartyCode || isLoadingFullData) {
-      return;
-    }
+  // Function to handle page navigation
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
-    const selectedConfig = allDepartmentConfigs.find(c => c.id === activeTabId);
-    if (!selectedConfig || selectedConfig.is_prime_minister) {
-      return; // No promises for PM
-    }
-
-    setIsLoadingFullData(true);
-    
-    try {
-      const departmentFullName = selectedConfig.official_full_name;
-      let effectiveDepartmentFullNameOverride: string | undefined = undefined;
+  // Effect to update displayed promises when page changes
+  useEffect(() => {
+    if (allPromises.length > 0 && activeDepartmentData) {
+      const startIndex = (currentPage - 1) * promisesPerPage;
+      const endIndex = startIndex + promisesPerPage;
+      const currentPagePromises = allPromises.slice(startIndex, endIndex);
       
-      const ministerInfo = ministerInfos[activeTabId];
-      if (ministerInfo && 
-          ministerInfo.effectiveDepartmentOfficialFullName &&
-          ministerInfo.effectiveDepartmentId !== selectedConfig.id) {
-          effectiveDepartmentFullNameOverride = ministerInfo.effectiveDepartmentOfficialFullName;
-      }
-      
-      console.log(`[HomePageClient] Loading full promise data for ${departmentFullName}`);
-      const fullPromises = await fetchPromisesForDepartment(
-        departmentFullName,
-        currentSessionId,
-        currentGoverningPartyCode,
-        "Canada",
-        effectiveDepartmentFullNameOverride,
-        {
-          limit: 50, // Load more promises
-          includeEvidence: true, // Include evidence
-          offset: 0
-        }
-      );
-      
-      const allEvidenceItemsFlat = fullPromises.reduce((acc, promise) => {
-        if (promise.evidence) {
-          promise.evidence.forEach(ev => {
-            if (!acc.find(existingEv => existingEv.id === ev.id)) acc.push(ev);
-          });
-        }
-        return acc;
-      }, [] as EvidenceItem[]);
-
       setActiveDepartmentData(prev => prev ? {
         ...prev,
-        promises: fullPromises,
-        evidenceItems: allEvidenceItemsFlat
+        promises: currentPagePromises
       } : null);
-      setIsShowingSummary(false);
-      
-    } catch (error) {
-      console.error('Error loading full data:', error);
-    } finally {
-      setIsLoadingFullData(false);
     }
-  }, [activeTabId, currentSessionId, currentGoverningPartyCode, allDepartmentConfigs, ministerInfos, isLoadingFullData]);
+  }, [currentPage, allPromises, promisesPerPage]);
 
   // Actual JSX rendering for the client component
   return (
@@ -264,11 +229,17 @@ export default function HomePageClient({
       <div className="container px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="col-span-1">
-            <h1 className="text-4xl md:text-6xl font-bold mb-8">{pageTitle}</h1>
+            <h1 className="text-4xl lg:text-6xl font-bold mb-8">{pageTitle}</h1>
             <div className="mb-8">
-              <p className="text-gray-900">
+              <p className="text-gray-900 mb-8">
                 A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
               </p>
+              <button 
+                onClick={() => setIsFAQModalOpen(true)}
+                className="font-mono text-sm text-[#8b2332] hover:text-[#721c28] transition-colors"
+              >
+                FAQ
+              </button>
             </div>
           </div>
 
@@ -319,16 +290,38 @@ export default function HomePageClient({
                             departmentFullName={dept.official_full_name}
                             departmentShortName={dept.display_short_name}
                           />
-                          {/* Load More Button for Summary Data */}
-                          {isShowingSummary && !dept.is_prime_minister && activeDepartmentData.promises.length >= 10 && (
-                            <div className="mt-6 text-center">
-                              <button
-                                onClick={loadFullData}
-                                disabled={isLoadingFullData}
-                                className="px-6 py-3 border font-mono text-sm hover:bg-[#7a1f2b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                              >
-                                {isLoadingFullData ? 'Loading Full Data...' : 'LOAD MORE'}
-                              </button>
+                          {/* Pagination Controls */}
+                          {!dept.is_prime_minister && totalPromises > 0 && (
+                            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[#d3c7b9]">
+                              {/* Page Info */}
+                              <div className="text-sm text-gray-600">
+                                Showing {((currentPage - 1) * promisesPerPage) + 1} to {Math.min(currentPage * promisesPerPage, totalPromises)} of {totalPromises} promises
+                              </div>
+                              
+                              {/* Navigation Buttons */}
+                              {totalPromises > promisesPerPage && (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1 text-sm border border-[#d3c7b9] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    Previous
+                                  </button>
+                                  
+                                  <span className="px-3 py-1 text-sm">
+                                    Page {currentPage} of {Math.ceil(totalPromises / promisesPerPage)}
+                                  </span>
+                                  
+                                  <button
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage >= Math.ceil(totalPromises / promisesPerPage)}
+                                    className="px-3 py-1 text-sm border border-[#d3c7b9] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                  >
+                                    Next
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </>
@@ -345,6 +338,7 @@ export default function HomePageClient({
           </div>
         </div>
       </div>
+      <FAQModal isOpen={isFAQModalOpen} onClose={() => setIsFAQModalOpen(false)} />
     </div>
   );
 } 
