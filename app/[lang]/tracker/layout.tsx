@@ -116,29 +116,6 @@ const fetchDeptConfigs = async (currentSessionId?: string | null) => {
     (a, b) => (a.display_order ?? 999) - (b.display_order ?? 999),
   );
 
-  // Apply parliament-based filtering for ISED/AIDI on the server
-  if (currentSessionId?.startsWith("44")) {
-    mainDeptConfigs = mainDeptConfigs.filter(
-      (config) =>
-        config.id !== "artificial-intelligence-and-digital-innovation",
-    );
-  } else if (currentSessionId?.startsWith("45")) {
-    mainDeptConfigs = mainDeptConfigs.filter(
-      (config) =>
-        config.id !== "innovation-science-and-economic-development-canada",
-    );
-  } else {
-    const aidiExists = mainDeptConfigs.some(
-      (c) => c.id === "artificial-intelligence-and-digital-innovation",
-    );
-    if (aidiExists) {
-      mainDeptConfigs = mainDeptConfigs.filter(
-        (config) =>
-          config.id !== "innovation-science-and-economic-development-canada",
-      );
-    }
-  }
-
   mainDeptConfigs = mainDeptConfigs.filter(
     (config) => config.bc_priority === 1,
   );
