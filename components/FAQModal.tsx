@@ -18,14 +18,14 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
           <div>
             <h3 className="text-lg font-semibold mb-2">Why did you build this?</h3>
             <p className="text-gray-700">
-              We wanted to better understand what was being done in key areas that matter to Canadians like us. We wanted to understand what was being promised, what progress has been made, and what outcomes it has resulted in.
+              We want to better understand what is being done in key areas that matter to Canadians like us. We want to understand what the government is promising, what progress has been made, and, most importantly, what the outcomes have been.
             </p>
           </div>
           
           <div>
             <h3 className="text-lg font-semibold mb-2">Where do commitments come from?</h3>
             <p className="text-gray-700">
-              We pull commitments from the Liberal Party's platform. We show the original text of the commitment and its source in each commitment's details.
+              We have pulled commitments from the Liberal Party's platform. We show the original text of the commitment and its source in each commitment's details. As new commitments are made we will add these in.
             </p>
           </div>
 
@@ -39,7 +39,14 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
           <div>
             <h3 className="text-lg font-semibold mb-2">How can I contribute?</h3>
             <p className="text-gray-700">
-              We are planning to open source this project in the near future so that anyone can contribute.
+              This is a work in progress and we would love help from others.We are planning to open source this project in the near future so that anyone can contribute.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-2">How can I get in contact with you?</h3>
+            <p className="text-gray-700">
+              You can reach out to us at <a href="mailto:hi@buildcanada.com">hi@buildcanada.com</a>
             </p>
           </div>
         </div>
