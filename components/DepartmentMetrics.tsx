@@ -313,18 +313,6 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={17}
             />
           </ChartWithSource>
-          <ChartWithSource
-            dataSource={departmentData.metrics[1].dataSource}
-            dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
-            targetSource={departmentData.metrics[1].targetSource}
-            targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
-          >
-            <BalanceSheetChart
-              title="Operating Balance"
-              categories={["Net operating balance"]}
-              startDate="2015-01"
-            />
-          </ChartWithSource>
         </div>
       );
 
@@ -351,7 +339,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
 
     case "immigration-refugees-and-citizenship-canada":
       return (
-        <>
+        <div className="col-span-1 lg:col-span-2">
           <ChartWithSource
             dataSource={departmentData.metrics[1].dataSource}
             dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
@@ -371,14 +359,6 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               <p>Chart coming soon</p>
             </div>
           </div>
-        </>
-          </div>
-          {/*<div className="border flex items-center justify-center text-muted-foreground">*/}
-          {/*  <div className="text-center">*/}
-          {/*    <h4 className="font-medium mb-2">PR Admissions Chart</h4>*/}
-          {/*    <p>Chart coming soon</p>*/}
-          {/*  </div>*/}
-          {/*</div>*/}
         </div>
       );
 
@@ -478,17 +458,13 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
       );
 
     default:
-      return departmentData.metrics.map((metric, index) => (
-        <div
-          key={index}
-          className="border flex items-center justify-center text-muted-foreground"
-        >
-          <div className="text-center">
-            <h4 className="font-medium mb-2">{metric.metric}</h4>
-            <p>Chart coming soon</p>
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <div className="border p-8 flex items-center justify-center">
+            <p className="text-muted-foreground">Coming soon</p>
           </div>
         </div>
-      ));
+      );
   }
 };
 
@@ -499,16 +475,11 @@ export default function DepartmentMetrics({
 
   if (!departmentData) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Guiding Metrics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            No metrics data available for this department yet. {departmentSlug}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="col-span-1 lg:col-span-2">
+        <div className="border p-8 flex items-center justify-center">
+          <p className="text-muted-foreground">Coming soon</p>
+        </div>
+      </div>
     );
   }
 
