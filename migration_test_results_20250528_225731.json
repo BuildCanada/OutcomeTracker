@@ -1,0 +1,22 @@
+{
+  "total_tests": 8,
+  "passed_tests": 8,
+  "failed_tests": 0,
+  "success_rate": 1.0,
+  "test_breakdown": {
+    "ingestion": {
+      "total": 4,
+      "passed": 4
+    },
+    "processing": {
+      "total": 4,
+      "passed": 4
+    },
+    "linking": {
+      "total": 0,
+      "passed": 0
+    }
+  },
+  "failed_test_details": [],
+  "timestamp": "2025-05-29T02:57:31.263395+00:00"
+}

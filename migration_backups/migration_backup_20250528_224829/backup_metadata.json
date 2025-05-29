@@ -1,0 +1,10 @@
+{
+  "timestamp": "20250528_224829",
+  "backed_up_files": [
+    "scripts/ingestion_jobs/",
+    "scripts/processing_jobs/",
+    "cloud_run_main.py",
+    "cloudbuild.yaml"
+  ],
+  "backup_path": "/Users/tscheidt/promise-tracker/PromiseTracker/migration_backups/migration_backup_20250528_224829"
+}

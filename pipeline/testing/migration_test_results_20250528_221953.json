@@ -1,0 +1,62 @@
+{
+  "total_tests": 8,
+  "passed_tests": 0,
+  "failed_tests": [
+    {
+      "name": "canada_news_ingestion",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    },
+    {
+      "name": "legisinfo_bills_ingestion",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    },
+    {
+      "name": "orders_in_council_ingestion",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    },
+    {
+      "name": "canada_gazette_ingestion",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    },
+    {
+      "name": "canada_news_processing_processing",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    },
+    {
+      "name": "legisinfo_processing_processing",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    },
+    {
+      "name": "oic_processing_processing",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    },
+    {
+      "name": "gazette_processing_processing",
+      "issues": [],
+      "notes": "Test failed with error: 'JobResult' object has no attribute 'to_dict'"
+    }
+  ],
+  "success_rate": 0.0,
+  "test_breakdown": {
+    "ingestion": {
+      "total": 4,
+      "passed": 0
+    },
+    "processing": {
+      "total": 4,
+      "passed": 0
+    },
+    "linking": {
+      "total": 0,
+      "passed": 0
+    }
+  },
+  "timestamp": "2025-05-29T02:19:53.061070+00:00"
+}
