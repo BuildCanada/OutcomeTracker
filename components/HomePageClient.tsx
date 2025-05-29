@@ -17,6 +17,7 @@ import type {
   PrimeMinister
 } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import FAQModal from "@/components/FAQModal";
 
 // Define Department IDs as constants
 const ISED_DEPARTMENT_ID = 'innovation-science-and-economic-development-canada';
@@ -59,6 +60,7 @@ export default function HomePageClient({
   // New state for performance optimization
   const [isShowingSummary, setIsShowingSummary] = useState<boolean>(true);
   const [isLoadingFullData, setIsLoadingFullData] = useState<boolean>(false);
+  const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
 
   // Effect to set currentMinisterInfo based on activeTabId and cached ministerInfos
   useEffect(() => {
@@ -266,9 +268,15 @@ export default function HomePageClient({
           <div className="col-span-1">
             <h1 className="text-4xl lg:text-6xl font-bold mb-8">{pageTitle}</h1>
             <div className="mb-8">
-              <p className="text-gray-900">
+              <p className="text-gray-900 mb-8">
                 A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
               </p>
+              <button 
+                onClick={() => setIsFAQModalOpen(true)}
+                className="font-mono text-sm text-[#8b2332] hover:text-[#721c28] transition-colors"
+              >
+                FAQ
+              </button>
             </div>
           </div>
 
@@ -345,6 +353,7 @@ export default function HomePageClient({
           </div>
         </div>
       </div>
+      <FAQModal isOpen={isFAQModalOpen} onClose={() => setIsFAQModalOpen(false)} />
     </div>
   );
 } 

@@ -55,7 +55,7 @@ const formatSimpleDate = (dateString: string | undefined): string => {
 
 // Progress dot color scale (red to green) - moved here for use in modal
 const progressDotColors = [
-  "bg-orange-400",  // Score 1
+  "bg-orange-300",  // Score 1
   "bg-amber-300",   // Score 2
   "bg-yellow-300",  // Score 3
   "bg-lime-400",    // Score 4
@@ -85,7 +85,7 @@ function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: num
 
 function getPieColor(progressScore: number): string {
   const colorMap = [
-    '#fb923c', // orange-400
+    '#ffb86a', // orange-300
     '#fcd34d', // amber-300
     '#fde047', // yellow-300
     '#a3e635', // lime-400
