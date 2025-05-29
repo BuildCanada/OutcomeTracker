@@ -22,6 +22,7 @@ import AnnualizedHousingChart from "./charts/AnnualizedHousingChart";
 import ProductivityChart from "@/components/charts/ProductivityChart";
 import PrimaryEnergyChart from "@/components/charts/PrimaryEnergyChart";
 import LabourProductivityGrowthChart from "@/components/charts/LabourProductivityGrowthChart";
+import ChartWithSource from "@/components/charts/ChartWithSource";
 import DefenseSpendingChart from "@/components/charts/DefenseSpendingChart";
 import CFTAExceptionsChart from "@/components/charts/CFTAExceptionsChart";
 
@@ -31,6 +32,8 @@ interface MetricData {
   target2029: string;
   dataSource: string;
   dataSourceUrl?: string;
+  targetSource?: string;
+  targetSourceUrl?: string;
   brendanStatus: string;
 }
 
@@ -50,10 +53,11 @@ const DEPARTMENT_METRICS: Record<
         metric: "GDP per capita",
         definition: "Gross domestic product per person",
         target2029: "",
-        dataSource:
-          "GDP (quarterly) [Statcan] → Gross domestic product at market prices (chained 2017 dollars) [Population (quarterly) [Statcan]] → Canada",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610010401",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "Done, need to add to PM page",
       },
     ],
@@ -66,20 +70,22 @@ const DEPARTMENT_METRICS: Record<
         definition:
           'Gross fixed capital formation (excluding "Residential structures") as a percentage of GDP',
         target2029: "11% → 17%",
-        dataSource:
-          "Gross fixed capital formation (quarterly) [Statcan] → Gross fixed capital formation MINUS Residential structures (chained 2017 dollars) GDP (above)",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610010401",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "Done, need to add to finance page",
       },
       // {
       //   metric: "Operating Deficit",
       //   definition: "Net operating balance?",
       //   target2029: "$61.9B/year → $0",
-      //   dataSource:
-      //     "Operations and Balance Sheet (quarterly) [Statcan] → Net operating balance (federal government)",
+      //   dataSource: "Statcan",
       //   dataSourceUrl:
       //     "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010001501",
+      //   targetSource: "Liberal Party",
+      //   targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
       //   brendanStatus:
       //     "Graph looks weird, need to verify how numbers are reported.",
       // },
@@ -93,10 +99,11 @@ const DEPARTMENT_METRICS: Record<
         definition:
           "Number of residential units that have started in a give time frame",
         target2029: "250k/year → 500k/year",
-        dataSource:
-          "Housing starts (monthly) [StatCan] → Housing starts, Total units",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3410014301",
+        targetSource: "Liberal Party",
+        targetSourceUrl: "https://liberal.ca/housing-plan/",
         brendanStatus: "Done, need to add to housing page",
       },
     ],
@@ -108,10 +115,11 @@ const DEPARTMENT_METRICS: Record<
         metric: "% of PR admissions",
         definition: "PR admissions as a share of total Canadian population",
         target2029: "1.2% → 1%",
-        dataSource:
-          "Permanent Residents (monthly) [IRCC] → Canada - Permanent Residents by Province/Territory and Immigration Category → Total Population (above)",
+        dataSource: "IRCC",
         dataSourceUrl:
           "https://open.canada.ca/data/en/dataset/f7e5498e-0ad8-4417-85c9-9b8aff9b9eda",
+        targetSource: "Liberal Party",
+        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf/notices/supplementary-immigration-levels-2024-2026.html",
         brendanStatus: "",
       },
       {
@@ -119,10 +127,11 @@ const DEPARTMENT_METRICS: Record<
         definition:
           "Proportion of the Canadian population that is made up of non-permanent residents",
         target2029: "6.2% → 5%",
-        dataSource:
-          "NPR population (quarterly) [Statcan] → Total, non-permanent residents (Canada) Population (above)",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710012101",
+        targetSource: "Liberal Party",
+        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "Done, need to add to immigration",
       },
       {
@@ -130,10 +139,11 @@ const DEPARTMENT_METRICS: Record<
         definition:
           "Median total income of very recent immigrants (5 years or less) as a percentage of total income of a persons born in Canada",
         target2029: "80% → 100%",
-        dataSource:
-          "Median income by selected demographic characteristics (annual) [Statcan] → Total Income, Very recent immigrants (5 years or less)",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1110009101",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "",
       },
     ],
@@ -145,10 +155,11 @@ const DEPARTMENT_METRICS: Record<
         metric: "% of GDP spent",
         definition: "Percentage of GDP spent towards defence",
         target2029: "1.37% → 2%",
-        dataSource:
-          "Military expenditure (% of GDP) [World Bank] → Canada",
+        dataSource: "World Bank",
         dataSourceUrl:
           "https://data.worldbank.org/indicator/MS.MIL.XPND.GD.ZS?locations=CA",
+        targetSource: "Liberal Party",
+        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "Done, chart added",
       },
       {
@@ -157,6 +168,8 @@ const DEPARTMENT_METRICS: Record<
           "Percentage of defence budget spent towards modernizing equipment and R&D",
         target2029: "18.6% → 25%",
         dataSource: "PBO or Department of National Defence Budget disclosures",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "",
       },
     ],
@@ -168,10 +181,11 @@ const DEPARTMENT_METRICS: Record<
         metric: "Energy exports",
         definition: "",
         target2029: "Xx → xx",
-        dataSource:
-          "Consolidated energy statistics (monthly) [Statcan] → Primary energy, Production",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510007901",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "",
       },
       {
@@ -180,6 +194,8 @@ const DEPARTMENT_METRICS: Record<
           "Time to approve major energy and natural resource projects",
         target2029: "5 years → 2 years",
         dataSource: "?",
+        targetSource: "Liberal Party",
+        targetSourceUrl: "https://www.canada.ca/en/natural-resources-canada/news/2025/05/speech-minister-tim-hodgson-at-the-calgary-chamber-of-commerce.html",
         brendanStatus: "",
       },
     ],
@@ -191,10 +207,11 @@ const DEPARTMENT_METRICS: Record<
         metric: "Public service productivity",
         definition: "",
         target2029: "20% increase",
-        dataSource:
-          "Labour productivity (non-business sectors) (quarterly) [Statcan] → Non-business sector and others",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610020701",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "",
       },
     ],
@@ -207,9 +224,11 @@ const DEPARTMENT_METRICS: Record<
         definition:
           "Labour productivity is a measure of real gross domestic product (GDP) per hour worked.",
         target2029: "<1% → 2% YoY",
-        dataSource: "Labour productivity [Statcan] → Labour productivity",
+        dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610020601",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "",
       },
     ],
@@ -221,10 +240,11 @@ const DEPARTMENT_METRICS: Record<
         metric: "Physicians per capita",
         definition: "Physician Supply as a share of total population",
         target2029: "2.43 per 1000 people → 3.5",
-        dataSource:
-          "Supply, Distribution and Migration of Physicians in Canada – Data Tables (yearly) [CIHI] → Canada, Physician Supply Population (above)",
+        dataSource: "CIHI",
         dataSourceUrl:
           "https://www.cihi.ca/en/access-data-and-reports/data-tables",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "",
       },
     ],
@@ -259,41 +279,64 @@ const getStatusBadgeVariant = (status: string) => {
 };
 
 const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
+  const departmentData = DEPARTMENT_METRICS[departmentSlug];
+  if (!departmentData) return [];
+
   switch (departmentSlug) {
     case "prime-minister":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
             <GDPPerCapitaChart title="GDP Per Capita" startYear={2015} />
-          </div>
+          </ChartWithSource>
         </div>
       );
 
     case "finance-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
             <CapitalFormationChart
               title="% of GDP in capital-focused investment"
               startYear={2015}
               showTarget={true}
               targetValue={17}
             />
-          </div>
-          {/* <div className="border bg-white">
+          </ChartWithSource>
+          <ChartWithSource
+            dataSource={departmentData.metrics[1].dataSource}
+            dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
+            targetSource={departmentData.metrics[1].targetSource}
+            targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
+          >
             <BalanceSheetChart
               title="Operating Balance"
               categories={["Net operating balance"]}
               startDate="2015-01"
             />
-          </div> */}
+          </ChartWithSource>
         </div>
       );
 
     case "infrastructure-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
             <AnnualizedHousingChart
               category="Total units"
               endYear={2029}
@@ -302,20 +345,33 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               showTarget
               title="Trailing 12 Month Housing Starts"
             />
-          </div>
+          </ChartWithSource>
         </div>
       );
 
     case "immigration-refugees-and-citizenship-canada":
       return (
-        <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
+        <>
+          <ChartWithSource
+            dataSource={departmentData.metrics[1].dataSource}
+            dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
+            targetSource={departmentData.metrics[1].targetSource}
+            targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
+          >
             <NPRPopulationChart
               title="NPR % of Population"
               startYear={2015}
               showTarget={true}
               targetValue={5}
             />
+          </ChartWithSource>
+          <div className="border flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <h4 className="font-medium mb-2">PR Admissions Chart</h4>
+              <p>Chart coming soon</p>
+            </div>
+          </div>
+        </>
           </div>
           {/*<div className="border flex items-center justify-center text-muted-foreground">*/}
           {/*  <div className="text-center">*/}
@@ -329,7 +385,12 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "treasury-board-of-canada-secretariat":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
             <ProductivityChart
               title="Public Service Productivity"
               sector="Non-business sector and others"
@@ -339,14 +400,19 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={120}
               showGrowthRate={false}
             />
-          </div>
+          </ChartWithSource>
         </div>
       );
 
     case "natural-resources-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
             <PrimaryEnergyChart
               title="Total Primary Energy Production"
               category="Primary energy"
@@ -356,14 +422,19 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               showTarget={true}
               targetValue={3000000}
             />
-          </div>
+          </ChartWithSource>
         </div>
       );
 
     case "innovation-science-and-economic-development-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
             <LabourProductivityGrowthChart
               title="Labour Productivity Growth"
               sector="Total economy"
@@ -374,7 +445,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={2.0}
               showProductivityIndex={false}
             />
-          </div>
+          </ChartWithSource>
         </div>
       );
 
@@ -407,20 +478,17 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
       );
 
     default:
-      const deptData = DEPARTMENT_METRICS[departmentSlug];
-      return (
-        deptData?.metrics.map((metric, index) => (
-          <div
-            key={index}
-            className="border flex items-center justify-center text-muted-foreground"
-          >
-            <div className="text-center">
-              <h4 className="font-medium mb-2">{metric.metric}</h4>
-              <p>Chart coming soon</p>
-            </div>
+      return departmentData.metrics.map((metric, index) => (
+        <div
+          key={index}
+          className="border flex items-center justify-center text-muted-foreground"
+        >
+          <div className="text-center">
+            <h4 className="font-medium mb-2">{metric.metric}</h4>
+            <p>Chart coming soon</p>
           </div>
-        )) || []
-      );
+        </div>
+      ));
   }
 };
 

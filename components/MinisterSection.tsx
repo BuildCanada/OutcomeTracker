@@ -123,7 +123,7 @@ export function Commitments({
   const totalPromises = sortedPromises.length;
 
   return (
-    <div className="mb-8">
+    <div className="my-8">
       <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
         <h3 className="text-2xl font-semibold">Commitments</h3>
         <div className="flex flex-wrap gap-4">
