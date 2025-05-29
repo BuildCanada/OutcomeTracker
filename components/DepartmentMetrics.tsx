@@ -70,17 +70,17 @@ const DEPARTMENT_METRICS: Record<
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610010401",
         brendanStatus: "Done, need to add to finance page",
       },
-      {
-        metric: "Operating Deficit",
-        definition: "Net operating balance?",
-        target2029: "$61.9B/year → $0",
-        dataSource:
-          "Operations and Balance Sheet (quarterly) [Statcan] → Net operating balance (federal government)",
-        dataSourceUrl:
-          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010001501",
-        brendanStatus:
-          "Graph looks weird, need to verify how numbers are reported.",
-      },
+      // {
+      //   metric: "Operating Deficit",
+      //   definition: "Net operating balance?",
+      //   target2029: "$61.9B/year → $0",
+      //   dataSource:
+      //     "Operations and Balance Sheet (quarterly) [Statcan] → Net operating balance (federal government)",
+      //   dataSourceUrl:
+      //     "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010001501",
+      //   brendanStatus:
+      //     "Graph looks weird, need to verify how numbers are reported.",
+      // },
     ],
   },
   "infrastructure-canada": {
@@ -247,7 +247,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "prime-minister":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border">
+          <div className="border bg-white">
             <GDPPerCapitaChart title="GDP Per Capita" startYear={2015} />
           </div>
         </div>
@@ -255,8 +255,8 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
 
     case "finance-canada":
       return (
-        <>
-          <div className="border">
+        <div className="col-span-1 lg:col-span-2">
+          <div className="border bg-white">
             <CapitalFormationChart
               title="% of GDP in capital-focused investment"
               startYear={2015}
@@ -264,20 +264,20 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={17}
             />
           </div>
-          <div className="border">
+          {/* <div className="border bg-white">
             <BalanceSheetChart
               title="Operating Balance"
               categories={["Net operating balance"]}
               startDate="2015-01"
             />
-          </div>
-        </>
+          </div> */}
+        </div>
       );
 
     case "infrastructure-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border">
+          <div className="border bg-white">
             <AnnualizedHousingChart
               category="Total units"
               endYear={2029}
@@ -292,8 +292,8 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
 
     case "immigration-refugees-and-citizenship-canada":
       return (
-        <>
-          <div className="border">
+        <div className="col-span-1 lg:col-span-2">
+          <div className="border bg-white">
             <NPRPopulationChart
               title="NPR % of Population"
               startYear={2015}
@@ -301,19 +301,19 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={5}
             />
           </div>
-          <div className="border flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <h4 className="font-medium mb-2">PR Admissions Chart</h4>
-              <p>Chart coming soon</p>
-            </div>
-          </div>
-        </>
+          {/*<div className="border flex items-center justify-center text-muted-foreground">*/}
+          {/*  <div className="text-center">*/}
+          {/*    <h4 className="font-medium mb-2">PR Admissions Chart</h4>*/}
+          {/*    <p>Chart coming soon</p>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
+        </div>
       );
 
     case "treasury-board-of-canada-secretariat":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border">
+          <div className="border bg-white">
             <ProductivityChart
               title="Public Service Productivity"
               sector="Non-business sector and others"
@@ -330,7 +330,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "natural-resources-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border">
+          <div className="border bg-white">
             <PrimaryEnergyChart
               title="Total Primary Energy Production"
               category="Primary energy"
@@ -347,7 +347,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "innovation-science-and-economic-development-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border">
+          <div className="border bg-white">
             <LabourProductivityGrowthChart
               title="Labour Productivity Growth"
               sector="Total economy"

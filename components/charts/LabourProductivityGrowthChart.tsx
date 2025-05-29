@@ -12,6 +12,7 @@ import {
   Legend,
 } from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
+import {TARGET_BORDER_COLOR, TARGET_BG_COLOR} from "@/components/charts/utils/constants";
 
 ChartJS.register(
   CategoryScale,
@@ -133,8 +134,8 @@ export default function LabourProductivityGrowthChart({
     datasets.push({
       label: `Target (${targetValue}%)`,
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(34, 197, 94)",
-      backgroundColor: "rgba(34, 197, 94, 0.5)",
+      borderColor: TARGET_BORDER_COLOR,
+      backgroundColor: TARGET_BG_COLOR,
       borderWidth: 2,
       borderDash: [5, 5],
       pointRadius: 0,
