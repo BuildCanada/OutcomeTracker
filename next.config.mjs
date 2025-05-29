@@ -29,6 +29,14 @@ const nextConfig = {
         destination: "/en/tracker",
       },
       {
+        source: "/en/tracker/:path*",
+        destination: "/en/tracker/:path*",
+      },
+      {
+        source: "/promise/:path*",
+        destination: "/promise/:path*",
+      },
+      {
         source: "/fr/tracker",
         destination: "/fr/tracker",
       },
