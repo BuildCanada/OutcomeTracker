@@ -200,7 +200,7 @@ export default function PrimaryEnergyChart({
     },
     scales: {
       y: {
-        beginAtZero: false,
+        beginAtZero: true,
         title: {
           display: true,
           text: "Energy Production (Petajoules)",
