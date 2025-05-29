@@ -216,6 +216,7 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
 
   // ADDED: Log the received promise object, especially its evidence array
   console.log("[PromiseModal Debug] Received promise:", promise);
+  console.log("[PromiseModal Debug] Promise source_url:", promise.source_url);
   if (promise && loadedEvidence) {
     console.log("[PromiseModal Debug] Promise evidence array:", loadedEvidence);
     console.log(`[PromiseModal Debug] Number of evidence items in modal: ${loadedEvidence.length}`);
@@ -405,16 +406,21 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                   <blockquote className="text-sm italic break-words border-l-4 border-[#8b2332] bg-gray-50 px-4 py-3 mb-3 text-gray-700">
                     {text}
                   </blockquote>
+                </div>
+              )}
+              {/* Always show source URL if it exists, regardless of concise_title */}
+              {promise.source_url && (
+                <div className="mt-3">
                   <a 
-                  href="https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 hover:underline text-xs font-mono inline-flex items-center gap-1"
+                    href={promise.source_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 hover:underline text-xs font-mono inline-flex items-center gap-1"
                   >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m5-3h3m0 0v6m0-6L10 14" />
-                  </svg>
-                  View Source
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m5-3h3m0 0v6m0-6L10 14" />
+                    </svg>
+                    View Source
                   </a>
                 </div>
               )}

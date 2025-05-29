@@ -167,12 +167,11 @@ export async function fetchPromisesForDepartment(
             bc_promise_rank_rationale: data.bc_promise_rank_rationale ?? undefined,
             bc_promise_direction: data.bc_promise_direction ?? undefined,
             evidence: [], // Will be populated later
-            
-            // New flat structure fields
             region_code: data.region_code || undefined,
             party_code: data.party_code || undefined,
             migration_metadata: data.migration_metadata || undefined,
             source_type: data.source_type || undefined,
+            source_url: data.source_url || undefined,
             
             // Explanation fields
             concise_title: data.concise_title ?? undefined,
@@ -318,6 +317,13 @@ export async function fetchPromisesForMultipleDepartments(
           bc_promise_direction: data.bc_promise_direction,
           progress_score: data.progress_score,
           progress_summary: data.progress_summary,
+          source_type: data.source_type || undefined,
+          source_url: data.source_url || undefined,
+          concise_title: data.concise_title ?? undefined,
+          description: data.description ?? undefined,
+          what_it_means_for_canadians: data.what_it_means_for_canadians ?? undefined,
+          intended_impact_and_objectives: data.intended_impact_and_objectives ?? undefined,
+          background_and_context: data.background_and_context ?? undefined,
           evidence: [], // Populate separately if needed
         } as PromiseData);
       });
@@ -874,6 +880,7 @@ export async function fetchPromisesSummary(
             party_code: data.party_code || undefined,
             migration_metadata: data.migration_metadata || undefined,
             source_type: data.source_type || undefined,
+            source_url: data.source_url || undefined,
             
             // Explanation fields
             concise_title: data.concise_title ?? undefined,

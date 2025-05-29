@@ -104,6 +104,7 @@ export interface PromiseData {
   responsible_department_lead: string;
   category?: string; // Primary policy category (e.g., "Economy", "Healthcare", "Environment")
   source_type?: string; // Made optional as it's not used client-side
+  source_url?: string; // URL to the source document
   commitment_history_rationale?: RationaleEvent[]; // Added optional field
   date_issued?: string; // Optional
   linked_evidence_ids?: string[];
@@ -119,6 +120,14 @@ export interface PromiseData {
   what_it_means_for_canadians?: string;
   intended_impact_and_objectives?: string;
   background_and_context?: string;
+
+  // CONSOLIDATED PROMISE FIELDS (from bulk_ingest_consolidated_promises.py)
+  appears_in?: string; // "Platform Only", "Both", "SFT Only" - indicates source document(s)
+  commitment_id?: string; // The consolidated commitment ID
+  canonical_commitment_text?: string; // The canonical text from consolidation
+  reporting_lead_title?: string; // Lead minister/department title
+  all_other_ministers_involved?: string; // Other ministers involved
+  notes_and_differences?: string; // Notes about differences between sources
 
   // NEW FIELDS FOR FLAT STRUCTURE MIGRATION
   region_code?: string; // e.g., "Canada" - region identifier
