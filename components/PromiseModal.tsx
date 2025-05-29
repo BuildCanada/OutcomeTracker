@@ -55,9 +55,9 @@ const formatSimpleDate = (dateString: string | undefined): string => {
 
 // Progress dot color scale (red to green) - moved here for use in modal
 const progressDotColors = [
-  "bg-orange-300",  // Score 1
+  "bg-yellow-300",  // Score 1
   "bg-amber-300",   // Score 2
-  "bg-yellow-300",  // Score 3
+  "bg-orange-300",  // Score 3
   "bg-lime-400",    // Score 4
   "bg-green-600",   // Score 5
 ];

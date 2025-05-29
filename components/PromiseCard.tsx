@@ -297,9 +297,9 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
 
   // Progress dot color scale (red to green)
   const dotColors = [
-    "bg-orange-300", // Score 1
+    "bg-yellow-300", // Score 1
     "bg-amber-300", // Score 2
-    "bg-yellow-300", // Score 3
+    "bg-orange-300", // Score 3
     "bg-lime-400", // Score 4
     "bg-green-600", // Score 5
   ];
@@ -347,11 +347,11 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
   }
   function getPieColor(progressScore: number): string {
     const colorMap = [
-      "#ffb86a", // orange-300
-      "#fcd34d", // amber-300
-      "#fde047", // yellow-300
-      "#a3e635", // lime-400
-      "#16a34a", // green-600
+      '#fde047', // yellow-300
+      '#fcd34d', // amber-300
+      '#ffb86a', // orange-300
+      '#a3e635', // lime-400
+      '#16a34a', // green-600
     ];
     return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
   }

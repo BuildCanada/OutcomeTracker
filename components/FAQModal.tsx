@@ -18,7 +18,7 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
           <div>
             <h3 className="text-lg font-semibold mb-2">Why did you build this?</h3>
             <p className="text-gray-700">
-              We want to better understand what is being done in key areas that matter to Canadians like us. We want to understand what the government is promising, what progress has been made, and, most importantly, what the outcomes have been.
+              We wanted to better understand what is being done in key areas that matter to Canadians like us. We built this tracker to know what key commitments have been made, what their progress has been, and how they impact outcomes.
             </p>
           </div>
           
