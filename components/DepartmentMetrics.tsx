@@ -121,7 +121,8 @@ const DEPARTMENT_METRICS: Record<
         dataSourceUrl:
           "https://open.canada.ca/data/en/dataset/f7e5498e-0ad8-4417-85c9-9b8aff9b9eda",
         targetSource: "Liberal Party",
-        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf/notices/supplementary-immigration-levels-2024-2026.html",
+        targetSourceUrl:
+          "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf/notices/supplementary-immigration-levels-2024-2026.html",
         brendanStatus: "",
       },
       {
@@ -133,7 +134,8 @@ const DEPARTMENT_METRICS: Record<
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710012101",
         targetSource: "Liberal Party",
-        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
+        targetSourceUrl:
+          "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "Done, need to add to immigration",
       },
       {
@@ -161,7 +163,8 @@ const DEPARTMENT_METRICS: Record<
         dataSourceUrl:
           "https://data.worldbank.org/indicator/MS.MIL.XPND.GD.ZS?locations=CA",
         targetSource: "Liberal Party",
-        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
+        targetSourceUrl:
+          "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "Done, chart added",
       },
       {
@@ -197,7 +200,8 @@ const DEPARTMENT_METRICS: Record<
         target2029: "5 years → 2 years",
         dataSource: "?",
         targetSource: "Liberal Party",
-        targetSourceUrl: "https://www.canada.ca/en/natural-resources-canada/news/2025/05/speech-minister-tim-hodgson-at-the-calgary-chamber-of-commerce.html",
+        targetSourceUrl:
+          "https://www.canada.ca/en/natural-resources-canada/news/2025/05/speech-minister-tim-hodgson-at-the-calgary-chamber-of-commerce.html",
         brendanStatus: "",
       },
     ],
@@ -256,17 +260,16 @@ const DEPARTMENT_METRICS: Record<
     metrics: [
       {
         metric: "CFTA Exceptions",
-        definition: "Number of exceptions to the Canadian Free Trade Agreement by province and territory",
+        definition:
+          "Number of exceptions to the Canadian Free Trade Agreement by province and territory",
         target2029: "Reduce interprovincial trade barriers → 50% reduction",
-        dataSource:
-          "Canadian Free Trade Agreement Exceptions [CFIB] → Provincial and territorial exceptions count",
-        dataSourceUrl:
-          "https://www.cfib-fcei.ca/",
+        dataSource: "Canadian Federation of Independent Business",
+        dataSourceUrl: "https://www.cfib-fcei.ca/",
         brendanStatus: "Done, chart added",
       },
     ],
   },
-}
+};
 const getStatusBadgeVariant = (status: string) => {
   if (status.toLowerCase().includes("done")) {
     return "default";
@@ -386,6 +389,28 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
         </div>
       );
 
+    case "public-services-and-procurement-canada":
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
+            <ProductivityChart
+              title="Public Service Productivity"
+              sector="Non-business sector and others"
+              startYear={2015}
+              endYear={2024}
+              showTarget={true}
+              targetValue={120}
+              showGrowthRate={false}
+            />
+          </ChartWithSource>
+        </div>
+      );
+
     case "natural-resources-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
@@ -434,28 +459,38 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "national-defence":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
-            <DefenseSpendingChart
-              title="Defense Spending (% of GDP)"
-              startYear={2000}
-              endYear={2024}
-              showTarget={true}
-              targetValue={2.0}
-            />
-          </div>
+            <ChartWithSource
+              dataSource={departmentData.metrics[0].dataSource}
+              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+              targetSource={departmentData.metrics[0].targetSource}
+              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+            >
+              <DefenseSpendingChart
+                title="Defense Spending (% of GDP)"
+                startYear={2000}
+                endYear={2024}
+                showTarget={true}
+                targetValue={2.0}
+              />
+            </ChartWithSource>
         </div>
       );
 
     case "transport-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-          <div className="border bg-white">
-            <CFTAExceptionsChart
-              title="CFTA Exceptions by Province/Territory"
-              showLegend={true}
-              height={500}
-            />
-          </div>
+            <ChartWithSource
+              dataSource={departmentData.metrics[0].dataSource}
+              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+              targetSource={departmentData.metrics[0].targetSource}
+              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+            >
+              <CFTAExceptionsChart
+                title="CFTA Exceptions by Province/Territory"
+                showLegend={true}
+                height={500}
+              />
+            </ChartWithSource>
         </div>
       );
 

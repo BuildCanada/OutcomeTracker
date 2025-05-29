@@ -23,7 +23,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 interface CFTAExceptionsChartProps {
@@ -31,8 +31,6 @@ interface CFTAExceptionsChartProps {
   showLegend?: boolean;
   height?: number;
 }
-
-
 
 // Various shades of grey for provinces
 const greyColors = [
@@ -68,7 +66,7 @@ const greyBorderColors = [
 ];
 
 // Blue color for federal government
-const federalColor = "rgba(54, 162, 235, 0.6)";
+const federalColor = "rgba(54, 162, 235, 0.8)";
 const federalBorderColor = "rgba(54, 162, 235, 1)";
 
 export default function CFTAExceptionsChart({
@@ -83,7 +81,7 @@ export default function CFTAExceptionsChart({
   const years = data.Alberta.map((item: any) => item[0].toString());
 
   // Separate federal from provinces/territories
-  const provinces = Object.keys(data).filter(key => key !== "Federal");
+  const provinces = Object.keys(data).filter((key) => key !== "Federal");
   const federal = "Federal";
 
   // Sort provinces by their 2024 values (highest to lowest) for better stacking order
@@ -99,14 +97,20 @@ export default function CFTAExceptionsChart({
   const datasets = orderedEntities.map((entityName, index) => {
     const entityData = data[entityName];
     const values = years.map((year: string) => {
-      const yearData = entityData.find((item: any) => item[0].toString() === year);
+      const yearData = entityData.find(
+        (item: any) => item[0].toString() === year,
+      );
       return yearData ? yearData[1] : 0;
     });
 
     // Use blue for federal, grey for provinces
     const isFederal = entityName === "Federal";
-    const backgroundColor = isFederal ? federalColor : greyColors[(index - 1) % greyColors.length];
-    const borderColor = isFederal ? federalBorderColor : greyBorderColors[(index - 1) % greyBorderColors.length];
+    const backgroundColor = isFederal
+      ? federalColor
+      : greyColors[(index - 1) % greyColors.length];
+    const borderColor = isFederal
+      ? federalBorderColor
+      : greyBorderColors[(index - 1) % greyBorderColors.length];
 
     return {
       label: entityName,
@@ -114,7 +118,7 @@ export default function CFTAExceptionsChart({
       backgroundColor: backgroundColor,
       borderColor: borderColor,
       borderWidth: 1,
-      fill: index === 0 ? 'origin' : '-1',
+      fill: index === 0 ? "origin" : "-1",
       tension: 0.1,
       pointRadius: 3,
       pointHoverRadius: 5,
@@ -168,13 +172,19 @@ export default function CFTAExceptionsChart({
           label: function (context: any) {
             const label = context.dataset.label || "";
             const value = context.parsed.y;
-            const total = context.chart.data.datasets.reduce((sum: number, dataset: any) => {
-              return sum + dataset.data[context.dataIndex];
-            }, 0);
+            const total = context.chart.data.datasets.reduce(
+              (sum: number, dataset: any) => {
+                return sum + dataset.data[context.dataIndex];
+              },
+              0,
+            );
             return `${label}: ${value} exceptions (${((value / total) * 100).toFixed(1)}%)`;
           },
           footer: function (context: any) {
-            const total = context.reduce((sum: number, item: any) => sum + item.parsed.y, 0);
+            const total = context.reduce(
+              (sum: number, item: any) => sum + item.parsed.y,
+              0,
+            );
             return `Total: ${total} exceptions`;
           },
         },

@@ -124,8 +124,8 @@ export default function PrimaryEnergyChart({
     {
       label: `${category} Production`,
       data: energyValues,
-      borderColor: "rgb(34, 139, 34)",
-      backgroundColor: "rgba(34, 139, 34, 0.5)",
+      borderColor: "rgb(54, 162, 235)",
+      backgroundColor: "rgba(54, 162, 235, 0.1)",
       tension: 0.3,
     },
   ];

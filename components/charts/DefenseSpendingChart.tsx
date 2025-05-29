@@ -51,7 +51,8 @@ export default function DefenseSpendingChart({
 }: DefenseSpendingChartProps) {
   // Get defense spending data
   const defenseDataObj = defenseData as any;
-  const militaryExpenditureData = defenseDataObj.data["Military expenditure (% of GDP)"] || [];
+  const militaryExpenditureData =
+    defenseDataObj.data["Military expenditure (% of GDP)"] || [];
 
   // Filter data by year range
   const filteredData = militaryExpenditureData.filter(function (item: any) {
@@ -72,8 +73,8 @@ export default function DefenseSpendingChart({
     {
       label: "Defense Spending (% of GDP)",
       data: chartValues,
-      borderColor: "rgb(34, 139, 34)",
-      backgroundColor: "rgba(34, 139, 34, 0.5)",
+      borderColor: "rgb(54, 162, 235)",
+      backgroundColor: "rgba(54, 162, 235, 0.1)",
       tension: 0.3,
     },
   ];
