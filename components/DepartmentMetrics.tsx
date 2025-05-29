@@ -358,12 +358,6 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetValue={5}
             />
           </ChartWithSource>
-          <div className="border flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <h4 className="font-medium mb-2">PR Admissions Chart</h4>
-              <p>Chart coming soon</p>
-            </div>
-          </div>
         </div>
       );
 
@@ -497,7 +491,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "health-canada":
       return (
         <>
-          <div className="col-span-1 lg:col-span-2">
+          <div className="col-span-1">
             <ChartWithSource
               dataSource={departmentData.metrics[0].dataSource}
               dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
@@ -514,7 +508,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               />
             </ChartWithSource>
           </div>
-          <div className="col-span-1 lg:col-span-2">
+          <div className="col-span-1">
             <ChartWithSource
               dataSource={departmentData.metrics[0].dataSource}
               dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
