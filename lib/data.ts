@@ -120,7 +120,7 @@ export async function fetchPromisesForDepartment(
         where('parliament_session_id', '==', parliamentSessionId),
         where('party_code', '==', governingPartyCode),
         where('region_code', '==', regionCode),
-        where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"]),
+        where('bc_promise_rank', 'in', ["strong", "medium", "weak", "Strong", "Medium", "Weak"]),
         where('status', '==', 'active') 
       );
 
@@ -839,7 +839,7 @@ export async function fetchPromisesSummary(
         where('parliament_session_id', '==', parliamentSessionId),
         where('party_code', '==', governingPartyCode),
         where('region_code', '==', regionCode),
-        where('bc_promise_rank', 'in', ["strong", "medium", "Strong", "Medium"]), // Include strong and medium promises
+        where('bc_promise_rank', 'in', ["strong", "medium", "weak", "Strong", "Medium", "Weak"]),
         // Temporarily removed status filter until migration is complete
         // where('status', '==', 'active'), // Exclude deleted promises
         orderBy('date_issued', 'desc'),
