@@ -26,6 +26,7 @@ const meta = {
         'treasury-board-of-canada-secretariat',
         'innovation-science-and-economic-development-canada',
         'health-canada',
+        'transport-canada',
         'invalid-department'
       ],
       description: 'The department slug to display metrics for. Prime Minister, Finance, Housing, and Immigration have interactive charts.',
@@ -126,6 +127,19 @@ export const Health: Story = {
   args: {
     departmentSlug: 'health-canada',
   },
+};
+
+export const Transport: Story = {
+  args: {
+    departmentSlug: 'transport-canada',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Shows CFTA exceptions chart displaying interprovincial trade barriers by province/territory with stacked area visualization and reduction targets.'
+      }
+    }
+  }
 };
 
 export const GovernmentTransformation: Story = {

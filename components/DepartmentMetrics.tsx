@@ -23,6 +23,7 @@ import ProductivityChart from "@/components/charts/ProductivityChart";
 import PrimaryEnergyChart from "@/components/charts/PrimaryEnergyChart";
 import LabourProductivityGrowthChart from "@/components/charts/LabourProductivityGrowthChart";
 import DefenseSpendingChart from "@/components/charts/DefenseSpendingChart";
+import CFTAExceptionsChart from "@/components/charts/CFTAExceptionsChart";
 
 interface MetricData {
   metric: string;
@@ -228,8 +229,22 @@ const DEPARTMENT_METRICS: Record<
       },
     ],
   },
-};
-
+  "transport-canada": {
+    displayName: "Transport & Internal Trade",
+    metrics: [
+      {
+        metric: "CFTA Exceptions",
+        definition: "Number of exceptions to the Canadian Free Trade Agreement by province and territory",
+        target2029: "Reduce interprovincial trade barriers → 50% reduction",
+        dataSource:
+          "Canadian Free Trade Agreement Exceptions [CFIB] → Provincial and territorial exceptions count",
+        dataSourceUrl:
+          "https://www.cfib-fcei.ca/",
+        brendanStatus: "Done, chart added",
+      },
+    ],
+  },
+}
 const getStatusBadgeVariant = (status: string) => {
   if (status.toLowerCase().includes("done")) {
     return "default";
@@ -373,6 +388,19 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               endYear={2024}
               showTarget={true}
               targetValue={2.0}
+            />
+          </div>
+        </div>
+      );
+
+    case "transport-canada":
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <div className="border bg-white">
+            <CFTAExceptionsChart
+              title="CFTA Exceptions by Province/Territory"
+              showLegend={true}
+              height={500}
             />
           </div>
         </div>
