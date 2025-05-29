@@ -1,32 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PromiseData, EvidenceItem } from "@/lib/types";
 import { Timestamp } from "firebase/firestore";
-import { CalendarDaysIcon, ListChecksIcon, TrendingUpIcon, XIcon, CheckIcon, PlusIcon, MinusIcon } from "lucide-react";
+import { TrendingUpIcon, XIcon, MinusIcon } from "lucide-react";
 import PromiseModal from "./PromiseModal";
+import { fetchParliamentSessionDates } from "@/lib/data";
+import { useDepartments } from "@/context/DepartmentContext";
 
 interface PromiseCardProps {
   promise: PromiseData;
-  evidenceItems: EvidenceItem[];
   departmentShortName?: string;
 }
 
-const formatDate = (dateInput: EvidenceItem['evidence_date']): string | null => {
+const formatDate = (dateInput: Timestamp | string): string | null => {
   if (!dateInput) return null;
   let dateObj: Date;
 
   if (dateInput instanceof Timestamp) {
     dateObj = dateInput.toDate();
-  } else if (typeof dateInput === 'object' && dateInput !== null && 
-             typeof (dateInput as any).seconds === 'number' && 
-             typeof (dateInput as any).nanoseconds === 'number') {
+  } else if (
+    typeof dateInput === "object" &&
+    dateInput !== null &&
+    typeof (dateInput as any).seconds === "number" &&
+    typeof (dateInput as any).nanoseconds === "number"
+  ) {
     // Handle serialized Timestamp plain object
     dateObj = new Date((dateInput as any).seconds * 1000);
-  } else if (typeof dateInput === 'string') {
+  } else if (typeof dateInput === "string") {
     // Prefer parsing YYYY-MM-DD as local date components to avoid UTC issues with new Date(str)
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-      const [year, month, day] = dateInput.split('-').map(Number);
+      const [year, month, day] = dateInput.split("-").map(Number);
       dateObj = new Date(year, month - 1, day);
     } else {
       dateObj = new Date(dateInput); // For other string formats like ISO with timezone
@@ -37,54 +41,115 @@ const formatDate = (dateInput: EvidenceItem['evidence_date']): string | null => 
   }
 
   if (isNaN(dateObj.getTime())) {
-    console.warn("[PromiseCard formatDate] Invalid date constructed for input:", dateInput);
+    console.warn(
+      "[PromiseCard formatDate] Invalid date constructed for input:",
+      dateInput,
+    );
     return null;
   }
 
-  return dateObj.toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
+  return dateObj.toLocaleDateString("en-CA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 };
 
-export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps) {
+const getDateMillis = (dateInput: Timestamp | string): number => {
+  if (!dateInput) return NaN;
+  let d: Date;
+  if (dateInput instanceof Timestamp) {
+    d = dateInput.toDate();
+  } else if (
+    typeof dateInput === "object" &&
+    dateInput !== null &&
+    typeof (dateInput as any).seconds === "number" &&
+    typeof (dateInput as any).nanoseconds === "number"
+  ) {
+    // Handle serialized Timestamp
+    d = new Date((dateInput as any).seconds * 1000);
+  } else if (typeof dateInput === "string") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+      const [year, month, day] = dateInput.split("-").map(Number);
+      d = new Date(year, month - 1, day);
+    } else {
+      d = new Date(dateInput);
+    }
+  } else {
+    return NaN; // Unknown type
+  }
+  return d.getTime();
+};
+
+export default function PromiseCard({ promise }: PromiseCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showProgressTooltip, setShowProgressTooltip] = useState(false);
   const [showImpactTooltip, setShowImpactTooltip] = useState(false);
   const [showAlignmentTooltip, setShowAlignmentTooltip] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
 
-  // Use promise.evidence directly, as it should be populated by the data fetching layer.
-  const relevantEvidenceForThisPromise = promise.evidence || [];
+  const [loadedEvidence, setLoadedEvidence] = useState<EvidenceItem[]>(
+    promise.evidence || [],
+  );
+  const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
 
-  // Use linked_evidence_ids for the count if available, otherwise fallback to the length of promise.evidence.
-  // const evidenceCount = promise.linked_evidence_ids?.length ?? relevantEvidenceForThisPromise.length;
-  // Correctly count only the filtered evidence items passed in promise.evidence
-  const evidenceCount = relevantEvidenceForThisPromise.length;
+  const { sessionId } = useDepartments();
 
+  useEffect(() => {
+    const loadEvidence = async () => {
+      if (!promise?.linked_evidence_ids?.length) {
+        setLoadedEvidence([]);
+        return;
+      }
+
+      setIsLoadingEvidence(true);
+      try {
+        const sessionDates = sessionId
+          ? await fetchParliamentSessionDates(sessionId)
+          : null;
+
+        const response = await fetch("/api/evidence", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            evidenceIds: promise.linked_evidence_ids,
+            sessionsStartDate: sessionDates?.sessionStartDate,
+            sessionEndDate: sessionDates?.sessionEndDate,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Evidence API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setLoadedEvidence(data.evidenceItems || []);
+      } catch (error) {
+        console.error("Error loading evidence for promise:", error);
+        setLoadedEvidence([]);
+      } finally {
+        setIsLoadingEvidence(false);
+      }
+    };
+
+    loadEvidence();
+  }, [promise?.linked_evidence_ids, sessionId]);
+
+  // Create a combined promise object with loaded evidence for the timeline
+  const promiseWithEvidence = useMemo(() => {
+    if (!promise) return null;
+
+    return {
+      ...promise,
+      evidence: loadedEvidence,
+    };
+  }, [promise, loadedEvidence]);
+
+  console.log({ evidence: promise.evidence });
   // Find the most recent evidence date for "Last Update"
   let lastUpdateDate: string | null = null;
-  if (relevantEvidenceForThisPromise.length > 0) {
-    const sorted = [...relevantEvidenceForThisPromise].sort((a, b) => {
-      const getDateMillis = (dateInput: EvidenceItem['evidence_date']): number => {
-        if (!dateInput) return NaN; 
-        let d: Date;
-        if (dateInput instanceof Timestamp) {
-          d = dateInput.toDate();
-        } else if (typeof dateInput === 'object' && dateInput !== null && 
-                   typeof (dateInput as any).seconds === 'number' &&
-                   typeof (dateInput as any).nanoseconds === 'number') { // Handle serialized Timestamp
-          d = new Date((dateInput as any).seconds * 1000);
-        } else if (typeof dateInput === 'string') {
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-            const [year, month, day] = dateInput.split('-').map(Number);
-            d = new Date(year, month - 1, day);
-          } else {
-            d = new Date(dateInput);
-          }
-        } else {
-          return NaN; // Unknown type
-        }
-        return d.getTime();
-      };
-
+  if (!!promiseWithEvidence && promiseWithEvidence.evidence.length > 0) {
+    const sorted = promiseWithEvidence.evidence.sort((a, b) => {
       const dateAMillis = getDateMillis(a.evidence_date);
       const dateBMillis = getDateMillis(b.evidence_date);
 
@@ -95,15 +160,9 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
       return dateBMillis - dateAMillis; // Descending
     });
     if (sorted[0]) {
-        lastUpdateDate = formatDate(sorted[0].evidence_date);
+      lastUpdateDate = formatDate(sorted[0].evidence_date);
     }
   }
-
-  // Prepare the promise data specifically for the modal.
-  const promiseForModal: PromiseData = {
-    ...promise,
-    evidence: relevantEvidenceForThisPromise,
-  };
 
   const handleCardClick = () => {
     setIsModalOpen(true);
@@ -111,7 +170,8 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
 
   // Progress Indicator
   const progressScore = promise.progress_score || 0; // 1-5
-  const progressSummary = promise.progress_summary || "No progress summary available.";
+  const progressSummary =
+    promise.progress_summary || "No progress summary available.";
   const isDelivered = progressScore === 5;
 
   // Human-friendly progress tooltip
@@ -124,44 +184,78 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
   else if (progressScore === 5) progressTooltip = "Complete";
 
   // Impact Indicator
-  const impactRankRaw = promise.bc_promise_rank ?? '';
-  const impactRationale = promise.bc_promise_rank_rationale || "No rationale provided.";
+  const impactRankRaw = promise.bc_promise_rank ?? "";
+  const impactRationale =
+    promise.bc_promise_rank_rationale || "No rationale provided.";
   let impactIcon = null;
   let impactRankStr = String(impactRankRaw).toLowerCase();
   let impactRankNum = Number(impactRankRaw);
   let filledBars = 0;
-  let impactLevelLabel = '';
-  if (impactRankStr === 'strong' || impactRankNum >= 8) {
+  let impactLevelLabel = "";
+  if (impactRankStr === "strong" || impactRankNum >= 8) {
     filledBars = 3;
-    impactLevelLabel = 'High Impact';
-  } else if (impactRankStr === 'medium' || (impactRankNum >= 5 && impactRankNum < 8)) {
+    impactLevelLabel = "High Impact";
+  } else if (
+    impactRankStr === "medium" ||
+    (impactRankNum >= 5 && impactRankNum < 8)
+  ) {
     filledBars = 2;
-    impactLevelLabel = 'Medium Impact';
-  } else if (impactRankStr === 'low' || (impactRankNum > 0 && impactRankNum < 5)) {
+    impactLevelLabel = "Medium Impact";
+  } else if (
+    impactRankStr === "low" ||
+    (impactRankNum > 0 && impactRankNum < 5)
+  ) {
     filledBars = 1;
-    impactLevelLabel = 'Low Impact';
+    impactLevelLabel = "Low Impact";
   }
-  let impactPillBg = '';
-  let impactBarColor = '';
+  let impactPillBg = "";
+  let impactBarColor = "";
   if (filledBars === 3) {
-    impactPillBg = 'bg-green-50'; // same as alignment
-    impactBarColor = '#166534'; // dark green
+    impactPillBg = "bg-green-50"; // same as alignment
+    impactBarColor = "#166534"; // dark green
   } else if (filledBars === 2) {
-    impactPillBg = 'bg-yellow-50'; // very light yellow
-    impactBarColor = '#ca8a04'; // burnt yellow (yellow-700)
+    impactPillBg = "bg-yellow-50"; // very light yellow
+    impactBarColor = "#ca8a04"; // burnt yellow (yellow-700)
   } else if (filledBars === 1) {
-    impactPillBg = 'bg-gray-100'; // light gray
-    impactBarColor = '#374151'; // dark gray
+    impactPillBg = "bg-gray-100"; // light gray
+    impactBarColor = "#374151"; // dark gray
   }
   // SVG for network bars
   impactIcon = (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1.5" y="8" width="1.5" height="4.5" rx="0.75" fill={filledBars >= 1 ? impactBarColor : '#d1d5db'} />
-      <rect x="5.5" y="5.5" width="1.5" height="7" rx="0.75" fill={filledBars >= 2 ? impactBarColor : '#d1d5db'} />
-      <rect x="9.5" y="3" width="1.5" height="9.5" rx="0.75" fill={filledBars >= 3 ? impactBarColor : '#d1d5db'} />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="1.5"
+        y="8"
+        width="1.5"
+        height="4.5"
+        rx="0.75"
+        fill={filledBars >= 1 ? impactBarColor : "#d1d5db"}
+      />
+      <rect
+        x="5.5"
+        y="5.5"
+        width="1.5"
+        height="7"
+        rx="0.75"
+        fill={filledBars >= 2 ? impactBarColor : "#d1d5db"}
+      />
+      <rect
+        x="9.5"
+        y="3"
+        width="1.5"
+        height="9.5"
+        rx="0.75"
+        fill={filledBars >= 3 ? impactBarColor : "#d1d5db"}
+      />
     </svg>
   );
-  const impactTooltip = `${impactLevelLabel}${impactLevelLabel ? ': ' : ''}${impactRationale}`;
+  const impactTooltip = `${impactLevelLabel}${impactLevelLabel ? ": " : ""}${impactRationale}`;
 
   // Alignment Indicator
   const alignmentDirection = promise.bc_promise_direction;
@@ -186,7 +280,12 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
       alignmentLabel = "Not Aligned";
       alignmentColor = "text-red-700";
       alignmentBg = "bg-red-50";
-      alignmentIcon = <TrendingUpIcon className="w-3.5 h-3.5 text-red-600" style={{ transform: 'scaleY(-1)' }} />;
+      alignmentIcon = (
+        <TrendingUpIcon
+          className="w-3.5 h-3.5 text-red-600"
+          style={{ transform: "scaleY(-1)" }}
+        />
+      );
       break;
     default:
       alignmentLabel = "Unknown";
@@ -198,47 +297,71 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
 
   // Progress dot color scale (red to green)
   const dotColors = [
-    "bg-orange-300",  // Score 1
-    "bg-amber-300",   // Score 2
-    "bg-yellow-300",  // Score 3
-    "bg-lime-400",    // Score 4
-    "bg-green-600"    // Score 5
+    "bg-orange-300", // Score 1
+    "bg-amber-300", // Score 2
+    "bg-yellow-300", // Score 3
+    "bg-lime-400", // Score 4
+    "bg-green-600", // Score 5
   ];
 
   // Helper function to get SVG arc path for pie fill
-  function getPieArcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+  function getPieArcPath(
+    cx: number,
+    cy: number,
+    r: number,
+    startAngle: number,
+    endAngle: number,
+  ): string {
     const start = polarToCartesian(cx, cy, r, endAngle);
     const end = polarToCartesian(cx, cy, r, startAngle);
     const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
     return [
-      "M", cx, cy,
-      "L", start.x, start.y,
-      "A", r, r, 0, largeArcFlag, 0, end.x, end.y,
-      "Z"
+      "M",
+      cx,
+      cy,
+      "L",
+      start.x,
+      start.y,
+      "A",
+      r,
+      r,
+      0,
+      largeArcFlag,
+      0,
+      end.x,
+      end.y,
+      "Z",
     ].join(" ");
   }
-  function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: number): { x: number; y: number } {
-    var angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
+  function polarToCartesian(
+    cx: number,
+    cy: number,
+    r: number,
+    angleInDegrees: number,
+  ): { x: number; y: number } {
+    var angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
     return {
-      x: cx + (r * Math.cos(angleInRadians)),
-      y: cy + (r * Math.sin(angleInRadians))
+      x: cx + r * Math.cos(angleInRadians),
+      y: cy + r * Math.sin(angleInRadians),
     };
   }
   function getPieColor(progressScore: number): string {
     const colorMap = [
-      '#ffb86a', // orange-300
-      '#fcd34d', // amber-300
-      '#fde047', // yellow-300
-      '#a3e635', // lime-400
-      '#16a34a', // green-600
+      "#ffb86a", // orange-300
+      "#fcd34d", // amber-300
+      "#fde047", // yellow-300
+      "#a3e635", // lime-400
+      "#16a34a", // green-600
     ];
     return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
   }
 
   // Check if the promise is overdue (more than 90 days since 2025-05-27)
-  const targetDate = new Date('2025-05-27');
+  const targetDate = new Date("2025-05-27");
   const today = new Date();
-  const daysSinceTarget = Math.floor((today.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24));
+  const daysSinceTarget = Math.floor(
+    (today.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const isOverdue = daysSinceTarget > 90;
 
   return (
@@ -248,7 +371,9 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
         tabIndex={0}
         aria-label={promise.text}
         onClick={handleCardClick}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") handleCardClick();
+        }}
       >
         <div className="p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -262,8 +387,16 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                 onBlur={() => setShowProgressTooltip(false)}
                 tabIndex={0}
                 aria-label={`Commitment Progress`}
-                onClick={e => { e.stopPropagation(); setShowProgressModal(true); }}
-                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setShowProgressModal(true); } }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowProgressModal(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.stopPropagation();
+                    setShowProgressModal(true);
+                  }
+                }}
               >
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
                   {/* Full colored circle as background - only if progress > 0 */}
@@ -280,7 +413,13 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                   {/* White arc for incomplete portion (only if not complete) */}
                   {progressScore < 5 && progressScore > 0 && (
                     <path
-                      d={getPieArcPath(12, 12, 10, 0, (1 - progressScore / 5) * 360)}
+                      d={getPieArcPath(
+                        12,
+                        12,
+                        10,
+                        0,
+                        (1 - progressScore / 5) * 360,
+                      )}
                       fill="#fff"
                     />
                   )}
@@ -290,7 +429,13 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
                     cy="12"
                     r="10"
                     fill="none"
-                    stroke={progressScore === 0 ? (isOverdue ? '#ef4444' : '#d3c7b9') : getPieColor(progressScore)}
+                    stroke={
+                      progressScore === 0
+                        ? isOverdue
+                          ? "#ef4444"
+                          : "#d3c7b9"
+                        : getPieColor(progressScore)
+                    }
                     strokeWidth="2"
                   />
                 </svg>
@@ -302,10 +447,16 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               </div>
               <div className="flex flex-col items-start justify-start">
                 <span className="text-xs font-medium text-gray-700">
-                  {progressScore === 0 ? 'Not started' : progressScore === 5 ? 'Complete' : 'In Progress'}
+                  {progressScore === 0
+                    ? "Not started"
+                    : progressScore === 5
+                      ? "Complete"
+                      : "In Progress"}
                 </span>
                 <span className="text-xs text-gray-400">
-                  {lastUpdateDate ? `Last update ${lastUpdateDate}` : 'No update yet'}
+                  {lastUpdateDate
+                    ? `Last update ${lastUpdateDate}`
+                    : "No update yet"}
                 </span>
               </div>
             </div>
@@ -376,11 +527,17 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               <XIcon className="w-5 h-5" />
             </button>
             <h2 className="text-lg font-bold mb-4">Commitment Progress</h2>
-            <div className="text-gray-800 whitespace-pre-line">{progressSummary}</div>
+            <div className="text-gray-800 whitespace-pre-line">
+              {progressSummary}
+            </div>
           </div>
         </div>
       )}
-      <PromiseModal promise={promiseForModal} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <PromiseModal
+        promise={promiseWithEvidence}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </>
   );
-} 
+}
