@@ -35,7 +35,7 @@ export const Sidebar = ({ pageTitle }: { pageTitle: string }) => {
   );
 };
 
-const DEFAULT_TAB = "finance-canada";
+const DEFAULT_TAB = "prime-minister-office";
 
 export function DepartmentPillLinks({
   mainTabConfigs,

@@ -83,8 +83,6 @@ export interface DepartmentConfig {
       promise_query_slug_override?: string; // Optional: if promise query needs a slug different from minister_lookup_slug
     };
   };
-
-  is_prime_minister?: boolean; // Add this field to identify PM department
 }
 
 export interface MinisterDetails {
@@ -121,7 +119,6 @@ export interface PromiseData {
   what_it_means_for_canadians?: string;
   intended_impact_and_objectives?: string;
   background_and_context?: string;
-  description?: string;
 
   // NEW FIELDS FOR FLAT STRUCTURE MIGRATION
   region_code?: string; // e.g., "Canada" - region identifier
@@ -137,7 +134,7 @@ export interface PromiseData {
 }
 
 export type DepartmentSlug =
-  | "prime-minister"
+  | "prime-minister-office"
   | "agriculture-and-agri-food-canada"
   | "artificial-intelligence-and-digital-innovation"
   | "atlantic-canada-opportunities-agency"

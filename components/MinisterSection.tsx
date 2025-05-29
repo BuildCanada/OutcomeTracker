@@ -65,14 +65,12 @@ export default function MinisterSection({
           <DepartmentMetrics departmentSlug={departmentSlug} />
         </div>
 
-        {/* Promises Section - Only show if not Prime Minister */}
-        {departmentSlug !== "prime-minister" && (
-          <Commitments
-            promises={promises}
-            evidenceItems={evidenceItems}
-            departmentShortName={departmentShortName}
-          />
-        )}
+        {/* Promises Section */}
+        <Commitments
+          promises={promises}
+          evidenceItems={evidenceItems}
+          departmentShortName={departmentShortName}
+        />
       </div>
     </div>
   );
@@ -181,7 +179,6 @@ export function Commitments({
             <PromiseCard
               key={promise.id}
               promise={promise}
-              evidenceItems={evidenceItems || []}
               departmentShortName={
                 departmentShortName ? departmentShortName : undefined
               }

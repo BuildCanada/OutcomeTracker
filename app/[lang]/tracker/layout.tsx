@@ -100,15 +100,6 @@ const fetchDeptConfigs = async (currentSessionId?: string | null) => {
   );
 
   const allDeptConfigs = [
-    {
-      id: "prime-minister",
-      official_full_name: "Office of the Prime Minister",
-      display_short_name: "Prime Minister",
-      bc_priority: 1,
-      is_prime_minister: true,
-      department_slug: "prime-minister",
-      display_order: 1, // Prime Minister is first
-    } as DepartmentConfig,
     ...allDepartmentConfigsWithOrder,
   ];
 

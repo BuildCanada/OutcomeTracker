@@ -444,6 +444,23 @@ def build_department_ministers(representatives_data, variant_to_dept, dept_id_to
             # logger.debug(f"  Attempting to upsert doc: {doc_id} for minister {full_name}, title '{title}'")
 
             try:
+                # Check if document already exists to preserve manual departmentId fixes
+                existing_doc = ministers_collection.document(doc_id).get()
+                
+                if existing_doc.exists:
+                    existing_data = existing_doc.to_dict()
+                    existing_dept_id = existing_data.get('departmentId')
+                    
+                    # If departmentId is already set (not null), preserve it
+                    # This prevents overwriting manual fixes like setting Prime Minister to 'prime-minister-office'
+                    if existing_dept_id is not None:
+                        logger.info(f"  Preserving existing departmentId '{existing_dept_id}' for {full_name} - {title} (doc: {doc_id})")
+                        doc_data["departmentId"] = existing_dept_id
+                        # Also preserve the department name if it exists
+                        existing_dept_name = existing_data.get('departmentName')
+                        if existing_dept_name is not None:
+                            doc_data["departmentName"] = existing_dept_name
+                
                 ministers_collection.document(doc_id).set(doc_data, merge=True)
                 upserted += 1
                 # logger.info(f"  Successfully upserted department_minister doc: {doc_id} for {full_name} - {title}")

@@ -5,11 +5,12 @@ import { Timestamp } from "firebase-admin/firestore";
 
 // Define display order for other departments
 export const DEPARTMENT_DISPLAY_ORDER: Record<string, number> = {
+  'prime-minister-office': 1, // Prime Minister is first
   'finance-canada': 2,
   'infrastructure-canada': 3, // Housing
   'national-defence': 4,
   'immigration-refugees-and-citizenship-canada': 5, // Immigration
-  'public-services-and-procurement-canada': 6, // Government
+  'treasury-board-of-canada-secretariat': 6, // Government
   'natural-resources-canada': 7, // Energy
   'transport-canada': 8, // Internal Trade
   'innovation-science-and-economic-development-canada': 9, // Industry
@@ -70,15 +71,6 @@ export const fetchDeptConfigs = async (currentSessionId?: string | null) => {
   );
 
   const allDeptConfigs = [
-    {
-      id: "prime-minister",
-      official_full_name: "Office of the Prime Minister",
-      display_short_name: "Prime Minister",
-      bc_priority: 1,
-      is_prime_minister: true,
-      department_slug: "prime-minister",
-      display_order: 1, // Prime Minister is first
-    } as DepartmentConfig,
     ...allDepartmentConfigsWithOrder,
   ];
 

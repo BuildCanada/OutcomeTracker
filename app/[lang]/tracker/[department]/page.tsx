@@ -24,6 +24,7 @@ export default function Page({
     useDepartments();
 
   const [ministerInfo, setMinisterInfo] = useState<MinisterInfo | null>();
+  const [ministerLoading, setMinisterLoading] = useState<boolean>(true);
   const [promises, setPromises] = useState<PromiseData[]>([]);
   const [promisesLoading, setPromisesLoading] = useState<boolean>(true);
 
@@ -34,14 +35,13 @@ export default function Page({
   // Load minister data
   useEffect(() => {
     const loadMinisterInfo = async () => {
+      setMinisterLoading(true);
       const response = await fetch(
         `/api/minister-info?departmentId=${department}&sessionId=${45}`,
       );
-      if (department === "prime-minister") {
-        setMinisterInfo(await response.json());
-      } else {
-        setMinisterInfo(await response.json());
-      }
+      const data = await response.json();
+      setMinisterInfo(data);
+      setMinisterLoading(false);
     };
     loadMinisterInfo();
   }, [department]);
@@ -90,7 +90,7 @@ export default function Page({
 
   console.log(ministerInfo);
 
-  if (!ministerInfo || !currentDepartment) {
+  if (ministerLoading || !currentDepartment) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-20 w-1/2 bg-gray-200" />
@@ -123,8 +123,7 @@ export default function Page({
         <DepartmentMetrics departmentSlug={department} />
       </div>
 
-      {department !== "prime-minister" && promisesComponent}
+      {promisesComponent}
     </div>
   );
-  J;
 }

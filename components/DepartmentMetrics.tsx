@@ -48,7 +48,7 @@ const DEPARTMENT_METRICS: Record<
   string,
   { displayName: string; metrics: MetricData[] }
 > = {
-  "prime-minister": {
+  "prime-minister-office": {
     displayName: "Prime Minister",
     metrics: [
       {
@@ -288,7 +288,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
   if (!departmentData) return [];
 
   switch (departmentSlug) {
-    case "prime-minister":
+    case "prime-minister-office":
       return (
         <div className="col-span-1 lg:col-span-2">
           <ChartWithSource
