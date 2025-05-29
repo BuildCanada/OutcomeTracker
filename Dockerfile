@@ -31,5 +31,5 @@ USER appuser
 # Expose port
 EXPOSE 8080
 
-# Run the Cloud Run main application
-CMD ["python", "cloud_run_main.py"] 
+# Run the new pipeline orchestrator
+CMD ["python", "-m", "pipeline.orchestrator"] 

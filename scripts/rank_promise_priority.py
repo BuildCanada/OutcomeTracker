@@ -8,6 +8,12 @@ from dotenv import load_dotenv
 import time
 import logging # Added
 import re # Ensure re is imported
+import sys
+from pathlib import Path
+
+# Add the scripts directory to the path so we can import the firebase utility
+sys.path.append(str(Path(__file__).parent))
+from firebase_init_util import get_firestore_client, log_firebase_info
 
 # Load environment variables
 load_dotenv()
@@ -51,42 +57,18 @@ GENERATION_CONFIG = {
 }
 SYSTEM_INSTRUCTION = "You are the Build-Canada Mandate Scorer. You are an expert in Canadian policy and economics."
 
-# --- Firestore Initialization (mimicking enrich_tag_new_promise.py) ---
+# --- Firestore Initialization (using centralized utility) ---
 def initialize_firestore():
-    db_client = None
+    """Initialize Firestore using the centralized firebase_init_util."""
     try:
-        if not firebase_admin._apps:
-            firebase_admin.initialize_app()
-        project_id = os.getenv('FIREBASE_PROJECT_ID', '[Not Set - Using Default]')
-        logger.info(f"Attempting Firestore connection (Project: {project_id}) using default credentials.")
-        db_client = firestore.client()
-        logger.info(f"Successfully connected to Firestore using default credentials.")
+        logger.info("Initializing Firestore using centralized utility...")
+        db_client = get_firestore_client("rank_promise_priority_app")
+        logger.info("Successfully initialized Firestore client")
+        log_firebase_info()  # Log current Firebase configuration
         return db_client
-    except Exception as e_default:
-        logger.warning(f"Firestore init with default creds failed: {e_default}. Attempting service account.")
-        cred_path = os.getenv("FIREBASE_ADMIN_SDK_PATH") # Ensure this ENV var is set
-        if not cred_path:
-            logger.critical("FIREBASE_ADMIN_SDK_PATH environment variable not set and default creds failed.")
-            raise ValueError("FIREBASE_ADMIN_SDK_PATH environment variable not set and default creds failed.")
-        if not os.path.exists(cred_path):
-            logger.critical(f"Firebase Admin SDK file not found at {cred_path}")
-            raise FileNotFoundError(f"Firebase Admin SDK file not found at {cred_path}")
-        try:
-            logger.info(f"Attempting Firebase init with service account key from: {cred_path}")
-            cred = credentials.Certificate(cred_path)
-            app_name = 'rank_promise_priority_app' # Unique app name for this script
-            if firebase_admin.DEFAULT_APP_NAME not in firebase_admin._apps:
-                 firebase_admin.initialize_app(cred) 
-            elif not any(app.name == app_name for app in firebase_admin._apps.values()):
-                 firebase_admin.initialize_app(cred, name=app_name)
-            current_app = firebase_admin.get_app(name=app_name if any(app.name == app_name for app in firebase_admin._apps.values()) else firebase_admin.DEFAULT_APP_NAME)
-            project_id_sa = current_app.project_id or os.getenv('FIREBASE_PROJECT_ID', '[Not Set - Using Service Account]')
-            logger.info(f"Connected to Firestore (Project: {project_id_sa}) via service account using app: {current_app.name}.")
-            db_client = firestore.client(app=current_app)
-            return db_client
-        except Exception as e_sa:
-            logger.critical(f"Firebase init with service account key from {cred_path} failed: {e_sa}", exc_info=True)
-            raise
+    except Exception as e:
+        logger.critical(f"Failed to initialize Firestore: {e}", exc_info=True)
+        raise
 
 # --- Generative AI Initialization (mimicking enrich_tag_new_promise.py) ---
 def initialize_genai():

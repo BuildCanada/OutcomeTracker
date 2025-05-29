@@ -22,11 +22,17 @@ export interface TimelineDisplayEvent {
   evidenceSourceType?: string; // Optional evidence source type
 }
 
-const formatDate = (dateInput: Timestamp | string): string => {
+const formatDate = (dateInput: Timestamp | string | any): string => {
   if (!dateInput) return 'Date not available';
   let dateObj: Date;
+  
   if (dateInput instanceof Timestamp) {
     dateObj = dateInput.toDate();
+  } else if (typeof dateInput === 'object' && dateInput !== null && 
+             typeof dateInput.seconds === 'number' && 
+             typeof dateInput.nanoseconds === 'number') {
+    // Handle serialized Timestamp objects from API
+    dateObj = new Date(dateInput.seconds * 1000);
   } else if (typeof dateInput === 'string') {
     dateObj = new Date(dateInput);
     if (isNaN(dateObj.getTime())) { // Check if date string was valid
@@ -38,8 +44,15 @@ const formatDate = (dateInput: Timestamp | string): string => {
         if (isNaN(dateObj.getTime())) return 'Invalid date string';
     }
   } else {
+    console.warn('[PromiseProgressTimeline] Unknown date format:', dateInput);
     return 'Invalid date format';
   }
+  
+  if (isNaN(dateObj.getTime())) {
+    console.warn('[PromiseProgressTimeline] Invalid date created from:', dateInput);
+    return 'Invalid date';
+  }
+  
   return dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 };
 

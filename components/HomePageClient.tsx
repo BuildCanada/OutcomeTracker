@@ -20,9 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
-// Define Department IDs as constants
-const ISED_DEPARTMENT_ID = "innovation-science-and-economic-development-canada";
-const AIDI_DEPARTMENT_ID = "artificial-intelligence-and-digital-innovation";
+import FAQModal from "@/components/FAQModal";
 
 // Client-side component to handle the dynamic parts that need state and effects
 export default function HomePageClient({
@@ -102,9 +100,6 @@ export default function HomePageClient({
 
       // 1. Fetch Minister Info if not cached for THIS tab ID
       if (!ministerInfos.hasOwnProperty(thisTabId)) {
-        console.log(
-          `[HomePageClient] Minister info for ${thisTabId} not cached. Fetching...`,
-        );
         try {
           const response = await fetch(
             `/api/minister-info?departmentId=${thisTabId}&sessionId=${currentSessionId}`,
@@ -199,10 +194,6 @@ export default function HomePageClient({
             finalMinisterInfoToUse.effectiveDepartmentOfficialFullName;
         }
 
-        console.log(
-          `[HomePageClient] Fetching promise summary for dept: ${departmentFullName}, session: ${currentSessionId}, party: ${currentGoverningPartyCode}, override: ${effectiveDepartmentFullNameOverride}`,
-        );
-
         // First, load a lightweight summary for faster initial page load
         const promiseSummaries = await fetchPromisesSummary(
           effectiveDepartmentFullNameOverride || departmentFullName,
@@ -214,11 +205,6 @@ export default function HomePageClient({
 
         if (activeTabId !== thisTabId) return; // Tab changed during fetch, abort
 
-        console.log(
-          `[HomePageClient] Setting active department data for ${thisTabId} with minister:`,
-          finalMinisterInfoToUse?.name,
-          `and ${promiseSummaries.length} promise summaries.`,
-        );
         setActiveDepartmentData({
           ministerInfo: finalMinisterInfoToUse,
           promises: promiseSummaries as PromiseData[], // Type assertion since we know the structure
@@ -227,10 +213,6 @@ export default function HomePageClient({
         setIsShowingSummary(true); // Mark that we're showing summary data
       } catch (err: any) {
         if (activeTabId !== thisTabId) return; // Tab changed
-        console.error(
-          `[HomePageClient] Error fetching promise data for department ${departmentFullName} (Session: ${currentSessionId}):`,
-          err,
-        );
         setError(`Failed to load promise data for ${departmentFullName}.`);
         setActiveDepartmentData({
           ministerInfo: finalMinisterInfoToUse,
@@ -426,17 +408,29 @@ export default function HomePageClient({
   );
 }
 
-export const Sidebar = ({ pageTitle }: { pageTitle: string }) => (
-  <div className="col-span-1">
-    <h1 className="text-4xl md:text-6xl font-bold mb-8">{pageTitle}</h1>
-    <div className="mb-8">
-      <p className="text-gray-900">
-        A non-partisan platform tracking progress of key commitments during the
-        45th Parliament of Canada.
-      </p>
-    </div>
-  </div>
-);
+export const Sidebar = ({ pageTitle }: { pageTitle: string }) => {
+    const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
+
+    return (
+        <div className="col-span-1">
+            <h1 className="text-4xl md:text-6xl font-bold mb-8">{pageTitle}</h1>
+            <div className="mb-8">
+                <p className="text-gray-900">
+                    A non-partisan platform tracking progress of key commitments during the
+                    45th Parliament of Canada.
+                </p>
+                <button
+                    onClick={() => setIsFAQModalOpen(true)}
+                    className="font-mono text-sm text-[#8b2332] hover:text-[#721c28] transition-colors"
+                >
+                    FAQ
+                </button>
+
+            </div>
+            <FAQModal isOpen={isFAQModalOpen} onClose={() => setIsFAQModalOpen(false)} />
+        </div>
+    );
+};
 
 export function DepartmentPills({
   mainTabConfigs,

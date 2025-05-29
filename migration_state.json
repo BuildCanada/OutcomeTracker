@@ -1,0 +1,19 @@
+{
+  "current_step": 9,
+  "completed_steps": [
+    "backup_existing_system",
+    "test_ingestion_jobs",
+    "migrate_ingestion_jobs",
+    "test_processing_jobs",
+    "migrate_processing_jobs",
+    "migrate_orchestration",
+    "test_linking_jobs",
+    "migrate_linking_jobs",
+    "cleanup_deprecated_scripts"
+  ],
+  "failed_steps": [
+    "test_ingestion_jobs"
+  ],
+  "started_at": "2025-05-29T02:48:29.013545+00:00",
+  "last_updated": "2025-05-29T03:40:37.115937+00:00"
+}
