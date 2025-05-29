@@ -16,6 +16,14 @@ from flask import Flask, request, jsonify
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 
+# Firebase imports
+try:
+    import firebase_admin
+    from firebase_admin import credentials, firestore
+    FIREBASE_AVAILABLE = True
+except ImportError:
+    FIREBASE_AVAILABLE = False
+
 from .core.base_job import BaseJob, JobResult, JobStatus
 from .core.job_runner import JobRunner
 
@@ -30,6 +38,7 @@ class PipelineOrchestrator:
     - Dependency management
     - Trigger coordination
     - Error handling and resilience
+    - Firestore logging for monitoring
     """
     
     def __init__(self, config_path: str = None):
@@ -48,6 +57,84 @@ class PipelineOrchestrator:
         self.active_jobs = {}  # Track currently running jobs
         self.job_lock = threading.Lock()
         
+        # Initialize Firestore for monitoring
+        self.firestore_db = self._init_firestore()
+        
+    def _init_firestore(self):
+        """Initialize Firestore connection for monitoring"""
+        if not FIREBASE_AVAILABLE:
+            self.logger.warning("Firebase not available - monitoring data will not be logged")
+            return None
+            
+        try:
+            # Check if Firebase is already initialized
+            if not firebase_admin._apps:
+                # Initialize Firebase Admin SDK
+                cred = credentials.ApplicationDefault()
+                firebase_admin.initialize_app(cred)
+            
+            db = firestore.client()
+            self.logger.info("Firestore initialized for monitoring")
+            return db
+        except Exception as e:
+            self.logger.warning(f"Failed to initialize Firestore: {e}")
+            return None
+    
+    def _log_job_execution(self, job_id: str, stage: str, job_name: str, result: JobResult, triggered_by: str = None):
+        """Log job execution to Firestore for monitoring"""
+        if not self.firestore_db:
+            return
+            
+        try:
+            execution_data = {
+                'job_name': job_name,
+                'stage': stage,
+                'status': result.status.value,
+                'start_time': result.start_time,
+                'end_time': result.end_time,
+                'duration_seconds': result.duration_seconds,
+                'items_processed': result.items_processed,
+                'items_created': result.items_created,
+                'items_updated': result.items_updated,
+                'items_skipped': result.items_skipped,
+                'errors': result.errors,
+                'error_message': result.error_message,
+                'triggered_by': triggered_by,
+                'metadata': result.metadata or {}
+            }
+            
+            # Add to pipeline_job_executions collection
+            self.firestore_db.collection('pipeline_job_executions').add(execution_data)
+            
+            # Create alert if job failed
+            if result.status == JobStatus.FAILED:
+                self._create_pipeline_alert(job_id, result.error_message)
+                
+        except Exception as e:
+            self.logger.error(f"Failed to log job execution to Firestore: {e}")
+    
+    def _create_pipeline_alert(self, job_id: str, error_message: str):
+        """Create a pipeline alert in Firestore"""
+        if not self.firestore_db:
+            return
+            
+        try:
+            alert_data = {
+                'alert_type': 'pipeline_job_failure',
+                'severity': 'critical',
+                'message': f'Pipeline job {job_id} failed',
+                'error_message': error_message,
+                'failure_count': 1,
+                'created_at': datetime.now(timezone.utc),
+                'resolved': False,
+                'source': 'pipeline'
+            }
+            
+            self.firestore_db.collection('pipeline_alerts').add(alert_data)
+            
+        except Exception as e:
+            self.logger.error(f"Failed to create pipeline alert: {e}")
+    
     def _load_job_config(self) -> Dict[str, Any]:
         """Load job configuration from YAML file"""
         try:
@@ -130,26 +217,35 @@ class PipelineOrchestrator:
             if job_instance.should_trigger_downstream(result):
                 self._trigger_downstream_jobs(stage, job_name, job_config, result)
             
+            # Log job execution to Firestore
+            self._log_job_execution(job_id, stage, job_name, result)
+            
             return result
             
         except KeyError:
             error_msg = f"Job {job_id} not found in configuration"
             self.logger.error(error_msg)
-            return JobResult(
+            result = JobResult(
                 job_name=job_id,
                 status=JobStatus.FAILED,
                 start_time=datetime.now(timezone.utc),
                 error_message=error_msg
             )
+            # Log failed job execution to Firestore
+            self._log_job_execution(job_id, stage, job_name, result)
+            return result
         except Exception as e:
             error_msg = f"Failed to execute job {job_id}: {e}"
             self.logger.error(error_msg, exc_info=True)
-            return JobResult(
+            result = JobResult(
                 job_name=job_id,
                 status=JobStatus.FAILED,
                 start_time=datetime.now(timezone.utc),
                 error_message=error_msg
             )
+            # Log failed job execution to Firestore
+            self._log_job_execution(job_id, stage, job_name, result)
+            return result
         finally:
             # Remove job from active jobs
             with self.job_lock:
@@ -206,6 +302,9 @@ class PipelineOrchestrator:
             
             result = self.execute_job(stage, job_name, trigger_metadata=trigger_metadata)
             self.logger.info(f"Triggered job completed: {stage}.{job_name} - {result.status.value}")
+            
+            # Log job execution to Firestore
+            self._log_job_execution(f"{stage}.{job_name}", stage, job_name, result, triggered_by=trigger_result.job_name)
             
         except Exception as e:
             self.logger.error(f"Failed to execute triggered job {stage}.{job_name}: {e}")

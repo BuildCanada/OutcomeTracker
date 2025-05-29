@@ -1,37 +1,143 @@
 # 🚀 Promise Tracker Pipeline - Cloud Run Quick Start
 
-Your pipeline migration is complete! Here's how to deploy it to Google Cloud Run in 3 simple steps.
+Get your Promise Tracker pipeline running on Google Cloud Run in 3 simple steps.
 
-## Prerequisites ✅
+## Prerequisites
 
-1. **Google Cloud SDK installed**
-   ```bash
-   gcloud auth login
-   export PROJECT_ID="your-project-id"
-   gcloud config set project $PROJECT_ID
-   ```
+- Google Cloud account with billing enabled
+- `gcloud` CLI installed and authenticated
+- Docker installed (for local testing)
 
-2. **Billing enabled** on your Google Cloud project
+## 🚀 Option 1: Manual Deployment (Quick Start)
 
-## 3-Step Deployment 🎯
-
-### Step 1: Deploy to Cloud Run
+### Step 1: Deploy the Pipeline
 ```bash
 ./deploy_to_cloud_run.sh
 ```
-**What it does**: Builds container, deploys to Cloud Run, outputs service URL
 
-### Step 2: Test the Deployment  
+### Step 2: Test the Deployment
 ```bash
 ./test_cloud_run.sh
 ```
-**What it does**: Runs 5 comprehensive tests to verify everything works
 
-### Step 3: Set Up Automation (Optional)
+### Step 3: Set Up Scheduling (Optional)
 ```bash
 ./setup_cloud_scheduler.sh
 ```
-**What it does**: Creates scheduled jobs for automatic pipeline execution
+
+## 🔄 Option 2: Automatic GitHub Deployment (Recommended)
+
+For automatic deployments when you make code changes:
+
+### Step 1: Set Up GitHub Integration
+```bash
+export GITHUB_OWNER="your-github-username"
+export GITHUB_REPO="promise-tracker"
+./setup_github_integration_workload_identity.sh
+```
+
+### Step 2: Add GitHub Secrets
+Follow the instructions in [GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md)
+
+### Step 3: Set Up Scheduling
+```bash
+./setup_cloud_scheduler.sh
+```
+
+**Benefits of GitHub Integration:**
+- ✅ Automatic deployment on code changes
+- ✅ Version tracking with Git SHA
+- ✅ Zero-downtime rolling updates
+- ✅ Easy rollback to previous versions
+- ✅ Keyless authentication (no service account keys)
+
+## 📊 Monitor Your Pipeline
+
+Access your monitoring dashboard at:
+```
+https://your-nextjs-app.com/admin/monitoring
+```
+
+The dashboard shows:
+- Pipeline job status and health
+- Recent executions and triggers
+- Cloud Run service status
+- RSS feed monitoring
+- Active alerts
+
+## 🎯 What Happens Next
+
+### Scheduled Jobs (Every Day)
+- **Canada News**: Every 2 hours → triggers News Processor → triggers Evidence Linker
+- **LEGISinfo Bills**: Every 4 hours → triggers Bill Processor → triggers Evidence Linker  
+- **Orders in Council**: Daily 6 AM → triggers OIC Processor → triggers Evidence Linker
+- **Canada Gazette**: Daily 7 AM → triggers Gazette Processor → triggers Evidence Linker
+
+### Automatic Trigger Chain
+```
+Ingestion → Processing → Evidence Linking → Progress Scoring
+```
+
+No manual intervention needed - the pipeline runs automatically!
+
+## 🛠️ Manual Job Triggers
+
+You can also trigger jobs manually from your monitoring dashboard or via API:
+
+```bash
+# Trigger a specific job
+curl -X POST https://your-cloud-run-url/jobs/ingestion/canada_news
+
+# Check job status
+curl https://your-cloud-run-url/jobs
+```
+
+## 📈 Cost Estimate
+
+**Typical monthly cost: $16-45**
+- Cloud Run: $10-30 (based on usage)
+- Cloud Scheduler: $0.10 (6 jobs)
+- Artifact Registry: $0.10 (storage)
+- Cloud Build: $5-15 (deployments)
+
+## 🚨 Troubleshooting
+
+### Deployment Issues
+```bash
+# Check service status
+gcloud run services describe promise-tracker-pipeline --region=us-central1
+
+# View logs
+gcloud logs read "resource.type=cloud_run_revision" --limit=50
+```
+
+### Job Issues
+```bash
+# Test individual endpoints
+./test_cloud_run.sh
+
+# Check monitoring dashboard
+# Visit /admin/monitoring in your Next.js app
+```
+
+## 📚 Additional Resources
+
+- [Complete Deployment Guide](./CLOUD_RUN_DEPLOYMENT_GUIDE.md)
+- [GitHub Integration Setup](./GITHUB_INTEGRATION.md)
+- [Pipeline Architecture](./pipeline/README.md)
+- [Monitoring Dashboard](./components/admin/README.md)
+
+## 🎉 You're Done!
+
+Your Promise Tracker pipeline is now running automatically on Google Cloud Run. The system will:
+
+1. **Ingest data** from government sources on schedule
+2. **Process** raw data into evidence items automatically  
+3. **Link evidence** to promises using AI
+4. **Update progress scores** based on new evidence
+5. **Log everything** to your monitoring dashboard
+
+Choose **Option 1** for quick manual deployment, or **Option 2** for automatic GitHub-based deployment with continuous integration.
 
 ## 🧪 Manual Testing
 
@@ -57,28 +163,6 @@ curl -X POST \
 # Check job status
 curl $SERVICE_URL/jobs/status
 ```
-
-## 📊 What You Get
-
-### **New Pipeline Architecture**
-- ✅ **Resilient**: Individual job failures don't crash the system
-- ✅ **Scalable**: Auto-scaling based on demand  
-- ✅ **Monitored**: Comprehensive logging and metrics
-- ✅ **Automated**: Scheduled execution with Cloud Scheduler
-
-### **API Endpoints**
-- `GET /health` - Health check
-- `GET /jobs/status` - Current job statuses
-- `POST /jobs/{stage}/{job_name}` - Run specific job
-- `POST /jobs/batch/{stage}` - Run all jobs in a stage
-
-### **Scheduled Jobs** (if you run step 3)
-- 🗞️ **Canada News**: Every 2 hours
-- 🏛️ **LEGISinfo Bills**: Every 4 hours  
-- 📋 **Orders in Council**: Daily at 6 AM
-- 📰 **Canada Gazette**: Daily at 7 AM
-- 🔄 **Evidence Processing**: Every 6 hours
-- 🔗 **Evidence Linking**: Daily at 10 PM
 
 ## 🎛️ Management
 

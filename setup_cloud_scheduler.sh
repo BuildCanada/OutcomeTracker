@@ -2,6 +2,7 @@
 
 # Promise Tracker Pipeline - Cloud Scheduler Setup
 # This script creates Cloud Scheduler jobs for automated pipeline execution
+# Note: Only ingestion jobs are scheduled - processing and linking are triggered automatically
 
 set -e
 
@@ -42,8 +43,14 @@ gcloud run services add-iam-policy-binding $SERVICE_NAME \
     --role="roles/run.invoker" \
     --region=$REGION
 
-# Create Cloud Scheduler jobs
-echo "📅 Creating scheduled jobs..."
+# Delete any existing processing/linking scheduled jobs (these should be triggered, not scheduled)
+echo "🧹 Cleaning up old scheduled processing/linking jobs..."
+gcloud scheduler jobs delete evidence-processing --location=$SCHEDULER_REGION --quiet || echo "evidence-processing job doesn't exist"
+gcloud scheduler jobs delete evidence-linking --location=$SCHEDULER_REGION --quiet || echo "evidence-linking job doesn't exist"
+
+# Create Cloud Scheduler jobs - ONLY FOR INGESTION
+echo "📅 Creating scheduled ingestion jobs..."
+echo "ℹ️  Note: Processing and linking jobs will be triggered automatically by ingestion"
 
 # 1. Canada News Ingestion - Every 2 hours
 gcloud scheduler jobs create http canada-news-ingestion \
@@ -52,7 +59,7 @@ gcloud scheduler jobs create http canada-news-ingestion \
     --http-method=POST \
     --oidc-service-account-email="promise-tracker-scheduler@$PROJECT_ID.iam.gserviceaccount.com" \
     --location=$SCHEDULER_REGION \
-    --description="Ingest Canada News every 2 hours" \
+    --description="Ingest Canada News every 2 hours (triggers processing automatically)" \
     --headers="Content-Type=application/json" \
     --message-body='{"config": {"max_items": 100}}' \
     || echo "Job canada-news-ingestion already exists"
@@ -64,7 +71,7 @@ gcloud scheduler jobs create http legisinfo-bills-ingestion \
     --http-method=POST \
     --oidc-service-account-email="promise-tracker-scheduler@$PROJECT_ID.iam.gserviceaccount.com" \
     --location=$SCHEDULER_REGION \
-    --description="Ingest LEGISinfo Bills every 4 hours" \
+    --description="Ingest LEGISinfo Bills every 4 hours (triggers processing automatically)" \
     --headers="Content-Type=application/json" \
     --message-body='{"config": {"max_items": 50}}' \
     || echo "Job legisinfo-bills-ingestion already exists"
@@ -76,7 +83,7 @@ gcloud scheduler jobs create http orders-in-council-ingestion \
     --http-method=POST \
     --oidc-service-account-email="promise-tracker-scheduler@$PROJECT_ID.iam.gserviceaccount.com" \
     --location=$SCHEDULER_REGION \
-    --description="Ingest Orders in Council daily at 6 AM" \
+    --description="Ingest Orders in Council daily at 6 AM (triggers processing automatically)" \
     --headers="Content-Type=application/json" \
     --message-body='{"config": {"max_items": 25}}' \
     || echo "Job orders-in-council-ingestion already exists"
@@ -88,43 +95,21 @@ gcloud scheduler jobs create http canada-gazette-ingestion \
     --http-method=POST \
     --oidc-service-account-email="promise-tracker-scheduler@$PROJECT_ID.iam.gserviceaccount.com" \
     --location=$SCHEDULER_REGION \
-    --description="Ingest Canada Gazette daily at 7 AM" \
+    --description="Ingest Canada Gazette daily at 7 AM (triggers processing automatically)" \
     --headers="Content-Type=application/json" \
     --message-body='{"config": {"max_items": 20}}' \
     || echo "Job canada-gazette-ingestion already exists"
 
-# 5. Processing Jobs - Every 6 hours
-gcloud scheduler jobs create http evidence-processing \
-    --schedule="0 */6 * * *" \
-    --uri="$SERVICE_URL/jobs/batch/processing" \
-    --http-method=POST \
-    --oidc-service-account-email="promise-tracker-scheduler@$PROJECT_ID.iam.gserviceaccount.com" \
-    --location=$SCHEDULER_REGION \
-    --description="Process raw data to evidence items every 6 hours" \
-    --headers="Content-Type=application/json" \
-    --message-body='{"config": {"max_items_per_job": 50}}' \
-    || echo "Job evidence-processing already exists"
-
-# 6. Evidence Linking - Daily at 10 PM
-gcloud scheduler jobs create http evidence-linking \
-    --schedule="0 22 * * *" \
-    --uri="$SERVICE_URL/jobs/linking/evidence_linker" \
-    --http-method=POST \
-    --oidc-service-account-email="promise-tracker-scheduler@$PROJECT_ID.iam.gserviceaccount.com" \
-    --location=$SCHEDULER_REGION \
-    --description="Link evidence to promises daily at 10 PM" \
-    --headers="Content-Type=application/json" \
-    --message-body='{"config": {"max_items": 100}}' \
-    || echo "Job evidence-linking already exists"
-
 echo "✅ Cloud Scheduler setup complete!"
 echo ""
-echo "📅 Scheduled Jobs Created:"
+echo "📅 Scheduled Jobs Created (Ingestion Only):"
 echo "   🗞️  Canada News:        Every 2 hours"
 echo "   🏛️  LEGISinfo Bills:    Every 4 hours"
 echo "   📋 Orders in Council:   Daily at 6 AM"
 echo "   📰 Canada Gazette:      Daily at 7 AM"
-echo "   🔄 Evidence Processing: Every 6 hours"
-echo "   🔗 Evidence Linking:    Daily at 10 PM"
+echo ""
+echo "🔄 Automatic Trigger Flow:"
+echo "   Ingestion → Processing → Evidence Linking → Progress Scoring"
+echo "   (No manual scheduling needed for processing/linking)"
 echo ""
 echo "🎛️  Manage jobs at: https://console.cloud.google.com/cloudscheduler?project=$PROJECT_ID" 

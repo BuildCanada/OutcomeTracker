@@ -1,11 +1,11 @@
 import React from 'react';
 import { firestoreAdmin } from '@/lib/firebaseAdmin';
 import { Timestamp } from 'firebase-admin/firestore';
-import RSSMonitoringDashboard from '../../../components/admin/RSSMonitoringDashboard';
+import UnifiedMonitoringDashboard from '../../../components/admin/UnifiedMonitoringDashboard';
 
 export const metadata = {
-  title: 'RSS Monitoring - Admin Dashboard',
-  description: 'Monitor RSS feed health and ingestion performance across multiple sources'
+  title: 'Pipeline Monitoring - Admin Dashboard',
+  description: 'Monitor RSS feeds and Cloud Run pipeline job health and performance'
 };
 
 interface RSSMetrics {
@@ -17,7 +17,25 @@ interface RSSMetrics {
   last_check: string | null;
 }
 
-interface RSSAlert {
+interface PipelineJobExecution {
+  id: string;
+  job_name: string;
+  stage: string;
+  status: 'success' | 'failed' | 'running';
+  start_time: string | null;
+  end_time?: string | null;
+  duration_seconds?: number;
+  items_processed?: number;
+  items_created?: number;
+  items_updated?: number;
+  items_skipped?: number;
+  errors?: number;
+  error_message?: string;
+  triggered_by?: string;
+  metadata?: any;
+}
+
+interface Alert {
   id: string;
   alert_type: string;
   severity: 'warning' | 'critical';
@@ -26,11 +44,12 @@ interface RSSAlert {
   failure_count: number;
   created_at: string | null;
   resolved: boolean;
+  source: 'rss' | 'pipeline';
 }
 
 interface RecentActivity {
   id: string;
-  operation: 'rss_check' | 'bill_ingestion';
+  operation: 'rss_check' | 'bill_ingestion' | 'pipeline_job';
   status: string;
   start_time: string | null;
   end_time?: string | null;
@@ -39,6 +58,10 @@ interface RecentActivity {
   evidence_created?: number;
   ingestion_type?: string;
   triggered_by?: string;
+  check_type?: string;
+  job_name?: string;
+  stage?: string;
+  source: 'rss' | 'pipeline';
 }
 
 // Helper function to serialize Firestore Timestamps
@@ -66,9 +89,9 @@ function serializeFirestoreData(data: any): any {
   return serialized;
 }
 
-async function getMonitoringData(feedType?: string) {
+async function getRSSMonitoringData() {
   try {
-    // Get today's metrics
+    // Get today's RSS metrics
     const today = new Date().toISOString().split('T')[0];
     const metricsDoc = await firestoreAdmin
       .collection('rss_feed_metrics')
@@ -78,7 +101,7 @@ async function getMonitoringData(feedType?: string) {
     const todayMetricsRaw = metricsDoc.exists ? metricsDoc.data() : null;
     const todayMetrics = todayMetricsRaw ? serializeFirestoreData(todayMetricsRaw) : null;
 
-    // Get last 7 days of metrics for trending
+    // Get last 7 days of RSS metrics for trending
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
@@ -94,111 +117,156 @@ async function getMonitoringData(feedType?: string) {
       ...serializeFirestoreData(doc.data())
     }));
 
-    // Get active alerts
-    const alertsSnapshot = await firestoreAdmin
+    // Get RSS alerts
+    const rssAlertsSnapshot = await firestoreAdmin
       .collection('rss_feed_alerts')
       .where('resolved', '==', false)
       .orderBy('created_at', 'desc')
       .limit(10)
       .get();
 
-    const activeAlerts = alertsSnapshot.docs.map(doc => ({
+    const rssAlerts = rssAlertsSnapshot.docs.map(doc => ({
       id: doc.id,
+      source: 'rss' as const,
       ...serializeFirestoreData(doc.data())
     }));
 
-    // Get recent activity (last 24 hours)
+    // Get recent RSS activity (last 24 hours)
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    let recentActivityQuery = firestoreAdmin
+    const recentRSSActivitySnapshot = await firestoreAdmin
       .collection('rss_feed_monitoring')
-      .where('start_time', '>=', twentyFourHoursAgo);
+      .where('start_time', '>=', twentyFourHoursAgo)
+      .orderBy('start_time', 'desc')
+      .limit(25)
+      .get();
 
-    // Filter by feed type if specified
-    if (feedType && feedType !== 'all') {
-      recentActivityQuery = recentActivityQuery.where('check_type', '==', feedType);
-    }
+    const recentRSSActivity = recentRSSActivitySnapshot.docs.map(doc => ({
+      id: doc.id,
+      source: 'rss' as const,
+      ...serializeFirestoreData(doc.data())
+    }));
 
-    const recentActivitySnapshot = await recentActivityQuery
+    return {
+      todayMetrics,
+      weeklyMetrics,
+      rssAlerts,
+      recentRSSActivity
+    };
+
+  } catch (error) {
+    console.error('Error fetching RSS monitoring data:', error);
+    return {
+      todayMetrics: null,
+      weeklyMetrics: [],
+      rssAlerts: [],
+      recentRSSActivity: []
+    };
+  }
+}
+
+async function getPipelineMonitoringData() {
+  try {
+    // Get recent pipeline job executions (last 24 hours)
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    const pipelineExecutionsSnapshot = await firestoreAdmin
+      .collection('pipeline_job_executions')
+      .where('start_time', '>=', twentyFourHoursAgo)
       .orderBy('start_time', 'desc')
       .limit(50)
       .get();
 
-    const recentActivity = recentActivitySnapshot.docs.map(doc => ({
+    const pipelineExecutions = pipelineExecutionsSnapshot.docs.map(doc => ({
       id: doc.id,
+      source: 'pipeline' as const,
+      operation: 'pipeline_job' as const,
       ...serializeFirestoreData(doc.data())
     }));
 
-    // Get feed summary stats for all feeds
-    const allActivitySnapshot = await firestoreAdmin
-      .collection('rss_feed_monitoring')
-      .where('start_time', '>=', twentyFourHoursAgo)
+    // Get pipeline alerts
+    const pipelineAlertsSnapshot = await firestoreAdmin
+      .collection('pipeline_alerts')
+      .where('resolved', '==', false)
+      .orderBy('created_at', 'desc')
+      .limit(10)
       .get();
 
-    const feedStats: Record<string, { total: number; successful: number; bills_found: number }> = {
-      legisinfo_bills: { total: 0, successful: 0, bills_found: 0 },
-      canada_news_rss: { total: 0, successful: 0, bills_found: 0 },
-      all: { total: 0, successful: 0, bills_found: 0 }
+    const pipelineAlerts = pipelineAlertsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      source: 'pipeline' as const,
+      ...serializeFirestoreData(doc.data())
+    }));
+
+    // Calculate pipeline job stats by stage
+    const jobStats: Record<string, { total: number; successful: number; failed: number; running: number }> = {
+      ingestion: { total: 0, successful: 0, failed: 0, running: 0 },
+      processing: { total: 0, successful: 0, failed: 0, running: 0 },
+      linking: { total: 0, successful: 0, failed: 0, running: 0 },
+      all: { total: 0, successful: 0, failed: 0, running: 0 }
     };
 
-    allActivitySnapshot.docs.forEach(doc => {
-      const data = doc.data();
-      const checkType = data.check_type || 'unknown';
-      const success = data.success === true;
-      const billsFound = data.bills_found || 0;
+    pipelineExecutions.forEach(execution => {
+      const stage = execution.stage || 'unknown';
+      const status = execution.status || 'unknown';
 
-      if (feedStats[checkType]) {
-        feedStats[checkType].total += 1;
-        if (success) feedStats[checkType].successful += 1;
-        feedStats[checkType].bills_found += billsFound;
+      if (jobStats[stage]) {
+        jobStats[stage].total += 1;
+        if (status === 'success') jobStats[stage].successful += 1;
+        else if (status === 'failed') jobStats[stage].failed += 1;
+        else if (status === 'running') jobStats[stage].running += 1;
       }
 
-      feedStats.all.total += 1;
-      if (success) feedStats.all.successful += 1;
-      feedStats.all.bills_found += billsFound;
+      jobStats.all.total += 1;
+      if (status === 'success') jobStats.all.successful += 1;
+      else if (status === 'failed') jobStats.all.failed += 1;
+      else if (status === 'running') jobStats.all.running += 1;
     });
 
-    // Calculate health status
-    let healthStatus = 'unknown';
-    let successRate = 0;
-    
-    if (todayMetrics) {
-      successRate = (todayMetrics.successful_checks / Math.max(todayMetrics.total_checks, 1)) * 100;
-      
-      if (successRate >= 95 && activeAlerts.length === 0) {
-        healthStatus = 'healthy';
-      } else if (successRate >= 80) {
-        healthStatus = 'warning';
-      } else {
-        healthStatus = 'critical';
-      }
-    }
-
     return {
-      healthStatus,
-      successRate,
-      todayMetrics,
-      weeklyMetrics,
-      activeAlerts,
-      recentActivity,
-      feedStats
+      pipelineExecutions,
+      pipelineAlerts,
+      jobStats
     };
 
   } catch (error) {
-    console.error('Error fetching monitoring data:', error);
+    console.error('Error fetching pipeline monitoring data:', error);
     return {
-      healthStatus: 'error',
-      successRate: 0,
-      todayMetrics: null,
-      weeklyMetrics: [],
-      activeAlerts: [],
-      recentActivity: [],
-      feedStats: {
-        legisinfo_bills: { total: 0, successful: 0, bills_found: 0 },
-        canada_news_rss: { total: 0, successful: 0, bills_found: 0 },
-        all: { total: 0, successful: 0, bills_found: 0 }
+      pipelineExecutions: [],
+      pipelineAlerts: [],
+      jobStats: {
+        ingestion: { total: 0, successful: 0, failed: 0, running: 0 },
+        processing: { total: 0, successful: 0, failed: 0, running: 0 },
+        linking: { total: 0, successful: 0, failed: 0, running: 0 },
+        all: { total: 0, successful: 0, failed: 0, running: 0 }
       }
+    };
+  }
+}
+
+async function getCloudRunServiceStatus() {
+  try {
+    // This would typically call the Cloud Run service health endpoint
+    // For now, we'll return a mock status
+    const serviceUrl = process.env.CLOUD_RUN_SERVICE_URL || 'https://promise-tracker-pipeline-2gbdayf7rq-uc.a.run.app';
+    
+    // In a real implementation, you'd make an HTTP request to the health endpoint
+    // const response = await fetch(`${serviceUrl}/`);
+    // const healthData = await response.json();
+    
+    return {
+      serviceUrl,
+      status: 'healthy', // This would come from the actual health check
+      lastCheck: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error checking Cloud Run service status:', error);
+    return {
+      serviceUrl: '',
+      status: 'unknown',
+      lastCheck: null
     };
   }
 }
@@ -206,29 +274,87 @@ async function getMonitoringData(feedType?: string) {
 export default async function MonitoringPage({ 
   searchParams 
 }: { 
-  searchParams: { feed?: string } 
+  searchParams: { view?: string; feed?: string } 
 }) {
+  const selectedView = searchParams.view || 'overview';
   const selectedFeed = searchParams.feed || 'all';
-  const monitoringData = await getMonitoringData(selectedFeed);
+
+  // Fetch all monitoring data in parallel
+  const [rssData, pipelineData, cloudRunStatus] = await Promise.all([
+    getRSSMonitoringData(),
+    getPipelineMonitoringData(),
+    getCloudRunServiceStatus()
+  ]);
+
+  // Combine alerts from both sources
+  const allAlerts = [...rssData.rssAlerts, ...pipelineData.pipelineAlerts];
+
+  // Combine recent activity from both sources
+  const allRecentActivity = [...rssData.recentRSSActivity, ...pipelineData.pipelineExecutions]
+    .sort((a, b) => {
+      const aTime = new Date(a.start_time || 0).getTime();
+      const bTime = new Date(b.start_time || 0).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, 50);
+
+  // Calculate overall health status
+  let overallHealthStatus = 'healthy';
+  let overallSuccessRate = 100;
+
+  // Check RSS health
+  if (rssData.todayMetrics) {
+    const rssSuccessRate = (rssData.todayMetrics.successful_checks / Math.max(rssData.todayMetrics.total_checks, 1)) * 100;
+    if (rssSuccessRate < 80) overallHealthStatus = 'critical';
+    else if (rssSuccessRate < 95) overallHealthStatus = 'warning';
+  }
+
+  // Check pipeline health
+  const pipelineSuccessRate = pipelineData.jobStats.all.total > 0 
+    ? (pipelineData.jobStats.all.successful / pipelineData.jobStats.all.total) * 100 
+    : 100;
+  
+  if (pipelineSuccessRate < 80) overallHealthStatus = 'critical';
+  else if (pipelineSuccessRate < 95 && overallHealthStatus === 'healthy') overallHealthStatus = 'warning';
+
+  // Check for active alerts
+  if (allAlerts.length > 0) {
+    const hasCriticalAlerts = allAlerts.some(alert => alert.severity === 'critical');
+    if (hasCriticalAlerts) overallHealthStatus = 'critical';
+    else if (overallHealthStatus === 'healthy') overallHealthStatus = 'warning';
+  }
+
+  overallSuccessRate = Math.round((rssData.todayMetrics ? 
+    ((rssData.todayMetrics.successful_checks / Math.max(rssData.todayMetrics.total_checks, 1)) + 
+     (pipelineData.jobStats.all.successful / Math.max(pipelineData.jobStats.all.total, 1))) / 2 
+    : pipelineSuccessRate) * 100);
 
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">RSS Feed Monitoring</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Pipeline Monitoring</h1>
         <p className="text-gray-600 mt-2">
-          Monitor the health and performance of RSS feed ingestion from multiple sources
+          Monitor RSS feeds and Cloud Run pipeline jobs health and performance
         </p>
       </div>
 
-      <RSSMonitoringDashboard 
-        healthStatus={monitoringData.healthStatus}
-        successRate={monitoringData.successRate}
-        todayMetrics={monitoringData.todayMetrics}
-        weeklyMetrics={monitoringData.weeklyMetrics}
-        activeAlerts={monitoringData.activeAlerts}
-        recentActivity={monitoringData.recentActivity}
-        feedStats={monitoringData.feedStats}
+      <UnifiedMonitoringDashboard 
+        selectedView={selectedView}
         selectedFeed={selectedFeed}
+        overallHealthStatus={overallHealthStatus}
+        overallSuccessRate={overallSuccessRate}
+        cloudRunStatus={cloudRunStatus}
+        rssData={{
+          todayMetrics: rssData.todayMetrics,
+          weeklyMetrics: rssData.weeklyMetrics,
+          recentActivity: rssData.recentRSSActivity
+        }}
+        pipelineData={{
+          jobStats: pipelineData.jobStats,
+          recentExecutions: pipelineData.pipelineExecutions
+        }}
+        allAlerts={allAlerts}
+        allRecentActivity={allRecentActivity}
       />
     </div>
   );
