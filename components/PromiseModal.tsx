@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import type { PromiseData, RationaleEvent, EvidenceItem } from "@/lib/types"
-import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon, TrendingUpIcon, ChevronDownIcon, ChevronRightIcon, CheckCircle2Icon, XIcon, ShareIcon } from "lucide-react"
+import { CalendarIcon, FileTextIcon, UsersIcon, LinkIcon, ChevronDownIcon, ChevronRightIcon, PaperclipIcon, ShareIcon } from "lucide-react"
 import { Timestamp } from 'firebase/firestore';
 import PromiseProgressTimeline from './PromiseProgressTimeline';
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -55,11 +55,11 @@ const formatSimpleDate = (dateString: string | undefined): string => {
 
 // Progress dot color scale (red to green) - moved here for use in modal
 const progressDotColors = [
-  "bg-red-500",      // Score 1
-  "bg-yellow-400", // Score 2
-  "bg-yellow-300", // Score 3
-  "bg-lime-400",   // Score 4
-  "bg-green-600",  // Score 5
+  "bg-orange-300",  // Score 1
+  "bg-amber-300",   // Score 2
+  "bg-yellow-300",  // Score 3
+  "bg-lime-400",    // Score 4
+  "bg-green-600",   // Score 5
 ];
 
 // Helper function to get SVG arc path for pie fill
@@ -85,8 +85,8 @@ function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: num
 
 function getPieColor(progressScore: number): string {
   const colorMap = [
-    '#ef4444', // red-500
-    '#facc15', // yellow-400
+    '#ffb86a', // orange-300
+    '#fcd34d', // amber-300
     '#fde047', // yellow-300
     '#a3e635', // lime-400
     '#16a34a', // green-600
@@ -250,13 +250,6 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
               </div>
             )}
 
-            {/* Original Text */}
-            {concise_title && (
-              <div className="text-sm italic text-gray-500 mb-2 break-words">
-                <span className="font-medium">Original Text:</span> {text}
-              </div>
-            )}
-
             {/* Last Updated Date */}
             {lastUpdateDate && (
               <DialogDescription className="text-xs text-gray-400">
@@ -400,6 +393,32 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                 )}
               </section>
             )}
+
+            {/* Original Text */}
+            <section className="border-t border-[#d3c7b9] pt-6">
+              <h3 className="text-xl font-bold text-[#222222] mb-3 flex items-center">
+                <PaperclipIcon className="mr-2 h-5 w-5 text-[#8b2332]" />
+                Original Text
+              </h3>
+              {concise_title && (
+                <div>
+                  <blockquote className="text-sm italic break-words border-l-4 border-[#8b2332] bg-gray-50 px-4 py-3 mb-3 text-gray-700">
+                    {text}
+                  </blockquote>
+                  <a 
+                  href="https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 hover:underline text-xs font-mono inline-flex items-center gap-1"
+                  >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6m5-3h3m0 0v6m0-6L10 14" />
+                  </svg>
+                  View Source
+                  </a>
+                </div>
+              )}
+            </section>
 
           </div>
           {/* Modal Footer */}

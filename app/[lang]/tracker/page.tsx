@@ -174,9 +174,10 @@ export default async function Home() {
     'immigration-refugees-and-citizenship-canada': 5, // Immigration
     'treasury-board-of-canada-secretariat': 6, // Government
     'natural-resources-canada': 7, // Energy
-    'innovation-science-and-economic-development-canada': 8,
-    'artificial-intelligence-and-digital-innovation': 8, // Also Innovation
-    'health-canada': 9
+    'transport-canada': 8, // Internal Trade
+    'innovation-science-and-economic-development-canada': 9,
+    'artificial-intelligence-and-digital-innovation': 9, // Also Innovation
+    'health-canada': 10
   };
 
   // Add display_order to all department configs and override display names where needed

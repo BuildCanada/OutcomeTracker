@@ -17,6 +17,7 @@ import type {
   PrimeMinister
 } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import FAQModal from "@/components/FAQModal";
 
 // Client-side component to handle the dynamic parts that need state and effects
 export default function HomePageClient({ 
@@ -57,6 +58,9 @@ export default function HomePageClient({
   const [allPromises, setAllPromises] = useState<PromiseData[]>([]);
   const [totalPromises, setTotalPromises] = useState<number>(0);
   const [promisesPerPage] = useState<number>(10);
+
+  // FAQ modal state
+  const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
 
   // Effect to set currentMinisterInfo based on activeTabId and cached ministerInfos
   useEffect(() => {
@@ -225,11 +229,17 @@ export default function HomePageClient({
       <div className="container px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="col-span-1">
-            <h1 className="text-4xl md:text-6xl font-bold mb-8">{pageTitle}</h1>
+            <h1 className="text-4xl lg:text-6xl font-bold mb-8">{pageTitle}</h1>
             <div className="mb-8">
-              <p className="text-gray-900">
+              <p className="text-gray-900 mb-8">
                 A non-partisan platform tracking progress of key commitments during the 45th Parliament of Canada.
               </p>
+              <button 
+                onClick={() => setIsFAQModalOpen(true)}
+                className="font-mono text-sm text-[#8b2332] hover:text-[#721c28] transition-colors"
+              >
+                FAQ
+              </button>
             </div>
           </div>
 
@@ -314,18 +324,6 @@ export default function HomePageClient({
                               )}
                             </div>
                           )}
-                          {/* Load More Button for Summary Data */}
-                          {/* isShowingSummary && !dept.is_prime_minister && activeDepartmentData.promises.length >= 10 && (
-                            <div className="mt-6 text-center">
-                              <button
-                                onClick={loadFullData}
-                                disabled={isLoadingFullData}
-                                className="px-6 py-3 border font-mono text-sm hover:bg-[#7a1f2b] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                              >
-                                {isLoadingFullData ? 'Loading Full Data...' : 'LOAD MORE'}
-                              </button>
-                            </div>
-                          )} */}
                         </>
                       ) : (
                         <div className="text-center py-10 text-gray-500">Select a department to view details.</div>
@@ -340,6 +338,7 @@ export default function HomePageClient({
           </div>
         </div>
       </div>
+      <FAQModal isOpen={isFAQModalOpen} onClose={() => setIsFAQModalOpen(false)} />
     </div>
   );
 } 
