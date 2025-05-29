@@ -112,7 +112,6 @@ export default function Page({
 
   return (
     <div className="space-y-4">
-      {JSON.stringify(ministerInfo)}
       {ministerInfo ? (
         <MinisterHeader ministerInfo={ministerInfo} />
       ) : (
