@@ -51,8 +51,8 @@ const nextConfig = {
       {
         source: "/:path*",
         // TODO: switch this over on webflow to be the main page that other things redirect to.
-        // destination: "https://flying-buffalo.buildcanada.com/:path*",
-        destination: "https://www.buildcanada.com/:path*",
+        destination: "https://flying-buffalo.buildcanada.com/:path*",
+        // destination: "https://www.buildcanada.com/:path*",
       },
     ];
   },
