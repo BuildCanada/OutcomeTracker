@@ -24,7 +24,9 @@ import PrimaryEnergyChart from "@/components/charts/PrimaryEnergyChart";
 import LabourProductivityGrowthChart from "@/components/charts/LabourProductivityGrowthChart";
 import ChartWithSource from "@/components/charts/ChartWithSource";
 import DefenseSpendingChart from "@/components/charts/DefenseSpendingChart";
-import CFTAExceptionsChart from "@/components/charts/CFTAExceptionsChart";
+import CFTAExceptionsChart from "./charts/CFTAExceptionsChart";
+import FederalPhysicianSupplyChart from "./charts/FederalPhysicianSupplyChart";
+import FederalPhysicianSupplyPerCapitaChart from "./charts/FederalPhysicianSupplyPerCapitaChart";
 
 interface MetricData {
   metric: string;
@@ -455,6 +457,44 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             />
           </div>
         </div>
+      );
+
+    case "health-canada":
+      return (
+        <>
+          <div className="col-span-1 lg:col-span-2">
+            <ChartWithSource
+              dataSource={departmentData.metrics[0].dataSource}
+              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+              targetSource={departmentData.metrics[0].targetSource}
+              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+            >
+              <FederalPhysicianSupplyPerCapitaChart
+                title="Physicians per 1,000 People (Target: 3.5)"
+                startYear={2019}
+                endYear={2023}
+                height={450}
+                showTarget={true}
+                targetValue={3.5}
+              />
+            </ChartWithSource>
+          </div>
+          <div className="col-span-1 lg:col-span-2">
+            <ChartWithSource
+              dataSource={departmentData.metrics[0].dataSource}
+              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+              targetSource={departmentData.metrics[0].targetSource}
+              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+            >
+              <FederalPhysicianSupplyChart
+                title="Total Federal Physician Supply"
+                startYear={2019}
+                endYear={2023}
+                height={450}
+              />
+            </ChartWithSource>
+          </div>
+        </>
       );
 
     default:
