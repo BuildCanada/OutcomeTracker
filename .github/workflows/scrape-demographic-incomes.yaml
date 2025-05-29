@@ -2,6 +2,7 @@ name: Scrape Demographic Income Data for Non-Permanent Residents
 
 on:
   push:
+    branches: [ main, master ]
   workflow_dispatch:
   schedule:
     # Daily at 8:23 AM UTC
