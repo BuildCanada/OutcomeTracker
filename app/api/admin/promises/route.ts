@@ -8,6 +8,7 @@ interface PromiseData {
   text: string;
   source_type: string;
   bc_promise_rank?: 'strong' | 'medium' | 'weak' | null;
+  parliament_session_id?: string;
   // Include other fields that might be stored and returned
   [key: string]: any;
 }
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const source_type = searchParams.get('source_type');
   const bc_promise_rank = searchParams.get('bc_promise_rank');
+  const parliament_session_id = searchParams.get('parliament_session_id');
   const searchText = searchParams.get('searchText'); // Client-side search will use this later on fetched data
   const limitParam = searchParams.get('limit');
   const pageParam = searchParams.get('page'); // For pagination, if implemented later
@@ -34,6 +36,12 @@ export async function GET(request: NextRequest) {
   // Apply filters for flat structure - hardcoded for LPC in Canada for now
   query = query.where('party_code', '==', 'LPC').where('region_code', '==', 'Canada');
   countQuery = countQuery.where('party_code', '==', 'LPC').where('region_code', '==', 'Canada');
+
+  // Filter by parliament session if provided
+  if (parliament_session_id) {
+    query = query.where('parliament_session_id', '==', parliament_session_id);
+    countQuery = countQuery.where('parliament_session_id', '==', parliament_session_id);
+  }
 
   // Apply filters using tuple syntax for .where()
   if (source_type && source_type !== 'all') {
@@ -76,6 +84,7 @@ export async function GET(request: NextRequest) {
         text: data.text || '',
         source_type: data.source_type || '',
         bc_promise_rank: data.bc_promise_rank === undefined ? null : data.bc_promise_rank,
+        parliament_session_id: data.parliament_session_id || undefined,
         ...data,
       } as PromiseData;
     });

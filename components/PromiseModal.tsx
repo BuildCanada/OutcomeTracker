@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { CopyIcon } from "lucide-react";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSession } from '@/context/SessionContext';
 import { fetchParliamentSessionDates } from '@/lib/data';
 
@@ -129,40 +129,33 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
   // Load evidence when modal opens if not already loaded
   useEffect(() => {
     const loadEvidence = async () => {
-      if (!isOpen || !linked_evidence_ids || linked_evidence_ids.length === 0) {
+      if (!promise?.linked_evidence_ids?.length) {
+        setLoadedEvidence([]);
         return;
       }
 
-      // If evidence is already loaded, use it
-      if (evidence && evidence.length > 0) {
-        setLoadedEvidence(evidence);
-        return;
-      }
-
-      // Otherwise, load evidence via API
       setIsLoadingEvidence(true);
       try {
+        const sessionDates = currentSessionId ? await fetchParliamentSessionDates(currentSessionId) : null;
+        
         const response = await fetch('/api/evidence', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            evidenceIds: linked_evidence_ids,
-            sessionStartDate,
-            sessionEndDate
+            evidenceIds: promise.linked_evidence_ids,
+            sessionsStartDate: sessionDates?.sessionStartDate,
+            sessionEndDate: sessionDates?.sessionEndDate,
           }),
         });
-
+        
         if (!response.ok) {
-          throw new Error('Failed to load evidence');
+          throw new Error(`Evidence API error: ${response.statusText}`);
         }
-
+        
         const data = await response.json();
         setLoadedEvidence(data.evidenceItems || []);
-        console.log(`[PromiseModal] Loaded ${data.evidenceItems?.length || 0} evidence items for promise ${promise.id}`);
       } catch (error) {
-        console.error('Error loading evidence:', error);
+        console.error('Error loading evidence for promise:', error);
         setLoadedEvidence([]);
       } finally {
         setIsLoadingEvidence(false);
@@ -170,7 +163,17 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
     };
 
     loadEvidence();
-  }, [isOpen, linked_evidence_ids, evidence, sessionStartDate, sessionEndDate, promise.id]);
+  }, [promise?.linked_evidence_ids, currentSessionId]);
+
+  // Create a combined promise object with loaded evidence for the timeline
+  const promiseWithEvidence = useMemo(() => {
+    if (!promise) return null;
+    
+    return {
+      ...promise,
+      evidence: loadedEvidence
+    };
+  }, [promise, loadedEvidence]);
 
   // Get the last updated date from evidence items
   const lastUpdateDate = loadedEvidence && loadedEvidence.length > 0 
@@ -336,12 +339,11 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                     <span className="ml-2 text-sm text-gray-500 italic">Loading evidence...</span>
                   )}
                 </h3>
-              <PromiseProgressTimeline 
-                promise={{
-                  ...promise,
-                  evidence: loadedEvidence
-                }} 
-              /> 
+              {promiseWithEvidence && (
+                <PromiseProgressTimeline 
+                  promise={promiseWithEvidence}
+                />
+              )}
             </section>
 
             {/* Background Section */}

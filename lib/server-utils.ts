@@ -9,59 +9,53 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
   departmentConfig: DepartmentConfig,
   session: ParliamentSession
 ): Promise<MinisterInfo | null> {
-  console.log(`[Server Utils Info] Fetching minister for department: ${departmentConfig.official_full_name || departmentConfig.id} (Session ID: ${session.id}, Parl No: ${session.parliament_number}) using 'department_ministers' collection.`);
+  if (!departmentConfig || !session) {
+    console.error("[Server Utils Error] Missing required parameters: departmentConfig or session");
+    return null;
+  }
+
   if (!firestoreAdmin) {
-    console.error(`[Server Utils Error] Firestore admin not available for dept: ${departmentConfig.id}`);
-    return null;
-  }
-  if (!session || !session.parliament_number || !session.start_date) {
-    console.error(`[Server Utils Error] Session info (parliament_number, start_date) missing for dept: ${departmentConfig.id}`, session);
+    console.error("[Server Utils Error] Firestore admin not available");
     return null;
   }
 
-  let departmentIdForQuery = departmentConfig.id;
-  let effectiveDeptConfigForName = departmentConfig; // Store the config to use for the final name
-  // const parliamentNumberStr = String(session.parliament_number); // We'll use session.id for mapping key
-
-  // Check for historical mapping using session.id as the key (e.g., "44-1")
-  const historicalMapping = departmentConfig.historical_mapping?.[session.id];
-
-  if (historicalMapping && historicalMapping.minister_lookup_slug) {
-    console.log(`[Server Utils Info] Applying historical mapping for Dept ID: '${departmentConfig.id}' in Session ID: '${session.id}'. Using historical minister_lookup_slug: '${historicalMapping.minister_lookup_slug}'.`);
-    departmentIdForQuery = historicalMapping.minister_lookup_slug;
-
-    // Attempt to fetch the historical department config for its name, using the minister_lookup_slug as its ID
-    try {
-      const historicalDeptDoc = await firestoreAdmin.collection('department_config').doc(historicalMapping.minister_lookup_slug).get();
-      if (historicalDeptDoc.exists) {
-        effectiveDeptConfigForName = historicalDeptDoc.data() as DepartmentConfig;
-        effectiveDeptConfigForName.id = historicalDeptDoc.id; // Ensure ID is part of the object
-        console.log(`[Server Utils Info] Successfully fetched historical DepartmentConfig for '${historicalMapping.minister_lookup_slug}' to use its name: ${effectiveDeptConfigForName.official_full_name}`);
-      } else {
-        console.warn(`[Server Utils Warn] Historical DepartmentConfig not found for ID: '${historicalMapping.minister_lookup_slug}'. Will use original department name for display if minister is found.`);
-      }
-    } catch (configError) {
-      console.error(`[Server Utils Error] Error fetching historical DepartmentConfig for '${historicalMapping.minister_lookup_slug}':`, configError);
-      // Continue with original departmentConfig for name if historical fetch fails
-    }
-  } else {
-    // Ensure parliamentNumberStr is defined if not using historical mapping for other parts of the function
-    // const parliamentNumberStr = String(session.parliament_number);
-  }
-  // We still need parliamentNumberStr for the Firestore query regardless of mapping
-  const parliamentNumberStr = String(session.parliament_number);
-
-  let t0 = Date.now();
   try {
-    const ministersQuerySnapshot = await firestoreAdmin
+    // Handle historical mappings
+    let effectiveDeptConfigForQuery = departmentConfig;
+    let effectiveDeptConfigForName = departmentConfig;
+    
+    const historicalMapping = departmentConfig.historical_mapping?.[session.id];
+    
+    if (historicalMapping && historicalMapping.minister_lookup_slug) {
+      effectiveDeptConfigForQuery = departmentConfig;
+      effectiveDeptConfigForQuery.id = historicalMapping.minister_lookup_slug;
+
+      // Attempt to fetch the historical department config for its name, using the minister_lookup_slug as its ID
+      try {
+        const historicalDeptDoc = await firestoreAdmin.collection('department_config').doc(historicalMapping.minister_lookup_slug).get();
+        if (historicalDeptDoc.exists) {
+          effectiveDeptConfigForName = historicalDeptDoc.data() as DepartmentConfig;
+          effectiveDeptConfigForName.id = historicalDeptDoc.id; // Ensure ID is part of the object
+        }
+      } catch (configError) {
+        console.error(`[Server Utils Error] Error fetching historical DepartmentConfig for '${historicalMapping.minister_lookup_slug}':`, configError);
+        // Continue with original departmentConfig for name if historical fetch fails
+      }
+    }
+
+    const departmentIdForQuery = effectiveDeptConfigForQuery.id;
+    const parliamentNumberStr = session.parliament_number.toString();
+
+    const t0 = Date.now();
+    const ministersQuery = firestoreAdmin
       .collection('department_ministers')
-      .where('departmentId', '==', departmentIdForQuery) // Use the potentially remapped ID
-      .where('parliamentNumber', '==', parliamentNumberStr) // Use the string version of parliament number
-      .get();
+      .where('departmentId', '==', departmentIdForQuery)
+      .where('parliamentNumber', '==', parliamentNumberStr)
+      .orderBy('positionStart', 'desc');
 
-    console.log(`[Server Utils LCP Timing] Query to 'department_ministers' for dept ${departmentIdForQuery} (parl ${parliamentNumberStr}) took ${Date.now() - t0} ms. Found ${ministersQuerySnapshot.docs.length} potential records.`);
+    const ministersQuerySnapshot = await ministersQuery.get();
 
-    if (ministersQuerySnapshot.empty) {
+    if (ministersQuerySnapshot.docs.length === 0) {
       console.log(`[Server Utils Info] No minister records found in 'department_ministers' for Dept ID: ${departmentIdForQuery}, Parliament: ${parliamentNumberStr}.`);
       return null;
     }
@@ -115,7 +109,6 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
 
     const allMinisterRecords: CandidateMinisterEntry[] = mappedRecords.filter((m): m is CandidateMinisterEntry => m !== null);
 
-
     let effectiveMinisterQueryDate = new Date(session.start_date);
     let candidates: CandidateMinisterEntry[] = allMinisterRecords.filter(m => {
       const startsOnOrBeforeQueryDate = m.positionStart <= effectiveMinisterQueryDate;
@@ -126,7 +119,6 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
     if (candidates.length === 0 && session.election_date_preceding) {
       const electionDate = new Date(session.election_date_preceding);
       if (!isNaN(electionDate.getTime())) {
-        console.log(`[Server Utils Info] No minister found for Dept ${departmentIdForQuery} using session_start_date (${session.start_date}). Trying election_date_preceding (${session.election_date_preceding}).`);
         effectiveMinisterQueryDate = electionDate;
         candidates = allMinisterRecords.filter(m => {
           const startsOnOrBeforeQueryDate = m.positionStart <= effectiveMinisterQueryDate;
@@ -139,7 +131,6 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
     }
 
     if (candidates.length === 0) {
-      console.log(`[Server Utils Info] No *active* minister found for Dept: ${departmentConfig.official_full_name || departmentIdForQuery} (Session: ${session.id}, Parl: ${parliamentNumberStr}) using effective date ${effectiveMinisterQueryDate.toISOString()}. Total minister records processed from query: ${allMinisterRecords.length}.`);
       return null;
     }
 
@@ -161,7 +152,6 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
     });
     
     const bestCandidate = candidates[0];
-    console.log(`[Server Utils Info] Selected Minister for ${effectiveDeptConfigForName.official_full_name || departmentIdForQuery} (Session ${session.id}, Parl ${parliamentNumberStr}) using effective date ${effectiveMinisterQueryDate.toISOString()}: ${bestCandidate.name} - ${bestCandidate.title} (PosStart: ${bestCandidate.positionStart.toISOString()}, PosEnd: ${bestCandidate.positionEnd ? bestCandidate.positionEnd.toISOString() : 'N/A'})`);
 
     let finalAvatarUrl = bestCandidate.avatarUrl;
     if (!finalAvatarUrl) {
@@ -175,12 +165,7 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
         if (bestCandidate.lastName && bestCandidate.firstName && partyAbbreviation && parliamentIdForUrl) {
             const nameSlug = (bestCandidate.lastName + bestCandidate.firstName).replace(/\\s+/g, '');
             finalAvatarUrl = `https://www.ourcommons.ca/Content/Parliamentarians/Images/OfficialMPPhotos/${parliamentIdForUrl}/${nameSlug}_${partyAbbreviation}.jpg`;
-            console.log(`[Server Utils Info] Constructed fallback avatar URL for ${bestCandidate.name}: ${finalAvatarUrl}`);
-        } else {
-            console.log(`[Server Utils Warn] Could not construct fallback avatar URL for ${bestCandidate.name}.`);
         }
-    } else {
-        console.log(`[Server Utils Info] Using avatar URL from department_ministers for ${bestCandidate.name}: ${finalAvatarUrl}`);
     }
 
     return {
@@ -197,7 +182,7 @@ export async function fetchMinisterForDepartmentInSessionAdmin(
     };
 
   } catch (error) {
-    console.error(`[Server Utils Error] Failed to fetch minister from 'department_ministers' for dept ${departmentIdForQuery} (parl ${parliamentNumberStr}):`, error);
+    console.error(`[Server Utils Error] Error in fetchMinisterForDepartmentInSessionAdmin:`, error);
     return null;
   }
 } 

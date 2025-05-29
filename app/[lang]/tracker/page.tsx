@@ -84,10 +84,6 @@ export default async function Home() {
   const currentSessionId = globalSession ? globalSession.id : null;
   const currentGoverningPartyCode = globalSession ? (globalSession.governing_party_code || null) : null;
 
-  console.log("[Server LCP Debug] Global Session Data:", globalSession);
-  console.log("[Server LCP Debug] Current Session ID:", currentSessionId);
-  console.log("[Server LCP Debug] Current Governing Party Code:", currentGoverningPartyCode);
-
   let initialAllDepartmentConfigs: DepartmentConfig[] = [];
   let initialMainTabConfigs: DepartmentConfig[] = [];
   let initialMinisterInfos: Record<string, MinisterInfo | null> = {};
@@ -98,9 +94,7 @@ export default async function Home() {
   let pageTitle = "Outcomes Tracker"; // Default title
 
   try {
-    const t0 = Date.now();
     const configsSnapshot = await firestoreAdmin.collection("department_config").get();
-    console.log(`[Server LCP Timing] department_config fetch took ${Date.now() - t0} ms`);
     initialAllDepartmentConfigs = configsSnapshot.docs.map(doc => {
         const data = doc.data();
         const serializedData: { [key: string]: any } = {};
@@ -114,15 +108,12 @@ export default async function Home() {
         return { id: doc.id, ...serializedData } as DepartmentConfig;
     })
     .sort((a, b) => (a.display_short_name || "").localeCompare(b.display_short_name || ""));
-    console.log(`[Server LCP Debug] Fetched ${initialAllDepartmentConfigs.length} total department configs.`);
 
     initialMainTabConfigs = initialAllDepartmentConfigs.filter(c => c.bc_priority === 1);
-    console.log(`[Server LCP Debug] Filtered to ${initialMainTabConfigs.length} main tab department configs.`);
 
     if (globalSession && initialMainTabConfigs.length > 0) {
       // Set Finance as the initial active tab
       initialActiveTabId = 'finance-canada';
-      console.log(`[Server LCP Debug] Initial Active Tab ID: ${initialActiveTabId}`);
 
       // Pre-fetch minister info for ALL main tabs
       const ministerFetchPromises = initialMainTabConfigs.map(config => 
@@ -130,39 +121,20 @@ export default async function Home() {
           .then(info => ({ id: config.id, info }))
       );
 
-      const t_minister_fetches_start = Date.now();
       const settledMinisterInfos = await Promise.allSettled(ministerFetchPromises);
-      console.log(`[Server LCP Timing] Fetching all main tab ministers took ${Date.now() - t_minister_fetches_start} ms`);
 
       settledMinisterInfos.forEach(result => {
         if (result.status === 'fulfilled' && result.value && result.value.info) {
           initialMinisterInfos[result.value.id] = result.value.info;
-          console.log(`[Server LCP Debug] Pre-fetched minister info for tab '${result.value.id}': ${result.value.info?.name}`);
-          if (result.value.id === 'artificial-intelligence-and-digital-innovation') {
-            console.log(`[Server LCP DEBUG - AI & Innovation Tab MinisterInfo]: parliament_session_id: ${globalSession?.id}, minister_info_payload: ${JSON.stringify(result.value.info, null, 2)}`);
-          }
         } else if (result.status === 'rejected') {
-          // Log error for specific department if its minister fetch failed
-          // We need to find which config.id corresponds to the failed promise.
-          // This requires a bit more effort if ministerFetchPromises doesn't directly carry the id upon rejection.
-          // For now, logging the reason.
           console.error(`[Server LCP Error] Failed to pre-fetch minister for a tab. Reason:`, result.reason);
         } else if (result.status === 'fulfilled' && result.value && !result.value.info) {
-           // Handle cases where the fetch was successful but no minister info was returned (logged by utility fn)
            initialMinisterInfos[result.value.id] = null; // Explicitly set to null
-           console.log(`[Server LCP Debug] Pre-fetched minister for tab '${result.value.id}': No minister info returned (null).`);
         }
       });
 
-      // }
     } else if (initialAllDepartmentConfigs.length > 0 && !initialMainTabConfigs.length) {
-      // This block executes if there are department configs, but none are marked as bc_priority === 1
-      // In this case, there's no initialActiveTabId or initialActiveTabConfig determined from priority tabs.
-      // We might want to set a default active tab from allDepartmentConfigs or handle appropriately.
-      console.warn("[Server LCP Debug] No priority tabs configured. initialActiveTabId may not be set here.");
       serverError = serverError ? serverError + " No priority tabs configured." : "No priority tabs configured.";
-      // If initialActiveTabConfig was referenced here, it would be out of scope. 
-      // Ensure logic here doesn't depend on it, or it's derived differently.
     } else if (!initialAllDepartmentConfigs.length) {
       serverError = serverError ? serverError + " No department configurations found." : "No department configurations found.";
     }
@@ -226,23 +198,7 @@ export default async function Home() {
     .sort((a, b) => (a.display_order ?? 999) - (b.display_order ?? 999));
 
   // Filter to get main tab configs (bc_priority === 1) from the fully sorted list
-  let mainTabConfigsWithPM = sortedAllDepartmentConfigs.filter(config => config.bc_priority === 1);
-
-  // Apply parliament-based filtering for ISED/AIDI on the server
-  if (currentSessionId?.startsWith("44")) {
-    mainTabConfigsWithPM = mainTabConfigsWithPM.filter(
-      config => config.id !== 'artificial-intelligence-and-digital-innovation'
-    );
-  } else if (currentSessionId?.startsWith("45")) {
-    mainTabConfigsWithPM = mainTabConfigsWithPM.filter(
-      config => config.id !== 'innovation-science-and-economic-development-canada'
-    );
-  } else {
-    const aidiExists = mainTabConfigsWithPM.some(c => c.id === 'artificial-intelligence-and-digital-innovation');
-    if (aidiExists) {
-      mainTabConfigsWithPM = mainTabConfigsWithPM.filter(config => config.id !== 'innovation-science-and-economic-development-canada');
-    }
-  }
+  const mainTabConfigsWithPM = sortedAllDepartmentConfigs.filter(config => config.bc_priority === 1);
 
   // Add PM to minister infos
   const ministerInfosWithPM = {
