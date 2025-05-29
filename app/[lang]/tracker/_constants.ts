@@ -12,17 +12,14 @@ export const DEPARTMENT_DISPLAY_ORDER: Record<string, number> = {
   'treasury-board-of-canada-secretariat': 6, // Government
   'natural-resources-canada': 7, // Energy
   'transport-canada': 8, // Internal Trade
-  'innovation-science-and-economic-development-canada': 9,
-  'artificial-intelligence-and-digital-innovation': 9, // Also Innovation
-  'health-canada': 10
+  'innovation-science-and-economic-development-canada': 9, // Industry
+  'artificial-intelligence-and-digital-innovation': 10, // Digital Innovation
+  'health-canada': 11,
 };
 
 export const fetchDeptConfigs = async (currentSessionId?: string | null) => {
-  // To speed this up, this is manually cached
-  //
 
   // return [ALL_DEPT_CONFIGS, MAIN_DEPT_CONFIGS];
-
   let initialAllDepartmentConfigs: DepartmentConfig[] = [];
   let initialMainTabConfigs: DepartmentConfig[] = [];
   const t0 = Date.now();
@@ -88,29 +85,6 @@ export const fetchDeptConfigs = async (currentSessionId?: string | null) => {
   let mainDeptConfigs = allDeptConfigs.sort(
     (a, b) => (a.display_order ?? 999) - (b.display_order ?? 999),
   );
-
-  // Apply parliament-based filtering for ISED/AIDI on the server
-  if (currentSessionId?.startsWith("44")) {
-    mainDeptConfigs = mainDeptConfigs.filter(
-      (config) =>
-        config.id !== "artificial-intelligence-and-digital-innovation",
-    );
-  } else if (currentSessionId?.startsWith("45")) {
-    mainDeptConfigs = mainDeptConfigs.filter(
-      (config) =>
-        config.id !== "innovation-science-and-economic-development-canada",
-    );
-  } else {
-    const aidiExists = mainDeptConfigs.some(
-      (c) => c.id === "artificial-intelligence-and-digital-innovation",
-    );
-    if (aidiExists) {
-      mainDeptConfigs = mainDeptConfigs.filter(
-        (config) =>
-          config.id !== "innovation-science-and-economic-development-canada",
-      );
-    }
-  }
 
   mainDeptConfigs = mainDeptConfigs.filter(
     (config) => config.bc_priority === 1,
