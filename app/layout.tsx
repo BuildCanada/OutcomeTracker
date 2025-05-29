@@ -28,7 +28,7 @@ const faviconDataUrl = `data:image/svg+xml,${encodeURIComponent(emojiFaviconSvg)
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://buildcanada.ca"),
-  title: `Results Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
+  title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
   description: "Track the progress of Canada's government initiatives",
   icons: {
     icon: faviconDataUrl,

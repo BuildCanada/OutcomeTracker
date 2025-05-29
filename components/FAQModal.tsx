@@ -39,7 +39,7 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
           <div>
             <h3 className="text-lg font-semibold mb-2">How can I contribute?</h3>
             <p className="text-gray-700">
-              This is a work in progress and we would love help from others.We are planning to open source this project in the near future so that anyone can contribute.
+              This is a work in progress and we would love help from others. We are planning to open source this project in the near future so that anyone can contribute.
             </p>
           </div>
 
