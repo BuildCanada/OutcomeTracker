@@ -20,7 +20,8 @@ const formatDate = (dateInput: EvidenceItem['evidence_date']): string | null => 
     dateObj = dateInput.toDate();
   } else if (typeof dateInput === 'object' && dateInput !== null && 
              typeof (dateInput as any).seconds === 'number' && 
-             typeof (dateInput as any).nanoseconds === 'number') { // Handle serialized Timestamp
+             typeof (dateInput as any).nanoseconds === 'number') {
+    // Handle serialized Timestamp plain object
     dateObj = new Date((dateInput as any).seconds * 1000);
   } else if (typeof dateInput === 'string') {
     // Prefer parsing YYYY-MM-DD as local date components to avoid UTC issues with new Date(str)

@@ -890,9 +890,53 @@ export async function fetchPromisesSummary(
       if (querySnapshot.docs.length > 0) {
         const promises: PromiseData[] = [];
 
-        querySnapshot.docs.forEach(docSnapshot => {
-          promises.push(docSnapshot.data());
-        });
+        // Process each promise and fetch its most recent evidence date
+        for (const docSnapshot of querySnapshot.docs) {
+          const promise = docSnapshot.data();
+          
+          // For each promise, fetch the most recent evidence date if it has linked evidence
+          if (promise.linked_evidence_ids && promise.linked_evidence_ids.length > 0) {
+            try {
+              // Query evidence items for this promise and get only the most recent one
+              const evidenceQuery = query(
+                collection(db, 'evidence_items'),
+                where(documentId(), 'in', promise.linked_evidence_ids.slice(0, 30)), // Firestore limit
+                orderBy('evidence_date', 'desc'),
+                limit(1)
+              );
+              
+              const evidenceSnapshot = await getDocs(evidenceQuery);
+              if (evidenceSnapshot.docs.length > 0) {
+                const mostRecentEvidence = evidenceSnapshot.docs[0].data();
+                // Add just the most recent evidence to show the date
+                promise.evidence = [{
+                  id: evidenceSnapshot.docs[0].id,
+                  evidence_id: evidenceSnapshot.docs[0].id,
+                  evidence_date: mostRecentEvidence.evidence_date,
+                  title_or_summary: mostRecentEvidence.title_or_summary || '',
+                  promise_ids: mostRecentEvidence.promise_ids || [],
+                  evidence_source_type: mostRecentEvidence.evidence_source_type || '',
+                  description_or_details: undefined,
+                  source_url: undefined,
+                  source_document_raw_id: undefined,
+                  linked_departments: mostRecentEvidence.linked_departments || [],
+                  status_impact_on_promise: undefined,
+                  ingested_at: mostRecentEvidence.ingested_at,
+                  additional_metadata: undefined,
+                }];
+              } else {
+                promise.evidence = [];
+              }
+            } catch (evidenceError) {
+              console.warn(`Failed to fetch evidence date for promise ${promise.id}:`, evidenceError);
+              promise.evidence = [];
+            }
+          } else {
+            promise.evidence = [];
+          }
+
+          promises.push(promise);
+        }
         
         return promises;
       }
