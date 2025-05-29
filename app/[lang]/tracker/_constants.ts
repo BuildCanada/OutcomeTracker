@@ -9,7 +9,7 @@ export const DEPARTMENT_DISPLAY_ORDER: Record<string, number> = {
   'infrastructure-canada': 3, // Housing
   'national-defence': 4,
   'immigration-refugees-and-citizenship-canada': 5, // Immigration
-  'treasury-board-of-canada-secretariat': 6, // Government
+  'public-services-and-procurement-canada': 6, // Government
   'natural-resources-canada': 7, // Energy
   'transport-canada': 8, // Internal Trade
   'innovation-science-and-economic-development-canada': 9, // Industry
