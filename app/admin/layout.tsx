@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 // Re-using some styling constants from your main page for consistency
 const DARK_BORDER_COLOR = "border-neutral-700";
@@ -12,9 +13,20 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const router = useRouter();
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/auth', {
+        method: 'DELETE',
+      });
+      router.push('/admin/login');
+      router.refresh();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -30,7 +42,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               href="/admin/monitoring" 
               className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
             >
-              RSS Monitoring
+              Monitoring
+            </Link>
+            <Link
+              href="/admin/reviews" 
+              className={`flex items-center ${DARK_BORDER_COLOR} border-r px-6 py-4 text-sm font-medium tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
+            >
+              Reviews
             </Link>
             <Link
               href="/en/tracker" 
@@ -38,6 +56,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             >
               Back to Main App
             </Link>
+            <div className="ml-auto flex items-center">
+              <button
+                onClick={handleLogout}
+                className={`flex items-center px-6 py-4 text-sm font-medium tracking-wider ${NAV_LINK_TEXT_COLOR} hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8b2332] transition-colors duration-150 ease-in-out md:px-8`}
+              >
+                Logout
+              </button>
+            </div>
           </nav>
         </div>
       </header>
