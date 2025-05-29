@@ -22,6 +22,7 @@ import AnnualizedHousingChart from "./charts/AnnualizedHousingChart";
 import ProductivityChart from "@/components/charts/ProductivityChart";
 import PrimaryEnergyChart from "@/components/charts/PrimaryEnergyChart";
 import LabourProductivityGrowthChart from "@/components/charts/LabourProductivityGrowthChart";
+import DefenseSpendingChart from "@/components/charts/DefenseSpendingChart";
 
 interface MetricData {
   metric: string;
@@ -144,10 +145,10 @@ const DEPARTMENT_METRICS: Record<
         definition: "Percentage of GDP spent towards defence",
         target2029: "1.37% → 2%",
         dataSource:
-          "Dollars spend on Defence (yearly) [Statcan] → Defence (Canada) (Federal government) GDP (above)",
+          "Military expenditure (% of GDP) [World Bank] → Canada",
         dataSourceUrl:
-          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010002401",
-        brendanStatus: "",
+          "https://data.worldbank.org/indicator/MS.MIL.XPND.GD.ZS?locations=CA",
+        brendanStatus: "Done, chart added",
       },
       {
         metric: "% towards modernization",
@@ -357,6 +358,21 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               showTarget={true}
               targetValue={2.0}
               showProductivityIndex={false}
+            />
+          </div>
+        </div>
+      );
+
+    case "national-defence":
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <div className="border bg-white">
+            <DefenseSpendingChart
+              title="Defense Spending (% of GDP)"
+              startYear={2000}
+              endYear={2024}
+              showTarget={true}
+              targetValue={2.0}
             />
           </div>
         </div>
