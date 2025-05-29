@@ -12,6 +12,7 @@ import {
   Legend,
 } from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
+import {TARGET_BG_COLOR, TARGET_BORDER_COLOR} from "@/components/charts/utils/constants";
 
 ChartJS.register(
   CategoryScale,
@@ -128,8 +129,8 @@ export default function ProductivityChart({
     datasets.push({
       label: "Target (20% increase)",
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(75, 192, 192)",
-      backgroundColor: "rgba(75, 192, 192, 0.5)",
+      borderColor: TARGET_BORDER_COLOR,
+      backgroundColor: TARGET_BG_COLOR,
       borderWidth: 2,
       borderDash: [10, 5],
       pointRadius: 0,

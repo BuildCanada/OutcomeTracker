@@ -23,6 +23,7 @@ import ProductivityChart from "@/components/charts/ProductivityChart";
 import PrimaryEnergyChart from "@/components/charts/PrimaryEnergyChart";
 import LabourProductivityGrowthChart from "@/components/charts/LabourProductivityGrowthChart";
 import ChartWithSource from "@/components/charts/ChartWithSource";
+import DefenseSpendingChart from "@/components/charts/DefenseSpendingChart";
 
 interface MetricData {
   metric: string;
@@ -75,18 +76,18 @@ const DEPARTMENT_METRICS: Record<
         targetSourceUrl: "",
         brendanStatus: "Done, need to add to finance page",
       },
-      {
-        metric: "Operating Deficit",
-        definition: "Net operating balance?",
-        target2029: "$61.9B/year → $0",
-        dataSource: "Statcan",
-        dataSourceUrl:
-          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010001501",
-        targetSource: "Liberal Party",
-        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
-        brendanStatus:
-          "Graph looks weird, need to verify how numbers are reported.",
-      },
+      // {
+      //   metric: "Operating Deficit",
+      //   definition: "Net operating balance?",
+      //   target2029: "$61.9B/year → $0",
+      //   dataSource: "Statcan",
+      //   dataSourceUrl:
+      //     "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010001501",
+      //   targetSource: "Liberal Party",
+      //   targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
+      //   brendanStatus:
+      //     "Graph looks weird, need to verify how numbers are reported.",
+      // },
     ],
   },
   "infrastructure-canada": {
@@ -153,12 +154,12 @@ const DEPARTMENT_METRICS: Record<
         metric: "% of GDP spent",
         definition: "Percentage of GDP spent towards defence",
         target2029: "1.37% → 2%",
-        dataSource: "Statcan",
+        dataSource: "World Bank",
         dataSourceUrl:
-          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1010002401",
+          "https://data.worldbank.org/indicator/MS.MIL.XPND.GD.ZS?locations=CA",
         targetSource: "Liberal Party",
         targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
-        brendanStatus: "",
+        brendanStatus: "Done, chart added",
       },
       {
         metric: "% towards modernization",
@@ -283,7 +284,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
 
     case "finance-canada":
       return (
-        <>
+        <div className="col-span-1 lg:col-span-2">
           <ChartWithSource
             dataSource={departmentData.metrics[0].dataSource}
             dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
@@ -309,7 +310,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               startDate="2015-01"
             />
           </ChartWithSource>
-        </>
+        </div>
       );
 
     case "infrastructure-canada":
@@ -356,6 +357,14 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             </div>
           </div>
         </>
+          </div>
+          {/*<div className="border flex items-center justify-center text-muted-foreground">*/}
+          {/*  <div className="text-center">*/}
+          {/*    <h4 className="font-medium mb-2">PR Admissions Chart</h4>*/}
+          {/*    <p>Chart coming soon</p>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
+        </div>
       );
 
     case "treasury-board-of-canada-secretariat":
@@ -422,6 +431,21 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               showProductivityIndex={false}
             />
           </ChartWithSource>
+        </div>
+      );
+
+    case "national-defence":
+      return (
+        <div className="col-span-1 lg:col-span-2">
+          <div className="border bg-white">
+            <DefenseSpendingChart
+              title="Defense Spending (% of GDP)"
+              startYear={2000}
+              endYear={2024}
+              showTarget={true}
+              targetValue={2.0}
+            />
+          </div>
         </div>
       );
 
