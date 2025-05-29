@@ -26,7 +26,7 @@ export default async function Layout({
     <div className="min-h-screen">
       <div className="container px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <Sidebar pageTitle="Outcome Tracker" />
+          <Sidebar pageTitle="Outcomes Tracker" />
           <div className="col-span-3">
             <DepartmentProvider
               allDeptConfigs={allDeptConfigs}
