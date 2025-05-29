@@ -37,7 +37,11 @@ export default function Page({
       const response = await fetch(
         `/api/minister-info?departmentId=${department}&sessionId=${45}`,
       );
-      setMinisterInfo(await response.json());
+      if (department === "prime-minister") {
+        setMinisterInfo(await response.json());
+      } else {
+        setMinisterInfo(await response.json());
+      }
     };
     loadMinisterInfo();
   }, [department]);
@@ -108,6 +112,7 @@ export default function Page({
 
   return (
     <div className="space-y-4">
+      {JSON.stringify(ministerInfo)}
       {ministerInfo ? (
         <MinisterHeader ministerInfo={ministerInfo} />
       ) : (
@@ -122,4 +127,5 @@ export default function Page({
       {department !== "prime-minister" && promisesComponent}
     </div>
   );
+  J;
 }
