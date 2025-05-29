@@ -200,7 +200,7 @@ const DEPARTMENT_METRICS: Record<
       },
     ],
   },
-  "treasury-board-of-canada-secretariat": {
+  "public-services-and-procurement-canada": {
     displayName: "Government Transformation",
     metrics: [
       {
