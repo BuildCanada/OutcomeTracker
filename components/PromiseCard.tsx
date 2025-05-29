@@ -197,11 +197,11 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
 
   // Progress dot color scale (red to green)
   const dotColors = [
-    "bg-red-500",
-    "bg-yellow-400",
-    "bg-yellow-300",
-    "bg-lime-400",
-    "bg-green-600"
+    "bg-orange-400",  // Score 1
+    "bg-amber-300",   // Score 2
+    "bg-yellow-300",  // Score 3
+    "bg-lime-400",    // Score 4
+    "bg-green-600"    // Score 5
   ];
 
   // Helper function to get SVG arc path for pie fill
@@ -225,8 +225,8 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
   }
   function getPieColor(progressScore: number): string {
     const colorMap = [
-      '#ef4444', // red-500
-      '#facc15', // yellow-400
+      '#fb923c', // orange-400
+      '#fcd34d', // amber-300
       '#fde047', // yellow-300
       '#a3e635', // lime-400
       '#16a34a', // green-600
@@ -250,7 +250,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
         onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCardClick(); }}
       >
         <div className="p-6">
-          <div className="flex flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             {/* Progress Indicator - Column 1 */}
             <div className="flex-shrink-0 flex flex-row items-center gap-2 w-[170px]">
               <div
@@ -309,7 +309,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               </div>
             </div>
             {/* Title and Description - Column 2 */}
-            <div className="flex-1 min-w-0">
+            <div className="md:flex-1">
               <div className="text-lg font-semibold leading-snug">
                 {promise.concise_title}
               </div>
@@ -318,7 +318,7 @@ export default function PromiseCard({ promise, evidenceItems }: PromiseCardProps
               </div>
             </div>
             {/* Impact and Alignment - Column 3 */}
-            <div className="flex gap-2 flex-shrink-0">
+            <div className="flex gap-2 md:w-auto md:flex-shrink-0 justify-start md:justify-end">
               {/* Impact pill */}
               {impactIcon && (
                 <div className="relative">
