@@ -265,6 +265,8 @@ const DEPARTMENT_METRICS: Record<
         target2029: "Reduce interprovincial trade barriers → 50% reduction",
         dataSource: "Canadian Federation of Independent Business",
         dataSourceUrl: "https://www.cfib-fcei.ca/",
+        targetSource: "Liberal Party",
+        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "Done, chart added",
       },
     ],
@@ -336,7 +338,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               startYear={2015}
               targetValue={500000}
               showTarget
-              title="Trailing 12 Month Housing Starts"
+              title="Annualized Housing Starts (Trailing 12 Months)"
             />
           </ChartWithSource>
         </div>
@@ -352,7 +354,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
           >
             <NPRPopulationChart
-              title="NPR % of Population"
+              title="Non-Permanent Residents as % of Population"
               startYear={2015}
               showTarget={true}
               targetValue={5}
@@ -418,6 +420,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               title="Total Primary Energy Production"
               category="Primary energy"
               startYear={2015}
+              endYear={2029}
               monthlyData={true}
               showTrend={false}
               showTarget={true}
@@ -440,7 +443,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               title="Labour Productivity Growth"
               sector="Total economy"
               startYear={2015}
-              endYear={2024}
+              endYear={2029}
               quarterlyData={true}
               showTarget={true}
               targetValue={2.0}
@@ -453,38 +456,38 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
     case "national-defence":
       return (
         <div className="col-span-1 lg:col-span-2">
-            <ChartWithSource
-              dataSource={departmentData.metrics[0].dataSource}
-              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
-              targetSource={departmentData.metrics[0].targetSource}
-              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
-            >
-              <DefenseSpendingChart
-                title="Defense Spending (% of GDP)"
-                startYear={2000}
-                endYear={2024}
-                showTarget={true}
-                targetValue={2.0}
-              />
-            </ChartWithSource>
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
+            <DefenseSpendingChart
+              title="Defense Spending (% of GDP)"
+              startYear={2000}
+              endYear={2029}
+              showTarget={true}
+              targetValue={2.0}
+            />
+          </ChartWithSource>
         </div>
       );
 
     case "transport-canada":
       return (
         <div className="col-span-1 lg:col-span-2">
-            <ChartWithSource
-              dataSource={departmentData.metrics[0].dataSource}
-              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
-              targetSource={departmentData.metrics[0].targetSource}
-              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
-            >
-              <CFTAExceptionsChart
-                title="CFTA Exceptions by Province/Territory"
-                showLegend={true}
-                height={500}
-              />
-            </ChartWithSource>
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
+            <CFTAExceptionsChart
+              title="CFTA Exceptions by Province/Territory"
+              showLegend={true}
+              height={500}
+            />
+          </ChartWithSource>
         </div>
       );
 
@@ -499,12 +502,12 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
             >
               <FederalPhysicianSupplyPerCapitaChart
-                title="Physicians per 1,000 People (Target: 3.5)"
+                title="Physicians per 1,000 People"
                 startYear={2019}
-                endYear={2023}
+                endYear={2029}
                 height={450}
                 showTarget={true}
-                targetValue={3.5}
+                targetValue={2.8}
               />
             </ChartWithSource>
           </div>
@@ -518,7 +521,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               <FederalPhysicianSupplyChart
                 title="Total Federal Physician Supply"
                 startYear={2019}
-                endYear={2023}
+                endYear={2029}
                 height={450}
               />
             </ChartWithSource>

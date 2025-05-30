@@ -41,7 +41,7 @@ export default function BalanceSheetChart({
   title = "Government Balance Sheet",
   categories = ["Revenue", "Expense"],
   startDate = "2010-01",
-  endDate = "2023-12",
+  endDate = "2029-12",
   showThousands = true,
 }: BalanceSheetChartProps) {
   // Get data for selected categories

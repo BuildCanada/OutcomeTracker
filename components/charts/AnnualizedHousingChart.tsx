@@ -68,7 +68,7 @@ export default function AnnualizedHousingChart({
   title = "Annualized Housing Starts",
   category = "Total units",
   startYear = 2010,
-  endYear = 2023,
+  endYear = 2029,
   showTarget = false,
   targetValue = 300000,
 }: AnnualizedHousingChartProps) {
@@ -147,7 +147,7 @@ export default function AnnualizedHousingChart({
   if (showTarget && targetValue) {
     datasets.push({
       type: "line",
-      label: "Annual Target",
+      label: "Target (500,000)",
       data: Array(labels.length).fill(targetValue),
       borderColor: "rgb(255, 99, 132)",
       backgroundColor: "rgba(255, 99, 132, 0.3)",
@@ -208,7 +208,7 @@ export default function AnnualizedHousingChart({
         beginAtZero: true,
         title: {
           display: true,
-          text: "Trailing 12-Month Total (Units)",
+          text: "Total Units",
           font: {
             size: 14,
           },
@@ -226,7 +226,7 @@ export default function AnnualizedHousingChart({
       x: {
         title: {
           display: true,
-          text: "Year-Month (Trailing 12 Months)",
+          text: "Year-Month",
           font: {
             size: 14,
           },

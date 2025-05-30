@@ -67,7 +67,7 @@ export default function RootLayout({
         <div className="border-2 border-black m-5">
           <SessionProvider>
             <Header />
-            <main className="container mx-auto p-4 bg-background site-main-content">
+            <main className="container mx-auto bg-background site-main-content">
               {children}
             </main>
 

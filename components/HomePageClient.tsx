@@ -14,7 +14,7 @@ export const Sidebar = ({ pageTitle }: { pageTitle: string }) => {
 
   return (
     <div className="col-span-1">
-      <h1 className="text-4xl md:text-6xl font-bold mb-8">{pageTitle}</h1>
+      <h1 className="text-4xl lg:text-5xl font-bold mb-8">{pageTitle}</h1>
       <div className="mb-8">
         <p className="text-gray-900 mb-6">
           A non-partisan platform tracking progress of key commitments during

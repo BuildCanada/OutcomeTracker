@@ -24,7 +24,30 @@ interface PromiseModalProps {
 const formatDate = (date: Timestamp | string | undefined): string => {
   if (!date) return "Date unknown";
   try {
-    const jsDate = date instanceof Timestamp ? date.toDate() : new Date(date);
+    let jsDate: Date;
+    if (date instanceof Timestamp) {
+      jsDate = date.toDate();
+    } else if (typeof date === 'object' && date !== null && 
+              typeof (date as any).seconds === 'number' &&
+              typeof (date as any).nanoseconds === 'number') {
+      // Handle serialized Timestamp objects
+      jsDate = new Date((date as any).seconds * 1000);
+    } else if (typeof date === 'string') {
+      // Handle YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        const [year, month, day] = date.split('-').map(Number);
+        jsDate = new Date(year, month - 1, day);
+      } else {
+        jsDate = new Date(date);
+      }
+    } else {
+      return "Invalid date format";
+    }
+
+    if (isNaN(jsDate.getTime())) {
+      return "Invalid date";
+    }
+
     return jsDate.toLocaleDateString("en-CA", {
       year: "numeric",
       month: "long",
@@ -32,7 +55,7 @@ const formatDate = (date: Timestamp | string | undefined): string => {
     });
   } catch (e) {
     console.error("Error formatting date:", date, e);
-    return typeof date === "string" ? date : "Invalid date"; // Fallback for unparsable strings
+    return "Invalid date";
   }
 };
 
@@ -55,9 +78,9 @@ const formatSimpleDate = (dateString: string | undefined): string => {
 
 // Progress dot color scale (red to green) - moved here for use in modal
 const progressDotColors = [
-  "bg-orange-300",  // Score 1
+  "bg-yellow-300",  // Score 1
   "bg-amber-300",   // Score 2
-  "bg-yellow-300",  // Score 3
+  "bg-orange-300",  // Score 3
   "bg-lime-400",    // Score 4
   "bg-green-600",   // Score 5
 ];
@@ -210,7 +233,13 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
 
           return dateBMillis - dateAMillis; // Descending
         });
-        return formatDate(sorted[0].evidence_date);
+
+        const mostRecentEvidence = sorted[0];
+        if (!mostRecentEvidence || !mostRecentEvidence.evidence_date) {
+          return null;
+        }
+
+        return formatDate(mostRecentEvidence.evidence_date);
       })()
     : null;
 

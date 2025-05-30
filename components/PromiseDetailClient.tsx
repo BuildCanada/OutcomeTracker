@@ -141,7 +141,7 @@ export default function PromiseDetailClient({ promise }: PromiseDetailClientProp
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl font-bold text-[#222222] mb-2 break-words pr-24">
+            <h1 className="text-2xl font-bold text-[#222222] mb-2 break-words pr-2">
               {concise_title || text}
             </h1>
 
