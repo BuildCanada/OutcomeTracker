@@ -116,7 +116,7 @@ export default function NPRPopulationChart({
 
   const datasets: ChartDataset[] = [
     {
-      label: "NPR % of Population",
+      label: "NPR %",
       data: chartValues,
       borderColor: "rgb(53, 162, 235)",
       backgroundColor: "rgba(53, 162, 235, 0.5)",

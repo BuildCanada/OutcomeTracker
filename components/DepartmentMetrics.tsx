@@ -265,6 +265,8 @@ const DEPARTMENT_METRICS: Record<
         target2029: "Reduce interprovincial trade barriers → 50% reduction",
         dataSource: "Canadian Federation of Independent Business",
         dataSourceUrl: "https://www.cfib-fcei.ca/",
+        targetSource: "Liberal Party",
+        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "Done, chart added",
       },
     ],
@@ -336,7 +338,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               startYear={2015}
               targetValue={500000}
               showTarget
-              title="Trailing 12 Month Housing Starts"
+              title="Annualized Housing Starts (Trailing 12 Months)"
             />
           </ChartWithSource>
         </div>
@@ -352,7 +354,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
           >
             <NPRPopulationChart
-              title="NPR % of Population"
+              title="Non-Permanent Residents as % of Population"
               startYear={2015}
               showTarget={true}
               targetValue={5}
@@ -500,12 +502,12 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
             >
               <FederalPhysicianSupplyPerCapitaChart
-                title="Physicians per 1,000 People (Target: 3.5)"
+                title="Physicians per 1,000 People"
                 startYear={2019}
                 endYear={2029}
                 height={450}
                 showTarget={true}
-                targetValue={3.5}
+                targetValue={2.8}
               />
             </ChartWithSource>
           </div>
