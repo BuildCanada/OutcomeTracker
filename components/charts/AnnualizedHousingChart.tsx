@@ -68,7 +68,7 @@ export default function AnnualizedHousingChart({
   title = "Annualized Housing Starts",
   category = "Total units",
   startYear = 2010,
-  endYear = 2023,
+  endYear = 2029,
   showTarget = false,
   targetValue = 300000,
 }: AnnualizedHousingChartProps) {

@@ -44,7 +44,7 @@ interface ChartDataset {
 export default function FederalPhysicianSupplyChart({
   title = "Federal Physician Supply",
   startYear = 2019,
-  endYear = 2023,
+  endYear = 2029,
   height = 400,
 }: FederalPhysicianSupplyChartProps) {
   // Get federal physician supply data

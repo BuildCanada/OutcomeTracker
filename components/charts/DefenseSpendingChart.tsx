@@ -45,7 +45,7 @@ interface ChartDataset {
 export default function DefenseSpendingChart({
   title = "Military expenditure (% of GDP)",
   startYear = 2000,
-  endYear = 2024,
+  endYear = 2029,
   showTarget = true,
   targetValue = 2.0,
 }: DefenseSpendingChartProps) {

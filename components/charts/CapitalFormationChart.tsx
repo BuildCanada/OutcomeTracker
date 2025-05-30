@@ -56,7 +56,7 @@ interface ChartDataset {
 export default function CapitalFormationChart({
   title = "% of GDP in capital-focused public and private investment",
   startYear = 1990,
-  endYear = 2023,
+  endYear = 2029,
   quarterlyData = true,
   showTarget = true,
   targetValue = 17,

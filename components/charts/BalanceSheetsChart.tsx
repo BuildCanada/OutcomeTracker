@@ -36,7 +36,7 @@ export default function BalanceSheetsChart({
   title = "Balance Sheet Metrics",
   category = "Revenue",
   startYear = 2010,
-  endYear = 2023,
+  endYear = 2029,
   showComparison = false,
   comparisonCategory = "Expense",
 }: BalanceSheetsChartProps) {
