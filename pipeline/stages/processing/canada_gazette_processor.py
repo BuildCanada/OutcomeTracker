@@ -16,11 +16,13 @@ from pathlib import Path
 # Handle imports for both module execution and testing
 try:
     from .base_processor import BaseProcessorJob
+    from ...config.evidence_source_types import get_standardized_source_type_for_processor
 except ImportError:
     # Add pipeline directory to path for testing
     pipeline_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(pipeline_dir))
     from stages.processing.base_processor import BaseProcessorJob
+    from config.evidence_source_types import get_standardized_source_type_for_processor
 
 
 class CanadaGazetteProcessor(BaseProcessorJob):
@@ -79,10 +81,10 @@ class CanadaGazetteProcessor(BaseProcessorJob):
             # Create evidence item
             evidence_item = {
                 # Core identification
-                'title': regulation_title or f"Regulation {regulation_number}",
-                'description': self._extract_gazette_description(raw_item),
+                'title_or_summary': regulation_title or f"Regulation {regulation_number}",
+                'description_or_details': self._extract_gazette_description(raw_item),
                 'full_text': full_text,
-                'source_type': 'canada_gazette',
+                'evidence_source_type': get_standardized_source_type_for_processor('canada_gazette'),
                 'source_url': raw_item.get('regulation_url', ''),
                 
                 # Gazette-specific fields
@@ -131,7 +133,7 @@ class CanadaGazetteProcessor(BaseProcessorJob):
                 'regulatory_details': gazette_analysis.get('regulatory_details', {}) if self.extract_regulatory_details else {},
                 
                 # Status tracking
-                'linking_status': 'pending',
+                'promise_linking_status': 'pending',
                 'created_at': datetime.now(timezone.utc),
                 'last_updated_at': datetime.now(timezone.utc)
             }
@@ -482,4 +484,8 @@ class CanadaGazetteProcessor(BaseProcessorJob):
             if new_count > existing_count:
                 return True
         
-        return False 
+        return False
+    
+    def _get_evidence_id_source_type(self) -> str:
+        """Get the source type identifier for evidence ID generation"""
+        return 'CanadaGazette' 

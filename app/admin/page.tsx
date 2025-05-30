@@ -3,17 +3,17 @@
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ListChecks, Settings, Archive, Activity } from 'lucide-react'; // Icons
+import { ListChecks, Settings, Archive, Activity, FileText } from 'lucide-react'; // Icons
 
 export default function AdminHomePage() {
   const adminSections = [
-    {
-      id: 'reviews',
-      href: '/admin/reviews',
-      title: 'Review Evidence Links',
-      description: 'Approve or reject pending evidence links submitted by users or automated processes.',
-      icon: <ListChecks className="mb-4 h-12 w-12 text-[#8b2332]" />,
-    },
+    // {
+    //   id: 'reviews',
+    //   href: '/admin/reviews',
+    //   title: 'Review Evidence Links',
+    //   description: 'Approve or reject pending evidence links submitted by users or automated processes.',
+    //   icon: <ListChecks className="mb-4 h-12 w-12 text-[#8b2332]" />,
+    // },
     {
       id: 'promises',
       href: '/admin/promises',
@@ -22,10 +22,17 @@ export default function AdminHomePage() {
       icon: <Archive className="mb-4 h-12 w-12 text-[#8b2332]" />,
     },
     {
+      id: 'evidence',
+      href: '/admin/evidence',
+      title: 'Manage Evidence',
+      description: 'Create, edit, and link evidence items to promises. Add evidence manually or automatically from URLs.',
+      icon: <FileText className="mb-4 h-12 w-12 text-[#8b2332]" />,
+    },
+    {
       id: 'monitoring',
       href: '/admin/monitoring',
-      title: 'RSS Monitoring',
-      description: 'Monitor RSS feeds, data ingestion pipelines, and system health with real-time analytics and alerts.',
+      title: 'Automated Job Monitoring',
+      description: 'Monitor data ingestion processing pipelines, and system health with real-time analytics and alerts.',
       icon: <Activity className="mb-4 h-12 w-12 text-[#8b2332]" />,
     },
     {

@@ -16,11 +16,13 @@ from pathlib import Path
 # Handle imports for both module execution and testing
 try:
     from .base_processor import BaseProcessorJob
+    from ...config.evidence_source_types import get_standardized_source_type_for_processor
 except ImportError:
     # Add pipeline directory to path for testing
     pipeline_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(pipeline_dir))
     from stages.processing.base_processor import BaseProcessorJob
+    from config.evidence_source_types import get_standardized_source_type_for_processor
 
 
 class LegisInfoProcessor(BaseProcessorJob):
@@ -80,10 +82,10 @@ class LegisInfoProcessor(BaseProcessorJob):
             # Create evidence item
             evidence_item = {
                 # Core identification
-                'title': title,
-                'description': self._extract_bill_description(raw_item),
+                'title_or_summary': title,
+                'description_or_details': self._extract_bill_description(raw_item),
                 'full_text': self._extract_bill_full_text(raw_item),
-                'source_type': 'legisinfo_bill',
+                'evidence_source_type': get_standardized_source_type_for_processor('legisinfo'),
                 'source_url': self._build_bill_url(raw_item),
                 
                 # Bill-specific fields
@@ -129,7 +131,7 @@ class LegisInfoProcessor(BaseProcessorJob):
                 'summary': bill_analysis.get('summary', ''),
                 
                 # Status tracking
-                'linking_status': 'pending',
+                'promise_linking_status': 'pending',
                 'created_at': datetime.now(timezone.utc),
                 'last_updated_at': datetime.now(timezone.utc)
             }
@@ -423,24 +425,9 @@ class LegisInfoProcessor(BaseProcessorJob):
         
         return min(confidence, 1.0)
     
-    def _generate_evidence_id(self, evidence_item: Dict[str, Any], 
-                             raw_item: Dict[str, Any]) -> str:
-        """Generate a unique ID for the evidence item"""
-        # Use human-readable ID from raw item
-        human_id = raw_item.get('human_readable_id', '')
-        if human_id:
-            return f"legisinfo_{human_id}"
-        
-        # Fallback to bill number
-        bill_number = raw_item.get('bill_number_formatted', '')
-        parliament_num = raw_item.get('parliament_number', '')
-        session_num = raw_item.get('session_number', '')
-        
-        if all([bill_number, parliament_num, session_num]):
-            return f"legisinfo_{parliament_num}_{session_num}_{bill_number}".replace('/', '_')
-        
-        # Final fallback
-        return f"legisinfo_{raw_item.get('_doc_id', 'unknown')}"
+    def _get_evidence_id_source_type(self) -> str:
+        """Get the source type identifier for evidence ID generation"""
+        return 'LegisInfo'
     
     def _should_update_evidence(self, existing_evidence: Dict[str, Any], 
                                new_evidence: Dict[str, Any]) -> bool:
@@ -456,7 +443,7 @@ class LegisInfoProcessor(BaseProcessorJob):
             return True
         
         # Update if content has changed
-        content_fields = ['title', 'description', 'full_text']
+        content_fields = ['title_or_summary', 'description_or_details', 'full_text']
         for field in content_fields:
             if existing_evidence.get(field) != new_evidence.get(field):
                 return True

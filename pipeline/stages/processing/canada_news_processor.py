@@ -16,11 +16,13 @@ from pathlib import Path
 # Handle imports for both module execution and testing
 try:
     from .base_processor import BaseProcessorJob
+    from ...config.evidence_source_types import get_standardized_source_type_for_processor
 except ImportError:
     # Add pipeline directory to path for testing
     pipeline_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(pipeline_dir))
     from stages.processing.base_processor import BaseProcessorJob
+    from config.evidence_source_types import get_standardized_source_type_for_processor
 
 
 class CanadaNewsProcessor(BaseProcessorJob):
@@ -79,10 +81,10 @@ class CanadaNewsProcessor(BaseProcessorJob):
             # Create evidence item
             evidence_item = {
                 # Core identification
-                'title': title,
-                'description': description,
+                'title_or_summary': title,
+                'description_or_details': description,
                 'full_text': full_text,
-                'source_type': 'canada_news',
+                'evidence_source_type': get_standardized_source_type_for_processor('canada_news'),
                 'source_url': raw_item.get('link', ''),
                 
                 # Dates
@@ -109,7 +111,7 @@ class CanadaNewsProcessor(BaseProcessorJob):
                 'llm_analysis': llm_analysis,
                 
                 # Status tracking
-                'linking_status': 'pending',
+                'promise_linking_status': 'pending',
                 'created_at': datetime.now(timezone.utc),
                 'last_updated_at': datetime.now(timezone.utc)
             }
@@ -358,7 +360,7 @@ class CanadaNewsProcessor(BaseProcessorJob):
                                new_evidence: Dict[str, Any]) -> bool:
         """Determine if existing evidence should be updated"""
         # Update if content has changed
-        content_fields = ['title', 'description', 'full_text']
+        content_fields = ['title_or_summary', 'description_or_details', 'full_text']
         for field in content_fields:
             if existing_evidence.get(field) != new_evidence.get(field):
                 return True
@@ -377,4 +379,8 @@ class CanadaNewsProcessor(BaseProcessorJob):
             if new_relevance > existing_relevance + 0.1:
                 return True
         
-        return False 
+        return False
+    
+    def _get_evidence_id_source_type(self) -> str:
+        """Get the source type identifier for evidence ID generation"""
+        return 'CanadaNews' 

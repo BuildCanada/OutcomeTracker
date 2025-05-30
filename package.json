@@ -12,7 +12,9 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@google/genai": "^1.2.0",
     "@hookform/resolvers": "^3.9.1",
+    "@langchain/core": "^0.3.57",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
@@ -40,8 +42,10 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
+    "@types/cheerio": "^0.22.35",
     "autoprefixer": "^10.4.20",
     "chart.js": "^4.4.9",
+    "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -50,6 +54,7 @@
     "firebase": "^11.7.1",
     "firebase-admin": "^13.4.0",
     "input-otp": "1.4.1",
+    "langchain": "^0.3.27",
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "latest",

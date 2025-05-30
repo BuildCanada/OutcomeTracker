@@ -141,3 +141,13 @@
       text-transform: uppercase;
     }
 }
+
+/* Custom checkbox styling for white checkmarks */
+.white-checkmark[data-state="checked"] {
+  background-color: #8b2332 !important;
+  border-color: #8b2332 !important;
+}
+
+.white-checkmark[data-state="checked"] svg {
+  color: white !important;
+}

@@ -254,21 +254,79 @@ class BaseProcessorJob(BaseJob):
     def _generate_evidence_id(self, evidence_item: Dict[str, Any], 
                              raw_item: Dict[str, Any]) -> str:
         """
-        Generate a unique ID for the evidence item.
-        Override in subclasses for source-specific ID generation.
+        Generate a unique ID for the evidence item using standardized pattern.
+        All processors should use this centralized method for consistency.
         
         Args:
             evidence_item: Processed evidence item
             raw_item: Original raw item
             
         Returns:
-            Unique evidence ID
+            Unique evidence ID in format: YYYYMMDD_{session}_{source_type}_{hash}
         """
         import hashlib
         
-        # Default implementation - use source document ID
-        source_id = raw_item.get('_doc_id', '')
-        return f"{self.source_collection}_{source_id}"
+        # Get date for ID (prefer evidence date, fallback to current date)
+        evidence_date = evidence_item.get('evidence_date') or evidence_item.get('publication_date')
+        if evidence_date:
+            if hasattr(evidence_date, 'strftime'):
+                date_str = evidence_date.strftime('%Y%m%d')
+            else:
+                # Handle string dates
+                try:
+                    from datetime import datetime
+                    if isinstance(evidence_date, str):
+                        # Try parsing common date formats
+                        for fmt in ['%Y-%m-%d', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%SZ']:
+                            try:
+                                parsed_date = datetime.strptime(evidence_date.split('T')[0], '%Y-%m-%d')
+                                date_str = parsed_date.strftime('%Y%m%d')
+                                break
+                            except ValueError:
+                                continue
+                        else:
+                            date_str = datetime.now().strftime('%Y%m%d')
+                    else:
+                        date_str = datetime.now().strftime('%Y%m%d')
+                except:
+                    date_str = datetime.now().strftime('%Y%m%d')
+        else:
+            date_str = datetime.now().strftime('%Y%m%d')
+        
+        # Get parliament session
+        session_id = evidence_item.get('parliament_session_id', 'unknown')
+        
+        # Determine source type for ID
+        source_type = self._get_evidence_id_source_type()
+        
+        # Create hash from key content for uniqueness
+        content_for_hash = f"{evidence_item.get('title_or_summary', '')}{evidence_item.get('source_url', '')}{raw_item.get('_doc_id', '')}"
+        short_hash = hashlib.md5(content_for_hash.encode()).hexdigest()[:8]
+        
+        return f"{date_str}_{session_id}_{source_type}_{short_hash}"
+    
+    def _get_evidence_id_source_type(self) -> str:
+        """
+        Get the source type identifier for evidence ID generation.
+        Override in subclasses to provide source-specific identifiers.
+        
+        Returns:
+            Source type string for evidence ID
+        """
+        # Default implementation - derive from class name
+        class_name = self.__class__.__name__
+        if 'CanadaNews' in class_name:
+            return 'CanadaNews'
+        elif 'LegisInfo' in class_name:
+            return 'LegisInfo'
+        elif 'OrdersInCouncil' in class_name:
+            return 'OrdersInCouncil'
+        elif 'CanadaGazette' in class_name:
+            return 'CanadaGazette'
+        elif 'Manual' in class_name:
+            return 'Manual'
+        else:
+            return 'Unknown'
     
     def _should_update_evidence(self, existing_evidence: Dict[str, Any], 
                                new_evidence: Dict[str, Any]) -> bool:
