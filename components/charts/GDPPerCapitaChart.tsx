@@ -43,7 +43,7 @@ export default function GDPPerCapitaChart({
   title = "GDP Per Capita",
   gdpMeasure = "Gross domestic product at market prices",
   startYear = 1961,
-  endYear = 2023,
+  endYear = 2099,
   quarterlyData = true,
   showAnnual = false,
   showTarget = false,
@@ -57,7 +57,7 @@ export default function GDPPerCapitaChart({
   const perCapitaValues = calculatePerCapita(
     gdpMetricData,
     populationCanadaData,
-    1000,
+    1000000,
   );
 
   // Filter data by year range
@@ -196,7 +196,7 @@ export default function GDPPerCapitaChart({
         beginAtZero: false,
         title: {
           display: true,
-          text: `${gdpMeasure} Per Capita (thousands $)`,
+          text: `${gdpMeasure} Per Capita`,
           font: {
             size: 14,
           },
