@@ -60,19 +60,19 @@ class CanadaGazetteProcessor(BaseProcessorJob):
             Evidence item ready for storage or None if processing failed
         """
         try:
-            # Extract basic information
+            # Extract basic information (using production field names)
             regulation_title = raw_item.get('regulation_title', '')
-            regulation_number = raw_item.get('regulation_number', '')
-            full_text = raw_item.get('full_text', '')
+            registration_sor_si_number = raw_item.get('registration_sor_si_number', '')
+            full_text_scraped = raw_item.get('full_text_scraped', '')
             
             # Basic validation
-            if not regulation_title and not regulation_number:
+            if not regulation_title and not registration_sor_si_number:
                 self.logger.warning(f"Gazette notice missing required fields: {raw_item.get('_doc_id', 'unknown')}")
                 return None
             
             # Check content length
-            if len(regulation_title) < self.min_content_length and len(full_text) < self.min_content_length:
-                self.logger.debug(f"Gazette notice content too short, skipping: {regulation_number}")
+            if len(regulation_title) < self.min_content_length and len(full_text_scraped) < self.min_content_length:
+                self.logger.debug(f"Gazette notice content too short, skipping: {registration_sor_si_number}")
                 return None
             
             # Analyze gazette content
@@ -81,34 +81,36 @@ class CanadaGazetteProcessor(BaseProcessorJob):
             # Create evidence item
             evidence_item = {
                 # Core identification
-                'title_or_summary': regulation_title or f"Regulation {regulation_number}",
+                'title_or_summary': regulation_title or f"Regulation {registration_sor_si_number}",
                 'description_or_details': self._extract_gazette_description(raw_item),
-                'full_text': full_text,
+                'full_text': full_text_scraped,
                 'evidence_source_type': get_standardized_source_type_for_processor('canada_gazette'),
-                'source_url': raw_item.get('regulation_url', ''),
+                'source_url': raw_item.get('source_url_regulation_html', ''),
                 
-                # Gazette-specific fields
+                # Gazette-specific fields (using production field names)
                 'regulation_title': regulation_title,
-                'regulation_number': regulation_number,
-                'regulation_url': raw_item.get('regulation_url', ''),
+                'registration_sor_si_number': registration_sor_si_number,  # Changed field name
+                'source_url_regulation_html': raw_item.get('source_url_regulation_html', ''),  # Changed field name
                 'regulation_date': raw_item.get('regulation_date'),
                 
                 # Issue metadata
                 'issue_title': raw_item.get('issue_title', ''),
-                'issue_url': raw_item.get('issue_url', ''),
+                'gazette_issue_url': raw_item.get('gazette_issue_url', ''),  # Changed field name
                 'issue_publication_date': raw_item.get('issue_publication_date'),
                 'issue_guid': raw_item.get('issue_guid', ''),
                 
                 # Dates
                 'publication_date': raw_item.get('regulation_date') or raw_item.get('issue_publication_date'),
-                'scraped_at': raw_item.get('scraped_at'),
+                'scraped_at': raw_item.get('ingested_at'),  # Changed field name
                 
-                # Source metadata
+                # Source metadata (using production field names)
                 'source_metadata': {
-                    'regulation_url': raw_item.get('regulation_url', ''),
+                    'source_url_regulation_html': raw_item.get('source_url_regulation_html', ''),
+                    'source_url_regulation_pdf': raw_item.get('source_url_regulation_pdf', ''),
                     'issue_title': raw_item.get('issue_title', ''),
-                    'issue_url': raw_item.get('issue_url', ''),
-                    'issue_guid': raw_item.get('issue_guid', '')
+                    'gazette_issue_url': raw_item.get('gazette_issue_url', ''),
+                    'issue_guid': raw_item.get('issue_guid', ''),
+                    'act_sponsoring': raw_item.get('act_sponsoring', '')
                 },
                 
                 # Parliament context
@@ -117,7 +119,6 @@ class CanadaGazetteProcessor(BaseProcessorJob):
                 # Processing metadata
                 'evidence_type': 'regulatory_publication',
                 'evidence_subtype': self._classify_regulation_type(raw_item, gazette_analysis),
-                'confidence_score': self._calculate_confidence_score(raw_item, gazette_analysis),
                 'processing_notes': [],
                 
                 # Gazette analysis results
@@ -135,7 +136,12 @@ class CanadaGazetteProcessor(BaseProcessorJob):
                 # Status tracking
                 'promise_linking_status': 'pending',
                 'created_at': datetime.now(timezone.utc),
-                'last_updated_at': datetime.now(timezone.utc)
+                'last_updated_at': datetime.now(timezone.utc),
+                
+                # Additional metadata for tracking (using production field names)
+                'additional_metadata': {
+                    'raw_gazette_notice_id': raw_item.get('raw_gazette_item_id', raw_item.get('_doc_id', ''))
+                }
             }
             
             return evidence_item
@@ -147,18 +153,18 @@ class CanadaGazetteProcessor(BaseProcessorJob):
     def _analyze_gazette_content(self, raw_item: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze gazette content to extract structured information"""
         regulation_title = raw_item.get('regulation_title', '')
-        full_text = raw_item.get('full_text', '')
-        regulation_number = raw_item.get('regulation_number', '')
+        full_text_scraped = raw_item.get('full_text_scraped', '')  # Changed field name
+        registration_sor_si_number = raw_item.get('registration_sor_si_number', '')  # Changed field name
         
         # Combine text for analysis
-        text_content = f"{regulation_title} {full_text}"
+        text_content = f"{regulation_title} {full_text_scraped}"
         
         analysis = {
             'summary': self._generate_gazette_summary(raw_item),
             'topics': self._extract_gazette_topics(text_content),
             'policy_areas': self._extract_policy_areas(text_content),
             'departments': self._extract_mentioned_departments(text_content),
-            'regulation_type': self._determine_regulation_type(regulation_number, text_content),
+            'regulation_type': self._determine_regulation_type(registration_sor_si_number, text_content),
             'urgency_level': self._assess_urgency_level(text_content),
             'analysis_timestamp': datetime.now(timezone.utc)
         }
@@ -172,27 +178,27 @@ class CanadaGazetteProcessor(BaseProcessorJob):
     def _extract_gazette_description(self, raw_item: Dict[str, Any]) -> str:
         """Extract or generate gazette notice description"""
         regulation_title = raw_item.get('regulation_title', '')
-        regulation_number = raw_item.get('regulation_number', '')
+        registration_sor_si_number = raw_item.get('registration_sor_si_number', '')
         
         if regulation_title and len(regulation_title) < 200:
             return regulation_title
         elif regulation_title:
             return regulation_title[:200] + "..."
-        elif regulation_number:
-            return f"Regulation {regulation_number}"
+        elif registration_sor_si_number:
+            return f"Regulation {registration_sor_si_number}"
         else:
             return "Canada Gazette Part II Notice"
     
     def _generate_gazette_summary(self, raw_item: Dict[str, Any]) -> str:
         """Generate a summary for the gazette notice"""
-        regulation_number = raw_item.get('regulation_number', '')
+        registration_sor_si_number = raw_item.get('registration_sor_si_number', '')
         regulation_title = raw_item.get('regulation_title', '')
         reg_date = raw_item.get('regulation_date') or raw_item.get('issue_publication_date')
         
         summary_parts = []
         
-        if regulation_number:
-            summary_parts.append(f"Regulation {regulation_number}")
+        if registration_sor_si_number:
+            summary_parts.append(f"Regulation {registration_sor_si_number}")
         
         if reg_date:
             date_str = reg_date.strftime("%B %d, %Y") if isinstance(reg_date, datetime) else str(reg_date)
@@ -267,12 +273,12 @@ class CanadaGazetteProcessor(BaseProcessorJob):
         
         return departments
     
-    def _determine_regulation_type(self, regulation_number: str, text_content: str) -> str:
+    def _determine_regulation_type(self, registration_sor_si_number: str, text_content: str) -> str:
         """Determine the type of regulation based on number and content"""
-        if not regulation_number:
+        if not registration_sor_si_number:
             return 'unknown'
         
-        reg_number_upper = regulation_number.upper()
+        reg_number_upper = registration_sor_si_number.upper()
         text_lower = text_content.lower()
         
         # Statutory Orders and Regulations
@@ -411,57 +417,48 @@ class CanadaGazetteProcessor(BaseProcessorJob):
         
         return type_mapping.get(regulation_type, 'regulatory_publication')
     
-    def _calculate_confidence_score(self, raw_item: Dict[str, Any], 
-                                   gazette_analysis: Dict[str, Any]) -> float:
-        """Calculate confidence score for the evidence item"""
-        confidence = 0.85  # Base confidence for Canada Gazette (official publication)
-        
-        # Boost for complete regulation number
-        if raw_item.get('regulation_number'):
-            confidence += 0.1
-        
-        # Boost for substantial content
-        full_text = raw_item.get('full_text', '')
-        if len(full_text) > 300:
-            confidence += 0.05
-        
-        # Boost for recent publication
-        pub_date = raw_item.get('regulation_date') or raw_item.get('issue_publication_date')
-        if pub_date:
-            days_old = (datetime.now(timezone.utc) - pub_date).days
-            if days_old < 90:  # Within 3 months
-                confidence += 0.05
-        
-        return min(confidence, 1.0)
-    
     def _generate_evidence_id(self, evidence_item: Dict[str, Any], 
                              raw_item: Dict[str, Any]) -> str:
-        """Generate a unique ID for the evidence item"""
-        # Use regulation number if available
-        regulation_number = raw_item.get('regulation_number', '')
-        if regulation_number:
-            # Clean regulation number for use as document ID
-            clean_number = re.sub(r'[^a-zA-Z0-9_-]', '_', regulation_number)
-            return f"gazette_{clean_number}"
+        """Generate a unique ID for the evidence item following pattern: YYYYMMDD_{parliament}_{source}_{hash}"""
+        # Get publication date for date prefix
+        pub_date = evidence_item.get('publication_date') or raw_item.get('publication_date')
+        if pub_date:
+            date_prefix = pub_date.strftime('%Y%m%d')
+        else:
+            date_prefix = datetime.now(timezone.utc).strftime('%Y%m%d')
         
-        # Use issue GUID + regulation title hash as fallback
-        issue_guid = raw_item.get('issue_guid', '')
-        regulation_title = raw_item.get('regulation_title', '')
+        # Get parliament session ID
+        parliament_id = evidence_item.get('parliament_session_id', '44')  # Default to 44
         
-        if issue_guid and regulation_title:
-            import hashlib
-            title_hash = hashlib.sha256(regulation_title.encode()).hexdigest()[:8]
-            clean_guid = re.sub(r'[^a-zA-Z0-9_-]', '_', issue_guid)
-            return f"gazette_{clean_guid}_{title_hash}"
+        # Source type identifier for Canada Gazette
+        source_type = 'Gazette2'  # Matches production pattern
         
-        # Final fallback to source document ID
-        return f"gazette_{raw_item.get('_doc_id', 'unknown')}"
+        # Create hash from registration number or raw item ID for uniqueness
+        registration_sor_si_number = raw_item.get('registration_sor_si_number', '')
+        raw_gazette_item_id = raw_item.get('raw_gazette_item_id', '')
+        
+        if registration_sor_si_number:
+            hash_source = registration_sor_si_number
+        elif raw_gazette_item_id:
+            hash_source = raw_gazette_item_id
+        else:
+            # Fallback to URL + title
+            url = raw_item.get('source_url_regulation_html', '')
+            title = raw_item.get('regulation_title', '')
+            hash_source = f"{url}_{title}"
+        
+        # Generate short hash (8-10 characters like in production)
+        import hashlib
+        short_hash = hashlib.sha256(hash_source.encode()).hexdigest()[:10]
+        
+        # Return in format: YYYYMMDD_{parliament}_{source}_{hash}
+        return f"{date_prefix}_{parliament_id}_{source_type}_{short_hash}"
     
     def _should_update_evidence(self, existing_evidence: Dict[str, Any], 
                                new_evidence: Dict[str, Any]) -> bool:
         """Determine if existing evidence should be updated"""
-        # Update if content has changed
-        content_fields = ['regulation_title', 'full_text']
+        # Update if content has changed (using production field names)
+        content_fields = ['regulation_title', 'full_text_scraped']  # Changed field name
         for field in content_fields:
             if existing_evidence.get(field) != new_evidence.get(field):
                 return True

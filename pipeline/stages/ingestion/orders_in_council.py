@@ -36,6 +36,12 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
     
     def __init__(self, job_name: str, config: Dict[str, Any] = None):
         """Initialize the Orders in Council ingestion job"""
+        # Set config first so we can access override before super().__init__()
+        self.config = config or {}
+        
+        # Allow test collection override
+        self._collection_name_override = self.config.get('collection_name')
+        
         super().__init__(job_name, config)
         
         # Scraping configuration
@@ -63,7 +69,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
     
     def _get_collection_name(self) -> str:
         """Return the Firestore collection name for raw data"""
-        return "raw_orders_in_council"
+        return self._collection_name_override or "raw_orders_in_council"
     
     def _fetch_new_items(self, since_date: datetime = None) -> List[Dict[str, Any]]:
         """
@@ -112,7 +118,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
                     
                 else:
                     consecutive_misses += 1
-                    self.logger.debug(f"No OIC found for attach_id {current_attach_id} (miss {consecutive_misses}/{self.max_consecutive_misses})")
+                    self.logger.info(f"No valid OIC found for attach_id {current_attach_id} (miss {consecutive_misses}/{self.max_consecutive_misses})")
                 
                 items_processed += 1
                 current_attach_id += 1
@@ -141,7 +147,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         Returns:
             OIC data dictionary or None if not found
         """
-        url = f"{self.base_url}?attach_id={attach_id}"
+        url = f"{self.base_url}?attach={attach_id}&lang=en"
         
         try:
             response = self._make_request(url)
@@ -149,7 +155,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
             
             # Check if page contains OIC data
             if not self._is_valid_oic_page(soup):
-                return None
+                return None  # Return None for invalid pages (will be treated as a miss)
             
             # Extract OIC data
             oic_data = {
@@ -191,86 +197,180 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
     
     def _is_valid_oic_page(self, soup: BeautifulSoup) -> bool:
         """Check if the page contains valid OIC data"""
-        # Look for key indicators that this is a valid OIC page
-        oic_indicators = [
-            soup.find(text=re.compile(r'P\.C\.\s*\d{4}-\d{3,4}', re.IGNORECASE)),
-            soup.find('title', text=re.compile(r'Order in Council', re.IGNORECASE)),
-            soup.find(text=re.compile(r'His Excellency.*Governor General', re.IGNORECASE))
-        ]
+        # Use the same validation as the working deprecated script
+        main_content = soup.find('main', id='wb-cont')
+        if not main_content:
+            return False
         
-        return any(indicator for indicator in oic_indicators)
+        # Check that main content has meaningful text (not just whitespace)
+        main_text = main_content.get_text(strip=True)
+        if not main_text or len(main_text) < 20:  # Require at least 20 chars of content (reduced from 50)
+            return False
+        
+        return True
     
     def _extract_oic_number(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract OIC number from the page"""
-        # Look for P.C. YYYY-NNNN pattern
-        oic_pattern = re.compile(r'P\.C\.\s*(\d{4}-\d{3,4})', re.IGNORECASE)
+        """Extract OIC number from the page using the logic from the working deprecated script"""
+        # Find main content first
+        main_content = soup.find('main', id='wb-cont')
+        if not main_content:
+            return None
         
-        # Search in various elements
-        for element in soup.find_all(['h1', 'h2', 'h3', 'p', 'div']):
-            text = element.get_text()
-            match = oic_pattern.search(text)
+        pc_number_raw = None
+        
+        # Method 1: Try finding <strong> tags first (from deprecated script)
+        pc_strong_tag = main_content.find('strong', string=re.compile(r"^\s*PC Number:\s*$", re.IGNORECASE))
+        if pc_strong_tag:
+            if pc_strong_tag.next_sibling and isinstance(pc_strong_tag.next_sibling, str) and pc_strong_tag.next_sibling.strip():
+                pc_number_raw = pc_strong_tag.next_sibling.strip()
+            elif pc_strong_tag.parent:
+                parent_text = pc_strong_tag.parent.get_text(separator=' ', strip=True)
+                match = re.search(r"PC Number:\s*([\w-]+)", parent_text, re.IGNORECASE)
+                if match: 
+                    pc_number_raw = match.group(1)
+        
+        # Method 2: Fallback using the <p> tag sequence if strong tags didn't work well
+        if not pc_number_raw:
+            all_p_tags_in_main = main_content.find_all('p', recursive=False)
+            if len(all_p_tags_in_main) > 0:
+                p_pc_text = all_p_tags_in_main[0].get_text(strip=True)
+                match = re.search(r"PC Number:\s*([\w-]+)", p_pc_text, re.IGNORECASE)
+                if match: 
+                    pc_number_raw = match.group(1)
+        
+        # Method 3: Look for P.C. YYYY-NNNN pattern anywhere in main content
+        if not pc_number_raw:
+            oic_pattern = re.compile(r'P\.C\.\s*(\d{4}-\d{3,4})', re.IGNORECASE)
+            match = oic_pattern.search(main_content.get_text())
             if match:
-                return f"P.C. {match.group(1)}"
+                pc_number_raw = match.group(1)
+        
+        # Format as P.C. if we found a number
+        if pc_number_raw:
+            # Add P.C. prefix if not already present
+            if not pc_number_raw.lower().startswith('p.c.'):
+                return f"P.C. {pc_number_raw}"
+            else:
+                return pc_number_raw
         
         return None
     
     def _extract_title(self, soup: BeautifulSoup) -> Optional[str]:
         """Extract title from the page"""
-        # Try different selectors for title
-        title_selectors = [
-            'h1',
-            'h2',
-            '.title',
-            '[class*="title"]'
-        ]
-        
-        for selector in title_selectors:
-            element = soup.select_one(selector)
-            if element:
-                title = element.get_text().strip()
-                if title and len(title) > 10:  # Basic validation
-                    return title
-        
-        # Fallback to page title
-        title_element = soup.find('title')
-        if title_element:
-            return title_element.get_text().strip()
-        
+        # This method extracts page title, but we want the first line of content
+        # The actual title will be extracted from full_text in _process_raw_item
         return None
     
     def _extract_publication_date(self, soup: BeautifulSoup) -> Optional[datetime]:
-        """Extract publication date from the page"""
-        # Look for date patterns
-        date_pattern = re.compile(r'\b(\d{4}-\d{2}-\d{2})\b')
+        """Extract publication date from the page using the logic from the working deprecated script"""
+        # Find main content first
+        main_content = soup.find('main', id='wb-cont')
+        if not main_content:
+            return None
         
-        # Search in various elements
-        for element in soup.find_all(['p', 'div', 'span']):
-            text = element.get_text()
-            match = date_pattern.search(text)
+        oic_date_str = None
+        
+        # Method 1: Try finding <strong> tags first (from deprecated script)
+        date_strong_tag = main_content.find('strong', string=re.compile(r"^\s*Date:\s*$", re.IGNORECASE))
+        if date_strong_tag:
+            if date_strong_tag.next_sibling and isinstance(date_strong_tag.next_sibling, str) and date_strong_tag.next_sibling.strip():
+                date_str_candidate = date_strong_tag.next_sibling.strip()
+                match = re.match(r"(\d{4}-\d{2}-\d{2})", date_str_candidate)
+                if match: 
+                    oic_date_str = match.group(1)
+            elif date_strong_tag.parent:
+                parent_text = date_strong_tag.parent.get_text(separator=' ', strip=True)
+                match = re.search(r"Date:\s*(\d{4}-\d{2}-\d{2})", parent_text, re.IGNORECASE)
+                if match: 
+                    oic_date_str = match.group(1)
+
+        # Method 2: Fallback using the <p> tag sequence if strong tags didn't work well
+        if not oic_date_str:
+            all_p_tags_in_main = main_content.find_all('p', recursive=False)
+            if len(all_p_tags_in_main) > 1:
+                p_date_text = all_p_tags_in_main[1].get_text(strip=True)
+                match = re.search(r"Date:\s*(\d{4}-\d{2}-\d{2})", p_date_text, re.IGNORECASE)
+                if match: 
+                    oic_date_str = match.group(1)
+        
+        # Method 3: Look for date patterns anywhere in main content
+        if not oic_date_str:
+            date_pattern = re.compile(r'\b(\d{4}-\d{2}-\d{2})\b')
+            match = date_pattern.search(main_content.get_text())
             if match:
-                try:
-                    date_str = match.group(1)
-                    return datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                except ValueError:
-                    continue
+                oic_date_str = match.group(1)
+        
+        # Parse the date string
+        if oic_date_str:
+            try:
+                dt_naive = datetime.strptime(oic_date_str, "%Y-%m-%d")
+                return dt_naive.replace(tzinfo=timezone.utc)
+            except ValueError as e:
+                self.logger.warning(f"Could not parse OIC date string '{oic_date_str}': {e}")
+                return None
         
         return None
     
     def _extract_content(self, soup: BeautifulSoup) -> Optional[str]:
-        """Extract full text content from the page"""
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
+        """Extract full text content from the page using the logic from the working deprecated script"""
+        # Find main content first
+        main_content = soup.find('main', id='wb-cont')
+        if not main_content:
+            return None
         
-        # Get text content
-        text = soup.get_text()
+        full_text_content = None
         
-        # Clean up whitespace
-        lines = (line.strip() for line in text.splitlines())
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        text = ' '.join(chunk for chunk in chunks if chunk)
+        # Remove "Back to Form" button from main_content before processing
+        overall_form = main_content.find('form', action='index.php')
+        if overall_form:
+            overall_form.decompose()
+
+        # Look for HR tag to find content section (from deprecated script)
+        hr_tag = main_content.find('hr')
+        if hr_tag:
+            content_node = hr_tag.find_next_sibling()
+            if content_node:
+                target_text_element = None
+                if content_node.name == 'p':
+                    section_div = content_node.find('div', class_=re.compile(r"Section\d*$", re.IGNORECASE))
+                    if not section_div:
+                        section_div = content_node.find('div', style=re.compile(r"line-height", re.IGNORECASE))
+                    target_text_element = section_div if section_div else content_node
+                elif content_node.name == 'div' and \
+                     (re.search(r"Section\d*$", " ".join(content_node.get('class', [])), re.IGNORECASE) or \
+                      re.search(r"line-height", content_node.get('style',''), re.IGNORECASE)):
+                    target_text_element = content_node
+                else:
+                    target_text_element = content_node
+                
+                if target_text_element:
+                    for s in target_text_element.select('script, style, noscript, header, footer, nav, form'): 
+                        s.decompose()
+                    full_text_content = target_text_element.get_text(separator='\n', strip=True)
+            else:
+                self.logger.warning(f"Could not find content node (sibling) after <hr>")
+        else:
+            # Fallback: Try to find content in <p> tags after the ones for PC#/Date (from deprecated script)
+            all_p_tags = main_content.find_all('p', recursive=False)
+            
+            potential_content_p = None
+            start_index_for_content = 2  # Skip PC number and date paragraphs
+            
+            if len(all_p_tags) > start_index_for_content:
+                potential_content_p = all_p_tags[start_index_for_content]
+            
+            if potential_content_p:
+                section_div = potential_content_p.find('div', class_=re.compile(r"Section\d*$", re.IGNORECASE))
+                if not section_div: 
+                    section_div = potential_content_p.find('div', style=re.compile(r"line-height", re.IGNORECASE))
+                
+                target_text_element = section_div if section_div else potential_content_p
+                for s in target_text_element.select('script, style, noscript, header, footer, nav, form'): 
+                    s.decompose()
+                full_text_content = target_text_element.get_text(separator='\n', strip=True)
+                self.logger.debug("Used fallback for full text (no HR)")
         
-        return text if text else None
+        return full_text_content if full_text_content else None
     
     def _extract_metadata(self, soup: BeautifulSoup) -> Dict[str, Any]:
         """Extract additional metadata from the page"""
@@ -299,7 +399,13 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
     def _get_last_scraped_attach_id(self) -> int:
         """Get the last successfully scraped attach_id from Firestore"""
         try:
-            config_doc = self.db.collection('script_config').document('ingest_raw_oic_config').get()
+            # Use different config document for test collections
+            config_doc_name = 'ingest_raw_oic_config'
+            collection_name = self._get_collection_name()
+            if 'test_' in collection_name:
+                config_doc_name = f'test_{config_doc_name}'
+                
+            config_doc = self.db.collection('script_config').document(config_doc_name).get()
             if config_doc.exists:
                 return config_doc.to_dict().get('last_successfully_scraped_attach_id', self.start_attach_id)
             else:
@@ -312,7 +418,13 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
     def _update_last_scraped_attach_id(self, attach_id: int):
         """Update the last successfully scraped attach_id in Firestore"""
         try:
-            self.db.collection('script_config').document('ingest_raw_oic_config').set({
+            # Use different config document for test collections
+            config_doc_name = 'ingest_raw_oic_config'
+            collection_name = self._get_collection_name()
+            if 'test_' in collection_name:
+                config_doc_name = f'test_{config_doc_name}'
+                
+            self.db.collection('script_config').document(config_doc_name).set({
                 'last_successfully_scraped_attach_id': attach_id,
                 'updated_at': datetime.now(timezone.utc)
             }, merge=True)
@@ -350,7 +462,8 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
     
     def _process_raw_item(self, raw_item: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Process a single raw OIC item into standardized format.
+        Process a single raw OIC item into standardized format that matches
+        the existing raw_orders_in_council collection structure.
         
         Args:
             raw_item: Raw OIC item from scraping
@@ -358,27 +471,64 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         Returns:
             Processed item ready for Firestore storage
         """
+        # Extract key information
+        attach_id = raw_item['attach_id']
+        oic_number = raw_item.get('oic_number', '')
+        oic_number_normalized = raw_item.get('oic_number_normalized', '')
+        full_text = raw_item.get('full_text', '')
+        title = raw_item.get('title', '')
+        source_url = raw_item['source_url']
+        publication_date = raw_item.get('publication_date')
+        scraped_at = raw_item['scraped_at']
+        
         # Determine parliament session ID
         parliament_session_id = None
-        if raw_item.get('publication_date'):
-            parliament_session_id = self._get_parliament_session_id(raw_item['publication_date'])
+        if publication_date:
+            parliament_session_id = self._get_parliament_session_id(publication_date)
         
+        # Extract OIC number without P.C. prefix for raw_oic_id
+        raw_oic_id = oic_number_normalized or oic_number.replace('P.C. ', '') if oic_number else str(attach_id)
+        
+        # Extract title from first non-empty line of full text (matching deprecated script)
+        title_or_summary_raw = None
+        if full_text:
+            for line in full_text.split('\n'):
+                stripped_line = line.strip()
+                if stripped_line:  # Take the first non-empty line
+                    title_or_summary_raw = stripped_line
+                    break
+        
+        # Create processed item matching the existing structure
         processed_item = {
-            # Core fields
-            'attach_id': raw_item['attach_id'],
-            'oic_number': raw_item.get('oic_number', ''),
-            'oic_number_normalized': raw_item.get('oic_number_normalized', ''),
-            'title': raw_item.get('title', ''),
-            'full_text': raw_item.get('full_text', ''),
-            'source_url': raw_item['source_url'],
-            'publication_date': raw_item.get('publication_date'),
+            # Core identification (matching sample structure)
+            'attach_id': attach_id,
+            'oic_number_full_raw': oic_number or '',
+            'raw_oic_id': raw_oic_id,
+            'title_or_summary_raw': title_or_summary_raw or '',
             
-            # Metadata
+            # Content
+            'full_text_scraped': full_text or '',
+            
+            # URLs
+            'source_url_oic_detail_page': source_url,
+            
+            # Dates (using 'oic_date' to match sample, and 'ingested_at')
+            'oic_date': publication_date,
+            'ingested_at': scraped_at,
+            
+            # Parliament context
             'parliament_session_id_assigned': parliament_session_id,
-            'scraped_at': raw_item['scraped_at'],
             
-            # Processing status
+            # Processing status (matching the pattern from other pipelines)
             'evidence_processing_status': 'pending_evidence_creation',
+            
+            # Department fields (often not available from scraping)
+            'responsible_department_raw': None,
+            'responsible_minister_raw': None,
+            'act_citation_raw': None,
+            
+            # Linking fields
+            'related_evidence_item_id': None,
             
             # Timestamps
             'last_updated_at': datetime.now(timezone.utc)
@@ -461,12 +611,17 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         Returns:
             Unique item ID
         """
-        # Use attach_id as the primary identifier
+        # Use raw_oic_id as the primary identifier (matches production structure)
+        raw_oic_id = item.get('raw_oic_id')
+        if raw_oic_id:
+            return raw_oic_id
+        
+        # Fallback to attach_id if no OIC number available
         attach_id = item.get('attach_id')
         if attach_id:
             return str(attach_id)
         
-        # Fallback to hash of OIC number + title
+        # Final fallback to hash of content
         oic_number = item.get('oic_number_normalized', item.get('oic_number', ''))
         title = item.get('title', '')
         id_source = f"{oic_number}_{title}"

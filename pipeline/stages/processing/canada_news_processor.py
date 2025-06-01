@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 import re
 from pathlib import Path
+import hashlib
 
 # Handle imports for both module execution and testing
 try:
@@ -44,7 +45,7 @@ class CanadaNewsProcessor(BaseProcessorJob):
     
     def _get_source_collection(self) -> str:
         """Return the Firestore collection name for raw data"""
-        return "raw_canada_news"
+        return "raw_news_releases"
     
     def _get_target_collection(self) -> str:
         """Return the Firestore collection name for evidence items"""
@@ -61,10 +62,10 @@ class CanadaNewsProcessor(BaseProcessorJob):
             Evidence item ready for storage or None if processing failed
         """
         try:
-            # Extract basic information
-            title = raw_item.get('title', '').strip()
-            description = raw_item.get('description', '').strip()
-            full_text = raw_item.get('full_text', '').strip()
+            # Extract basic information (using production field names only)
+            title = raw_item.get('title_raw', '').strip()
+            description = raw_item.get('summary_or_snippet_raw', '').strip()
+            full_text = raw_item.get('full_text_scraped', '').strip()
             
             if not title:
                 self.logger.warning(f"News item missing title: {raw_item.get('_doc_id', 'unknown')}")
@@ -85,18 +86,19 @@ class CanadaNewsProcessor(BaseProcessorJob):
                 'description_or_details': description,
                 'full_text': full_text,
                 'evidence_source_type': get_standardized_source_type_for_processor('canada_news'),
-                'source_url': raw_item.get('link', ''),
+                'source_url': raw_item.get('source_url', ''),
                 
                 # Dates
                 'publication_date': raw_item.get('publication_date'),
-                'scraped_at': raw_item.get('scraped_at'),
+                'scraped_at': raw_item.get('ingested_at'),  # Use production field name
                 
-                # Source metadata
+                # Source metadata (using production field names)
                 'source_metadata': {
-                    'rss_guid': raw_item.get('guid', ''),
-                    'categories': raw_item.get('categories', []),
-                    'author': raw_item.get('author', ''),
-                    'raw_entry': raw_item.get('raw_entry', {})
+                    'rss_feed_url': raw_item.get('rss_feed_url_used', ''),
+                    'categories': raw_item.get('categories_rss', []),
+                    'content_type': raw_item.get('content_type', ''),
+                    'source_feed': raw_item.get('source_feed', ''),
+                    'department_rss': raw_item.get('department_rss', '')
                 },
                 
                 # Parliament context
@@ -104,7 +106,6 @@ class CanadaNewsProcessor(BaseProcessorJob):
                 
                 # Processing metadata
                 'evidence_type': 'government_announcement',
-                'confidence_score': self._calculate_confidence_score(raw_item, llm_analysis),
                 'processing_notes': [],
                 
                 # LLM analysis results
@@ -113,7 +114,12 @@ class CanadaNewsProcessor(BaseProcessorJob):
                 # Status tracking
                 'promise_linking_status': 'pending',
                 'created_at': datetime.now(timezone.utc),
-                'last_updated_at': datetime.now(timezone.utc)
+                'last_updated_at': datetime.now(timezone.utc),
+                
+                # Additional metadata for tracking
+                'additional_metadata': {
+                    'raw_news_release_id': raw_item.get('raw_item_id', raw_item.get('_doc_id', ''))
+                }
             }
             
             # Add LLM-derived fields if available
@@ -297,29 +303,6 @@ class CanadaNewsProcessor(BaseProcessorJob):
         
         return min(score, 1.0)
     
-    def _calculate_confidence_score(self, raw_item: Dict[str, Any], 
-                                   llm_analysis: Optional[Dict[str, Any]]) -> float:
-        """Calculate confidence score for the evidence item"""
-        confidence = 0.7  # Base confidence for Canada News
-        
-        # Boost for complete content
-        if raw_item.get('full_text'):
-            confidence += 0.1
-        
-        # Boost for LLM analysis
-        if llm_analysis:
-            relevance = llm_analysis.get('relevance_score', 0)
-            confidence += relevance * 0.2
-        
-        # Boost for recent content
-        pub_date = raw_item.get('publication_date')
-        if pub_date:
-            days_old = (datetime.now(timezone.utc) - pub_date).days
-            if days_old < 30:
-                confidence += 0.1
-        
-        return min(confidence, 1.0)
-    
     def _enrich_with_llm_analysis(self, evidence_item: Dict[str, Any], 
                                  llm_analysis: Dict[str, Any]):
         """Enrich evidence item with LLM analysis results"""
@@ -337,24 +320,47 @@ class CanadaNewsProcessor(BaseProcessorJob):
         if announcement_type:
             evidence_item['evidence_subtype'] = announcement_type
         
-        # Update confidence based on relevance
+        # Update relevance score
         relevance_score = llm_analysis.get('relevance_score', 0)
         if relevance_score > 0:
-            current_confidence = evidence_item.get('confidence_score', 0.5)
-            evidence_item['confidence_score'] = min(current_confidence + (relevance_score * 0.2), 1.0)
+            current_relevance = evidence_item.get('relevance_score', 0)
+            evidence_item['relevance_score'] = min(current_relevance + (relevance_score * 0.2), 1.0)
     
     def _generate_evidence_id(self, evidence_item: Dict[str, Any], 
                              raw_item: Dict[str, Any]) -> str:
-        """Generate a unique ID for the evidence item"""
-        # Use RSS GUID if available, otherwise use source document ID
-        guid = raw_item.get('guid', '')
-        if guid:
-            # Clean GUID for use as document ID
-            clean_guid = re.sub(r'[^a-zA-Z0-9_-]', '_', guid)
-            return f"canada_news_{clean_guid}"
+        """Generate a unique ID for the evidence item following pattern: YYYYMMDD_{parliament}_{source}_{hash}"""
+        # Get publication date for date prefix
+        pub_date = evidence_item.get('publication_date') or raw_item.get('publication_date')
+        if pub_date:
+            date_prefix = pub_date.strftime('%Y%m%d')
+        else:
+            date_prefix = datetime.now(timezone.utc).strftime('%Y%m%d')
         
-        # Fallback to source document ID
-        return f"canada_news_{raw_item.get('_doc_id', 'unknown')}"
+        # Get parliament session ID
+        parliament_id = evidence_item.get('parliament_session_id', '44')  # Default to 44
+        
+        # Source type identifier
+        source_type = 'News'
+        
+        # Create hash from raw item ID or GUID for uniqueness
+        raw_doc_id = raw_item.get('_doc_id', '')
+        guid = raw_item.get('guid', '')
+        
+        if raw_doc_id:
+            hash_source = raw_doc_id
+        elif guid:
+            hash_source = guid
+        else:
+            # Fallback to URL + title
+            url = raw_item.get('source_url', '')
+            title = raw_item.get('title', '')
+            hash_source = f"{url}_{title}"
+        
+        # Generate short hash (8-10 characters like in production)
+        short_hash = hashlib.sha256(hash_source.encode()).hexdigest()[:9]
+        
+        # Return in format: YYYYMMDD_{parliament}_{source}_{hash}
+        return f"{date_prefix}_{parliament_id}_{source_type}_{short_hash}"
     
     def _should_update_evidence(self, existing_evidence: Dict[str, Any], 
                                new_evidence: Dict[str, Any]) -> bool:

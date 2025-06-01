@@ -228,8 +228,8 @@ class CanadaGazetteIngestion(BaseIngestionJob):
                     reg_data.update(issue_data)
                     
                     # Scrape full text if enabled
-                    if self.scrape_full_text and reg_data.get('regulation_url'):
-                        full_text = self._scrape_regulation_full_text(reg_data['regulation_url'])
+                    if self.scrape_full_text and reg_data.get('source_url_regulation_html'):
+                        full_text = self._scrape_regulation_full_text(reg_data['source_url_regulation_html'])
                         if full_text:
                             reg_data['full_text'] = full_text
                     
@@ -296,13 +296,14 @@ class CanadaGazetteIngestion(BaseIngestionJob):
         # Extract basic information
         reg_data = {
             'regulation_title': reg_link['text'],
-            'regulation_url': reg_link['url'],
+            'source_url_regulation_html': reg_link['url'],
+            'source_url_regulation_pdf': None,
         }
         
         # Try to extract regulation number/identifier
         reg_number = self._extract_regulation_number(reg_link['text'])
         if reg_number:
-            reg_data['regulation_number'] = reg_number
+            reg_data['registration_sor_si_number'] = reg_number
         
         # Look for additional metadata in surrounding elements
         parent = link_element.parent
@@ -428,26 +429,37 @@ class CanadaGazetteIngestion(BaseIngestionJob):
         if reg_date:
             parliament_session_id = self._get_parliament_session_id(reg_date)
         
+        # Generate raw gazette item ID (matching production pattern)
+        raw_gazette_item_id = self._generate_raw_gazette_item_id(raw_item)
+        
         processed_item = {
-            # Core fields
+            # Core fields (using production field names)
+            'raw_gazette_item_id': raw_gazette_item_id,
             'regulation_title': raw_item.get('regulation_title', ''),
-            'regulation_number': raw_item.get('regulation_number', ''),
-            'regulation_url': raw_item.get('regulation_url', ''),
+            'registration_sor_si_number': raw_item.get('registration_sor_si_number', ''),
+            'source_url_regulation_html': raw_item.get('source_url_regulation_html', ''),
+            'source_url_regulation_pdf': raw_item.get('source_url_regulation_pdf'),
             'regulation_date': raw_item.get('regulation_date'),
-            'full_text': raw_item.get('full_text', ''),
+            'full_text_scraped': raw_item.get('full_text', ''),  # Changed from full_text
             
-            # Issue metadata
+            # Issue metadata (using production field names)
+            'gazette_issue_url': raw_item.get('issue_url', ''),  # Changed from issue_url
             'issue_title': raw_item.get('issue_title', ''),
-            'issue_url': raw_item.get('issue_url', ''),
             'issue_publication_date': raw_item.get('issue_publication_date'),
             'issue_guid': raw_item.get('issue_guid', ''),
             
+            # Additional production fields
+            'act_sponsoring': None,  # Added missing field
+            'summary_snippet_from_gazette': None,  # Added missing field
+            'publication_date': raw_item.get('regulation_date') or raw_item.get('issue_publication_date'),
+            
             # Metadata
             'parliament_session_id_assigned': parliament_session_id,
-            'scraped_at': raw_item.get('scraped_at'),
+            'ingested_at': datetime.now(timezone.utc),  # Changed from scraped_at
             
             # Processing status
             'evidence_processing_status': 'pending_evidence_creation',
+            'related_evidence_item_id': None,  # Added missing field
             
             # Timestamps
             'last_updated_at': datetime.now(timezone.utc)
@@ -526,6 +538,32 @@ class CanadaGazetteIngestion(BaseIngestionJob):
             self.logger.error(f"Error loading parliament sessions: {e}")
             self._parliament_sessions_cache = []
     
+    def _generate_raw_gazette_item_id(self, raw_item: Dict[str, Any]) -> str:
+        """
+        Generate a unique ID for the raw gazette item in production format.
+        Format: CGP2_YYYYMMDD_hash12
+        
+        Args:
+            raw_item: Raw regulation item from scraping
+            
+        Returns:
+            Unique raw gazette item ID
+        """
+        # Get date for ID prefix
+        reg_date = raw_item.get('regulation_date') or raw_item.get('issue_publication_date')
+        if reg_date:
+            date_prefix = reg_date.strftime('%Y%m%d')
+        else:
+            date_prefix = datetime.now(timezone.utc).strftime('%Y%m%d')
+        
+        # Create hash input using URL and date (matching production logic)
+        url = raw_item.get('source_url_regulation_html', '')
+        id_hash_input = f"{url}_{reg_date.isoformat() if reg_date else datetime.now(timezone.utc).isoformat()}"
+        full_hash = hashlib.sha256(id_hash_input.encode('utf-8')).hexdigest()
+        short_hash = full_hash[:12]  # 12 characters like production
+        
+        return f"CGP2_{date_prefix}_{short_hash}"
+    
     def _generate_item_id(self, item: Dict[str, Any]) -> str:
         """
         Generate a unique ID for the Gazette notice item.
@@ -537,12 +575,12 @@ class CanadaGazetteIngestion(BaseIngestionJob):
             Unique item ID
         """
         # Use regulation number if available
-        reg_number = item.get('regulation_number')
+        reg_number = item.get('registration_sor_si_number')
         if reg_number:
             return reg_number.replace('/', '_').replace(' ', '_')
         
         # Fallback to hash of URL + title
-        url = item.get('regulation_url', '')
+        url = item.get('source_url_regulation_html', '')
         title = item.get('regulation_title', '')
         id_source = f"{url}_{title}"
         return hashlib.sha256(id_source.encode()).hexdigest()[:16]
@@ -564,8 +602,8 @@ class CanadaGazetteIngestion(BaseIngestionJob):
         if status in ['pending_evidence_creation', 'error_processing_script']:
             return True
         
-        # Check if content has changed
-        content_fields = ['regulation_title', 'full_text', 'regulation_number']
+        # Check if content has changed (using production field names)
+        content_fields = ['regulation_title', 'full_text_scraped', 'registration_sor_si_number']
         for field in content_fields:
             if existing_item.get(field) != new_item.get(field):
                 return True

@@ -115,7 +115,6 @@ class ManualEvidenceProcessor(BaseProcessorJob):
                 
                 # Processing metadata
                 'evidence_type': 'manual_entry',
-                'confidence_score': self._calculate_confidence_score(content_data, llm_analysis),
                 'processing_notes': [],
                 
                 # LLM analysis results
@@ -128,7 +127,7 @@ class ManualEvidenceProcessor(BaseProcessorJob):
                 'summary': llm_analysis.get('summary', '') if llm_analysis else content_data.get('description', ''),
                 
                 # Status tracking
-                'promise_linking_status': 'processed',
+                'promise_linking_status': 'pending',
                 'created_at': datetime.now(timezone.utc),
                 'last_updated_at': datetime.now(timezone.utc)
             }
@@ -437,49 +436,17 @@ class ManualEvidenceProcessor(BaseProcessorJob):
         
         return min(score, 1.0)
     
-    def _calculate_confidence_score(self, content_data: Dict[str, Any], 
-                                   llm_analysis: Optional[Dict[str, Any]]) -> float:
-        """Calculate confidence score for the evidence item"""
-        confidence = 0.6  # Base confidence for automated extraction
-        
-        # Boost for substantial content
-        content_length = len(content_data.get('full_text', ''))
-        if content_length > 1000:
-            confidence += 0.2
-        elif content_length > 500:
-            confidence += 0.1
-        
-        # Boost for good title and description
-        if content_data.get('title') and len(content_data['title']) > 10:
-            confidence += 0.1
-        
-        if content_data.get('description') and len(content_data['description']) > 20:
-            confidence += 0.1
-        
-        # Boost for LLM analysis
-        if llm_analysis:
-            relevance = llm_analysis.get('relevance_score', 0)
-            confidence += relevance * 0.1
-        
-        return min(confidence, 1.0)
-    
     def _should_update_evidence(self, existing_evidence: Dict[str, Any], 
                                new_evidence: Dict[str, Any]) -> bool:
         """Determine if existing evidence should be updated"""
-        # For manual evidence, generally don't update existing items
-        # unless there's a significant improvement in content
+        # Update if content has changed significantly
+        content_fields = ['title_or_summary', 'description_or_details', 'full_text']
+        for field in content_fields:
+            if existing_evidence.get(field) != new_evidence.get(field):
+                return True
         
-        existing_content_length = len(existing_evidence.get('full_text', ''))
-        new_content_length = len(new_evidence.get('full_text', ''))
-        
-        # Update if new content is significantly longer
-        if new_content_length > existing_content_length * 1.5:
-            return True
-        
-        # Update if confidence score improved significantly
-        existing_confidence = existing_evidence.get('confidence_score', 0)
-        new_confidence = new_evidence.get('confidence_score', 0)
-        if new_confidence > existing_confidence + 0.2:
+        # Update if publication date has changed
+        if existing_evidence.get('publication_date') != new_evidence.get('publication_date'):
             return True
         
         return False 

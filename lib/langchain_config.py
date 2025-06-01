@@ -81,9 +81,18 @@ class PromiseTrackerLangchain:
         if not self.api_key:
             raise ValueError("Google API key not found. Set GOOGLE_API_KEY or GEMINI_API_KEY environment variable.")
         
-        # Initialize LLM
+        # Initialize primary LLM for general operations
         self.llm = ChatGoogleGenerativeAI(
             model=self.model_name,
+            google_api_key=self.api_key,
+            temperature=0.1,  # Low temperature for consistent results
+            max_output_tokens=65536,
+            callbacks=[self.cost_tracker]
+        )
+        
+        # Initialize specialized LLM for evidence linking (more powerful model)
+        self.linking_llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-pro-preview-05-06",  # More powerful model for complex linking tasks
             google_api_key=self.api_key,
             temperature=0.1,  # Low temperature for consistent results
             max_output_tokens=65536,
@@ -97,6 +106,7 @@ class PromiseTrackerLangchain:
         self.chains = self._initialize_chains()
         
         logger.info(f"Langchain initialized with model: {self.model_name}")
+        logger.info(f"Evidence linking using enhanced model: gemini-2.5-flash-preview-05-20")
     
     def _load_prompt_templates(self) -> Dict[str, PromptTemplate]:
         """Load all prompt templates from the prompts directory."""
@@ -116,7 +126,7 @@ class PromiseTrackerLangchain:
         prompts['evidence_oic'] = self._load_file_template(prompts_dir / 'prompt_oic_evidence.md')
         
         # Evidence-promise linking prompts
-        # Evidence linking template is created directly in _create_evidence_linking_template()
+        prompts['multi_promise_linking'] = self._load_file_template(prompts_dir / 'prompt_link_evidence_to_promise.md')
         
         return prompts
     
@@ -331,7 +341,8 @@ Ensure the output is ONLY the JSON object."""
         chains['evidence_oic'] = self.prompts['evidence_oic'] | self.llm | JsonOutputParser()
         
         # Evidence-promise linking chains  
-        chains['evidence_linking'] = self._create_evidence_linking_template() | self.llm | JsonOutputParser()
+        chains['evidence_linking'] = self._create_evidence_linking_template() | self.linking_llm | JsonOutputParser()
+        chains['multi_promise_linking'] = self.prompts['multi_promise_linking'] | self.linking_llm | JsonOutputParser()
         
         return chains
     
@@ -422,6 +433,50 @@ Ensure the output is ONLY the JSON object."""
             logger.error(f"Error linking evidence to promise: {e}")
             return {'error': str(e)}
     
+    def link_evidence_to_multiple_promises(self, evidence_data: Dict[str, Any], promises_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Link a single evidence item to multiple promises using large-context LLM approach.
+        
+        Args:
+            evidence_data: The evidence item to analyze
+            promises_list: List of all promises to evaluate against
+            
+        Returns:
+            LLM analysis result with links found
+        """
+        try:
+            # Prepare evidence data
+            evidence_template_data = {
+                'evidence_source_type': evidence_data.get('evidence_source_type', 'Unknown'),
+                'evidence_date': evidence_data.get('evidence_date', evidence_data.get('date', 'Unknown')),
+                'evidence_title_or_summary': evidence_data.get('title_or_summary', evidence_data.get('title', '')),
+                'evidence_description_or_details': evidence_data.get('description_or_details', evidence_data.get('description', '')),
+                'parliament_session_id': evidence_data.get('parliament_session_id', 'Unknown')
+            }
+            
+            # Prepare promises data for template
+            promises_for_template = []
+            for promise in promises_list:
+                promises_for_template.append({
+                    "promise_id": promise.get('promise_id', promise.get('_doc_id', 'Unknown')),
+                    "text": promise.get('text', ''),
+                    "description": promise.get('description', ''),
+                    "background_and_context": promise.get('background_and_context', ''),
+                    "reporting_lead_title": promise.get('reporting_lead_title', '')
+                })
+            
+            # Combine template data
+            template_data = evidence_template_data.copy()
+            template_data['promises_json_list'] = json.dumps(promises_for_template, indent=2)
+            
+            # Invoke the multi-promise linking chain
+            result = self.chains['multi_promise_linking'].invoke(template_data)
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error linking evidence to multiple promises: {e}")
+            return {'error': str(e)}
+    
     def get_cost_summary(self) -> Dict[str, Any]:
         """Get cost and usage summary."""
         return {
@@ -460,4 +515,8 @@ def process_evidence_item(evidence_type: str, evidence_data: Dict[str, Any]) -> 
 
 def link_evidence_to_promise(evidence_data: Dict[str, Any], promise_data: Dict[str, Any]) -> Dict[str, Any]:
     """Convenience function for evidence-promise linking."""
-    return get_langchain_instance().link_evidence_to_promise(evidence_data, promise_data) 
+    return get_langchain_instance().link_evidence_to_promise(evidence_data, promise_data)
+
+def link_evidence_to_multiple_promises(evidence_data: Dict[str, Any], promises_list: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Convenience function for multi-promise evidence linking."""
+    return get_langchain_instance().link_evidence_to_multiple_promises(evidence_data, promises_list) 

@@ -1,0 +1,333 @@
+{
+  "input_evidence": {
+    "source_document_raw_id": "SI/2021-93",
+    "key_concepts": [
+      "Minister of Housing and Diversity and Inclusion",
+      "National Housing Strategy Act",
+      "ministerial designation",
+      "housing strategy",
+      "affordable housing"
+    ],
+    "source_url": "https://gazette.gc.ca/rp-pr/p2/2021/2021-11-10/html/si-tr93-eng.html",
+    "description_or_details": "This order formally designates the Minister of Housing and Diversity and Inclusion as the responsible minister for the National Housing Strategy Act, thereby clarifying the ministerial authority and accountability for the implementation of Canada's national housing plan.",
+    "evidence_source_type": "Regulation (Canada Gazette P2)",
+    "promise_ids": [
+      "LPC_20211216_MANDL_4be4ced2",
+      "LPC_20211216_MANDL_3903d4f5",
+      "LPC_20211216_MANDL_b1f13bf4"
+    ],
+    "linked_departments": [
+      "Minister of Housing and Diversity and Inclusion"
+    ],
+    "promise_linking_status": "pending",
+    "parliament_session_id": "44",
+    "additional_metadata": {
+      "raw_gazette_notice_id": "CGP2_20211110_3d11509808ef",
+      "rias_summary": ""
+    },
+    "potential_relevance_score": "High",
+    "evidence_date": "2021-11-10 14:00:00+00:00",
+    "evidence_id": "20211110_44_Gazette2_2e37d3d58d",
+    "llm_analysis_raw": {
+      "potential_relevance_score": "High",
+      "one_sentence_description": "This order formally designates the Minister of Housing and Diversity and Inclusion as the responsible minister for the National Housing Strategy Act, thereby clarifying the ministerial authority and accountability for the implementation of Canada's national housing plan.",
+      "key_concepts": [
+        "Minister of Housing and Diversity and Inclusion",
+        "National Housing Strategy Act",
+        "ministerial designation",
+        "housing strategy",
+        "affordable housing"
+      ],
+      "rias_summary": "",
+      "sponsoring_department_standardized": "Minister of Housing and Diversity and Inclusion",
+      "timeline_summary": "Minister of Housing and Diversity and Inclusion designated as the Minister for the National Housing Strategy Act."
+    },
+    "ingested_at": "2025-05-28 00:46:41.461025+00:00",
+    "title_or_summary": "Minister of Housing and Diversity and Inclusion designated as the Minister for the National Housing Strategy Act.",
+    "promise_linking_status_updated_at": "2025-06-01 20:41:41.848639+00:00",
+    "_doc_id": "20211110_44_Gazette2_2e37d3d58d"
+  },
+  "input_promises_sample": [
+    {
+      "promise_id": "LPC_20211216_MANDL_002f9cde",
+      "text": "Strengthen Canada's partnerhips with the United States.",
+      "description": "This commitment aims to enhance the multifaceted bilateral relationship between Canada and the United States, focusing on deeply integrated economic ties, trade, climate action, supply chain resilience, and security cooperation.",
+      "background_and_context": "The commitment to strengthen Canada's partnership with the United States is rooted in the fundamental importance of this relationship, recognized as Canada's most critical bilateral tie due to the longest undefended border and deeply integrated economies. Both Liberal platforms underscore that this partnership underpins shared prosperity and security. Key drivers for this commitment include addressing global challenges such as supply chain vulnerabilities, particularly evident during the pandemic, the urgency of climate action, and the need to counter rising protectionism to ensure fair market access for Canadian businesses. The commitment reflects a strategic imperative to collaborate on shared priorities like critical minerals, clean energy, and Arctic security, while continuously advocating for Canadian interests in an evolving global landscape.",
+      "reporting_lead_title": "",
+      "relevant_departments": [
+        "Global Affairs Canada",
+        "Finance Canada",
+        "National Defence",
+        "Artificial Intelligence and Digital Innovation",
+        "Public Safety Canada"
+      ],
+      "commitment_history_rationale": [
+        {
+          "date": "2020-03-20",
+          "source_url": "",
+          "action": "Prime Minister Justin Trudeau announced an agreement with the United States to temporarily close the Canada-U.S. border to non-essential travel, an unprecedented measure to curb the spread of COVID-19 that significantly impacted cross-border movement and economic activity."
+        },
+        {
+          "date": "2020-07-01",
+          "source_url": "",
+          "action": "The Canada-United States-Mexico Agreement (CUSMA/USMCA) officially entered into force, replacing NAFTA after years of renegotiation. This marked a new era for North American trade relations following a period of significant uncertainty and tension."
+        },
+        {
+          "date": "2021-02-23",
+          "source_url": "",
+          "action": "Prime Minister Justin Trudeau and U.S. President Joe Biden issued a joint statement, the 'Roadmap for a Renewed U.S.-Canada Partnership,' outlining shared priorities and a framework for cooperation on areas including COVID-19, climate change, economic recovery, and global security."
+        }
+      ],
+      "what_it_means_for_canadians": [
+        "Canadians will benefit from enhanced economic stability and growth due to smoother trade flows and more resilient supply chains, potentially leading to increased job opportunities and a wider availability of goods.",
+        "National security will be strengthened through coordinated efforts on border management, continental defense, and critical infrastructure protection, contributing to a safer and more secure environment for citizens.",
+        "Closer collaboration on climate action and clean energy initiatives could accelerate Canada's transition to a green economy, fostering innovation and creating new industries and jobs in sustainable sectors.",
+        "While beneficial, increased economic integration could also make Canada more susceptible to US economic downturns or protectionist policies, potentially impacting Canadian businesses and employment.",
+        "The commitment implies ongoing diplomatic engagement, which may involve navigating complex trade disputes or policy differences, potentially leading to temporary disruptions or adjustments for specific Canadian industries."
+      ],
+      "extracted_keywords_concepts": [
+        "Canada",
+        "United States",
+        "Bilateral Relationship",
+        "Economic Ties",
+        "Climate Action",
+        "Supply Chain Resilience",
+        "Security Cooperation",
+        "Critical Minerals",
+        "Clean Energy"
+      ],
+      "policy_areas": []
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_00b95752",
+      "text": "Develop a plan to phase out public financing of the fossil fuel sector.",
+      "description": "The commitment is to cease government financial support to the fossil fuel industry. \"Public financing\" refers to direct and indirect financial aid from federal government entities, including Crown corporations, to companies involved in oil, gas, and coal extraction, production, or transportation. This aims to shift investment away from carbon-intensive industries.",
+      "background_and_context": "This commitment arises from Canada's broader climate change agenda, including its commitment to achieving net-zero emissions by 2050 and the Paris Agreement. The Liberal platforms (2021 and 2025) explicitly state the urgency of tackling the climate crisis and building a clean economy. Public financing of fossil fuels is seen as counterproductive to these goals, as it can perpetuate reliance on high-carbon energy sources. The intent is to align federal investments with climate targets, shifting away from industries that contribute to greenhouse gas emissions towards a more sustainable and green future. This also relates to international efforts to phase out inefficient fossil fuel subsidies.",
+      "reporting_lead_title": "",
+      "relevant_departments": [
+        "Natural Resources Canada",
+        "Finance Canada",
+        "Environment and Climate Change Canada",
+        "Global Affairs Canada",
+        "Artificial Intelligence and Digital Innovation"
+      ],
+      "commitment_history_rationale": [
+        {
+          "date": "2009-09-25",
+          "source_url": "",
+          "action": "At the G20 Pittsburgh Summit, leaders, including Canada, committed to phase out inefficient fossil fuel subsidies over the medium term."
+        },
+        {
+          "date": "2015-06-08",
+          "source_url": "",
+          "action": "At the G7 Elmau Summit, leaders, including Canada, reiterated their commitment to eliminate inefficient fossil fuel subsidies and encouraged all countries to do so by 2025."
+        },
+        {
+          "date": "2016-12-09",
+          "source_url": "",
+          "action": "The Pan-Canadian Framework on Clean Growth and Climate Change, Canada's national climate plan, reiterated the commitment to phase out inefficient fossil fuel subsidies."
+        },
+        {
+          "date": "2020-11-19",
+          "source_url": "",
+          "action": "The Speech from the Throne formally committed the Government of Canada to legislate its goal of achieving net-zero emissions by 2050."
+        }
+      ],
+      "what_it_means_for_canadians": [
+        "Reduced government support for traditional energy sources could redirect public funds towards renewable energy projects and clean technologies, fostering innovation and new job opportunities in green sectors.",
+        "This transition might lead to shifts in employment, potentially challenging workers and communities heavily reliant on the fossil fuel industry, necessitating robust retraining and diversification programs.",
+        "Over time, it could contribute to improved air quality and reduced greenhouse gas emissions, aligning Canada with global climate goals and mitigating environmental impacts for future generations.",
+        "There could be concerns about energy security and affordability during the transition, as traditional energy supply chains are reconfigured and new, cleaner alternatives scale up.",
+        "This policy signals Canada's commitment to a global clean economy, potentially enhancing its international reputation and attracting foreign investment in sustainable industries."
+      ],
+      "extracted_keywords_concepts": [
+        "Public financing",
+        "Fossil fuel sector",
+        "Net-zero emissions",
+        "Paris Agreement",
+        "2050",
+        "Climate change agenda",
+        "Clean economy",
+        "Crown corporations"
+      ],
+      "policy_areas": []
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_025ac14d",
+      "text": "Provide grants of up to $5,000 for home retrofits through the Canada Greener Homes Grants Program.",
+      "description": "The Canada Greener Homes Grant offers homeowners up to $5,000 in financial support for energy-efficient home retrofits, such as improved insulation or updated heating systems, aiming to lower energy consumption and reduce greenhouse gas emissions from residential properties.",
+      "background_and_context": "The Canada Greener Homes Grant was a key component of the Liberal Party's 2021 platform, \"Forward For Everyone,\" specifically within the \"Fighting Climate Change and Building a Clean Economy\" section. It was developed to address the substantial greenhouse gas emissions from buildings in Canada and to provide tangible support for homeowners to contribute to climate action. The initiative also aimed to stimulate economic recovery and create jobs in the green sector following the COVID-19 pandemic. By encouraging energy-efficient renovations, the program aligns with broader goals of making homes more affordable to live in and more environmentally sustainable, directly supporting Canada's commitments to net-zero emissions.",
+      "reporting_lead_title": "",
+      "relevant_departments": [
+        "Natural Resources Canada"
+      ],
+      "commitment_history_rationale": [
+        {
+          "date": "2016-12-09",
+          "source_url": "",
+          "action": "The Pan-Canadian Framework on Clean Growth and Climate Change was released, outlining Canada's national climate change strategy, including commitments to improve energy efficiency in buildings and homes, setting the policy foundation for future retrofit programs."
+        },
+        {
+          "date": "2020-11-30",
+          "source_url": "",
+          "action": "The Fall Economic Statement 2020 announced the creation of the Canada Greener Homes Grant, committing $2.6 billion over seven years to help homeowners improve energy efficiency through retrofits."
+        },
+        {
+          "date": "2020-12-11",
+          "source_url": "",
+          "action": "The Government of Canada released 'A Healthy Environment and a Healthy Economy,' Canada's strengthened climate plan, which reiterated and provided further details on the Canada Greener Homes Grant as a key measure to help Canadians make their homes more energy efficient and reduce emissions."
+        }
+      ],
+      "what_it_means_for_canadians": [
+        "Canadians can save money on energy bills by making their homes more efficient, leading to long-term financial benefits and increased comfort through better insulation and updated systems.",
+        "The program helps reduce Canada's overall carbon footprint, allowing homeowners to directly contribute to environmental sustainability and the fight against climate change.",
+        "It fosters job growth and economic activity in the green construction and renovation sectors, supporting skilled trades and local businesses across the country.",
+        "Homeowners must navigate an application process, including energy assessments and selecting approved contractors, which can be time-consuming and require some upfront financial outlay before reimbursement."
+      ],
+      "extracted_keywords_concepts": [
+        "Canada Greener Homes Grants Program",
+        "grants",
+        "home retrofits",
+        "$5,000",
+        "homeowners",
+        "greenhouse gas emissions",
+        "climate action",
+        "Liberal Party"
+      ],
+      "policy_areas": []
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_02ba985f",
+      "text": "Introduce a Canada Disability Benefit Act.",
+      "description": "The commitment is to introduce the Canada Disability Benefit Act, establishing a new federal benefit, modelled after the Guaranteed Income Supplement, aimed at significantly reducing poverty among low-income working-age persons with disabilities across Canada.",
+      "background_and_context": "The commitment to introduce a Canada Disability Benefit Act stems from the recognized need to address the high rates of poverty among working-age persons with disabilities in Canada. Many individuals face significant barriers to employment and incur higher costs related to their disabilities, leading to financial precarity. The Liberal platform explicitly aims to lift hundreds of thousands out of poverty, acknowledging that existing support systems are often insufficient. By modelling the benefit after the Guaranteed Income Supplement for seniors, the government seeks to establish a robust, effective federal mechanism to provide income support, recognizing the call from disability advocates for a more comprehensive and equitable approach to financial assistance. This initiative aligns with broader goals of social inclusion and reducing income inequality.",
+      "reporting_lead_title": "",
+      "relevant_departments": [
+        "Employment and Social Development Canada",
+        "Justice Canada",
+        "Privy Council Office"
+      ],
+      "commitment_history_rationale": [
+        {
+          "date": "2019-06-21",
+          "source_url": "",
+          "action": "The Accessible Canada Act received Royal Assent, establishing a framework to identify, remove, and prevent barriers to accessibility in areas under federal jurisdiction. This landmark legislation set a new standard for disability inclusion and laid foundational groundwork for further initiatives addressing the needs of persons with disabilities."
+        },
+        {
+          "date": "2020-09-23",
+          "source_url": "",
+          "action": "The Speech from the Throne announced the government's intention to bring forward a new Disability Inclusion Plan, which would include a new Canada Disability Benefit, based on the Guaranteed Income Supplement model."
+        },
+        {
+          "date": "2021-04-19",
+          "source_url": "",
+          "action": "Budget 2021 committed $11.9 million over three years to Employment and Social Development Canada to undertake consultations and engagement activities with the disability community and other stakeholders on the design of a new Canada Disability Benefit, following up on the commitment made in the 2020 Speech from the Throne."
+        }
+      ],
+      "what_it_means_for_canadians": [
+        "Eligible low-income working-age Canadians with disabilities could receive direct financial assistance, significantly improving their economic security and ability to afford essential needs, reducing reliance on other programs.",
+        "This benefit aims to lift hundreds of thousands out of poverty, potentially leading to better housing, nutrition, and overall quality of life, fostering greater independence and dignity.",
+        "Implementation complexities might arise concerning provincial disability benefits, potentially leading to unintended benefit reductions or complex eligibility processes for some individuals, requiring careful coordination.",
+        "For the broader society, it signifies a step towards greater social equity and inclusion for persons with disabilities, acknowledging their unique financial challenges and promoting a more supportive social safety net."
+      ],
+      "extracted_keywords_concepts": [
+        "Canada Disability Benefit Act",
+        "Poverty",
+        "Working-age persons with disabilities",
+        "Guaranteed Income Supplement",
+        "Income support",
+        "Disability advocates",
+        "Canada"
+      ],
+      "policy_areas": []
+    },
+    {
+      "promise_id": "LPC_20211216_MANDL_02f46616",
+      "text": "Implement a new EI benefit for self-employed Canadians.",
+      "description": "This commitment involves establishing a new Employment Insurance (EI) benefit tailored for self-employed Canadians, aiming to provide them with temporary financial assistance during periods of unemployment, illness, or parental leave, similar to the support available for traditionally employed individuals.",
+      "background_and_context": "The 2021 Liberal platform, 'Forward For Everyone,' specifically committed to continuing engagement with workers and employers to ensure Employment Insurance (EI) is available for all Canadians, explicitly mentioning a new EI benefit for self-employed Canadians (page 39). This commitment arose from a recognition that the traditional EI system primarily serves salaried employees, leaving a significant portion of the workforce\u2014the self-employed\u2014without similar income support during periods of job loss, illness, or parental leave. The COVID-19 pandemic further highlighted this gap, as many self-employed individuals relied on emergency benefits due to the lack of a tailored EI program. The goal is to modernize EI to reflect the evolving nature of work and provide a more equitable social safety net, ensuring broader economic security.",
+      "reporting_lead_title": "",
+      "relevant_departments": [
+        "Employment and Social Development Canada",
+        "Canada Revenue Agency"
+      ],
+      "commitment_history_rationale": [
+        {
+          "date": "2020-03-25",
+          "source_url": "",
+          "action": "The Prime Minister announced the Canada Emergency Response Benefit (CERB) as part of Canada's COVID-19 Economic Response Plan. This temporary benefit provided income support to workers, including self-employed individuals, who lost income due to the pandemic, highlighting a gap in the existing EI system for this group."
+        },
+        {
+          "date": "2020-08-20",
+          "source_url": "",
+          "action": "The Government of Canada announced details of new income support benefits, including the Canada Recovery Benefit (CRB), to transition from the CERB. The CRB continued to provide temporary income support to self-employed individuals who were not eligible for Employment Insurance, further underscoring the need for a permanent solution."
+        },
+        {
+          "date": "2020-11-30",
+          "source_url": "",
+          "action": "The Fall Economic Statement 2020, 'Supporting Canadians and Fighting COVID-19,' explicitly stated the government's intention to explore options for self-employed individuals, including a potential permanent benefit, as part of broader Employment Insurance modernization efforts."
+        },
+        {
+          "date": "2021-04-19",
+          "source_url": "",
+          "action": "Budget 2021, 'A Recovery Plan for Jobs, Growth, and Resilience,' reiterated the government's commitment to engage with Canadians and businesses on modernizing the EI program, specifically mentioning the exploration of options for self-employed workers."
+        }
+      ],
+      "what_it_means_for_canadians": [
+        "Self-employed individuals could gain a crucial safety net, offering financial stability during unexpected downturns, illness, or parental leave, reducing their vulnerability compared to traditional employees.",
+        "This could encourage entrepreneurship by mitigating some of the financial risks associated with self-employment, potentially fostering small business growth and innovation across Canada.",
+        "Implementing this benefit would likely require new contributions from self-employed individuals, impacting their current income, and necessitate significant changes to the EI program's administrative structure.",
+        "Defining eligibility and benefit duration for self-employed individuals, whose income and work patterns are often irregular, might prove complex, potentially leading to administrative hurdles.",
+        "This benefit could help reduce income inequality between employed and self-employed populations, offering a more equitable social safety net and contributing to overall economic resilience."
+      ],
+      "extracted_keywords_concepts": [
+        "Employment Insurance",
+        "Self-employed Canadians",
+        "2021 Liberal platform",
+        "COVID-19 pandemic",
+        "Income support",
+        "Unemployment",
+        "Illness",
+        "Parental leave"
+      ],
+      "policy_areas": []
+    }
+  ],
+  "total_promises_count": 759,
+  "llm_response": {
+    "links": [],
+    "success": true,
+    "validation_results": {
+      "total_links_returned": 4,
+      "valid_links": 0,
+      "invalid_links": 4,
+      "invalid_link_details": [
+        {
+          "invalid_promise_id": "WGE-001",
+          "explanation": "The evidence announces funding for projects explicitly stated as part of the Federal LGBTQ2 Action Plan, directly advancing its implementation and goals of supporting community organizations and addressing discrimination.",
+          "score": 10
+        },
+        {
+          "invalid_promise_id": "WGE-002",
+          "explanation": "The announced $1.8 million for LGBTQ2 projects is a concrete disbursement from the $100 million committed over 5 years to fund community-led initiatives under the Federal LGBTQ2 Action Plan.",
+          "score": 10
+        },
+        {
+          "invalid_promise_id": "JUS-015",
+          "explanation": "The funding supports projects aimed at helping LGBTQI+ communities overcome hate, aligning with the promise's objective to combat hate and provide support to affected communities, though it doesn't address legislative aspects or direct Justice ministry action.",
+          "score": 7
+        },
+        {
+          "invalid_promise_id": "PCH-010",
+          "explanation": "The funding for projects supporting LGBTQI+ communities contributes to promoting diversity and inclusion by addressing barriers for a specific diverse community, aligning with the general intent of this promise, though primarily driven by WGE.",
+          "score": 6
+        }
+      ]
+    }
+  },
+  "processing_metadata": {
+    "llm_processing_time": 79.34293007850647,
+    "total_processing_time": 80.45867800712585,
+    "timestamp": "2025-06-01T21:22:17.492667+00:00"
+  }
+}

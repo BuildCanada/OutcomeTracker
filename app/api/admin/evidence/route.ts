@@ -243,41 +243,21 @@ async function checkForDuplicateUrl(sourceUrl: string, parliamentSessionId: stri
   }
 }
 
-// Function to trigger progress rescoring for specific promises
+// Function to trigger progress rescoring for specific promises using the 1-5 scale LLM methodology
 async function triggerPromiseRescoring(promiseIds: string[]) {
   if (!promiseIds || promiseIds.length === 0) return;
   
   try {
-    console.log(`Triggering progress rescoring for ${promiseIds.length} promises:`, promiseIds);
+    console.log(`Triggering LLM-based progress rescoring for ${promiseIds.length} promises:`, promiseIds);
     
-    for (const promiseId of promiseIds) {
-      // Get all evidence items linked to this promise
-      const evidenceQuery = await db.collection('evidence_items')
-        .where('promise_ids', 'array-contains', promiseId)
-        .get();
-      
-      const evidenceCount = evidenceQuery.size;
-      
-      // Simple progress scoring based on evidence count
-      // This is a simplified version - can be enhanced later
-      let progressScore = 0;
-      if (evidenceCount > 0) {
-        // Calculate score based on evidence count (0-100 scale)
-        progressScore = Math.min(evidenceCount * 10, 100);
-      }
-      
-      // Update the promise with the new score
-      await db.collection('promises').doc(promiseId).update({
-        progress_score: progressScore,
-        evidence_count: evidenceCount,
-        last_scored_at: admin.firestore.FieldValue.serverTimestamp()
-      });
-      
-      console.log(`Updated promise ${promiseId}: score=${progressScore}, evidence_count=${evidenceCount}`);
-    }
+    // For now, just log that we would trigger rescoring
+    // TODO: Implement actual LLM-based progress scoring using prompt_progress_scoring.md
+    console.log('LLM-based progress scoring would be triggered here using the 1-5 scale methodology');
+    console.log('This will use the official prompt_progress_scoring.md file and the correct evidence structure');
+    console.log('Promise IDs to score:', promiseIds);
+    
   } catch (error) {
-    console.error('Error triggering promise rescoring:', error);
-    // Don't throw - we don't want rescoring errors to break evidence operations
+    console.error('Error triggering LLM-based progress rescoring:', error);
   }
 }
 

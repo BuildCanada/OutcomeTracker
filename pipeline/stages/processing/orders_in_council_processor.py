@@ -1,28 +1,34 @@
 """
 Orders in Council Processor Job
 
-Processes raw Orders in Council into evidence items with regulatory analysis.
-This replaces the existing process_oic_to_evidence.py script with a more robust,
-class-based implementation.
+Processes raw Orders in Council into evidence items with LLM analysis.
+Uses the existing prompt_oic_evidence.md prompt for structured analysis.
 """
 
 import logging
 import sys
+import json
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
-import re
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Handle imports for both module execution and testing
 try:
     from .base_processor import BaseProcessorJob
     from ...config.evidence_source_types import get_standardized_source_type_for_processor
+    from ...lib.langchain_config import get_langchain_instance
 except ImportError:
     # Add pipeline directory to path for testing
     pipeline_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(pipeline_dir))
     from stages.processing.base_processor import BaseProcessorJob
     from config.evidence_source_types import get_standardized_source_type_for_processor
+    from lib.langchain_config import get_langchain_instance
+
+# Load environment variables
+load_dotenv()
 
 
 class OrdersInCouncilProcessor(BaseProcessorJob):
@@ -30,7 +36,7 @@ class OrdersInCouncilProcessor(BaseProcessorJob):
     Processing job for Orders in Council data.
     
     Transforms raw OIC data into structured evidence items
-    with analysis of regulatory actions and policy implementation.
+    with LLM analysis using the prompt_oic_evidence.md prompt.
     """
     
     def __init__(self, job_name: str, config: Dict[str, Any] = None):
@@ -38,384 +44,319 @@ class OrdersInCouncilProcessor(BaseProcessorJob):
         super().__init__(job_name, config)
         
         # Processing settings
-        self.min_content_length = self.config.get('min_content_length', 100)
-        self.extract_appointments = self.config.get('extract_appointments', True)
+        self.min_content_length = self.config.get('min_content_length', 50)
+        
+        # Load the OIC evidence prompt
+        self.prompt_template = self._load_prompt_template()
     
     def _get_source_collection(self) -> str:
         """Return the Firestore collection name for raw data"""
-        return "raw_orders_in_council"
+        return self.config.get('source_collection', "raw_orders_in_council")
     
     def _get_target_collection(self) -> str:
         """Return the Firestore collection name for evidence items"""
-        return "evidence_items"
+        return self.config.get('target_collection', "evidence_items")
+    
+    def _load_prompt_template(self) -> str:
+        """Load the OIC evidence prompt template"""
+        try:
+            prompt_path = Path(__file__).parent.parent.parent / "prompts" / "prompt_oic_evidence.md"
+            if prompt_path.exists():
+                return prompt_path.read_text()
+            else:
+                self.logger.warning("OIC prompt template not found, using fallback")
+                return self._get_fallback_prompt()
+        except Exception as e:
+            self.logger.error(f"Error loading prompt template: {e}")
+            return self._get_fallback_prompt()
+    
+    def _get_fallback_prompt(self) -> str:
+        """Fallback prompt if template file is not found"""
+        return """
+Analyze the following Order in Council and extract structured information:
+
+ORDER IN COUNCIL DATA:
+- OIC Number: {oic_number_full_raw}
+- OIC Date: {oic_date}
+- Title/Summary: {title_or_summary_raw}
+- Responsible Department: {responsible_department_raw}
+- Act Citation: {act_citation_raw}
+- Parliamentary Session: {parliament_session_id}
+
+FULL TEXT OF ORDER IN COUNCIL:
+{full_text_scraped}
+
+Please analyze this Order in Council and provide a JSON response with:
+1. timeline_summary: Brief factual summary (max 30 words)
+2. potential_relevance_score: High/Medium/Low relevance for government commitments
+3. key_concepts: Array of up to 10 keywords or phrases
+4. sponsoring_department_standardized: Primary responsible department
+5. one_sentence_description: Core purpose (30-50 words)
+
+Return ONLY valid JSON with these fields.
+        """
     
     def _process_raw_item(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
         Process a single raw OIC item into an evidence item.
         
         Args:
-            raw_item: Raw OIC item from scraping
+            raw_item: Raw OIC item from ingestion
             
         Returns:
             Evidence item ready for storage or None if processing failed
         """
         try:
             # Extract basic information
-            oic_number = raw_item.get('oic_number', '')
-            title = raw_item.get('title', '')
-            full_text = raw_item.get('full_text', '')
+            attach_id = raw_item.get('attach_id')
+            oic_number = raw_item.get('oic_number_full_raw', '')
+            raw_oic_id = raw_item.get('raw_oic_id', '')
+            title = raw_item.get('title_or_summary_raw', '')
+            full_text = raw_item.get('full_text_scraped', '')
             
             # Basic validation
-            if not oic_number and not title:
+            if not attach_id or (not oic_number and not title):
                 self.logger.warning(f"OIC missing required fields: {raw_item.get('_doc_id', 'unknown')}")
+                self._update_processing_status(raw_item, 'skipped_missing_data')
                 return None
             
             # Check content length
             if len(full_text) < self.min_content_length:
                 self.logger.debug(f"OIC content too short, skipping: {oic_number}")
+                self._update_processing_status(raw_item, 'skipped_insufficient_content')
                 return None
             
-            # Analyze OIC content
-            oic_analysis = self._analyze_oic_content(raw_item)
+            # Analyze OIC content with LLM
+            oic_analysis = self._analyze_oic_with_llm(raw_item)
             
-            # Create evidence item
-            evidence_item = {
-                # Core identification
-                'title_or_summary': title or f"Order in Council {oic_number}",
-                'description_or_details': self._extract_oic_description(raw_item),
-                'full_text': full_text,
-                'evidence_source_type': get_standardized_source_type_for_processor('orders_in_council'),
-                'source_url': raw_item.get('source_url', ''),
-                
-                # OIC-specific fields
-                'oic_number': oic_number,
-                'oic_number_normalized': raw_item.get('oic_number_normalized', ''),
-                'attach_id': raw_item.get('attach_id'),
-                
-                # Dates
-                'publication_date': raw_item.get('publication_date'),
-                'scraped_at': raw_item.get('scraped_at'),
-                
-                # Source metadata
-                'source_metadata': {
-                    'attach_id': raw_item.get('attach_id'),
-                    'source_url': raw_item.get('source_url', '')
-                },
-                
-                # Parliament context
-                'parliament_session_id': raw_item.get('parliament_session_id_assigned'),
-                
-                # Processing metadata
-                'evidence_type': 'regulatory_action',
-                'evidence_subtype': self._classify_oic_type(raw_item, oic_analysis),
-                'confidence_score': self._calculate_confidence_score(raw_item, oic_analysis),
-                'processing_notes': [],
-                
-                # OIC analysis results
-                'oic_analysis': oic_analysis,
-                
-                # Extracted fields
-                'topics': oic_analysis.get('topics', []),
-                'policy_areas': oic_analysis.get('policy_areas', []),
-                'departments': oic_analysis.get('departments', []),
-                'summary': oic_analysis.get('summary', ''),
-                
-                # Special extractions
-                'appointments': oic_analysis.get('appointments', []) if self.extract_appointments else [],
-                'regulatory_actions': oic_analysis.get('regulatory_actions', []),
-                
-                # Status tracking
-                'promise_linking_status': 'pending',
-                'created_at': datetime.now(timezone.utc),
-                'last_updated_at': datetime.now(timezone.utc)
-            }
+            if not oic_analysis:
+                self.logger.warning(f"Failed to analyze OIC {oic_number}")
+                self._update_processing_status(raw_item, 'error_processing_script')
+                return None
+            
+            # Create evidence item matching the existing structure
+            evidence_item = self._create_evidence_item(raw_item, oic_analysis)
+            
+            # Update processing status to indicate successful processing
+            self._update_processing_status(raw_item, 'evidence_created')
             
             return evidence_item
             
         except Exception as e:
-            self.logger.error(f"Error processing OIC {raw_item.get('_doc_id', 'unknown')}: {e}")
+            self.logger.error(f"Error processing OIC {raw_item.get('raw_oic_id', 'unknown')}: {e}")
+            self._update_processing_status(raw_item, 'error_processing_script')
             return None
     
-    def _analyze_oic_content(self, raw_item: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze OIC content to extract structured information"""
-        title = raw_item.get('title', '')
-        full_text = raw_item.get('full_text', '')
+    def _analyze_oic_with_llm(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Analyze OIC content using LLM with the OIC evidence prompt"""
+        try:
+            # Extract data for prompt
+            oic_number = raw_item.get('oic_number_full_raw', '')
+            oic_date = raw_item.get('oic_date')
+            title = raw_item.get('title_or_summary_raw', '')
+            full_text = raw_item.get('full_text_scraped', '')
+            source_url = raw_item.get('source_url_oic_detail_page', '')
+            parliament_session = raw_item.get('parliament_session_id_assigned', '')
+            responsible_dept = raw_item.get('responsible_department_raw', '')
+            act_citation = raw_item.get('act_citation_raw', '')
+            
+            # Format date for prompt
+            date_str = oic_date.strftime("%Y-%m-%d") if oic_date else "Unknown"
+            
+            # Fill in the prompt template
+            filled_prompt = self.prompt_template.format(
+                oic_number_full_raw=oic_number,
+                oic_date=date_str,
+                title_or_summary_raw=title,
+                responsible_department_raw=responsible_dept or "Not specified",
+                act_citation_raw=act_citation or "Not specified",
+                full_text_scraped=full_text[:3000] + ("..." if len(full_text) > 3000 else ""),
+                parliament_session_id=parliament_session
+            )
+            
+            # Debug logging
+            self.logger.debug(f"Full text length: {len(full_text)}")
+            self.logger.debug(f"Title: {title}")
+            self.logger.debug(f"OIC Number: {oic_number}")
+            self.logger.debug(f"Filled prompt length: {len(filled_prompt)}")
+            
+            # Get LLM instance and analyze
+            langchain_instance = get_langchain_instance()
+            if not langchain_instance:
+                self.logger.error("Could not get LangChain instance")
+                return None
+            
+            # Make LLM call
+            response = langchain_instance.llm.invoke(filled_prompt)
+            
+            # Parse JSON response
+            if hasattr(response, 'content'):
+                response_text = response.content
+            else:
+                response_text = str(response)
+            
+            # Extract JSON from response
+            json_start = response_text.find('{')
+            json_end = response_text.rfind('}') + 1
+            
+            if json_start >= 0 and json_end > json_start:
+                json_str = response_text[json_start:json_end]
+                analysis = json.loads(json_str)
+                
+                # Validate required fields
+                required_fields = ['timeline_summary', 'potential_relevance_score', 'key_concepts']
+                if all(field in analysis for field in required_fields):
+                    analysis['analysis_timestamp'] = datetime.now(timezone.utc)
+                    return analysis
+                else:
+                    self.logger.warning(f"LLM response missing required fields: {analysis}")
+                    return None
+            else:
+                self.logger.warning(f"Could not extract JSON from LLM response: {response_text[:200]}")
+                return None
+                
+        except Exception as e:
+            self.logger.error(f"Error in LLM analysis: {e}")
+            return None
+    
+    def _create_evidence_item(self, raw_item: Dict[str, Any], analysis: Dict[str, Any]) -> Dict[str, Any]:
+        """Create evidence item matching the existing structure"""
+        # Extract basic info
+        attach_id = raw_item.get('attach_id')
+        raw_oic_id = raw_item.get('raw_oic_id', '')
+        oic_number = raw_item.get('oic_number_full_raw', '')
+        title = raw_item.get('title_or_summary_raw', '')
+        full_text = raw_item.get('full_text_scraped', '')
+        oic_date = raw_item.get('oic_date')
+        source_url = raw_item.get('source_url_oic_detail_page', '')
+        parliament_session = raw_item.get('parliament_session_id_assigned', '')
+        ingested_at = raw_item.get('ingested_at')
         
-        # Combine text for analysis
-        text_content = f"{title} {full_text}"
+        # Generate evidence ID
+        evidence_id = self._generate_evidence_id(raw_item, oic_date)
         
-        analysis = {
-            'summary': self._generate_oic_summary(raw_item),
-            'topics': self._extract_oic_topics(text_content),
-            'policy_areas': self._extract_policy_areas(text_content),
-            'departments': self._extract_mentioned_departments(text_content),
-            'oic_type': self._determine_oic_type(text_content),
-            'urgency_level': self._assess_urgency_level(text_content),
-            'analysis_timestamp': datetime.now(timezone.utc)
+        # Create evidence item structure matching the sample
+        evidence_item = {
+            # Core identification (matching sample structure)
+            'evidence_id': evidence_id,
+            'attach_id': attach_id,
+            'raw_oic_document_id': raw_oic_id,
+            'source_document_raw_id': raw_oic_id,
+            
+            # Content fields
+            'title_or_summary': analysis.get('timeline_summary', title or f"Order in Council {oic_number}"),
+            'description_or_details': analysis.get('one_sentence_description', title or ''),
+            
+            # Source information
+            'evidence_source_type': 'OrderInCouncil (PCO)',
+            'source_url': source_url,
+            
+            # Dates
+            'evidence_date': oic_date,
+            'ingested_at': ingested_at,
+            
+            # LLM analysis results
+            'key_concepts': analysis.get('key_concepts', []),
+            'potential_relevance_score': analysis.get('potential_relevance_score', 'Low'),
+            'linked_departments': self._extract_departments_from_analysis(analysis),
+            
+            # Parliament context
+            'parliament_session_id': parliament_session,
+            
+            # Additional metadata
+            'additional_metadata': {
+                'oic_number_full_raw': oic_number,
+                'analysis_timestamp': analysis.get('analysis_timestamp')
+            },
+            
+            # Linking fields
+            'promise_ids': [],
+            'promise_linking_status': 'pending',
+            
+            # Timestamps
+            'created_at': datetime.now(timezone.utc),
+            'last_updated_at': datetime.now(timezone.utc)
         }
         
-        # Extract appointments if enabled
-        if self.extract_appointments:
-            analysis['appointments'] = self._extract_appointments(text_content)
-        
-        # Extract regulatory actions
-        analysis['regulatory_actions'] = self._extract_regulatory_actions(text_content)
-        
-        return analysis
+        return evidence_item
     
-    def _extract_oic_description(self, raw_item: Dict[str, Any]) -> str:
-        """Extract or generate OIC description"""
-        title = raw_item.get('title', '')
-        oic_number = raw_item.get('oic_number', '')
-        
-        if title and len(title) < 200:
-            return title
-        elif title:
-            return title[:200] + "..."
-        elif oic_number:
-            return f"Order in Council {oic_number}"
-        else:
-            return "Order in Council"
-    
-    def _generate_oic_summary(self, raw_item: Dict[str, Any]) -> str:
-        """Generate a summary for the OIC"""
-        oic_number = raw_item.get('oic_number', '')
-        title = raw_item.get('title', '')
-        pub_date = raw_item.get('publication_date')
-        
-        summary_parts = []
-        
-        if oic_number:
-            summary_parts.append(f"Order in Council {oic_number}")
-        
-        if pub_date:
-            date_str = pub_date.strftime("%B %d, %Y") if isinstance(pub_date, datetime) else str(pub_date)
-            summary_parts.append(f"published on {date_str}")
-        
-        if title:
-            summary_parts.append(f"regarding {title.lower()}")
-        
-        return ", ".join(summary_parts) + "."
-    
-    def _extract_oic_topics(self, text_content: str) -> list:
-        """Extract topics from OIC content"""
-        topic_keywords = {
-            'appointments': ['appoint', 'appointment', 'designate', 'nomination'],
-            'regulations': ['regulation', 'regulatory', 'rule', 'standard'],
-            'funding': ['funding', 'grant', 'contribution', 'financial assistance'],
-            'policy_implementation': ['implement', 'establish', 'create', 'authorize'],
-            'administrative': ['administrative', 'procedure', 'process', 'operation'],
-            'international': ['international', 'treaty', 'agreement', 'foreign'],
-            'emergency': ['emergency', 'urgent', 'immediate', 'crisis'],
-            'taxation': ['tax', 'taxation', 'duty', 'tariff', 'revenue'],
-            'healthcare': ['health', 'medical', 'healthcare', 'hospital'],
-            'environment': ['environment', 'environmental', 'climate', 'pollution'],
-            'transportation': ['transport', 'transportation', 'railway', 'aviation'],
-            'immigration': ['immigration', 'citizenship', 'refugee', 'visa'],
-            'defense': ['defense', 'defence', 'military', 'armed forces', 'security']
-        }
-        
-        text_lower = text_content.lower()
-        topics = []
-        
-        for topic, keywords in topic_keywords.items():
-            if any(keyword in text_lower for keyword in keywords):
-                topics.append(topic)
-        
-        return topics
-    
-    def _extract_policy_areas(self, text_content: str) -> list:
-        """Extract policy areas from OIC content"""
-        # For OICs, policy areas often align with topics
-        return self._extract_oic_topics(text_content)
-    
-    def _extract_mentioned_departments(self, text_content: str) -> list:
-        """Extract government departments mentioned in the OIC"""
-        department_patterns = [
-            'Health Canada',
-            'Transport Canada',
-            'Environment and Climate Change Canada',
-            'Immigration, Refugees and Citizenship Canada',
-            'Public Safety Canada',
-            'Global Affairs Canada',
-            'Innovation, Science and Economic Development Canada',
-            'Finance Canada',
-            'Justice Canada',
-            'Employment and Social Development Canada',
-            'Natural Resources Canada',
-            'Agriculture and Agri-Food Canada',
-            'Fisheries and Oceans Canada',
-            'Canadian Heritage',
-            'Indigenous Services Canada',
-            'Crown-Indigenous Relations and Northern Affairs Canada'
-        ]
-        
+    def _extract_departments_from_analysis(self, analysis: Dict[str, Any]) -> list:
+        """Extract department information from LLM analysis"""
         departments = []
-        text_lower = text_content.lower()
         
-        for dept in department_patterns:
-            if dept.lower() in text_lower:
-                departments.append(dept)
+        # Get standardized department from analysis
+        dept = analysis.get('sponsoring_department_standardized', '')
+        if dept and dept.strip():
+            departments.append(dept.strip())
         
         return departments
     
-    def _determine_oic_type(self, text_content: str) -> str:
-        """Determine the type of Order in Council"""
-        text_lower = text_content.lower()
-        
-        if any(word in text_lower for word in ['appoint', 'appointment', 'designate']):
-            return 'appointment'
-        elif any(word in text_lower for word in ['regulation', 'regulatory', 'rule']):
-            return 'regulatory'
-        elif any(word in text_lower for word in ['funding', 'grant', 'contribution']):
-            return 'funding'
-        elif any(word in text_lower for word in ['treaty', 'agreement', 'international']):
-            return 'international'
-        elif any(word in text_lower for word in ['emergency', 'urgent', 'immediate']):
-            return 'emergency'
+    def _generate_evidence_id(self, raw_item: Dict[str, Any], oic_date: datetime) -> str:
+        """Generate evidence ID matching the existing pattern"""
+        # Use pattern: YYYYMMDD_parliament_OIC_hash
+        if oic_date:
+            date_str = oic_date.strftime("%Y%m%d")
         else:
-            return 'administrative'
+            date_str = datetime.now().strftime("%Y%m%d")
+        
+        parliament_session = raw_item.get('parliament_session_id_assigned', 'XX')
+        raw_oic_id = raw_item.get('raw_oic_id', '')
+        
+        # Create hash from OIC identifier
+        import hashlib
+        hash_input = f"{raw_oic_id}_{raw_item.get('attach_id', '')}"
+        short_hash = hashlib.sha256(hash_input.encode()).hexdigest()[:10]
+        
+        return f"{date_str}_{parliament_session}_OIC_{short_hash}"
     
-    def _assess_urgency_level(self, text_content: str) -> str:
-        """Assess the urgency level of the OIC"""
-        text_lower = text_content.lower()
-        
-        if any(word in text_lower for word in ['emergency', 'urgent', 'immediate', 'crisis']):
-            return 'high'
-        elif any(word in text_lower for word in ['expedite', 'priority', 'important']):
-            return 'medium'
-        else:
-            return 'low'
-    
-    def _extract_appointments(self, text_content: str) -> list:
-        """Extract appointment information from OIC text"""
-        appointments = []
-        
-        # Simple pattern matching for appointments
-        # In practice, this would use more sophisticated NLP
-        
-        text_lower = text_content.lower()
-        
-        if 'appoint' in text_lower or 'appointment' in text_lower:
-            # Look for common appointment patterns
-            appointment_keywords = [
-                'chief executive officer', 'ceo', 'president', 'director',
-                'commissioner', 'chairperson', 'chair', 'member',
-                'judge', 'justice', 'minister', 'deputy minister'
-            ]
+    def _update_processing_status(self, raw_item: Dict[str, Any], status: str):
+        """Update the processing status of a raw OIC item"""
+        try:
+            doc_id = raw_item.get('_doc_id') or raw_item.get('raw_oic_id')
+            if not doc_id:
+                self.logger.error("Cannot update processing status: no document ID found")
+                return
             
-            for keyword in appointment_keywords:
-                if keyword in text_lower:
-                    appointments.append({
-                        'position_type': keyword,
-                        'context': 'appointment_mentioned'
-                    })
-        
-        return appointments
-    
-    def _extract_regulatory_actions(self, text_content: str) -> list:
-        """Extract regulatory actions from OIC text"""
-        actions = []
-        
-        text_lower = text_content.lower()
-        
-        action_keywords = {
-            'establish': 'establishment',
-            'create': 'creation',
-            'authorize': 'authorization',
-            'approve': 'approval',
-            'implement': 'implementation',
-            'amend': 'amendment',
-            'repeal': 'repeal',
-            'suspend': 'suspension'
-        }
-        
-        for keyword, action_type in action_keywords.items():
-            if keyword in text_lower:
-                actions.append({
-                    'action_type': action_type,
-                    'keyword': keyword
-                })
-        
-        return actions
-    
-    def _classify_oic_type(self, raw_item: Dict[str, Any], oic_analysis: Dict[str, Any]) -> str:
-        """Classify the type of regulatory action"""
-        oic_type = oic_analysis.get('oic_type', 'administrative')
-        
-        # Map OIC types to evidence subtypes
-        type_mapping = {
-            'appointment': 'government_appointment',
-            'regulatory': 'regulatory_implementation',
-            'funding': 'funding_authorization',
-            'international': 'international_agreement',
-            'emergency': 'emergency_measure',
-            'administrative': 'administrative_action'
-        }
-        
-        return type_mapping.get(oic_type, 'regulatory_action')
-    
-    def _calculate_confidence_score(self, raw_item: Dict[str, Any], 
-                                   oic_analysis: Dict[str, Any]) -> float:
-        """Calculate confidence score for the evidence item"""
-        confidence = 0.8  # Base confidence for OICs (official government documents)
-        
-        # Boost for complete OIC number
-        if raw_item.get('oic_number_normalized'):
-            confidence += 0.1
-        
-        # Boost for substantial content
-        full_text = raw_item.get('full_text', '')
-        if len(full_text) > 500:
-            confidence += 0.05
-        
-        # Boost for recent publication
-        pub_date = raw_item.get('publication_date')
-        if pub_date:
-            days_old = (datetime.now(timezone.utc) - pub_date).days
-            if days_old < 180:  # Within 6 months
-                confidence += 0.05
-        
-        return min(confidence, 1.0)
-    
-    def _generate_evidence_id(self, evidence_item: Dict[str, Any], 
-                             raw_item: Dict[str, Any]) -> str:
-        """Generate a unique ID for the evidence item"""
-        # Use normalized OIC number if available
-        oic_number_normalized = raw_item.get('oic_number_normalized', '')
-        if oic_number_normalized:
-            return f"oic_{oic_number_normalized}".replace('-', '_')
-        
-        # Use attach_id as fallback
-        attach_id = raw_item.get('attach_id')
-        if attach_id:
-            return f"oic_attach_{attach_id}"
-        
-        # Final fallback to source document ID
-        return f"oic_{raw_item.get('_doc_id', 'unknown')}"
+            collection_name = self._get_source_collection()
+            
+            # Prepare update data
+            update_data = {
+                'evidence_processing_status': status,
+                'last_updated_at': datetime.now(timezone.utc)
+            }
+            
+            # Add processed_at timestamp for successful processing
+            if status == 'evidence_created':
+                update_data['processed_at'] = datetime.now(timezone.utc)
+                
+                # Add LLM model name if available
+                llm_instance = get_langchain_instance()
+                if hasattr(llm_instance, 'model_name'):
+                    update_data['llm_model_name_last_attempt'] = llm_instance.model_name
+                elif hasattr(llm_instance, 'model'):
+                    update_data['llm_model_name_last_attempt'] = llm_instance.model
+                else:
+                    update_data['llm_model_name_last_attempt'] = 'unknown'
+            
+            self.db.collection(collection_name).document(doc_id).update(update_data)
+            self.logger.debug(f"Updated processing status for {doc_id} to {status}")
+            
+        except Exception as e:
+            self.logger.error(f"Failed to update processing status: {e}")
     
     def _should_update_evidence(self, existing_evidence: Dict[str, Any], 
                                new_evidence: Dict[str, Any]) -> bool:
         """Determine if existing evidence should be updated"""
         # Update if content has changed
-        content_fields = ['title_or_summary', 'full_text']
+        content_fields = ['title_or_summary', 'description_or_details']
         for field in content_fields:
             if existing_evidence.get(field) != new_evidence.get(field):
                 return True
         
         # Update if analysis has improved
-        existing_analysis = existing_evidence.get('oic_analysis', {})
-        new_analysis = new_evidence.get('oic_analysis', {})
+        existing_concepts = len(existing_evidence.get('key_concepts', []))
+        new_concepts = len(new_evidence.get('key_concepts', []))
+        if new_concepts > existing_concepts:
+            return True
         
-        # Check if new analysis has more extracted information
-        for field in ['appointments', 'regulatory_actions', 'departments']:
-            existing_count = len(existing_analysis.get(field, []))
-            new_count = len(new_analysis.get(field, []))
-            if new_count > existing_count:
-                return True
-        
-        return False
-    
-    def _get_evidence_id_source_type(self) -> str:
-        """Get the source type identifier for evidence ID generation"""
-        return 'OrdersInCouncil' 
+        return False 

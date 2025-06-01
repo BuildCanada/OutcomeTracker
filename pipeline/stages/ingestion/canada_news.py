@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from urllib.parse import urljoin, urlparse
 from pathlib import Path
+from bs4 import BeautifulSoup
 
 # Handle imports for both module execution and testing
 try:
@@ -151,8 +152,22 @@ class CanadaNewsIngestion(BaseIngestionJob):
                         'raw_entry': dict(entry)  # Store full entry for debugging
                     }
                     
+                    # Extract full text content from the article URL
+                    full_text = self._extract_full_text(item['source_url'])
+                    if full_text:
+                        item['full_text'] = full_text
+                    
                     # Only include items with required fields
                     if item['title'] and item['source_url']:
+                        # Add category filtering (critical missing feature from deprecated script)
+                        categories_rss = item.get('tags', [])
+                        if categories_rss:
+                            parsed_categories_lower = [cat.lower() for cat in categories_rss]
+                            target_categories = {"backgrounders", "statements", "speeches"}
+                            if not any(cat_lower in target_categories for cat_lower in parsed_categories_lower):
+                                self.logger.debug(f"Skipping item due to category filter. Categories: {categories_rss}. URL: {item['source_url']}")
+                                continue
+                        
                         items.append(item)
                     else:
                         self.logger.warning(f"Skipping item with missing title or URL: {entry.get('id', 'unknown')}")
@@ -261,6 +276,85 @@ class CanadaNewsIngestion(BaseIngestionJob):
         self.logger.warning(f"Could not parse publication date for entry: {entry.get('id', 'unknown')}")
         return None
     
+    def _extract_full_text(self, url: str) -> Optional[str]:
+        """
+        Extract full text content from a news article URL using BeautifulSoup.
+        
+        Args:
+            url: URL of the news article
+            
+        Returns:
+            Extracted full text content or None if extraction fails
+        """
+        if not url:
+            return None
+            
+        try:
+            self.logger.debug(f"Extracting full text from: {url}")
+            
+            # Make request with same headers and timeout as RSS requests
+            response = self._make_request(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Remove script and style elements
+            for script in soup(["script", "style", "nav", "header", "footer"]):
+                script.decompose()
+            
+            # Try Canada.ca specific selector first (from deprecated script)
+            main_content = soup.find('main', attrs={'property': 'mainContentOfPage'})
+            
+            if main_content:
+                # Canada.ca specific extraction
+                text = main_content.get_text(separator='\n', strip=True)
+                self.logger.debug(f"Successfully extracted main content using Canada.ca selector")
+            else:
+                # Fallback to generic content selectors
+                content_selectors = [
+                    'main',
+                    '.content', 
+                    '.article-content',
+                    '.news-content',
+                    '#content',
+                    '.main-content'
+                ]
+                
+                for selector in content_selectors:
+                    main_content = soup.select_one(selector)
+                    if main_content:
+                        break
+                
+                # If no main content area found, use the whole body
+                if not main_content:
+                    main_content = soup.find('body') or soup
+                
+                # Extract text from paragraphs and other text elements
+                text_elements = main_content.find_all(['p', 'div', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                
+                # Get text content and clean it up
+                text_parts = []
+                for element in text_elements:
+                    element_text = element.get_text().strip()
+                    if element_text and len(element_text) > 10:  # Filter out very short text snippets
+                        text_parts.append(element_text)
+                
+                text = ' '.join(text_parts)
+            
+            # Clean up whitespace
+            lines = (line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            cleaned_text = ' '.join(chunk for chunk in chunks if chunk)
+            
+            if cleaned_text and len(cleaned_text) > 100:  # Ensure we got meaningful content
+                self.logger.debug(f"Successfully extracted {len(cleaned_text)} characters of text")
+                return cleaned_text
+            else:
+                self.logger.warning(f"Extracted text too short or empty for URL: {url}")
+                return None
+                
+        except Exception as e:
+            self.logger.warning(f"Failed to extract full text from {url}: {e}")
+            return None
+    
     def _process_raw_item(self, raw_item: Dict[str, Any]) -> Dict[str, Any]:
         """
         Process a single raw RSS item into standardized format.
@@ -277,28 +371,34 @@ class CanadaNewsIngestion(BaseIngestionJob):
         # Determine parliament session ID based on publication date
         parliament_session_id = self._get_parliament_session_id(raw_item['publication_date'])
         
+        # Generate the document ID
+        doc_id = self._generate_item_id(raw_item)
+        
         processed_item = {
-            # Core fields
-            'title': raw_item['title'],
-            'description': raw_item['description'],
+            # Core fields (using production field names)
+            'title_raw': raw_item['title'],
+            'summary_or_snippet_raw': raw_item['description'],
             'source_url': raw_item['source_url'],
             'publication_date': raw_item['publication_date'],
+            'full_text_scraped': raw_item.get('full_text', ''),  # Use production field name
             
-            # Metadata
+            # Metadata (using production field names)
             'department_rss': department,
-            'feed_name': raw_item['feed_name'],
-            'feed_url': raw_item['feed_url'],
+            'source_feed_name': raw_item['feed_name'],  # Use production field name
+            'rss_feed_url_used': raw_item['feed_url'],  # Use production field name
+            'source_feed': 'canada_news_api',  # Add missing field
             'parliament_session_id_assigned': parliament_session_id,
             
             # Processing status
             'evidence_processing_status': 'pending_evidence_creation',
             
-            # Additional fields
-            'guid': raw_item.get('guid', ''),
-            'author': raw_item.get('author', ''),
-            'tags': raw_item.get('tags', []),
+            # Additional fields (using production field names)
+            'raw_item_id': doc_id,  # Add missing field - document ID reference
+            'categories_rss': raw_item.get('tags', []),  # Use production field name
+            'content_type': raw_item['feed_name'],  # Add missing field - map from feed name
             
             # Timestamps
+            'ingested_at': datetime.now(timezone.utc),
             'last_updated_at': datetime.now(timezone.utc)
         }
         
@@ -348,51 +448,56 @@ class CanadaNewsIngestion(BaseIngestionJob):
             publication_date: Publication date of the news item
             
         Returns:
-            Parliament session ID or None
+            Parliament session ID (format: "44", "45", etc.)
         """
         if not publication_date:
             return None
         
-        # Simple logic - can be enhanced with actual session data
+        # Return only the parliament number, not the subsession
         if publication_date.year >= 2025:
-            return "45-1"  # 45th Parliament, 1st Session
+            return "45"  # 45th Parliament
         elif publication_date.year >= 2021:
-            return "44-1"  # 44th Parliament, 1st Session
+            return "44"  # 44th Parliament
         elif publication_date.year >= 2019:
-            return "43-2"  # 43rd Parliament, 2nd Session
+            return "43"  # 43rd Parliament
         else:
-            return "43-1"  # 43rd Parliament, 1st Session
+            return "42"  # 42nd Parliament
     
     def _generate_item_id(self, item: Dict[str, Any]) -> str:
         """
-        Generate a unique ID for the news item.
+        Generate a unique ID for the news item following the pattern: YYYYMMDD_CANADANEWS_{hash}
         
         Args:
             item: Processed news item
             
         Returns:
-            Unique item ID
+            Unique item ID following production naming convention
         """
         import hashlib
         
-        # Use URL as primary identifier
-        url = item.get('source_url', '')
-        if url:
-            # Extract meaningful part of URL for ID
-            parsed_url = urlparse(url)
-            path_parts = parsed_url.path.strip('/').split('/')
-            
-            # Use last part of path if it looks like an ID
-            if path_parts and path_parts[-1]:
-                url_id = path_parts[-1]
-                # Remove file extensions
-                if '.' in url_id:
-                    url_id = url_id.split('.')[0]
-                return url_id
+        # Get publication date for date prefix
+        pub_date = item.get('publication_date')
+        if pub_date:
+            date_prefix = pub_date.strftime('%Y%m%d')
+        else:
+            date_prefix = datetime.now(timezone.utc).strftime('%Y%m%d')
         
-        # Fallback to hash of URL + title
-        id_source = f"{url}_{item.get('title', '')}"
-        return hashlib.sha256(id_source.encode()).hexdigest()[:16]
+        # Create hash from URL + title for uniqueness
+        url = item.get('source_url', '')
+        title = item.get('title', '')
+        guid = item.get('guid', '')
+        
+        # Use GUID first if available, otherwise URL + title
+        if guid:
+            hash_source = guid
+        else:
+            hash_source = f"{url}_{title}"
+        
+        # Generate short hash (12 characters like in production)
+        short_hash = hashlib.sha256(hash_source.encode()).hexdigest()[:12]
+        
+        # Return in format: YYYYMMDD_CANADANEWS_{hash}
+        return f"{date_prefix}_CANADANEWS_{short_hash}"
     
     def _should_update_item(self, existing_item: Dict[str, Any], 
                            new_item: Dict[str, Any]) -> bool:

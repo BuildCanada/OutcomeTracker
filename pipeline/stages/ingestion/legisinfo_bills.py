@@ -34,6 +34,12 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
     
     def __init__(self, job_name: str, config: Dict[str, Any] = None):
         """Initialize the LEGISinfo Bills ingestion job"""
+        # Set config first so we can access override before super().__init__()
+        self.config = config or {}
+        
+        # Allow test collection override
+        self._collection_name_override = self.config.get('collection_name')
+        
         super().__init__(job_name, config)
         
         # API endpoints
@@ -47,6 +53,7 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
         
         # Processing settings
         self.min_parliament = self.config.get('min_parliament', 44)  # Start from Parliament 44
+        self.max_parliament = self.config.get('max_parliament', None)  # Optional upper bound
         self.max_bills_per_run = self.config.get('max_bills_per_run', None)
     
     def _get_source_name(self) -> str:
@@ -55,7 +62,7 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
     
     def _get_collection_name(self) -> str:
         """Return the Firestore collection name for raw data"""
-        return "raw_legisinfo_bill_details"
+        return self._collection_name_override or "raw_legisinfo_bill_details"
     
     def _fetch_new_items(self, since_date: datetime = None) -> List[Dict[str, Any]]:
         """
@@ -177,21 +184,39 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
                     raise
     
     def _filter_bills_by_parliament(self, bills: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Filter bills by minimum parliament number"""
+        """Filter bills by parliament number range"""
         filtered_bills = []
         excluded_count = 0
         
         for bill in bills:
             parliament_num = bill.get('ParliamentNumber')
-            if parliament_num and int(parliament_num) >= self.min_parliament:
+            if parliament_num:
+                parliament_num = int(parliament_num)
+                
+                # Check minimum parliament
+                if parliament_num < self.min_parliament:
+                    excluded_count += 1
+                    continue
+                
+                # Check maximum parliament if specified
+                if self.max_parliament is not None and parliament_num > self.max_parliament:
+                    excluded_count += 1
+                    continue
+                
                 filtered_bills.append(bill)
             else:
                 excluded_count += 1
         
         if excluded_count > 0:
-            self.logger.info(f"Excluded {excluded_count} bills from parliaments < {self.min_parliament}")
+            parliament_range = f"{self.min_parliament}"
+            if self.max_parliament:
+                parliament_range += f"-{self.max_parliament}"
+            else:
+                parliament_range += "+"
+            self.logger.info(f"Excluded {excluded_count} bills outside parliament range {parliament_range}")
         
-        self.logger.info(f"Filtered to {len(filtered_bills)} bills from parliament {self.min_parliament}+")
+        self.logger.info(f"Filtered to {len(filtered_bills)} bills from parliament {self.min_parliament}" + 
+                        (f"-{self.max_parliament}" if self.max_parliament else "+"))
         return filtered_bills
     
     def _filter_bills_by_date(self, bills: List[Dict[str, Any]], since_date: datetime) -> List[Dict[str, Any]]:
@@ -232,7 +257,8 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
     
     def _process_raw_item(self, raw_item: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Process a single raw bill item into standardized format.
+        Process a single raw bill item into standardized format that matches
+        the existing Parliament 44 bill structure.
         
         Args:
             raw_item: Raw bill item with list and detail data
@@ -243,55 +269,72 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
         bill_list_data = raw_item['bill_list_data']
         bill_details_data = raw_item['bill_details_data']
         
+        # Handle case where bill_details_data is a list (API returns list containing one dict)
+        if isinstance(bill_details_data, list) and len(bill_details_data) > 0:
+            bill_details_data = bill_details_data[0]
+        elif isinstance(bill_details_data, list) and len(bill_details_data) == 0:
+            self.logger.warning("Empty bill_details_data list received")
+            bill_details_data = {}
+        
         # Extract key information
         parliament_num = bill_list_data.get('ParliamentNumber')
         session_num = bill_list_data.get('SessionNumber')
         bill_code = bill_list_data.get('BillNumberFormatted', '')
         
-        # Create human-readable ID
-        human_readable_id = f"{parliament_num}-{session_num}_{bill_code}"
+        # Create parliament session ID (format: "44-1")
+        parliament_session_id = f"{parliament_num}-{session_num}"
         
         # Parse dates
         latest_activity = self._parse_legisinfo_datetime(bill_list_data.get('LatestActivityDateTime'))
         
+        # Extract ID from bill details
+        parl_id = str(bill_details_data.get('Id', ''))
+        
+        # Create source URL
+        source_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session_id}/{bill_code}/json?view=details"
+        
+        # Store raw JSON content as string (matching Parliament 44 format)
+        raw_json_content = json.dumps([bill_details_data]) if bill_details_data else "[]"
+        
+        # Use existing Parliament 44 field structure
         processed_item = {
-            # Core identification
-            'human_readable_id': human_readable_id,
-            'parliament_number': parliament_num,
-            'session_number': session_num,
-            'bill_number_formatted': bill_code,
+            # Core identification (matching Parliament 44 format)
+            'bill_number_code_feed': bill_code,
+            'parl_id': parl_id,
+            'parliament_session_id': parliament_session_id,
             
-            # Basic information
-            'title': bill_details_data.get('LongTitle', {}).get('Title', ''),
-            'short_title': bill_details_data.get('ShortTitle', {}).get('Title', ''),
-            'bill_type': bill_list_data.get('BillType', ''),
-            'status': bill_list_data.get('Status', ''),
+            # Store raw JSON as string (like Parliament 44)
+            'raw_json_content': raw_json_content,
+            'source_detailed_json_url': source_url,
             
             # Dates
-            'latest_activity_datetime': latest_activity,
-            'introduction_date': self._parse_legisinfo_datetime(
-                bill_list_data.get('IntroductionDateTime')
-            ),
+            'ingested_at': latest_activity,
             
-            # Sponsor information
-            'sponsor_name': bill_list_data.get('SponsorName', ''),
-            'sponsor_affiliation': bill_list_data.get('SponsorAffiliation', ''),
+            # Processing status (matching Parliament 44 format)
+            'processing_status': 'pending_processing',
             
-            # Raw data
-            'bill_list_json': bill_list_data,
-            'bill_details_json': bill_details_data,
-            
-            # Processing metadata
-            'evidence_processing_status': 'pending_evidence_creation',
+            # Metadata
             'fetch_timestamp': raw_item['fetch_timestamp'],
             'last_updated_at': datetime.now(timezone.utc)
         }
         
         return processed_item
     
+    def _clean_html_text(self, html_text: str) -> str:
+        """Clean HTML tags from text"""
+        if not html_text:
+            return ""
+        
+        import re
+        # Replace <br> with newline
+        cleaned = re.sub(r'<br\s*/?>', '\n', html_text)
+        # Strip other HTML tags
+        cleaned = re.sub(r'<[^>]+>', '', cleaned).strip()
+        return cleaned
+    
     def _generate_item_id(self, item: Dict[str, Any]) -> str:
         """
-        Generate a unique ID for the bill item.
+        Generate a unique ID for the bill item using the same pattern as Parliament 44.
         
         Args:
             item: Processed bill item
@@ -299,8 +342,15 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
         Returns:
             Unique item ID
         """
-        # Use human-readable ID as the document ID
-        return item.get('human_readable_id', '')
+        # Use format: {parliament_session_id}_{bill_code} (like "44-1_C-1")
+        parliament_session = item.get('parliament_session_id', '')
+        bill_code = item.get('bill_number_code_feed', '')
+        
+        if parliament_session and bill_code:
+            return f"{parliament_session}_{bill_code}"
+        
+        # Fallback to parl_id if available
+        return item.get('parl_id', f"bill_{item.get('fetch_timestamp', '')}")
     
     def _should_update_item(self, existing_item: Dict[str, Any], 
                            new_item: Dict[str, Any]) -> bool:
@@ -315,13 +365,13 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
             True if item should be updated
         """
         # Always update if processing status allows it
-        status = existing_item.get('evidence_processing_status', '')
-        if status in ['pending_evidence_creation', 'error_processing_script']:
+        status = existing_item.get('processing_status', '')
+        if status == 'error_processing_script':
             return True
         
         # Check if latest activity date has changed
-        existing_activity = existing_item.get('latest_activity_datetime')
-        new_activity = new_item.get('latest_activity_datetime')
+        existing_activity = existing_item.get('ingested_at')
+        new_activity = new_item.get('ingested_at')
         
         if existing_activity != new_activity:
             return True
