@@ -1,17 +1,11 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
-import clsx from "clsx";
 import { SessionProvider } from "@/context/SessionContext";
 import { Toaster } from "@/components/ui/toaster";
-import Link from "next/link";
-import Image from "next/image";
-import "./globals.css";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
-
-const inter = Inter({ subsets: ["latin"] });
+import Script from "next/script";
 
 // SVG for the emoji favicon: 🏗️🇨🇦 using separate text elements, further reduced font
 // and Unicode escape for the Canadian flag emoji.
@@ -99,6 +93,17 @@ export default function RootLayout({
         </div>
         <Toaster />
         <SimpleAnalytics />
+        <Script src="https://frenglish.ai/frenglish.bundle.js" strategy="beforeInteractive" />
+        <Script id="frenglish-init" strategy="afterInteractive">
+          {`
+            window.frenglishSettings = {
+              api_key: '26da1b6f351b6c9f2624c39b125322ac'
+            };
+            if (window.Frenglish) {
+              window.Frenglish.initialize(window.frenglishSettings);
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
