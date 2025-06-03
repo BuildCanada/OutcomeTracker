@@ -202,7 +202,7 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
     filledBars = 2;
     impactLevelLabel = "Medium Impact";
   } else if (
-    impactRankStr === "low" ||
+    impactRankStr === "weak" ||
     (impactRankNum > 0 && impactRankNum < 5)
   ) {
     filledBars = 1;

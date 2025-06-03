@@ -253,6 +253,17 @@ const DEPARTMENT_METRICS: Record<
         targetSourceUrl: "",
         brendanStatus: "",
       },
+      {
+        metric: "Total Federal Physician Supply",
+        definition: "Total number of physicians in Canada",
+        target2029: "",
+        dataSource: "CIHI",
+        dataSourceUrl:
+          "https://www.cihi.ca/en/access-data-and-reports/data-tables",
+        targetSource: "",
+        targetSourceUrl: "",
+        brendanStatus: "",
+      },
     ],
   },
   "transport-canada": {
@@ -513,10 +524,10 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
           </div>
           <div className="col-span-1">
             <ChartWithSource
-              dataSource={departmentData.metrics[0].dataSource}
-              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
-              targetSource={departmentData.metrics[0].targetSource}
-              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+              dataSource={departmentData.metrics[1].dataSource}
+              dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
+              targetSource={departmentData.metrics[1].targetSource}
+              targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
             >
               <FederalPhysicianSupplyChart
                 title="Total Federal Physician Supply"
