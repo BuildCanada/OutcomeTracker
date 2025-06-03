@@ -93,7 +93,7 @@ export default function LabourProductivityGrowthChart({
     : [];
 
   // Format dates for display
-  const labels = filteredData.map((dataPoint: [string, number]) => {
+  let labels = filteredData.map((dataPoint: [string, number]) => {
     const dateStr = dataPoint[0];
     if (quarterlyData) {
       const [year, month] = dateStr.split("-");
@@ -105,10 +105,15 @@ export default function LabourProductivityGrowthChart({
     }
   });
 
+  // Align labels and data arrays to start from first valid growth rate (index 4)
+  labels = labels.slice(4);
+  const alignedGrowthRates = growthRates.slice(4);
+  const alignedProductivityValues = showProductivityIndex ? productivityValues.slice(4) : [];
+
   const datasets: ChartDataset[] = [
     {
       label: "YoY Growth Rate (%)",
-      data: growthRates,
+      data: alignedGrowthRates,
       borderColor: "rgb(53, 162, 235)",
       backgroundColor: "rgba(53, 162, 235, 0.5)",
       tension: 0.3,
@@ -120,7 +125,7 @@ export default function LabourProductivityGrowthChart({
   if (showProductivityIndex) {
     datasets.push({
       label: "Productivity Index",
-      data: productivityValues,
+      data: alignedProductivityValues,
       borderColor: "rgb(156, 163, 175)",
       backgroundColor: "rgba(156, 163, 175, 0.5)",
       tension: 0.3,
