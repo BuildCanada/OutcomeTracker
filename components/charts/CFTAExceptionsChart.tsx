@@ -125,9 +125,24 @@ export default function CFTAExceptionsChart({
     };
   });
 
+  // Add target line dataset
+  const targetDataset = {
+    label: "Target (0 exceptions)",
+    data: years.map(() => 0),
+    borderColor: "rgba(255, 0, 0, 0.8)",
+    backgroundColor: "rgba(255, 99, 132, 0.3)",
+    borderWidth: 2,
+    borderDash: [5, 5],
+    fill: false,
+    pointRadius: 0,
+    tension: 0,
+    stack: "target",
+    order: 99,
+  };
+
   const chartData = {
     labels: years,
-    datasets,
+    datasets: [...datasets, targetDataset],
   };
 
   const options: any = {

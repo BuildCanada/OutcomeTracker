@@ -25,7 +25,14 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
           <div>
             <h3 className="text-lg font-semibold mb-2">Where do commitments come from?</h3>
             <p className="text-gray-700">
-              We have pulled commitments from the Liberal Party's platform. We show the original text of the commitment and its source in each commitment's details. As new commitments are made we will add these in.
+              We have pulled commitments from the Liberal Party's platform. We show the original text and the source in each commitment's details. As new commitments are made,we will add these in.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Where do metrics and targets come from?</h3>
+            <p className="text-gray-700">
+              In cases where the Liberal Party has provided a metric and/or target, we use that. In other cases, we set a metric based on the policy's intention. In each graph, we show where the target source comes from.
             </p>
           </div>
 
@@ -44,7 +51,7 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-2">How can I get in contact with you?</h3>
+            <h3 className="text-lg font-semibold mb-2">How can I get in touch?</h3>
             <p className="text-gray-700">
               You can reach out to us at <a href="mailto:hi@buildcanada.com">hi@buildcanada.com</a>
             </p>
