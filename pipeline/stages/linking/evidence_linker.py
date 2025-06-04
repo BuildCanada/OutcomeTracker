@@ -562,4 +562,99 @@ class EvidenceLinker(BaseJob):
             'trigger_time': datetime.now(timezone.utc).isoformat(),
             'linking_method': 'hybrid_semantic_llm',
             'optimizations_used': result.metadata.get('optimizations', {})
-        } 
+        }
+
+if __name__ == "__main__":
+    import argparse
+    import logging
+    
+    # Optionally load environment variables for local development
+    # This won't break Cloud Run if python-dotenv isn't available
+    try:
+        from dotenv import load_dotenv
+        # Go up to the PromiseTracker directory (4 levels from pipeline/stages/linking/)
+        env_path = Path(__file__).resolve().parent.parent.parent.parent / '.env'
+        load_dotenv(env_path)
+        print(f"📋 Loaded environment from: {env_path}")
+    except ImportError:
+        print("📋 python-dotenv not available, skipping .env file loading")
+    except Exception as e:
+        print(f"📋 Could not load .env file: {e}")
+    
+    # Setup logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+    )
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Hybrid Evidence Linker for Promise Tracker')
+    parser.add_argument('--parliament_session_id', type=str, default='44',
+                        help='Parliament session ID to process (default: 44)')
+    parser.add_argument('--limit', type=int, default=100,
+                        help='Maximum number of evidence items to process (default: 100)')
+    parser.add_argument('--validation_threshold', type=float, default=0.5,
+                        help='LLM validation confidence threshold (default: 0.5)')
+    parser.add_argument('--semantic_threshold', type=float, default=0.45,
+                        help='Semantic similarity threshold (default: 0.45)')
+    parser.add_argument('--batch_size', type=int, default=10,
+                        help='Batch size for processing (default: 10)')
+    parser.add_argument('--dry_run', action='store_true',
+                        help='Run without making database updates')
+    
+    args = parser.parse_args()
+    
+    print(f"🔗 Starting Hybrid Evidence Linker")
+    print(f"Parliament Session: {args.parliament_session_id}")
+    print(f"Max Items: {args.limit}")
+    print(f"Validation Threshold: {args.validation_threshold}")
+    print(f"Semantic Threshold: {args.semantic_threshold}")
+    print(f"Batch Size: {args.batch_size}")
+    print(f"Dry Run: {args.dry_run}")
+    print("-" * 60)
+    
+    try:
+        # Create job configuration
+        config = {
+            'batch_size': args.batch_size,
+            'max_items_per_run': args.limit,
+            'semantic_threshold': args.semantic_threshold,
+            'llm_validation_threshold': args.validation_threshold,
+            'dry_run': args.dry_run
+        }
+        
+        # Initialize and run the evidence linker
+        linker = EvidenceLinker("hybrid_evidence_linker", config)
+        
+        # Execute the job
+        result = linker.execute(
+            parliament_session_id=args.parliament_session_id,
+            limit=args.limit,
+            validation_threshold=args.validation_threshold
+        )
+        
+        # Print results
+        print("\n" + "=" * 60)
+        print("🎉 Evidence Linking Complete!")
+        print(f"Status: {result.status.value}")
+        print(f"Duration: {result.duration_seconds:.2f} seconds")
+        print(f"Items Processed: {result.items_processed}")
+        print(f"Items Updated: {result.items_updated}")
+        print(f"Items Skipped: {result.items_skipped}")
+        print(f"Errors: {result.errors}")
+        
+        if result.metadata:
+            optimizations = result.metadata.get('optimizations', {})
+            print(f"\nOptimizations:")
+            print(f"  Bill Linking Bypasses: {optimizations.get('bill_linking_bypasses', 0)}")
+            print(f"  High Similarity Bypasses: {optimizations.get('high_similarity_bypasses', 0)}")
+            print(f"  Batch LLM Validations: {optimizations.get('batch_llm_validations', 0)}")
+        
+        if result.error_message:
+            print(f"\nError: {result.error_message}")
+            
+    except KeyboardInterrupt:
+        print("\n🛑 Interrupted by user")
+    except Exception as e:
+        print(f"\n❌ Error: {e}")
+        logging.error("Evidence linker failed", exc_info=True) 
