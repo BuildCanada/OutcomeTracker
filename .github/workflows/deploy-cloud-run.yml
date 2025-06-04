@@ -95,4 +95,4 @@ jobs:
         echo "   🏷️  Git SHA: ${{ github.sha }}"
         echo "   🌿 Branch: ${{ github.ref_name }}"
         echo "   👤 Triggered by: ${{ github.actor }}"
-        echo "   🔐 Auth: Workload Identity Federation (keyless)" 
+        echo "   🔐 Auth: Workload Identity Federation" 
