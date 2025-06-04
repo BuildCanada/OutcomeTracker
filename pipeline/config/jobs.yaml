@@ -120,13 +120,17 @@ stages:
         timeout_minutes: 60
         retry_attempts: 2
         dependencies: ["linking.evidence_linker"]
-        
+
+  maintenance:
+    description: "Maintenance and enrichment jobs"
+    jobs:
       promise_enricher:
         class: "pipeline.stages.linking.promise_enricher.PromiseEnricher"
         description: "Enrich promises with explanations and metadata"
         timeout_minutes: 90
         retry_attempts: 2
-        dependencies: []  # Can run independently
+        dependencies: []  # Manual execution only
+        schedule: null  # No automatic schedule - run on demand
 
 # Global configuration
 global:
