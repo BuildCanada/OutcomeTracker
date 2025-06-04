@@ -1,0 +1,129 @@
+{
+  "test_config": {
+    "parliament_session": 44,
+    "evidence_limit": 3,
+    "validation_threshold": 0.5,
+    "collections": {
+      "promises": "promises_test",
+      "evidence": "evidence_items_test"
+    }
+  },
+  "performance_metrics": {
+    "total_test_time": 45.02306389808655,
+    "setup_time": 2.965312957763672,
+    "avg_processing_time_per_evidence": 14.019250313440958,
+    "semantic_linker_stats": {
+      "embeddings_generated": 762,
+      "similarities_calculated": 2277,
+      "links_created": 0,
+      "processing_time": 0.0
+    },
+    "llm_validator_stats": {
+      "validations_performed": 11,
+      "total_validation_time": 40.48075485229492,
+      "successful_validations": 0,
+      "failed_validations": 0,
+      "avg_validation_time": 0.0,
+      "batch_optimizations": 3
+    }
+  },
+  "evidence_results": [
+    {
+      "evidence_id": "20211013_44_Gazette2_bd7ed6d0b3",
+      "evidence_title": "Regulations amending the Farm Products Agencies Act come into force, impacting Canadian chicken marketing quotas for production and marketing.",
+      "semantic_matches_found": 5,
+      "validated_matches": 2,
+      "high_confidence_matches": 2,
+      "optimization_used": "high_similarity_bypass_1_of_5",
+      "processing_time": {
+        "semantic_matching": 0.0657339096069336,
+        "llm_validation": 14.422362089157104,
+        "total": 14.488095998764038
+      },
+      "top_matches": [
+        {
+          "promise_id": "1237",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.501732349395752,
+          "reasoning_preview": "High semantic similarity (0.502) indicates strong relationship. Auto-validated without LLM to improve performance."
+        },
+        {
+          "promise_id": "408",
+          "confidence_score": 0.95,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.4591306447982788,
+          "reasoning_preview": "The evidence details the amendment of regulations for Canadian chicken marketing quotas to manage supply. This is a direct action to maintain and protect the supply-managed agricultural sector for chi..."
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "semantic_matches_found": 20,
+      "validated_matches": 10,
+      "high_confidence_matches": 10,
+      "optimization_used": "high_similarity_bypass_9_of_20",
+      "processing_time": {
+        "semantic_matching": 0.05611705780029297,
+        "llm_validation": 16.739875078201294,
+        "total": 16.795992136001587
+      },
+      "top_matches": [
+        {
+          "promise_id": "2404",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.6895480751991272,
+          "reasoning_preview": "High semantic similarity (0.690) indicates strong relationship. Auto-validated without LLM to improve performance."
+        },
+        {
+          "promise_id": "3102",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.6027289628982544,
+          "reasoning_preview": "High semantic similarity (0.603) indicates strong relationship. Auto-validated without LLM to improve performance."
+        },
+        {
+          "promise_id": "2401",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5647441148757935,
+          "reasoning_preview": "High semantic similarity (0.565) indicates strong relationship. Auto-validated without LLM to improve performance."
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211110_44_Gazette2_2719d4bd5e",
+      "evidence_title": "Order designates Minister of Housing and Diversity and Inclusion as the Minister for National Housing Act purposes.",
+      "semantic_matches_found": 3,
+      "validated_matches": 1,
+      "high_confidence_matches": 1,
+      "optimization_used": "high_similarity_bypass_1_of_3",
+      "processing_time": {
+        "semantic_matching": 0.0718231201171875,
+        "llm_validation": 9.318758964538574,
+        "total": 9.390582084655762
+      },
+      "top_matches": [
+        {
+          "promise_id": "1324",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5382741093635559,
+          "reasoning_preview": "High semantic similarity (0.538) indicates strong relationship. Auto-validated without LLM to improve performance."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "evidence_items_processed": 3,
+    "total_semantic_matches": 28,
+    "total_validated_matches": 13,
+    "total_high_confidence_matches": 13,
+    "avg_semantic_matches_per_evidence": 9.333333333333334,
+    "avg_validated_matches_per_evidence": 4.333333333333333,
+    "validation_success_rate": 46.42857142857143,
+    "high_confidence_rate": 100.0
+  }
+}

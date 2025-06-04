@@ -16,4 +16,6 @@ __author__ = "Promise Tracker Team"
 from .core.job_runner import JobRunner
 from .orchestrator import PipelineOrchestrator
 
-__all__ = ["JobRunner", "PipelineOrchestrator"] 
+__all__ = ["JobRunner", "PipelineOrchestrator"]
+
+# This file makes the pipeline directory a Python package 

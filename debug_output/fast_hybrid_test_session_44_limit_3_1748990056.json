@@ -1,0 +1,207 @@
+{
+  "test_config": {
+    "parliament_session": 44,
+    "evidence_limit": 3,
+    "validation_threshold": 0.5,
+    "collections": {
+      "promises": "promises_test",
+      "evidence": "evidence_items_test"
+    }
+  },
+  "performance_metrics": {
+    "total_test_time": 40.14614415168762,
+    "setup_time": 2.9534010887145996,
+    "avg_processing_time_per_evidence": 12.397581020991007,
+    "semantic_linker_stats": {
+      "embeddings_generated": 762,
+      "similarities_calculated": 2277,
+      "links_created": 0,
+      "processing_time": 0.0
+    },
+    "llm_validator_stats": {
+      "validations_performed": 11,
+      "total_validation_time": 35.401373624801636,
+      "successful_validations": 0,
+      "failed_validations": 0,
+      "avg_validation_time": 0.0,
+      "batch_optimizations": 3
+    }
+  },
+  "evidence_results": [
+    {
+      "evidence_id": "20211013_44_Gazette2_bd7ed6d0b3",
+      "evidence_title": "Regulations amending the Farm Products Agencies Act come into force, impacting Canadian chicken marketing quotas for production and marketing.",
+      "semantic_matches_found": 5,
+      "validated_matches": 2,
+      "high_confidence_matches": 2,
+      "optimization_used": "high_similarity_bypass_1_of_5",
+      "processing_time": {
+        "semantic_matching": 0.05979490280151367,
+        "llm_validation": 11.136792182922363,
+        "total": 11.196587085723877
+      },
+      "top_matches": [
+        {
+          "promise_id": "1237",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.501732349395752,
+          "reasoning_preview": "High semantic similarity (0.502) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.502) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.501732349395752,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "408",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.4591306447982788,
+          "reasoning_preview": "The evidence describes regulations that establish limits for chicken production and marketing quotas to manage supply. This is a direct mechanism for protecting and maintaining the supply-managed agri...",
+          "full_reasoning": "The evidence describes regulations that establish limits for chicken production and marketing quotas to manage supply. This is a direct mechanism for protecting and maintaining the supply-managed agricultural sector for chicken, which is explicitly mentioned as a goal in the promise.",
+          "thematic_alignment": 0.9,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "semantic_matches_found": 20,
+      "validated_matches": 10,
+      "high_confidence_matches": 10,
+      "optimization_used": "high_similarity_bypass_9_of_20",
+      "processing_time": {
+        "semantic_matching": 0.056558847427368164,
+        "llm_validation": 17.551938772201538,
+        "total": 17.608497619628906
+      },
+      "top_matches": [
+        {
+          "promise_id": "2404",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.6895480751991272,
+          "reasoning_preview": "High semantic similarity (0.690) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.690) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6895480751991272,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3102",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.6027289628982544,
+          "reasoning_preview": "High semantic similarity (0.603) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.603) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6027289628982544,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2401",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5647441148757935,
+          "reasoning_preview": "High semantic similarity (0.565) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.565) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5647441148757935,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2402",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5502269268035889,
+          "reasoning_preview": "High semantic similarity (0.550) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.550) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5502269268035889,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3301",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5453877449035645,
+          "reasoning_preview": "High semantic similarity (0.545) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.545) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5453877449035645,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211110_44_Gazette2_2719d4bd5e",
+      "evidence_title": "Order designates Minister of Housing and Diversity and Inclusion as the Minister for National Housing Act purposes.",
+      "semantic_matches_found": 3,
+      "validated_matches": 1,
+      "high_confidence_matches": 1,
+      "optimization_used": "high_similarity_bypass_1_of_3",
+      "processing_time": {
+        "semantic_matching": 0.0704798698425293,
+        "llm_validation": 6.712893009185791,
+        "total": 6.78337287902832
+      },
+      "top_matches": [
+        {
+          "promise_id": "1324",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5382741093635559,
+          "reasoning_preview": "High semantic similarity (0.538) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.538) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5382741093635559,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "evidence_items_processed": 3,
+    "total_semantic_matches": 28,
+    "total_validated_matches": 13,
+    "total_high_confidence_matches": 13,
+    "avg_semantic_matches_per_evidence": 9.333333333333334,
+    "avg_validated_matches_per_evidence": 4.333333333333333,
+    "validation_success_rate": 46.42857142857143,
+    "high_confidence_rate": 100.0
+  }
+}

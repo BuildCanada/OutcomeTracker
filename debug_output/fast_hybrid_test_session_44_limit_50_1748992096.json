@@ -1,0 +1,1669 @@
+{
+  "test_config": {
+    "parliament_session": 44,
+    "evidence_limit": 50,
+    "validation_threshold": 0.55,
+    "collections": {
+      "promises": "promises_test",
+      "evidence": "evidence_items_test"
+    }
+  },
+  "performance_metrics": {
+    "total_test_time": 131.22162890434265,
+    "setup_time": 2.978590250015259,
+    "avg_processing_time_per_evidence": 2.564860773086548,
+    "semantic_linker_stats": {
+      "embeddings_generated": 809,
+      "similarities_calculated": 37950,
+      "links_created": 0,
+      "processing_time": 0.0
+    },
+    "llm_validator_stats": {
+      "validations_performed": 38,
+      "total_validation_time": 124.41036605834961,
+      "successful_validations": 0,
+      "failed_validations": 0,
+      "avg_validation_time": 0.0,
+      "batch_optimizations": 11
+    }
+  },
+  "evidence_results": [
+    {
+      "evidence_id": "20211122_44_News_e43022d631",
+      "evidence_title": "Acting Chief Plant Health Officer announced measures to prevent potato wart spread from Prince Edward Island.",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.06230497360229492,
+        "llm_validation": 0,
+        "total": 0.06230497360229492
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211122_44_News_f30881e7b8",
+      "evidence_title": "Public hearing begins to consider Rogers Communications' application to acquire Shaw Communications' cable and satellite services, a transaction impacting Canadians and the industry.",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.03643298149108887,
+        "llm_validation": 0,
+        "total": 0.03643298149108887
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211123_44_News_31897c631e",
+      "evidence_title": "Minister Joly issues statement condemning Maduro regime for fixing 2018 Venezuelan elections, subverting constitutional order, and intensifying human rights abuses.",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.03386878967285156,
+        "llm_validation": 0,
+        "total": 0.03386878967285156
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211123_44_News_60f15d4d6d",
+      "evidence_title": "CFIA confirmed potato wart in Prince Edward Island, initiating an investigation and implementing strict regulatory measures to prevent its potential spread.",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.035006046295166016,
+        "llm_validation": 0,
+        "total": 0.035006046295166016
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211123_44_News_b38bb3169c",
+      "evidence_title": "CFIA implements controls to prevent the domestic and international spread of potato wart, a quarantine pest found in PEI.",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.03594493865966797,
+        "llm_validation": 0,
+        "total": 0.03594493865966797
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211123_44_S-1_event_senate_582daf0b",
+      "evidence_title": "Bill S-1: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.035463809967041016,
+        "llm_validation": 0,
+        "total": 0.035463809967041016
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_C-2_event_houseofcommons_7d6df99b",
+      "evidence_title": "Bill C-2: Introduction and first reading in House of Commons",
+      "semantic_matches_found": 2,
+      "validated_matches": 2,
+      "high_confidence_matches": 2,
+      "optimization_used": "high_similarity_bypass_1_of_2",
+      "processing_time": {
+        "semantic_matching": 0.03394818305969238,
+        "llm_validation": 12.416232824325562,
+        "total": 12.450181007385254
+      },
+      "top_matches": [
+        {
+          "promise_id": "203",
+          "promise_text": "Ensure that the House of Commons is a healthy and safe workplace for all employees.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.540948748588562,
+          "reasoning_preview": "High semantic similarity (0.541) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.541) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.540948748588562,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "201",
+          "promise_text": "Support the maintenance of the vaccine mandate in the House of Commons and the Senate.",
+          "confidence_score": 0.65,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.4538377523422241,
+          "reasoning_preview": "The evidence describes the introduction and first reading of Bill C-2 in the House of Commons. While the evidence itself does not explicitly state the content of Bill C-2, during the specified period ...",
+          "full_reasoning": "The evidence describes the introduction and first reading of Bill C-2 in the House of Commons. While the evidence itself does not explicitly state the content of Bill C-2, during the specified period (2021), Bill C-2 was a significant piece of legislation related to the government's COVID-19 response and measures. The promise is to support the maintenance of a vaccine mandate in the House of Commons. The introduction of a bill addressing COVID-19 measures can be seen as a legislative action that supports the government's overall pandemic strategy, which included vaccine mandates, thereby indirectly supporting the promise.",
+          "thematic_alignment": 0.65,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_Gazette2_3dc5cec2d1",
+      "evidence_title": "A proclamation establishes electoral boundaries commissions to readjust federal electoral districts across Canada.",
+      "semantic_matches_found": 1,
+      "validated_matches": 1,
+      "high_confidence_matches": 1,
+      "optimization_used": "high_similarity_bypass_1_of_1",
+      "processing_time": {
+        "semantic_matching": 0.056195974349975586,
+        "llm_validation": 5.0067901611328125e-06,
+        "total": 0.05620098114013672
+      },
+      "top_matches": [
+        {
+          "promise_id": "1729",
+          "promise_text": "Consider the Chief Electoral Officer\u2019s forthcoming legislative recommendations from the 43rd and 44th general elections to support transparency, fairness and participation in the federal electoral process.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5832250714302063,
+          "reasoning_preview": "High semantic similarity (0.583) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.583) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5832250714302063,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "high_similarity_bypass"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_Gazette2_c2cd3294bb",
+      "evidence_title": "Regulations amend the Special Economic Measures (Nicaragua) Regulations, enacting further sanctions against Nicaraguan officials due to human rights abuses.",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.0377960205078125,
+        "llm_validation": 0,
+        "total": 0.0377960205078125
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_Gazette2_e668b42ae4",
+      "evidence_title": "Regulations amend the Railway Safety Act to enable administrative monetary penalties for non-compliance with vaccination mandates in the rail sector.",
+      "semantic_matches_found": 18,
+      "validated_matches": 9,
+      "high_confidence_matches": 9,
+      "optimization_used": "high_similarity_bypass_8_of_18",
+      "processing_time": {
+        "semantic_matching": 0.13153576850891113,
+        "llm_validation": 13.785557985305786,
+        "total": 13.917093753814697
+      },
+      "top_matches": [
+        {
+          "promise_id": "2101",
+          "promise_text": "Work with federally regulated workplaces to ensure that COVID-19 vaccination is enforced.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5797719359397888,
+          "reasoning_preview": "High semantic similarity (0.580) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.580) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5797719359397888,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3802",
+          "promise_text": "Ensure vaccination is enforced for workers at Crown corporations and separate agencies.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.575738787651062,
+          "reasoning_preview": "High semantic similarity (0.576) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.576) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.575738787651062,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3401",
+          "promise_text": "Require that travellers on interprovincial trains, commercial flights, cruise ships and other federally-regulated vessels be vaccinated.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5587835311889648,
+          "reasoning_preview": "High semantic similarity (0.559) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.559) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5587835311889648,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3801",
+          "promise_text": "Ensure vaccination across the Public Service.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5562920570373535,
+          "reasoning_preview": "High semantic similarity (0.556) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.556) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5562920570373535,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3402",
+          "promise_text": "Ensure that COVID-19 vaccination is prioritized for workers in federally regulated transportation sector.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5474022030830383,
+          "reasoning_preview": "High semantic similarity (0.547) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.547) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5474022030830383,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_News_01b42582c6",
+      "evidence_title": "Government details eligible businesses for the Tourism and Hospitality Recovery Program.",
+      "semantic_matches_found": 9,
+      "validated_matches": 5,
+      "high_confidence_matches": 5,
+      "optimization_used": "high_similarity_bypass_5_of_9",
+      "processing_time": {
+        "semantic_matching": 0.07519841194152832,
+        "llm_validation": 0.00012803077697753906,
+        "total": 0.07532644271850586
+      },
+      "top_matches": [
+        {
+          "promise_id": "3301",
+          "promise_text": "Advance recovery measures to support the hard-hit tourism industry, such as the Tourism Relief Fund, to help local tourism businesses recover from the pandemic and position themselves for future growth.",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.6702737212181091,
+          "reasoning_preview": "High semantic similarity (0.670) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.670) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6702737212181091,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "107",
+          "promise_text": "Support business recovery and workers, including by implementing legislation that extends the Canada Recovery Hiring Program, introduces rent and wage supports for tourism and hospitality sectors and arts and culture industries, and provides emergency support in the event of future public health lockdowns.",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.6642053723335266,
+          "reasoning_preview": "High semantic similarity (0.664) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.664) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6642053723335266,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "503",
+          "promise_text": "Launch an Arts and Culture Recovery Program to mitigate the impacts of reduced capacity in cultural venues.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5487439036369324,
+          "reasoning_preview": "High semantic similarity (0.549) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.549) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5487439036369324,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1506",
+          "promise_text": "Analyze and, as appropriate, adjust eligibility criteria to ensure that business support programs are as inclusive as possible.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5394868850708008,
+          "reasoning_preview": "High semantic similarity (0.539) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.539) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5394868850708008,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3302",
+          "promise_text": "Examine ways to finance projects and support communities, both rural and urban, across Canada as they develop destinations and create and enhance tourism products, facilities and experiences.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5109254121780396,
+          "reasoning_preview": "High semantic similarity (0.511) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.511) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5109254121780396,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_News_30a4494f74",
+      "evidence_title": "Canada announced $325 million in funding for 11 projects supporting sexual and reproductive health and rights.",
+      "semantic_matches_found": 20,
+      "validated_matches": 20,
+      "high_confidence_matches": 20,
+      "optimization_used": "high_similarity_bypass_20_of_20",
+      "processing_time": {
+        "semantic_matching": 0.008847236633300781,
+        "llm_validation": 2.6226043701171875e-05,
+        "total": 0.008873462677001953
+      },
+      "top_matches": [
+        {
+          "promise_id": "1814",
+          "promise_text": "Close persistent gaps in sexual and reproductive health and rights services, including in relation to the prevention of sexual and gender-based violence.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5850228667259216,
+          "reasoning_preview": "High semantic similarity (0.585) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.585) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5850228667259216,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "high_similarity_bypass"
+        },
+        {
+          "promise_id": "1223",
+          "promise_text": "Establish a\u00a0sexual\u00a0and\u00a0reproductive\u00a0health\u00a0information and rights\u00a0portal.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5809966921806335,
+          "reasoning_preview": "High semantic similarity (0.581) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.581) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5809966921806335,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "high_similarity_bypass"
+        },
+        {
+          "promise_id": "1809",
+          "promise_text": "Increase Canada\u2019s international development assistance every year towards 2030.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5740869045257568,
+          "reasoning_preview": "High semantic similarity (0.574) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.574) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5740869045257568,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "high_similarity_bypass"
+        },
+        {
+          "promise_id": "901",
+          "promise_text": "Conclude negotiations and implement agreements for a Canada-wide Early Learning and Child Care system.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5670820474624634,
+          "reasoning_preview": "High semantic similarity (0.567) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.567) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5670820474624634,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "high_similarity_bypass"
+        },
+        {
+          "promise_id": "913",
+          "promise_text": "Advance implementation of the Community Services Recovery Fund.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5591261386871338,
+          "reasoning_preview": "High semantic similarity (0.559) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.559) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5591261386871338,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "high_similarity_bypass"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_News_4370c7204e",
+      "evidence_title": "Government operates the New Horizons for Seniors Program, a federal grants and contributions initiative.",
+      "semantic_matches_found": 9,
+      "validated_matches": 3,
+      "high_confidence_matches": 3,
+      "optimization_used": "high_similarity_bypass_3_of_9",
+      "processing_time": {
+        "semantic_matching": 0.03547501564025879,
+        "llm_validation": 0.00011491775512695312,
+        "total": 0.03558993339538574
+      },
+      "top_matches": [
+        {
+          "promise_id": "3108",
+          "promise_text": "Advance seniors programming, including the New Horizons for Seniors Program.",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.7818692922592163,
+          "reasoning_preview": "High semantic similarity (0.782) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.782) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.7818692922592163,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3104",
+          "promise_text": "Assist organizations to provide practical supports to help seniors age in place.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5194790363311768,
+          "reasoning_preview": "High semantic similarity (0.519) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.519) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5194790363311768,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3816",
+          "promise_text": "Create a fellowship for 1,000 students and new graduates.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5015320777893066,
+          "reasoning_preview": "High semantic similarity (0.502) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.502) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5015320777893066,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_News_84bd5ba53c",
+      "evidence_title": "Minister Ng issues statement regarding U.S. final duty rates on Canadian softwood lumber, emphasizing the industry's economic importance.",
+      "semantic_matches_found": 6,
+      "validated_matches": 2,
+      "high_confidence_matches": 2,
+      "optimization_used": "high_similarity_bypass_1_of_6",
+      "processing_time": {
+        "semantic_matching": 0.03763604164123535,
+        "llm_validation": 10.795016050338745,
+        "total": 10.83265209197998
+      },
+      "top_matches": [
+        {
+          "promise_id": "1909",
+          "promise_text": "Engage the United States to address bilateral trade issues and protectionist measures.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5176132321357727,
+          "reasoning_preview": "High semantic similarity (0.518) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.518) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5176132321357727,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1925",
+          "promise_text": "Introduce a reciprocal procurement policy that will ensure goods and services are procured from countries that grant Canadian businesses a similar level of market access.",
+          "confidence_score": 0.6,
+          "category": "Related Policy",
+          "semantic_similarity": 0.45347240567207336,
+          "reasoning_preview": "The evidence highlights U.S. duty rates on Canadian softwood lumber, which represents a significant barrier to market access for a key Canadian industry. The promise proposes a reciprocal procurement ...",
+          "full_reasoning": "The evidence highlights U.S. duty rates on Canadian softwood lumber, which represents a significant barrier to market access for a key Canadian industry. The promise proposes a reciprocal procurement policy aimed at ensuring Canadian businesses receive similar market access abroad. While the evidence is about export challenges and the promise is about import policy, the underlying theme of ensuring fair market access for Canadian industries in response to trade imbalances connects them as related policy considerations.",
+          "thematic_alignment": 0.6,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_News_d970dad714",
+      "evidence_title": "Canada, Sweden, Ukraine, and UK expressed disappointment over Iran's refusal to negotiate reparations for Flight PS752 victims.",
+      "semantic_matches_found": 3,
+      "validated_matches": 3,
+      "high_confidence_matches": 3,
+      "optimization_used": "high_similarity_bypass_2_of_3",
+      "processing_time": {
+        "semantic_matching": 0.05622291564941406,
+        "llm_validation": 6.173590183258057,
+        "total": 6.229813098907471
+      },
+      "top_matches": [
+        {
+          "promise_id": "1121",
+          "promise_text": "Work with international partners to hold Iran accountable and to provide support to the families and loved ones of the victims as they fight for justice and reparations.",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.7523958683013916,
+          "reasoning_preview": "High semantic similarity (0.752) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.752) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.7523958683013916,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3412",
+          "promise_text": "Advance Canada's ongoing response to the tragic downing of flight PS752.",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.7304766178131104,
+          "reasoning_preview": "High semantic similarity (0.730) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.730) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.7304766178131104,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3413",
+          "promise_text": "Advance the Safer Skies Initiative.",
+          "confidence_score": 0.85,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.48311376571655273,
+          "reasoning_preview": "The Safer Skies Initiative was launched by Canada in direct response to the downing of Flight PS752. While the evidence details diplomatic efforts for reparations rather than a new safety protocol, th...",
+          "full_reasoning": "The Safer Skies Initiative was launched by Canada in direct response to the downing of Flight PS752. While the evidence details diplomatic efforts for reparations rather than a new safety protocol, these ongoing international efforts to achieve justice and compensation for PS752 victims are intrinsically linked to the context and rationale for the Safer Skies Initiative. Maintaining international focus and pressure on the consequences of the PS752 tragedy helps to sustain the political will and international cooperation necessary to 'Advance the Safer Skies Initiative' by reinforcing the critical need for enhanced civil aviation safety in conflict zones.",
+          "thematic_alignment": 0.85,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_News_ddf09ccc23",
+      "evidence_title": "The College of Immigration and Citizenship Consultants officially opened to regulate immigration and citizenship consultants.",
+      "semantic_matches_found": 6,
+      "validated_matches": 6,
+      "high_confidence_matches": 6,
+      "optimization_used": "high_similarity_bypass_1_of_6",
+      "processing_time": {
+        "semantic_matching": 0.05940508842468262,
+        "llm_validation": 15.795878171920776,
+        "total": 15.855283260345459
+      },
+      "top_matches": [
+        {
+          "promise_id": "1420",
+          "promise_text": "Move forward on the Municipal Nominee Program.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5066624283790588,
+          "reasoning_preview": "High semantic similarity (0.507) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.507) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5066624283790588,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1416",
+          "promise_text": "Extend pathways to Permanent Residence for international students and temporary foreign workers through the Express Entry system.",
+          "confidence_score": 0.95,
+          "category": "Not Related",
+          "semantic_similarity": 0.46964940428733826,
+          "reasoning_preview": "The evidence concerns the regulation of immigration and citizenship consultants. This has no direct or indirect relationship to the promise of extending pathways to Permanent Residence for internation...",
+          "full_reasoning": "The evidence concerns the regulation of immigration and citizenship consultants. This has no direct or indirect relationship to the promise of extending pathways to Permanent Residence for international students and temporary foreign workers through the Express Entry system.",
+          "thematic_alignment": 0.95,
+          "department_overlap": false,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1419",
+          "promise_text": "Make the Atlantic Immigration Pilot a permanent program.",
+          "confidence_score": 0.95,
+          "category": "Not Related",
+          "semantic_similarity": 0.4696067273616791,
+          "reasoning_preview": "The evidence describes the establishment of a regulatory body for immigration consultants. This is unrelated to the promise of making the Atlantic Immigration Pilot a permanent program, which is a spe...",
+          "full_reasoning": "The evidence describes the establishment of a regulatory body for immigration consultants. This is unrelated to the promise of making the Atlantic Immigration Pilot a permanent program, which is a specific immigration stream.",
+          "thematic_alignment": 0.95,
+          "department_overlap": false,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1402",
+          "promise_text": "Expand the new immigration stream for human rights defenders and work with civil society groups to provide resettlement opportunities for people under threat.",
+          "confidence_score": 0.95,
+          "category": "Not Related",
+          "semantic_similarity": 0.45171844959259033,
+          "reasoning_preview": "The evidence is about regulating immigration and citizenship consultants. This has no direct or indirect connection to the promise of expanding an immigration stream for human rights defenders.",
+          "full_reasoning": "The evidence is about regulating immigration and citizenship consultants. This has no direct or indirect connection to the promise of expanding an immigration stream for human rights defenders.",
+          "thematic_alignment": 0.95,
+          "department_overlap": false,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "730",
+          "promise_text": "Continue to work with provinces, territories and regulatory bodies to improve foreign credential recognition.",
+          "confidence_score": 0.9,
+          "category": "Not Related",
+          "semantic_similarity": 0.4913809895515442,
+          "reasoning_preview": "The evidence describes the opening of the College of Immigration and Citizenship Consultants (CICC) to regulate immigration consultants. This is distinct from the promise to improve foreign credential...",
+          "full_reasoning": "The evidence describes the opening of the College of Immigration and Citizenship Consultants (CICC) to regulate immigration consultants. This is distinct from the promise to improve foreign credential recognition, as the CICC's mandate does not directly or indirectly involve the process of recognizing foreign credentials.",
+          "thematic_alignment": 0.9,
+          "department_overlap": false,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211124_44_S-201_event_senate_b7fe79d3",
+      "evidence_title": "Bill S-201: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.030535221099853516,
+        "llm_validation": 0,
+        "total": 0.030535221099853516
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-202_event_senate_45c32637",
+      "evidence_title": "Bill S-202: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006804943084716797,
+        "llm_validation": 0,
+        "total": 0.006804943084716797
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-203_event_senate_5cf4cdf5",
+      "evidence_title": "Bill S-203: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006118059158325195,
+        "llm_validation": 0,
+        "total": 0.006118059158325195
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-204_event_senate_57d9457d",
+      "evidence_title": "Bill S-204: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006128072738647461,
+        "llm_validation": 0,
+        "total": 0.006128072738647461
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-205_event_senate_d172f4ce",
+      "evidence_title": "Bill S-205: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006354093551635742,
+        "llm_validation": 0,
+        "total": 0.006354093551635742
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-206_event_senate_272ac206",
+      "evidence_title": "Bill S-206: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006227970123291016,
+        "llm_validation": 0,
+        "total": 0.006227970123291016
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-207_event_senate_60da7bb1",
+      "evidence_title": "Bill S-207: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006455898284912109,
+        "llm_validation": 0,
+        "total": 0.006455898284912109
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-208_event_senate_fc06caf7",
+      "evidence_title": "Bill S-208: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006072044372558594,
+        "llm_validation": 0,
+        "total": 0.006072044372558594
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-209_event_senate_7aa038c7",
+      "evidence_title": "Bill S-209: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.005995035171508789,
+        "llm_validation": 0,
+        "total": 0.005995035171508789
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-210_event_senate_60663690",
+      "evidence_title": "Bill S-210: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.007647991180419922,
+        "llm_validation": 0,
+        "total": 0.007647991180419922
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-211_event_senate_aa9ae6cf",
+      "evidence_title": "Bill S-211: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006235837936401367,
+        "llm_validation": 0,
+        "total": 0.006235837936401367
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-212_event_senate_78c8150c",
+      "evidence_title": "Bill S-212: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.00612187385559082,
+        "llm_validation": 0,
+        "total": 0.00612187385559082
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-213_event_senate_0cda8937",
+      "evidence_title": "Bill S-213: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.00626826286315918,
+        "llm_validation": 0,
+        "total": 0.00626826286315918
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-214_event_senate_b712816d",
+      "evidence_title": "Bill S-214: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.0060040950775146484,
+        "llm_validation": 0,
+        "total": 0.0060040950775146484
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-215_event_senate_9d35514d",
+      "evidence_title": "Bill S-215: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.00604701042175293,
+        "llm_validation": 0,
+        "total": 0.00604701042175293
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-216_event_senate_2e3ed192",
+      "evidence_title": "Bill S-216: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006117105484008789,
+        "llm_validation": 0,
+        "total": 0.006117105484008789
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-217_event_senate_20af6fa1",
+      "evidence_title": "Bill S-217: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.005675077438354492,
+        "llm_validation": 0,
+        "total": 0.005675077438354492
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-218_event_senate_000f4048",
+      "evidence_title": "Bill S-218: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006548881530761719,
+        "llm_validation": 0,
+        "total": 0.006548881530761719
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-219_event_senate_06958fda",
+      "evidence_title": "Bill S-219: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.0060961246490478516,
+        "llm_validation": 0,
+        "total": 0.0060961246490478516
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-220_event_senate_b4144845",
+      "evidence_title": "Bill S-220: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.008322000503540039,
+        "llm_validation": 0,
+        "total": 0.008322000503540039
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-221_event_senate_043e8007",
+      "evidence_title": "Bill S-221: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006436824798583984,
+        "llm_validation": 0,
+        "total": 0.006436824798583984
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-222_event_senate_e3ae7713",
+      "evidence_title": "Bill S-222: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.005822896957397461,
+        "llm_validation": 0,
+        "total": 0.005822896957397461
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-223_event_senate_42aa9918",
+      "evidence_title": "Bill S-223: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006285905838012695,
+        "llm_validation": 0,
+        "total": 0.006285905838012695
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-224_event_senate_47b13fbd",
+      "evidence_title": "Bill S-224: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.0060160160064697266,
+        "llm_validation": 0,
+        "total": 0.0060160160064697266
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-225_event_senate_71683263",
+      "evidence_title": "Bill S-225: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.0068149566650390625,
+        "llm_validation": 0,
+        "total": 0.0068149566650390625
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-226_event_parliament_506a89f0",
+      "evidence_title": "Bill S-226: Bill Bill not proceeded with in Parliament",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.03679990768432617,
+        "llm_validation": 0,
+        "total": 0.03679990768432617
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-226_event_senate_b91e5960",
+      "evidence_title": "Bill S-226: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006905078887939453,
+        "llm_validation": 0,
+        "total": 0.006905078887939453
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211124_44_S-2_event_senate_7e54c6e4",
+      "evidence_title": "Bill S-2: Introduction and first reading in Senate",
+      "semantic_matches_found": 0,
+      "validated_matches": 0,
+      "high_confidence_matches": 0,
+      "optimization_used": "none_needed",
+      "processing_time": {
+        "semantic_matching": 0.006204366683959961,
+        "llm_validation": 0,
+        "total": 0.006204366683959961
+      },
+      "top_matches": []
+    },
+    {
+      "evidence_id": "20211125_44_C-201_event_houseofcommons_2ac5f91e",
+      "evidence_title": "Bill C-201: Introduction and first reading in House of Commons",
+      "semantic_matches_found": 3,
+      "validated_matches": 3,
+      "high_confidence_matches": 3,
+      "optimization_used": "high_similarity_bypass_1_of_3",
+      "processing_time": {
+        "semantic_matching": 0.0072939395904541016,
+        "llm_validation": 12.509517192840576,
+        "total": 12.51681113243103
+      },
+      "top_matches": [
+        {
+          "promise_id": "203",
+          "promise_text": "Ensure that the House of Commons is a healthy and safe workplace for all employees.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5738480687141418,
+          "reasoning_preview": "High semantic similarity (0.574) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.574) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5738480687141418,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "201",
+          "promise_text": "Support the maintenance of the vaccine mandate in the House of Commons and the Senate.",
+          "confidence_score": 1.0,
+          "category": "Not Related",
+          "semantic_similarity": 0.4818103313446045,
+          "reasoning_preview": "Bill C-201, introduced and read for the first time, was an act seeking to prohibit vaccine mandates. This action directly contradicts the promise to 'support the maintenance of the vaccine mandate in ...",
+          "full_reasoning": "Bill C-201, introduced and read for the first time, was an act seeking to prohibit vaccine mandates. This action directly contradicts the promise to 'support the maintenance of the vaccine mandate in the House of Commons and the Senate,' therefore it does not represent progress towards this promise.",
+          "thematic_alignment": 1.0,
+          "department_overlap": false,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "205",
+          "promise_text": "Develop a plan to make Parliament a more inclusive place for families and to respond with greater agility in the event of a future national health crisis.",
+          "confidence_score": 0.95,
+          "category": "Not Related",
+          "semantic_similarity": 0.4772125482559204,
+          "reasoning_preview": "The introduction of Bill C-201, which concerned vaccine mandates, does not relate to making Parliament a more inclusive place for families or improving Parliament's operational agility in responding t...",
+          "full_reasoning": "The introduction of Bill C-201, which concerned vaccine mandates, does not relate to making Parliament a more inclusive place for families or improving Parliament's operational agility in responding to future national health crises, which are the core components of this promise.",
+          "thematic_alignment": 0.95,
+          "department_overlap": false,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211125_44_C-202_event_houseofcommons_493a5fef",
+      "evidence_title": "Bill C-202: Introduction and first reading in House of Commons",
+      "semantic_matches_found": 4,
+      "validated_matches": 4,
+      "high_confidence_matches": 4,
+      "optimization_used": "high_similarity_bypass_3_of_4",
+      "processing_time": {
+        "semantic_matching": 0.041298866271972656,
+        "llm_validation": 6.543731927871704,
+        "total": 6.585030794143677
+      },
+      "top_matches": [
+        {
+          "promise_id": "203",
+          "promise_text": "Ensure that the House of Commons is a healthy and safe workplace for all employees.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5878376960754395,
+          "reasoning_preview": "High semantic similarity (0.588) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.588) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5878376960754395,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "205",
+          "promise_text": "Develop a plan to make Parliament a more inclusive place for families and to respond with greater agility in the event of a future national health crisis.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5064476132392883,
+          "reasoning_preview": "High semantic similarity (0.506) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.506) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5064476132392883,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "201",
+          "promise_text": "Support the maintenance of the vaccine mandate in the House of Commons and the Senate.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5004430413246155,
+          "reasoning_preview": "High semantic similarity (0.500) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.500) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5004430413246155,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "200",
+          "promise_text": "Ensure that the essential work of Parliament continues in an effective and efficient manner, while respecting the continued need to innovate to respond to the realities of the COVID-19 pandemic.",
+          "confidence_score": 0.7,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.45787590742111206,
+          "reasoning_preview": "The introduction and first reading of Bill C-202 demonstrate that the 'essential work of Parliament continues,' which is a core component of the promise. While the evidence doesn't explicitly detail h...",
+          "full_reasoning": "The introduction and first reading of Bill C-202 demonstrate that the 'essential work of Parliament continues,' which is a core component of the promise. While the evidence doesn't explicitly detail how this specific event incorporates 'innovative operational methods' or 'efficiency' related to the COVID-19 pandemic, it confirms that legislative functions are active and ongoing, thereby supporting the broader commitment to maintain parliamentary operations.",
+          "thematic_alignment": 0.7,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211125_44_News_35502b2cc2",
+      "evidence_title": "Canada achieved successful outcomes at the ICCAT meeting, enabling better regulation, conservation, and regeneration of Atlantic tuna, tuna-like, and shark species.",
+      "semantic_matches_found": 19,
+      "validated_matches": 9,
+      "high_confidence_matches": 9,
+      "optimization_used": "high_similarity_bypass_7_of_19",
+      "processing_time": {
+        "semantic_matching": 0.05336403846740723,
+        "llm_validation": 11.342502117156982,
+        "total": 11.39586615562439
+      },
+      "top_matches": [
+        {
+          "promise_id": "1006",
+          "promise_text": "Ensure Canada meets its goals to conserve 25 per cent of its oceans by 2025 and 30 per cent by 2030, and champion this goal internationally.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5339357852935791,
+          "reasoning_preview": "High semantic similarity (0.534) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.534) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5339357852935791,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1005",
+          "promise_text": "Make new investments and develop a conservation strategy to restore and rebuild wild Atlantic salmon populations and their habitats.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5312734842300415,
+          "reasoning_preview": "High semantic similarity (0.531) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.531) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5312734842300415,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1017",
+          "promise_text": "Create a national, interdisciplinary working group focused on climate-resilient ocean conservation planning.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5229133367538452,
+          "reasoning_preview": "High semantic similarity (0.523) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.523) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5229133367538452,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1001",
+          "promise_text": "Continue to implement the modernized\u00a0Fisheries Act.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5168814659118652,
+          "reasoning_preview": "High semantic similarity (0.517) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.517) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5168814659118652,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1020",
+          "promise_text": "Work to introduce Canada\u2019s first Aquaculture Act.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5120369791984558,
+          "reasoning_preview": "High semantic similarity (0.512) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.512) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5120369791984558,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211125_44_News_5e5ac45c72",
+      "evidence_title": "Minister Ien issued a statement on International Day for the Elimination of Violence Against Women, highlighting the ongoing reality of gender-based violence.",
+      "semantic_matches_found": 16,
+      "validated_matches": 5,
+      "high_confidence_matches": 5,
+      "optimization_used": "high_similarity_bypass_4_of_16",
+      "processing_time": {
+        "semantic_matching": 0.06629395484924316,
+        "llm_validation": 16.641258001327515,
+        "total": 16.707551956176758
+      },
+      "top_matches": [
+        {
+          "promise_id": "305",
+          "promise_text": "Develop a 10-year National Action Plan to End Gender-Based Violence, begin negotiations with Provinces and Territories, and accelerate the establishment of a dedicated Secretariat.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5505826473236084,
+          "reasoning_preview": "High semantic similarity (0.551) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.551) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5505826473236084,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "605",
+          "promise_text": "Support the implementation of the 2021 MMIWG and 2SLGBTQQIA+ National Action Plan.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5254353880882263,
+          "reasoning_preview": "High semantic similarity (0.525) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.525) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5254353880882263,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "302",
+          "promise_text": "Collaborate with women\u2019s movements, organizations, experts and advocates on public policy relating to women and gender equality.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5135642290115356,
+          "reasoning_preview": "High semantic similarity (0.514) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.514) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5135642290115356,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "1119",
+          "promise_text": "With support from the Ambassador for Women, Peace and Security, continue to advance Canada\u2019s National Action Plan on Women, Peace and Security, including by launching Canada\u2019s 3rd National Action Plan, and build on Canada\u2019s leadership to further this agenda on the global stage, including our support for the Elsie Initiative for Women in Peace Operations and for the full and meaningful participation of women peacebuilders in peace and security matters.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5111339092254639,
+          "reasoning_preview": "High semantic similarity (0.511) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.511) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5111339092254639,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "304",
+          "promise_text": "Strengthen the Department of Women and Gender Equality as a centre of expertise for advancing gender equality and supporting the application of GBA Plus across government decision-making processes.",
+          "confidence_score": 0.6,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.48437297344207764,
+          "reasoning_preview": "A public statement by Minister Ien (Minister for Women and Gender Equality) on a core issue like gender-based violence, reaffirming the government's commitment, reinforces the Department of Women and ...",
+          "full_reasoning": "A public statement by Minister Ien (Minister for Women and Gender Equality) on a core issue like gender-based violence, reaffirming the government's commitment, reinforces the Department of Women and Gender Equality's mandate and public role. This can be seen as a supporting action towards strengthening the department as a centre of expertise in this area.",
+          "thematic_alignment": 0.6,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211125_44_News_696d83d273",
+      "evidence_title": "Minister Qualtrough issued a statement on Canada Emergency Response Benefit (CERB) advance payments.",
+      "semantic_matches_found": 6,
+      "validated_matches": 4,
+      "high_confidence_matches": 4,
+      "optimization_used": "high_similarity_bypass_3_of_6",
+      "processing_time": {
+        "semantic_matching": 0.057235002517700195,
+        "llm_validation": 9.576711893081665,
+        "total": 9.633946895599365
+      },
+      "top_matches": [
+        {
+          "promise_id": "2401",
+          "promise_text": "Support Canadians and Canadian businesses by efficiently implementing, processing, and issuing COVID-19-related benefits.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.6430959701538086,
+          "reasoning_preview": "High semantic similarity (0.643) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.643) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6430959701538086,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3102",
+          "promise_text": "Ensure seniors\u2019 eligibility for the Guaranteed Income Supplement is not negatively impacted by receipt of the Canada Emergency Response Benefit (CERB) and the Canada Recovery Benefit (CRB).",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5922465324401855,
+          "reasoning_preview": "High semantic similarity (0.592) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.592) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5922465324401855,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2402",
+          "promise_text": "Implement the enhanced Canada Workers Benefit and ensure Canadians who qualify are automatically enrolled, with the benefits delivered on a quarterly basis.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5318827033042908,
+          "reasoning_preview": "High semantic similarity (0.532) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.532) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5318827033042908,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2404",
+          "promise_text": "Ensure the effective delivery and integrity of other relief and recovery measures delivered by the CRA.",
+          "confidence_score": 0.85,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.4582267999649048,
+          "reasoning_preview": "The evidence describes a ministerial statement regarding Canada Emergency Response Benefit (CERB) advance payments. CERB was a key COVID-19 'relief and recovery measure' delivered by the government, o...",
+          "full_reasoning": "The evidence describes a ministerial statement regarding Canada Emergency Response Benefit (CERB) advance payments. CERB was a key COVID-19 'relief and recovery measure' delivered by the government, often with CRA involvement. The promise is to 'ensure the effective delivery and integrity of other relief and recovery measures delivered by the CRA.' A statement addressing aspects like advance payments for a major relief program directly relates to ensuring its effective and proper administration, thus supporting the broader goal of the promise.",
+          "thematic_alignment": 0.85,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211125_44_News_c690038ddc",
+      "evidence_title": "Government details advance payment for Canada Emergency Response Benefit.",
+      "semantic_matches_found": 20,
+      "validated_matches": 8,
+      "high_confidence_matches": 8,
+      "optimization_used": "high_similarity_bypass_6_of_20",
+      "processing_time": {
+        "semantic_matching": 0.05829286575317383,
+        "llm_validation": 8.831424951553345,
+        "total": 8.889717817306519
+      },
+      "top_matches": [
+        {
+          "promise_id": "2401",
+          "promise_text": "Support Canadians and Canadian businesses by efficiently implementing, processing, and issuing COVID-19-related benefits.",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.721822202205658,
+          "reasoning_preview": "High semantic similarity (0.722) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.722) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.721822202205658,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3102",
+          "promise_text": "Ensure seniors\u2019 eligibility for the Guaranteed Income Supplement is not negatively impacted by receipt of the Canada Emergency Response Benefit (CERB) and the Canada Recovery Benefit (CRB).",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.6649520993232727,
+          "reasoning_preview": "High semantic similarity (0.665) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.665) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6649520993232727,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2402",
+          "promise_text": "Implement the enhanced Canada Workers Benefit and ensure Canadians who qualify are automatically enrolled, with the benefits delivered on a quarterly basis.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5712425708770752,
+          "reasoning_preview": "High semantic similarity (0.571) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.571) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5712425708770752,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3714",
+          "promise_text": "Assess the response to Requests for Federal Assistance from provinces and territories, including assistance from the Canadian Armed Forces.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5297318696975708,
+          "reasoning_preview": "High semantic similarity (0.530) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.530) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5297318696975708,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2213",
+          "promise_text": "Advance Canada\u2019s first-ever National Action Plan on Post-Traumatic Stress Injuries, including additional investment to support the health and well-being of first responders.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5041532516479492,
+          "reasoning_preview": "High semantic similarity (0.504) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.504) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5041532516479492,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "evidence_items_processed": 50,
+    "total_semantic_matches": 142,
+    "total_validated_matches": 84,
+    "total_high_confidence_matches": 84,
+    "avg_semantic_matches_per_evidence": 2.84,
+    "avg_validated_matches_per_evidence": 1.68,
+    "validation_success_rate": 59.154929577464785,
+    "high_confidence_rate": 100.0
+  }
+}

@@ -1,0 +1,215 @@
+{
+  "test_config": {
+    "parliament_session": 44,
+    "evidence_limit": 3,
+    "validation_threshold": 0.5,
+    "collections": {
+      "promises": "promises_test",
+      "evidence": "evidence_items_test"
+    }
+  },
+  "performance_metrics": {
+    "total_test_time": 40.613895893096924,
+    "setup_time": 2.940561056137085,
+    "avg_processing_time_per_evidence": 12.557778278986612,
+    "semantic_linker_stats": {
+      "embeddings_generated": 762,
+      "similarities_calculated": 2277,
+      "links_created": 0,
+      "processing_time": 0.0
+    },
+    "llm_validator_stats": {
+      "validations_performed": 11,
+      "total_validation_time": 36.08544898033142,
+      "successful_validations": 0,
+      "failed_validations": 0,
+      "avg_validation_time": 0.0,
+      "batch_optimizations": 3
+    }
+  },
+  "evidence_results": [
+    {
+      "evidence_id": "20211013_44_Gazette2_bd7ed6d0b3",
+      "evidence_title": "Regulations amending the Farm Products Agencies Act come into force, impacting Canadian chicken marketing quotas for production and marketing.",
+      "semantic_matches_found": 5,
+      "validated_matches": 2,
+      "high_confidence_matches": 2,
+      "optimization_used": "high_similarity_bypass_1_of_5",
+      "processing_time": {
+        "semantic_matching": 0.05985689163208008,
+        "llm_validation": 12.328313112258911,
+        "total": 12.388170003890991
+      },
+      "top_matches": [
+        {
+          "promise_id": "1237",
+          "promise_text": "Increase testing of products for compliance with Canadian standards.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.501732349395752,
+          "reasoning_preview": "High semantic similarity (0.502) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.502) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.501732349395752,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "408",
+          "promise_text": "Protect supply-managed agricultural sectors, including by providing full and fair compensation with respect to the Canada-United States-Mexico Agreement (CUSMA) and making this determination within the first year of the mandate.",
+          "confidence_score": 0.95,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.4591306447982788,
+          "reasoning_preview": "The evidence describes regulations that amend chicken marketing quotas to manage supply within the Canadian agricultural sector. This is a direct action to protect and maintain the supply-managed chic...",
+          "full_reasoning": "The evidence describes regulations that amend chicken marketing quotas to manage supply within the Canadian agricultural sector. This is a direct action to protect and maintain the supply-managed chicken sector, which is explicitly mentioned as one of the sectors the promise aims to safeguard.",
+          "thematic_alignment": 0.95,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "Batch validated",
+          "progress_indicator": "Assessed in batch",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211110_44_Gazette2_03b68d9d80",
+      "evidence_title": "Regulations amending the Canada Recovery Benefits Act come into force, modifying provisions related to federal recovery benefits.",
+      "semantic_matches_found": 20,
+      "validated_matches": 10,
+      "high_confidence_matches": 10,
+      "optimization_used": "high_similarity_bypass_9_of_20",
+      "processing_time": {
+        "semantic_matching": 0.05496978759765625,
+        "llm_validation": 15.302289962768555,
+        "total": 15.357259750366211
+      },
+      "top_matches": [
+        {
+          "promise_id": "2404",
+          "promise_text": "Ensure the effective delivery and integrity of other relief and recovery measures delivered by the CRA.",
+          "confidence_score": 0.9,
+          "category": "Direct Implementation",
+          "semantic_similarity": 0.6895480751991272,
+          "reasoning_preview": "High semantic similarity (0.690) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.690) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6895480751991272,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3102",
+          "promise_text": "Ensure seniors\u2019 eligibility for the Guaranteed Income Supplement is not negatively impacted by receipt of the Canada Emergency Response Benefit (CERB) and the Canada Recovery Benefit (CRB).",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.6027289628982544,
+          "reasoning_preview": "High semantic similarity (0.603) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.603) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.6027289628982544,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2401",
+          "promise_text": "Support Canadians and Canadian businesses by efficiently implementing, processing, and issuing COVID-19-related benefits.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5647441148757935,
+          "reasoning_preview": "High semantic similarity (0.565) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.565) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5647441148757935,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "2402",
+          "promise_text": "Implement the enhanced Canada Workers Benefit and ensure Canadians who qualify are automatically enrolled, with the benefits delivered on a quarterly basis.",
+          "confidence_score": 0.8,
+          "category": "Supporting Action",
+          "semantic_similarity": 0.5502269268035889,
+          "reasoning_preview": "High semantic similarity (0.550) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.550) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5502269268035889,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        },
+        {
+          "promise_id": "3301",
+          "promise_text": "Advance recovery measures to support the hard-hit tourism industry, such as the Tourism Relief Fund, to help local tourism businesses recover from the pandemic and position themselves for future growth.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5453877449035645,
+          "reasoning_preview": "High semantic similarity (0.545) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.545) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5453877449035645,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    },
+    {
+      "evidence_id": "20211110_44_Gazette2_2719d4bd5e",
+      "evidence_title": "Order designates Minister of Housing and Diversity and Inclusion as the Minister for National Housing Act purposes.",
+      "semantic_matches_found": 3,
+      "validated_matches": 1,
+      "high_confidence_matches": 1,
+      "optimization_used": "high_similarity_bypass_1_of_3",
+      "processing_time": {
+        "semantic_matching": 0.05431699752807617,
+        "llm_validation": 8.45509386062622,
+        "total": 8.509410858154297
+      },
+      "top_matches": [
+        {
+          "promise_id": "1324",
+          "promise_text": "Appoint a new Federal Housing Advocate to monitor progress in meeting the goals of the National Housing Strategy.",
+          "confidence_score": 0.7,
+          "category": "Related Policy",
+          "semantic_similarity": 0.5382741093635559,
+          "reasoning_preview": "High semantic similarity (0.538) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "full_reasoning": "High semantic similarity (0.538) indicates strong relationship. Auto-validated without LLM to improve performance.",
+          "thematic_alignment": 0.5382741093635559,
+          "department_overlap": true,
+          "timeline_relevance": "Contemporary",
+          "implementation_type": "Policy Implementation",
+          "semantic_quality_assessment": "High quality semantic match",
+          "progress_indicator": "Evidence of policy progress",
+          "validation_method": "batch_llm_validation"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "evidence_items_processed": 3,
+    "total_semantic_matches": 28,
+    "total_validated_matches": 13,
+    "total_high_confidence_matches": 13,
+    "avg_semantic_matches_per_evidence": 9.333333333333334,
+    "avg_validated_matches_per_evidence": 4.333333333333333,
+    "validation_success_rate": 46.42857142857143,
+    "high_confidence_rate": 100.0
+  }
+}

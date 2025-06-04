@@ -92,7 +92,7 @@ class PromiseTrackerLangchain:
         
         # Initialize specialized LLM for evidence linking (more powerful model)
         self.linking_llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-pro-preview-05-06",  # More powerful model for complex linking tasks
+            model="gemini-2.5-flash-preview-05-20",  
             google_api_key=self.api_key,
             temperature=0.1,  # Low temperature for consistent results
             max_output_tokens=65536,

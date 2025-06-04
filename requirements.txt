@@ -14,3 +14,4 @@ google-genai # For LLM processing
 langchain
 langgraph
 httpx # For downloading files from URLs
+langchain-google-genai

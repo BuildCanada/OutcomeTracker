@@ -158,22 +158,24 @@ All processing jobs implement the BaseProcessorJob pattern with:
 - LLM-based analysis with source type determination
 - Evidence source type: `Manual Entry`
 
-#### 5. Linking Stage - **NEEDS IMPROVEMENT**
-**Evidence Linker** ⚠️ **REQUIRES REVISION**
-- Basic keyword-based matching with simple heuristics
-- Department, date, and policy area matching logic implemented
-- Link creation in `evidence_promise_links` collection
-- **Current Issues**: Simplistic matching algorithm, no semantic analysis
-- **Needed**: Enhanced NLP/embedding-based semantic matching
-- **Status**: Functional but not production-quality for accurate linking
+#### 5. Linking Stage - **PRODUCTION READY**
 
-**Progress Scorer** ⚠️ **REQUIRES TESTING**
-- LLM-based progress scoring framework implemented
-- Integration with LangChain infrastructure in place
-- Promise score update logic designed
-- **Current Issues**: Untested with recent pipeline changes
-- **Needed**: Comprehensive testing with updated evidence processing
-- **Status**: Implementation complete but validation required
+**Evidence Linker** ✅ **PRODUCTION IMPLEMENTATION**
+- Hybrid approach combining semantic similarity (Sentence-Transformer embeddings) with optional LLM validation
+- Default similarity threshold 0.55 (configurable); high-similarity bypass ≥ 0.50 for performance
+- Model: `all-MiniLM-L6-v2` (fast, reliable)
+- Batch processing with configurable `batch_size` (default 10) and `max_items_per_run`
+- Optimisations:
+  - Bill-linking bypass (direct links for duplicate bill events)
+  - High-similarity auto-validation to avoid unnecessary LLM calls
+  - Batch LLM validation (≤ 8 candidates) for cost efficiency
+- Link creation directly into `evidence_items.promise_ids` arrays (frontend-compatible)
+- Detailed stats & cost tracking returned in job metadata
+
+**Progress Scorer** ⚠️ **REQUIRES VALIDATION WITH UPDATED PIPELINE**
+- LLM-based progress scoring framework complete (1-5 scale)
+- Rule-based fallback implemented
+- Needs comprehensive end-to-end testing with new evidence linking outputs
 
 #### 6. Testing Framework - **PRODUCTION READY**
 **Comprehensive Test Suite** ✅
@@ -421,3 +423,27 @@ Key achievements:
 - **Monitoring Ready**: Firestore logging and alerting infrastructure
 
 The system provides a **maintainable, scalable foundation** for government promise tracking with clear upgrade paths and comprehensive observability. Ready for full production deployment and Cloud Scheduler integration. 
+
+### 🔄 Automatic Job Flow
+```
+[Ingestion Job] ──▶ raw_* collection (new docs)
+        │
+        └─ triggers
+           └──▶ [Processing Job] ──▶ evidence_items (new docs)
+                   │
+                   └─ triggers (items_created)
+                      └──▶ [Evidence Linker] (hybrid) ── updates evidence.promise_ids
+                              │
+                              └─ triggers (new_links_created)
+                                 └──▶ [Progress Scorer] ── updates promises.progress_score
+```
+Notes:
+1. Triggers are declared in `pipeline/config/jobs.yaml` and fired by `PipelineOrchestrator`.
+2. All downstream jobs run **asynchronously** today (background threads); they therefore rely on Cloud Run CPU-available instances (Instance-based billing or alternative mechanisms).
+3. If a processing error sets `promise_linking_status = 'error_processing'`, the maintenance script below can bulk-reset them to `pending` for re-linking.
+
+### 🛠️  Maintenance Utilities
+| Script | Purpose | Typical cadence |
+| ------ | ------- | --------------- |
+| `scripts/utilities/one-time/reset_evidence_error_statuses.py` | Bulk-reset evidence documents whose `promise_linking_status` is `error_processing` back to `pending`, clearing the error message so the Evidence Linker will re-attempt them. | Ad-hoc, or scheduled daily via Cloud Scheduler & Cloud Run job if desired |
+| `pipeline/testing/check_firestore_indexes.py` | Verifies required composite indexes exist (processors rely on them). | Whenever Firestore rules/indexes change | 

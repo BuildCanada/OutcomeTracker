@@ -1,63 +1,99 @@
 """
-Evidence Linker Job for Promise Tracker Pipeline
+Hybrid Evidence Linker Job for Promise Tracker Pipeline
 
-Links evidence items to promises and creates promise-evidence relationships.
-This replaces the existing evidence linking scripts with a more robust,
-class-based implementation.
+Production-ready evidence linking that combines semantic similarity with LLM validation
+for high-precision promise-evidence relationships. Includes performance optimizations:
+- Bill linking bypass for same-document evidence
+- High similarity bypass for confident semantic matches  
+- Batch LLM validation for efficiency
+- Configurable thresholds and limits
+
+This replaces the existing keyword-based evidence linking with a sophisticated
+hybrid approach while maintaining the same BaseJob interface.
 """
 
 import logging
 import sys
+import asyncio
+import time
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from pathlib import Path
+import numpy as np
 
 # Handle imports for both module execution and testing
 try:
     from ...core.base_job import BaseJob
+    from .semantic_evidence_linker import SemanticEvidenceLinker
+    from .llm_evidence_validator import LLMEvidenceValidator, MatchEvaluation
 except ImportError:
     # Add pipeline directory to path for testing
     pipeline_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(pipeline_dir))
     from core.base_job import BaseJob
+    
+    # Add the linking directory for semantic components
+    sys.path.append(str(Path(__file__).parent))
+    from semantic_evidence_linker import SemanticEvidenceLinker
+    from llm_evidence_validator import LLMEvidenceValidator, MatchEvaluation
+
+from google.cloud import firestore
 
 
 class EvidenceLinker(BaseJob):
     """
-    Job for linking evidence items to promises.
+    Production-ready hybrid evidence linking job.
     
-    Analyzes evidence items and creates relationships with relevant promises
-    based on content similarity and semantic matching.
+    Combines semantic similarity analysis with LLM validation to create
+    high-quality evidence-promise relationships. Includes performance 
+    optimizations for production scale processing.
     """
     
     def __init__(self, job_name: str, config: Dict[str, Any] = None):
-        """Initialize the Evidence Linker job"""
+        """Initialize the Hybrid Evidence Linker job"""
         super().__init__(job_name, config)
         
         # Processing settings
-        self.batch_size = self.config.get('batch_size', 20)
-        self.max_items_per_run = self.config.get('max_items_per_run', 200)
-        self.min_confidence_threshold = self.config.get('min_confidence_threshold', 0.3)
+        self.batch_size = self.config.get('batch_size', 10)
+        self.max_items_per_run = self.config.get('max_items_per_run', 100)
+        
+        # Hybrid approach configuration
+        self.semantic_threshold = self.config.get('semantic_threshold', 0.45)
+        self.high_similarity_bypass_threshold = self.config.get('high_similarity_bypass_threshold', 0.50)
+        self.llm_validation_threshold = self.config.get('llm_validation_threshold', 0.5)
+        self.max_llm_candidates = self.config.get('max_llm_candidates', 5)
         
         # Collections
-        self.evidence_collection = 'evidence_items'
-        self.promises_collection = 'promises'
-        self.links_collection = 'promise_evidence_links'
+        self.evidence_collection = self.config.get('evidence_collection', 'evidence_items')
+        self.promises_collection = self.config.get('promises_collection', 'promises')
+        
+        # Initialize components (will be done in _execute_job)
+        self.semantic_linker = None
+        self.llm_validator = None
         
         # Cache for promises to avoid repeated queries
         self._promises_cache = None
+        self._promise_embeddings_cache = None
     
     def _execute_job(self, **kwargs) -> Dict[str, Any]:
         """
-        Execute the evidence linking job.
+        Execute the hybrid evidence linking job.
         
         Args:
-            **kwargs: Additional job arguments
-            
+            **kwargs: Additional job arguments including:
+                parliament_session_id: Session to process (default: 44)
+                limit: Max evidence items to process 
+                validation_threshold: LLM confidence threshold
+                
         Returns:
             Job execution statistics
         """
-        self.logger.info("Starting evidence linking process")
+        self.logger.info("Starting hybrid evidence linking process")
+        
+        # Extract parameters
+        parliament_session_id = str(kwargs.get('parliament_session_id', '44'))
+        limit = kwargs.get('limit', self.max_items_per_run)
+        validation_threshold = kwargs.get('validation_threshold', self.llm_validation_threshold)
         
         stats = {
             'items_processed': 0,
@@ -66,87 +102,132 @@ class EvidenceLinker(BaseJob):
             'items_skipped': 0,
             'errors': 0,
             'metadata': {
+                'parliament_session_id': parliament_session_id,
                 'evidence_collection': self.evidence_collection,
                 'promises_collection': self.promises_collection,
-                'links_collection': self.links_collection
+                'semantic_threshold': self.semantic_threshold,
+                'validation_threshold': validation_threshold,
+                'optimizations': {
+                    'bill_linking_bypasses': 0,
+                    'high_similarity_bypasses': 0,
+                    'batch_llm_validations': 0
+                }
             }
         }
         
         try:
-            # Load promises cache
-            self._load_promises_cache()
+            # Initialize components
+            self._init_components()
+            
+            # Load and cache promises
+            self._load_promises_cache(parliament_session_id)
             
             if not self._promises_cache:
-                self.logger.warning("No promises found for linking")
+                self.logger.warning(f"No promises found for session {parliament_session_id}")
                 return stats
             
             # Get evidence items to process
-            evidence_items = self._get_evidence_items_to_process()
+            evidence_items = self._get_evidence_items_to_process(parliament_session_id, limit)
             
             if not evidence_items:
                 self.logger.info("No evidence items found for linking")
                 return stats
-            
-            # Limit items if configured
-            if self.max_items_per_run:
-                evidence_items = evidence_items[:self.max_items_per_run]
             
             self.logger.info(f"Processing {len(evidence_items)} evidence items against {len(self._promises_cache)} promises")
             
             # Process evidence items in batches
             for i in range(0, len(evidence_items), self.batch_size):
                 batch = evidence_items[i:i + self.batch_size]
-                batch_stats = self._process_evidence_batch(batch)
+                batch_stats = self._process_evidence_batch(batch, validation_threshold)
                 
                 # Update overall stats
                 for key in ['items_processed', 'items_created', 'items_updated', 'items_skipped', 'errors']:
                     stats[key] += batch_stats.get(key, 0)
                 
+                # Update optimization stats
+                for opt_key in ['bill_linking_bypasses', 'high_similarity_bypasses', 'batch_llm_validations']:
+                    stats['metadata']['optimizations'][opt_key] += batch_stats.get('optimizations', {}).get(opt_key, 0)
+                
                 self.logger.info(f"Processed batch {i//self.batch_size + 1}: "
-                               f"{batch_stats['items_created']} links created, "
-                               f"{batch_stats['items_updated']} updated, "
+                               f"{batch_stats['items_updated']} evidence items updated, "
                                f"{batch_stats['items_skipped']} skipped, "
                                f"{batch_stats['errors']} errors")
             
-            self.logger.info(f"Evidence linking completed: {stats['items_created']} links created, "
-                           f"{stats['items_updated']} updated, {stats['items_skipped']} skipped, "
-                           f"{stats['errors']} errors")
+            # Add component stats
+            if self.semantic_linker:
+                stats['metadata']['semantic_stats'] = self.semantic_linker.get_stats()
+            if self.llm_validator:
+                stats['metadata']['llm_stats'] = self.llm_validator.get_stats()
+            
+            self.logger.info(f"Hybrid evidence linking completed: {stats['items_updated']} evidence items updated, "
+                           f"{stats['items_skipped']} skipped, {stats['errors']} errors")
             
         except Exception as e:
-            self.logger.error(f"Fatal error in evidence linking: {e}", exc_info=True)
+            self.logger.error(f"Fatal error in hybrid evidence linking: {e}", exc_info=True)
             stats['errors'] += 1
             raise
         
         return stats
     
-    def _load_promises_cache(self):
-        """Load all active promises into memory for linking"""
+    def _init_components(self):
+        """Initialize semantic linker and LLM validator components."""
         try:
-            self._promises_cache = []
+            self.logger.info("Initializing hybrid evidence linking components")
             
-            # Query for active promises
-            promises_ref = self.db.collection(self.promises_collection).where('status', '==', 'active')
+            # Initialize semantic evidence linker
+            self.semantic_linker = SemanticEvidenceLinker(
+                similarity_threshold=self.semantic_threshold,
+                max_links_per_evidence=50  # Higher limit for pre-filtering
+            )
+            self.semantic_linker.initialize()
             
-            for doc in promises_ref.stream():
-                promise_data = doc.to_dict()
-                promise_data['_doc_id'] = doc.id
-                self._promises_cache.append(promise_data)
+            # Initialize LLM evidence validator  
+            self.llm_validator = LLMEvidenceValidator(
+                validation_threshold=self.llm_validation_threshold
+            )
             
-            self.logger.info(f"Loaded {len(self._promises_cache)} active promises for linking")
+            self.logger.info("Hybrid components initialized successfully")
             
+        except Exception as e:
+            self.logger.error(f"Failed to initialize hybrid components: {e}")
+            raise
+    
+    def _load_promises_cache(self, parliament_session_id: str):
+        """Load all promises and their embeddings into memory for efficient processing."""
+        try:
+            self.logger.info(f"Loading promises for session {parliament_session_id}")
+            
+            # Fetch promises using semantic linker
+            promise_docs, promise_ids = self.semantic_linker.fetch_promises(
+                parliament_session_id, self.promises_collection
+            )
+            
+            if promise_docs:
+                # Generate embeddings for all promises
+                promise_texts = [self.semantic_linker.create_promise_text(promise) for promise in promise_docs]
+                promise_embeddings = self.semantic_linker.generate_embeddings(promise_texts)
+                
+                self._promises_cache = promise_docs
+                self._promise_embeddings_cache = promise_embeddings
+                
+                self.logger.info(f"Cached {len(promise_docs)} promises with embeddings")
+            else:
+                self._promises_cache = []
+                self._promise_embeddings_cache = None
+                
         except Exception as e:
             self.logger.error(f"Error loading promises cache: {e}")
             self._promises_cache = []
+            self._promise_embeddings_cache = None
     
-    def _get_evidence_items_to_process(self) -> List[Dict[str, Any]]:
-        """Get evidence items that need linking"""
+    def _get_evidence_items_to_process(self, parliament_session_id: str, limit: int) -> List[Dict[str, Any]]:
+        """Get evidence items that need hybrid linking."""
         try:
-            # Query for evidence items that haven't been processed for linking
-            # or have been updated since last linking
+            # Query for evidence items with pending promise linking status
             query = (self.db.collection(self.evidence_collection)
-                    .where('linking_status', 'in', ['pending', 'needs_relinking'])
-                    .order_by('last_updated_at')
-                    .limit(self.max_items_per_run * 2))
+                    .where(filter=firestore.FieldFilter('parliament_session_id', '==', parliament_session_id))
+                    .where(filter=firestore.FieldFilter('promise_linking_status', '==', 'pending'))
+                    .limit(limit))
             
             items = []
             for doc in query.stream():
@@ -154,281 +235,307 @@ class EvidenceLinker(BaseJob):
                 item_data['_doc_id'] = doc.id
                 items.append(item_data)
             
-            self.logger.info(f"Found {len(items)} evidence items for linking")
+            self.logger.info(f"Found {len(items)} evidence items for hybrid linking")
             return items
             
         except Exception as e:
             self.logger.error(f"Error querying evidence items: {e}")
             return []
     
-    def _process_evidence_batch(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Process a batch of evidence items for linking"""
+    def _process_evidence_batch(self, batch: List[Dict[str, Any]], validation_threshold: float) -> Dict[str, Any]:
+        """Process a batch of evidence items using the hybrid approach."""
         batch_stats = {
             'items_processed': 0,
             'items_created': 0,
             'items_updated': 0,
             'items_skipped': 0,
-            'errors': 0
+            'errors': 0,
+            'optimizations': {
+                'bill_linking_bypasses': 0,
+                'high_similarity_bypasses': 0,
+                'batch_llm_validations': 0
+            }
         }
         
         for evidence_item in batch:
             try:
                 batch_stats['items_processed'] += 1
+                evidence_id = evidence_item.get('evidence_id', evidence_item.get('_doc_id'))
                 
-                # Find matching promises for this evidence item
-                matches = self._find_promise_matches(evidence_item)
+                self.logger.debug(f"Processing evidence item: {evidence_id}")
                 
-                if matches:
-                    # Create or update links
-                    links_created = self._create_evidence_links(evidence_item, matches)
-                    batch_stats['items_created'] += links_created
+                # OPTIMIZATION 1: Check bill linking bypass
+                bill_bypass_promise_ids = self._check_bill_linking_bypass(evidence_item)
+                if bill_bypass_promise_ids:
+                    self.logger.info(f"🚀 BILL BYPASS: Auto-linking {evidence_id} to {len(bill_bypass_promise_ids)} promises")
                     
-                    # Update evidence item linking status
-                    self._update_evidence_linking_status(evidence_item['_doc_id'], 'linked', len(matches))
+                    success = self._update_evidence_with_promise_links(
+                        evidence_id,
+                        bill_bypass_promise_ids,
+                        'bill_linking_bypass',
+                        [0.95] * len(bill_bypass_promise_ids)  # High confidence for bill links
+                    )
+                    
+                    if success:
+                        batch_stats['items_updated'] += 1
+                        batch_stats['optimizations']['bill_linking_bypasses'] += 1
+                    else:
+                        batch_stats['errors'] += 1
+                    
+                    continue
+                
+                # OPTIMIZATION 2: Semantic matching with LLM validation
+                validated_matches = self._hybrid_evidence_linking(evidence_item, validation_threshold, batch_stats)
+                
+                if validated_matches:
+                    # Update evidence with validated links
+                    promise_ids = [match.promise_id for match in validated_matches]
+                    confidence_scores = [match.confidence_score for match in validated_matches]
+                    
+                    success = self._update_evidence_with_promise_links(
+                        evidence_id,
+                        promise_ids,
+                        'hybrid_semantic_llm',
+                        confidence_scores
+                    )
+                    
+                    if success:
+                        batch_stats['items_updated'] += 1
+                    else:
+                        batch_stats['errors'] += 1
                 else:
-                    # No matches found
-                    self._update_evidence_linking_status(evidence_item['_doc_id'], 'no_matches', 0)
+                    # No matches found - update status
+                    self._update_evidence_linking_status(evidence_id, 'no_matches', 0)
                     batch_stats['items_skipped'] += 1
                     
             except Exception as e:
-                self.logger.error(f"Error processing evidence item {evidence_item.get('_doc_id', 'unknown')}: {e}")
+                self.logger.error(f"Error processing evidence item {evidence_item.get('evidence_id', 'unknown')}: {e}")
                 batch_stats['errors'] += 1
                 
                 # Mark as linking error
                 try:
-                    self._update_evidence_linking_status(evidence_item['_doc_id'], 'error', 0)
+                    self._update_evidence_linking_status(evidence_item.get('_doc_id'), 'error', 0)
                 except Exception:
                     pass
         
         return batch_stats
     
-    def _find_promise_matches(self, evidence_item: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_bill_linking_bypass(self, evidence_item: Dict[str, Any]) -> List[str]:
         """
-        Find promises that match the evidence item.
-        
-        Args:
-            evidence_item: Evidence item to match
+        Check if evidence can bypass semantic/LLM validation through bill linking.
+        Uses evidence_source_document_raw_id for robust document matching.
+        """
+        try:
+            # Check if this is a LEGISinfo Bill Event
+            evidence_source_type = evidence_item.get('evidence_source_type', '')
+            if evidence_source_type != 'Bill Event (LEGISinfo)':
+                return []
             
-        Returns:
-            List of matching promises with confidence scores
-        """
-        matches = []
-        
-        # Extract evidence content for matching
-        evidence_text = self._extract_evidence_text(evidence_item)
-        if not evidence_text:
-            return matches
-        
-        # Simple keyword-based matching (can be enhanced with semantic similarity)
-        for promise in self._promises_cache:
-            confidence = self._calculate_match_confidence(evidence_item, promise, evidence_text)
+            # Check if this evidence item has pending promise linking status
+            promise_linking_status = evidence_item.get('promise_linking_status', '')
+            if promise_linking_status != 'pending':
+                return []
             
-            if confidence >= self.min_confidence_threshold:
-                matches.append({
-                    'promise': promise,
-                    'confidence': confidence,
-                    'match_reasons': self._get_match_reasons(evidence_item, promise, evidence_text)
-                })
-        
-        # Sort by confidence (highest first)
-        matches.sort(key=lambda x: x['confidence'], reverse=True)
-        
-        return matches
-    
-    def _extract_evidence_text(self, evidence_item: Dict[str, Any]) -> str:
-        """Extract searchable text from evidence item"""
-        text_parts = []
-        
-        # Combine various text fields
-        for field in ['title', 'description', 'summary', 'full_text']:
-            if field in evidence_item and evidence_item[field]:
-                text_parts.append(str(evidence_item[field]))
-        
-        return ' '.join(text_parts).lower()
-    
-    def _calculate_match_confidence(self, evidence_item: Dict[str, Any], 
-                                  promise: Dict[str, Any], evidence_text: str) -> float:
-        """
-        Calculate confidence score for evidence-promise match.
-        
-        Args:
-            evidence_item: Evidence item
-            promise: Promise to match against
-            evidence_text: Extracted evidence text
+            # Get the source document raw ID for matching
+            source_document_raw_id = evidence_item.get('evidence_source_document_raw_id', '')
+            if not source_document_raw_id:
+                return []
             
-        Returns:
-            Confidence score between 0 and 1
-        """
-        confidence = 0.0
-        
-        # Extract promise text
-        promise_text = self._extract_promise_text(promise)
-        if not promise_text:
-            return confidence
-        
-        # Simple keyword matching (can be enhanced with NLP/embeddings)
-        promise_keywords = set(promise_text.lower().split())
-        evidence_keywords = set(evidence_text.split())
-        
-        # Calculate keyword overlap
-        common_keywords = promise_keywords.intersection(evidence_keywords)
-        if promise_keywords:
-            keyword_overlap = len(common_keywords) / len(promise_keywords)
-            confidence += keyword_overlap * 0.5
-        
-        # Check for specific matches
-        # Department/ministry matching
-        if self._check_department_match(evidence_item, promise):
-            confidence += 0.2
-        
-        # Date relevance
-        if self._check_date_relevance(evidence_item, promise):
-            confidence += 0.1
-        
-        # Policy area matching
-        if self._check_policy_area_match(evidence_item, promise):
-            confidence += 0.2
-        
-        return min(confidence, 1.0)  # Cap at 1.0
-    
-    def _extract_promise_text(self, promise: Dict[str, Any]) -> str:
-        """Extract searchable text from promise"""
-        text_parts = []
-        
-        for field in ['title', 'description', 'full_text', 'summary']:
-            if field in promise and promise[field]:
-                text_parts.append(str(promise[field]))
-        
-        return ' '.join(text_parts)
-    
-    def _check_department_match(self, evidence_item: Dict[str, Any], 
-                               promise: Dict[str, Any]) -> bool:
-        """Check if evidence and promise are from the same department"""
-        evidence_dept = evidence_item.get('department', '').lower()
-        promise_dept = promise.get('responsible_department', '').lower()
-        
-        if evidence_dept and promise_dept:
-            return evidence_dept in promise_dept or promise_dept in evidence_dept
-        
-        return False
-    
-    def _check_date_relevance(self, evidence_item: Dict[str, Any], 
-                             promise: Dict[str, Any]) -> bool:
-        """Check if evidence date is relevant to promise timeline"""
-        evidence_date = evidence_item.get('publication_date')
-        promise_date = promise.get('created_at')
-        
-        if evidence_date and promise_date:
-            # Evidence should be after promise was made
-            return evidence_date >= promise_date
-        
-        return False
-    
-    def _check_policy_area_match(self, evidence_item: Dict[str, Any], 
-                                promise: Dict[str, Any]) -> bool:
-        """Check if evidence and promise are in the same policy area"""
-        evidence_tags = set(evidence_item.get('tags', []))
-        promise_tags = set(promise.get('policy_areas', []))
-        
-        if evidence_tags and promise_tags:
-            return bool(evidence_tags.intersection(promise_tags))
-        
-        return False
-    
-    def _get_match_reasons(self, evidence_item: Dict[str, Any], 
-                          promise: Dict[str, Any], evidence_text: str) -> List[str]:
-        """Get human-readable reasons for the match"""
-        reasons = []
-        
-        if self._check_department_match(evidence_item, promise):
-            reasons.append("Department match")
-        
-        if self._check_date_relevance(evidence_item, promise):
-            reasons.append("Date relevance")
-        
-        if self._check_policy_area_match(evidence_item, promise):
-            reasons.append("Policy area match")
-        
-        # Add keyword overlap reason
-        promise_text = self._extract_promise_text(promise)
-        promise_keywords = set(promise_text.lower().split())
-        evidence_keywords = set(evidence_text.split())
-        common_keywords = promise_keywords.intersection(evidence_keywords)
-        
-        if len(common_keywords) > 3:
-            reasons.append(f"Keyword overlap ({len(common_keywords)} common terms)")
-        
-        return reasons
-    
-    def _create_evidence_links(self, evidence_item: Dict[str, Any], 
-                              matches: List[Dict[str, Any]]) -> int:
-        """
-        Create promise-evidence links for matches.
-        
-        Args:
-            evidence_item: Evidence item
-            matches: List of matching promises with confidence scores
+            # Query for other evidence items with the same source document ID that are already linked
+            query = (self.db.collection(self.evidence_collection)
+                    .where(filter=firestore.FieldFilter('evidence_source_document_raw_id', '==', source_document_raw_id))
+                    .where(filter=firestore.FieldFilter('promise_linking_status', '==', 'processed')))
             
-        Returns:
-            Number of links created
+            linked_promise_ids = set()
+            
+            for doc in query.stream():
+                doc_data = doc.to_dict()
+                promise_ids = doc_data.get('promise_ids', [])
+                if isinstance(promise_ids, list) and promise_ids:
+                    linked_promise_ids.update(promise_ids)
+            
+            return list(linked_promise_ids)
+            
+        except Exception as e:
+            self.logger.error(f"Error in bill linking bypass check: {e}")
+            return []
+    
+    def _hybrid_evidence_linking(
+        self, 
+        evidence_item: Dict[str, Any], 
+        validation_threshold: float,
+        batch_stats: Dict[str, Any]
+    ) -> List[MatchEvaluation]:
         """
-        links_created = 0
-        
-        for match in matches:
-            try:
-                promise = match['promise']
-                
-                # Generate link ID
-                link_id = f"{promise['_doc_id']}_{evidence_item['_doc_id']}"
-                
-                # Create link document
-                link_data = {
-                    'promise_id': promise['_doc_id'],
-                    'evidence_id': evidence_item['_doc_id'],
-                    'confidence_score': match['confidence'],
-                    'match_reasons': match['match_reasons'],
-                    'link_type': 'automatic',
-                    'created_at': datetime.now(timezone.utc),
-                    'created_by_job': self.job_name,
-                    'status': 'active'
-                }
-                
-                # Check if link already exists
-                link_ref = self.db.collection(self.links_collection).document(link_id)
-                existing_link = link_ref.get()
-                
-                if existing_link.exists:
-                    # Update existing link if confidence has changed significantly
-                    existing_confidence = existing_link.to_dict().get('confidence_score', 0)
-                    if abs(match['confidence'] - existing_confidence) > 0.1:
-                        link_data['updated_at'] = datetime.now(timezone.utc)
-                        link_data['created_at'] = existing_link.to_dict().get('created_at')
-                        link_ref.set(link_data)
+        Perform hybrid evidence linking: semantic pre-filtering + LLM validation.
+        """
+        try:
+            # Generate evidence embedding
+            evidence_text = self.semantic_linker.create_evidence_text(evidence_item)
+            evidence_embedding = self.semantic_linker.generate_embeddings([evidence_text])
+            
+            if evidence_embedding.size == 0:
+                self.logger.warning(f"Failed to generate embedding for evidence {evidence_item.get('evidence_id')}")
+                return []
+            
+            # Find semantic matches
+            semantic_matches = self.semantic_linker.find_semantic_matches(
+                evidence_embedding[0], self._promise_embeddings_cache, self._promises_cache
+            )
+            
+            if not semantic_matches:
+                self.logger.debug(f"No semantic matches found above threshold {self.semantic_threshold}")
+                return []
+            
+            # OPTIMIZATION 3: Separate high similarity matches from those needing LLM validation
+            high_similarity_matches = []
+            llm_validation_matches = []
+            
+            for match in semantic_matches:
+                if match['similarity_score'] >= self.high_similarity_bypass_threshold:
+                    high_similarity_matches.append(match)
                 else:
-                    # Create new link
-                    link_ref.set(link_data)
-                    links_created += 1
+                    llm_validation_matches.append(match)
+            
+            # Limit LLM validation candidates for performance
+            if len(llm_validation_matches) > self.max_llm_candidates:
+                llm_validation_matches = sorted(
+                    llm_validation_matches, 
+                    key=lambda x: x['similarity_score'], 
+                    reverse=True
+                )[:self.max_llm_candidates]
+            
+            validated_matches = []
+            
+            # Add high-confidence matches without LLM validation
+            for match in high_similarity_matches:
+                high_conf_eval = self._create_high_confidence_evaluation(match)
+                validated_matches.append(high_conf_eval)
+            
+            if high_similarity_matches:
+                batch_stats['optimizations']['high_similarity_bypasses'] += len(high_similarity_matches)
+                self.logger.debug(f"🚀 HIGH SIMILARITY BYPASS: {len(high_similarity_matches)} matches ≥{self.high_similarity_bypass_threshold}")
+            
+            # LLM validate the remaining matches
+            if llm_validation_matches:
+                self.logger.debug(f"🔍 LLM VALIDATION: {len(llm_validation_matches)} matches need validation")
                 
-            except Exception as e:
-                self.logger.error(f"Error creating link for promise {match['promise']['_doc_id']}: {e}")
-                continue
+                llm_validated = self.llm_validator.batch_validate_matches(
+                    evidence_item,
+                    llm_validation_matches,
+                    validation_threshold=validation_threshold
+                )
+                validated_matches.extend(llm_validated)
+                batch_stats['optimizations']['batch_llm_validations'] += 1
+            
+            # Filter for high confidence matches
+            final_matches = [
+                match for match in validated_matches 
+                if match.confidence_score >= validation_threshold
+            ]
+            
+            self.logger.info(f"Hybrid linking result: {len(final_matches)} final matches from {len(semantic_matches)} semantic candidates")
+            
+            return final_matches
+            
+        except Exception as e:
+            self.logger.error(f"Error in hybrid evidence linking: {e}")
+            return []
+    
+    def _create_high_confidence_evaluation(self, semantic_match: Dict[str, Any]) -> MatchEvaluation:
+        """Create high-confidence evaluation for semantic scores above bypass threshold."""
+        similarity_score = semantic_match.get('similarity_score', 0.0)
+        promise_data = semantic_match.get('promise_full', {})
         
-        return links_created
+        # Determine category based on similarity score
+        if similarity_score >= 0.65:
+            category = "Direct Implementation"
+            confidence = 0.9
+        elif similarity_score >= 0.55:
+            category = "Supporting Action"
+            confidence = 0.8
+        else:  # >= bypass threshold
+            category = "Related Policy"
+            confidence = 0.7
+        
+        return MatchEvaluation(
+            confidence_score=confidence,
+            reasoning=f"High semantic similarity ({similarity_score:.3f}) indicates strong relationship. Auto-validated without LLM to improve performance.",
+            category=category,
+            thematic_alignment=similarity_score,
+            department_overlap=True,
+            timeline_relevance="Contemporary",
+            implementation_type="Policy Implementation",
+            semantic_quality_assessment="High quality semantic match",
+            progress_indicator="Evidence of policy progress",
+            promise_id=promise_data.get('promise_id', ''),
+            semantic_similarity_score=similarity_score
+        )
+    
+    def _update_evidence_with_promise_links(
+        self,
+        evidence_id: str,
+        promise_ids: List[str],
+        optimization_method: str,
+        confidence_scores: List[float]
+    ) -> bool:
+        """Update evidence item with promise links and hybrid linking metadata."""
+        try:
+            evidence_ref = self.db.collection(self.evidence_collection).document(evidence_id)
+            evidence_doc = evidence_ref.get()
+            
+            if not evidence_doc.exists:
+                self.logger.error(f"Evidence document {evidence_id} not found for update")
+                return False
+            
+            evidence_data = evidence_doc.to_dict()
+            
+            # Get existing promise IDs to merge with new ones
+            existing_promise_ids = evidence_data.get('promise_ids', [])
+            if not isinstance(existing_promise_ids, list):
+                existing_promise_ids = []
+            
+            # Merge promise IDs (avoid duplicates)
+            all_promise_ids = list(set(existing_promise_ids + promise_ids))
+            
+            # Calculate average confidence for logging
+            avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.0
+            
+            # Update the evidence document
+            update_data = {
+                'promise_ids': all_promise_ids,
+                'promise_linking_status': 'processed',
+                'promise_linking_processed_at': firestore.SERVER_TIMESTAMP,
+                'promise_links_found': len(promise_ids),
+                'hybrid_linking_method': optimization_method,
+                'hybrid_linking_avg_confidence': avg_confidence,
+                'hybrid_linking_timestamp': firestore.SERVER_TIMESTAMP
+            }
+            
+            evidence_ref.update(update_data)
+            
+            self.logger.info(f"✅ Updated evidence {evidence_id}: Added {len(promise_ids)} new links (method: {optimization_method}, avg confidence: {avg_confidence:.3f})")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Failed to update evidence {evidence_id}: {e}")
+            return False
     
     def _update_evidence_linking_status(self, evidence_id: str, status: str, links_count: int):
-        """Update the linking status of an evidence item"""
+        """Update the linking status of an evidence item."""
         try:
             self.db.collection(self.evidence_collection).document(evidence_id).update({
-                'linking_status': status,
-                'linking_timestamp': datetime.now(timezone.utc),
-                'links_count': links_count
+                'promise_linking_status': status,
+                'promise_linking_processed_at': firestore.SERVER_TIMESTAMP,
+                'promise_links_found': links_count,
+                'hybrid_linking_timestamp': firestore.SERVER_TIMESTAMP
             })
         except Exception as e:
             self.logger.warning(f"Failed to update linking status for {evidence_id}: {e}")
     
     def should_trigger_downstream(self, result) -> bool:
         """
-        Trigger downstream progress scoring if new links were created.
+        Trigger downstream progress scoring if evidence items were updated.
         
         Args:
             result: Job execution result
@@ -436,7 +543,7 @@ class EvidenceLinker(BaseJob):
         Returns:
             True if downstream jobs should be triggered
         """
-        return result.items_created > 0
+        return result.items_updated > 0
     
     def get_trigger_metadata(self, result) -> Dict[str, Any]:
         """
@@ -450,7 +557,9 @@ class EvidenceLinker(BaseJob):
         """
         return {
             'triggered_by': self.job_name,
-            'links_created': result.items_created,
+            'evidence_updated': result.items_updated,
             'evidence_processed': result.items_processed,
-            'trigger_time': datetime.now(timezone.utc).isoformat()
+            'trigger_time': datetime.now(timezone.utc).isoformat(),
+            'linking_method': 'hybrid_semantic_llm',
+            'optimizations_used': result.metadata.get('optimizations', {})
         } 

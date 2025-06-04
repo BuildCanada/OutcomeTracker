@@ -1,0 +1,14 @@
+{
+  "test_config": {
+    "parliament_session": 44,
+    "evidence_limit": 2,
+    "validation_threshold": 0.7,
+    "collections": {
+      "promises": "promises_test",
+      "evidence": "evidence_items_test"
+    }
+  },
+  "performance_metrics": {},
+  "evidence_results": [],
+  "summary": {}
+}
