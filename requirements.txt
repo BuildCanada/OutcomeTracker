@@ -15,3 +15,5 @@ langchain
 langchain-google-genai # Required for LLM processors
 langgraph
 httpx # For downloading files from URLs
+scikit-learn # Required for evidence linker cosine similarity
+sentence-transformers # Required for semantic evidence linking
