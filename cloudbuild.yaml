@@ -8,20 +8,17 @@ steps:
       - '-t'
       - 'us-central1-docker.pkg.dev/promisetrackerapp/promise-tracker/promise-tracker-pipeline:latest'
       - '.'
-    dir: 'PromiseTracker'
 
   # Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: 
       - 'push'
       - 'us-central1-docker.pkg.dev/promisetrackerapp/promise-tracker/promise-tracker-pipeline:$COMMIT_SHA'
-    dir: 'PromiseTracker'
 
   - name: 'gcr.io/cloud-builders/docker'
     args: 
       - 'push'
       - 'us-central1-docker.pkg.dev/promisetrackerapp/promise-tracker/promise-tracker-pipeline:latest'
-    dir: 'PromiseTracker'
 
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
