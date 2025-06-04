@@ -615,14 +615,42 @@ export default function UnifiedMonitoringDashboard({
                     {formatTimestamp(activity.start_time)} • 
                     Duration: {formatDuration(activity.start_time, activity.end_time)}
                   </div>
-                  {activity.items_created && activity.items_created > 0 && (
-                    <div className="text-xs text-green-600 mt-1">
-                      Created {activity.items_created} items
+                  
+                  {/* Pipeline job metrics */}
+                  {activity.source === 'pipeline' && (
+                    <div className="text-xs mt-1">
+                      {activity.items_processed !== undefined && activity.items_processed > 0 && (
+                        <span className="text-blue-600 mr-3">Processed {activity.items_processed}</span>
+                      )}
+                      {activity.items_created !== undefined && activity.items_created > 0 && (
+                        <span className="text-green-600 mr-3">Created {activity.items_created}</span>
+                      )}
+                      {activity.items_updated !== undefined && activity.items_updated > 0 && (
+                        <span className="text-yellow-600 mr-3">Updated {activity.items_updated}</span>
+                      )}
+                      {activity.items_skipped !== undefined && activity.items_skipped > 0 && (
+                        <span className="text-gray-600 mr-3">Skipped {activity.items_skipped}</span>
+                      )}
+                      {/* Show "No new items" if job ran successfully but created/updated nothing */}
+                      {activity.status === 'success' && 
+                       (activity.items_created === 0 || activity.items_created === undefined) &&
+                       (activity.items_updated === 0 || activity.items_updated === undefined) && (
+                        <span className="text-gray-500">No new items</span>
+                      )}
                     </div>
                   )}
-                  {activity.bills_found && activity.bills_found > 0 && (
+                  
+                  {/* RSS metrics */}
+                  {activity.source === 'rss' && activity.bills_found !== undefined && activity.bills_found > 0 && (
                     <div className="text-xs text-green-600 mt-1">
                       Found {activity.bills_found} bills
+                    </div>
+                  )}
+                  
+                  {/* Error message */}
+                  {activity.error_message && (
+                    <div className="text-xs text-red-600 mt-1">
+                      Error: {activity.error_message}
                     </div>
                   )}
                 </div>

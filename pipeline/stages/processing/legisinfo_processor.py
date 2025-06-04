@@ -22,14 +22,12 @@ load_dotenv()
 try:
     from .base_processor import BaseProcessorJob
     from ...config.evidence_source_types import get_standardized_source_type_for_processor
-    from ...lib.langchain_config import get_langchain_instance
 except ImportError:
     # Add pipeline directory to path for testing
     pipeline_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(pipeline_dir))
     from stages.processing.base_processor import BaseProcessorJob
     from config.evidence_source_types import get_standardized_source_type_for_processor
-    from lib.langchain_config import get_langchain_instance
 
 
 class LegisInfoProcessor(BaseProcessorJob):
@@ -54,6 +52,28 @@ class LegisInfoProcessor(BaseProcessorJob):
         # Processing settings
         self.include_private_bills = self.config.get('include_private_bills', False)
         self.min_relevance_threshold = self.config.get('min_relevance_threshold', 0.3)
+        
+        # Lazy initialization for langchain
+        self._langchain_instance = None
+    
+    @property
+    def langchain_instance(self):
+        """Lazy initialization of langchain instance"""
+        if self._langchain_instance is None:
+            try:
+                # Lazy import to avoid circular dependencies
+                try:
+                    from ...lib.langchain_config import get_langchain_instance
+                except ImportError:
+                    from lib.langchain_config import get_langchain_instance
+                
+                self._langchain_instance = get_langchain_instance()
+                if not self._langchain_instance:
+                    self.logger.error("Could not get langchain instance")
+            except Exception as e:
+                self.logger.error(f"Error initializing langchain: {e}")
+                self._langchain_instance = None
+        return self._langchain_instance
     
     def _get_source_collection(self) -> str:
         """Return the Firestore collection name for raw data"""
@@ -224,13 +244,8 @@ class LegisInfoProcessor(BaseProcessorJob):
     def _call_llm_for_analysis(self, prompt_text: str) -> Optional[Dict[str, Any]]:
         """Call LLM for bill analysis"""
         try:
-            langchain_instance = get_langchain_instance()
-            if not langchain_instance:
-                self.logger.error("Could not get langchain instance")
-                return None
-            
             # Generate content using the LLM from the langchain instance
-            response = langchain_instance.llm.invoke(prompt_text)
+            response = self.langchain_instance.llm.invoke(prompt_text)
             
             if response and hasattr(response, 'content'):
                 # Clean and parse JSON response
@@ -767,19 +782,17 @@ class LegisInfoProcessor(BaseProcessorJob):
                 # Add LLM model name for successful processing
                 if status == 'processed':
                     try:
-                        langchain_instance = get_langchain_instance()
-                        if langchain_instance and hasattr(langchain_instance, 'llm'):
-                            # Try to get model name from different possible attributes
-                            if hasattr(langchain_instance.llm, 'model'):
-                                model_name = langchain_instance.llm.model
-                            elif hasattr(langchain_instance.llm, 'model_name'):
-                                model_name = langchain_instance.llm.model_name
-                            elif hasattr(langchain_instance.llm, '_model_name'):
-                                model_name = langchain_instance.llm._model_name
-                            else:
-                                # Default to a known model name for Gemini
-                                model_name = "models/gemini-2.5-flash-preview-05-20"
-                            update_data['llm_model_name_last_attempt'] = model_name
+                        # Try to get model name from different possible attributes
+                        if hasattr(self.langchain_instance.llm, 'model'):
+                            model_name = self.langchain_instance.llm.model
+                        elif hasattr(self.langchain_instance.llm, 'model_name'):
+                            model_name = self.langchain_instance.llm.model_name
+                        elif hasattr(self.langchain_instance.llm, '_model_name'):
+                            model_name = self.langchain_instance.llm._model_name
+                        else:
+                            # Default to a known model name for Gemini
+                            model_name = "models/gemini-2.5-flash-preview-05-20"
+                        update_data['llm_model_name_last_attempt'] = model_name
                     except Exception:
                         # Default to known Gemini model if extraction fails
                         update_data['llm_model_name_last_attempt'] = "models/gemini-2.5-flash-preview-05-20"

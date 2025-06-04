@@ -303,8 +303,9 @@ export default async function MonitoringPage({
   let overallSuccessRate = 100;
 
   // Check RSS health
-  if (rssData.todayMetrics) {
-    const rssSuccessRate = (rssData.todayMetrics.successful_checks / Math.max(rssData.todayMetrics.total_checks, 1)) * 100;
+  let rssSuccessRate = 100;
+  if (rssData.todayMetrics && rssData.todayMetrics.total_checks > 0) {
+    rssSuccessRate = (rssData.todayMetrics.successful_checks / rssData.todayMetrics.total_checks) * 100;
     if (rssSuccessRate < 80) overallHealthStatus = 'critical';
     else if (rssSuccessRate < 95) overallHealthStatus = 'warning';
   }
@@ -324,10 +325,12 @@ export default async function MonitoringPage({
     else if (overallHealthStatus === 'healthy') overallHealthStatus = 'warning';
   }
 
-  overallSuccessRate = Math.round((rssData.todayMetrics ? 
-    ((rssData.todayMetrics.successful_checks / Math.max(rssData.todayMetrics.total_checks, 1)) + 
-     (pipelineData.jobStats.all.successful / Math.max(pipelineData.jobStats.all.total, 1))) / 2 
-    : pipelineSuccessRate) * 100);
+  // Calculate combined success rate (already as percentage, don't multiply by 100 again)
+  if (rssData.todayMetrics && rssData.todayMetrics.total_checks > 0) {
+    overallSuccessRate = Math.round((rssSuccessRate + pipelineSuccessRate) / 2);
+  } else {
+    overallSuccessRate = Math.round(pipelineSuccessRate);
+  }
 
   return (
     <div className="container mx-auto p-6">

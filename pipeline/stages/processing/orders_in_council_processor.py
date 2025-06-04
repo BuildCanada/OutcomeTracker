@@ -18,14 +18,12 @@ from dotenv import load_dotenv
 try:
     from .base_processor import BaseProcessorJob
     from ...config.evidence_source_types import get_standardized_source_type_for_processor
-    from ...lib.langchain_config import get_langchain_instance
 except ImportError:
     # Add pipeline directory to path for testing
     pipeline_dir = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(pipeline_dir))
     from stages.processing.base_processor import BaseProcessorJob
     from config.evidence_source_types import get_standardized_source_type_for_processor
-    from lib.langchain_config import get_langchain_instance
 
 # Load environment variables
 load_dotenv()
@@ -48,6 +46,28 @@ class OrdersInCouncilProcessor(BaseProcessorJob):
         
         # Load the OIC evidence prompt
         self.prompt_template = self._load_prompt_template()
+        
+        # Lazy initialization for langchain
+        self._langchain_instance = None
+    
+    @property
+    def langchain_instance(self):
+        """Lazy initialization of langchain instance"""
+        if self._langchain_instance is None:
+            try:
+                # Lazy import to avoid circular dependencies
+                try:
+                    from ...lib.langchain_config import get_langchain_instance
+                except ImportError:
+                    from lib.langchain_config import get_langchain_instance
+                
+                self._langchain_instance = get_langchain_instance()
+                if not self._langchain_instance:
+                    self.logger.error("Could not get langchain instance")
+            except Exception as e:
+                self.logger.error(f"Error initializing langchain: {e}")
+                self._langchain_instance = None
+        return self._langchain_instance
     
     def _get_source_collection(self) -> str:
         """Return the Firestore collection name for raw data"""
@@ -181,7 +201,7 @@ Return ONLY valid JSON with these fields.
             self.logger.debug(f"Filled prompt length: {len(filled_prompt)}")
             
             # Get LLM instance and analyze
-            langchain_instance = get_langchain_instance()
+            langchain_instance = self.langchain_instance
             if not langchain_instance:
                 self.logger.error("Could not get LangChain instance")
                 return None
@@ -330,7 +350,7 @@ Return ONLY valid JSON with these fields.
                 update_data['processed_at'] = datetime.now(timezone.utc)
                 
                 # Add LLM model name if available
-                llm_instance = get_langchain_instance()
+                llm_instance = self.langchain_instance
                 if hasattr(llm_instance, 'model_name'):
                     update_data['llm_model_name_last_attempt'] = llm_instance.model_name
                 elif hasattr(llm_instance, 'model'):
