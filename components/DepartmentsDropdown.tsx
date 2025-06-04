@@ -55,7 +55,7 @@ export default function DepartmentsDropdown({
               setIsOpen(false);
             }}
           >
-            {department.shortName}
+            {department.display_short_name}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

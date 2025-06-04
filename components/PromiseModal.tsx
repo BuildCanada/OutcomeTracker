@@ -391,7 +391,13 @@ export default function PromiseModal({ promise, isOpen, onClose }: PromiseModalP
                       className="flex items-center text-xs text-[#0056b3] hover:underline focus:outline-none mb-2"
                       aria-expanded={isRationaleExpanded}
                     >
-                      {isRationaleExpanded ? <ChevronDownIcon className="mr-1 h-4 w-4" /> : <ChevronRightIcon className="mr-1 h-4 w-4" />}
+                      <span>
+                        {isRationaleExpanded ? (
+                          <ChevronDownIcon className="h-4 w-4" />
+                        ) : (
+                          <ChevronRightIcon className="h-4 w-4" />
+                        )}
+                      </span>
                       More Details of Preceding Events
                     </button>
                     {isRationaleExpanded && (
