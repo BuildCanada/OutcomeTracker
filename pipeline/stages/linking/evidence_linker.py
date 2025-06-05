@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 import numpy as np
+import os
 
 # Handle imports for both module execution and testing
 try:
@@ -174,6 +175,14 @@ class EvidenceLinker(BaseJob):
         try:
             self.logger.info("Initializing hybrid evidence linking components")
             
+            # Check for required environment variables first
+            gemini_api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+            if not gemini_api_key:
+                raise EnvironmentError(
+                    "Missing required environment variable: GEMINI_API_KEY or GOOGLE_API_KEY. "
+                    "Please ensure the API key is properly configured in the Cloud Run environment."
+                )
+            
             # Initialize semantic evidence linker
             self.semantic_linker = SemanticEvidenceLinker(
                 similarity_threshold=self.semantic_threshold,
@@ -188,6 +197,9 @@ class EvidenceLinker(BaseJob):
             
             self.logger.info("Hybrid components initialized successfully")
             
+        except EnvironmentError as e:
+            self.logger.error(f"Environment configuration error: {e}")
+            raise
         except Exception as e:
             self.logger.error(f"Failed to initialize hybrid components: {e}")
             raise
