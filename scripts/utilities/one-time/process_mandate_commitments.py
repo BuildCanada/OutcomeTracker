@@ -235,7 +235,7 @@ async def main_async(overwrite: bool = False, limit_arg: int | None = None):
 
     # Query for documents where the target field is null AND source type is Mandate Letter
     # OR query for ALL mandate letters if overwrite is True
-    base_query = db.collection(PROMISES_COLLECTION).where('source_type', '==', 'Mandate Letter Commitment (Structured)')
+    base_query = db.collection(PROMISES_COLLECTION).where(filter=firestore.FieldFilter('source_type', '==', 'Mandate Letter Commitment (Structured))')
 
     if not overwrite:
         query = base_query.where(FIELD_TO_POPULATE, '==', None)

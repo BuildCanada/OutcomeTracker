@@ -88,7 +88,7 @@ class LegisInfoProcessor(BaseProcessorJob):
         try:
             # LegisInfo uses 'processing_status' field instead of 'evidence_processing_status'
             query = (self.db.collection(self.source_collection)
-                    .where('processing_status', '==', 'pending_processing')
+                    .where(filter=firestore.FieldFilter('processing_status', '==', 'pending_processing'))
                     .order_by('last_updated_at')
                     .limit(self.max_items_per_run * 2))  # Get extra to account for filtering
             

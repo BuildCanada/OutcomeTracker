@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from firebase_admin import firestore
+
 """
 Test Firebase Connection
 
@@ -64,7 +66,7 @@ def test_firebase_connection():
             
             # Try to get a count with filters
             try:
-                active_query = promises_ref.where('status', '==', 'active').limit(5)
+                active_query = promises_ref.where(filter=firestore.FieldFilter('status', '==', 'active')).limit(5)
                 active_docs = active_query.get()
                 print(f"✅ Found {len(active_docs)} active promises (sample)")
             except Exception as e:

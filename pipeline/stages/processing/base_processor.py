@@ -140,8 +140,9 @@ class BaseProcessorJob(BaseJob):
         """Get raw items that need processing"""
         try:
             # Query for items with pending status
+            from firebase_admin import firestore
             query = (self.db.collection(self.source_collection)
-                    .where('evidence_processing_status', '==', 'pending_evidence_creation')
+                    .where(filter=firestore.FieldFilter('evidence_processing_status', '==', 'pending_evidence_creation'))
                     .order_by('last_updated_at')
                     .limit(self.max_items_per_run * 2))  # Get extra to account for filtering
             

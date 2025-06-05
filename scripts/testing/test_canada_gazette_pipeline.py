@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from firebase_admin import firestore
+
 """
 Canada Gazette Pipeline Validation Test
 
@@ -279,7 +281,7 @@ class CanadaGazettePipelineTest(BaseJob):
         try:
             collection = self.db.collection('evidence_items')
             # Filter by evidence source type for gazette
-            docs = collection.where('evidence_source_type', '==', 'Regulation (Canada Gazette P2)').order_by('created_at', direction='DESCENDING').limit(limit).stream()
+            docs = collection.where(filter=firestore.FieldFilter('evidence_source_type', '==', 'Regulation (Canada Gazette P2))').order_by('created_at', direction='DESCENDING').limit(limit).stream()
             return [doc.to_dict() for doc in docs]
         except Exception as e:
             self.logger.error(f"Error fetching recent gazette evidence items: {e}")

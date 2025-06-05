@@ -619,8 +619,8 @@ if __name__ == "__main__":
                         # Check if events need reprocessing only if we are not forcing keyword reprocessing (which implies event reprocessing too)
                         if not args.force_reprocess_events and not args.reprocess_events_without_evidence: 
                             evidence_query = db.collection(FIRESTORE_EVIDENCE_COLLECTION)\
-                                .where('bill_parl_id', '==', bill_parl_id)\
-                                .where('parliament_session_id', '==', parliament_num) # MODIFIED: Ensure this check is present
+                                .where(filter=firestore.FieldFilter('bill_parl_id', '==', bill_parl_id))\
+                                .where(filter=firestore.FieldFilter('parliament_session_id', '==', parliament_num)) # MODIFIED: Ensure this check is present
                             
                             existing_evidence_for_session = list(evidence_query.limit(1).stream())
                             if existing_evidence_for_session:
@@ -630,14 +630,14 @@ if __name__ == "__main__":
                             else:
                                 logger.info(f"  Bill {bill_code_from_feed} has no evidence items with parliament_session_id '{parliament_num}' yet. Will process events.")
                         elif args.reprocess_events_without_evidence:
-                            any_evidence_query = db.collection(FIRESTORE_EVIDENCE_COLLECTION).where('bill_parl_id', '==', bill_parl_id)
+                            any_evidence_query = db.collection(FIRESTORE_EVIDENCE_COLLECTION).where(filter=firestore.FieldFilter('bill_parl_id', '==', bill_parl_id))
                             if not list(any_evidence_query.limit(1).stream()):
                                 logger.info(f"  Bill {bill_code_from_feed} has NO evidence items at all. Processing events due to --reprocess_events_without_evidence.")
                             else:
                                 # If there IS some evidence, but --force_reprocess_events is false, AND we have processed this session before, then skip.
                                 evidence_query_specific_session = db.collection(FIRESTORE_EVIDENCE_COLLECTION)\
-                                    .where('bill_parl_id', '==', bill_parl_id)\
-                                    .where('parliament_session_id', '==', parliament_num)
+                                    .where(filter=firestore.FieldFilter('bill_parl_id', '==', bill_parl_id))\
+                                    .where(filter=firestore.FieldFilter('parliament_session_id', '==', parliament_num))
                                 if list(evidence_query_specific_session.limit(1).stream()):
                                      logger.info(f"  Bill {bill_code_from_feed} has evidence items for parliament_session_id '{parliament_num}'. Not reprocessing events due to --reprocess_events_without_evidence without --force_reprocess_events.")
                                      processed_bills_count +=1

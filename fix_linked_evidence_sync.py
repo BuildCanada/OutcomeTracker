@@ -53,7 +53,7 @@ async def analyze_and_fix_evidence_sync():
     logger.info("Firebase Admin SDK initialized successfully")
     
     # Get all active promises
-    promises_query = db.collection('promises').where('status', '==', 'active').limit(50)
+    promises_query = db.collection('promises').where(filter=firestore.FieldFilter('status', '==', 'active')).limit(50)
     promises = list(promises_query.stream())
     
     logger.info(f"Analyzing {len(promises)} active promises for evidence sync issues...")
@@ -68,7 +68,7 @@ async def analyze_and_fix_evidence_sync():
         frontend_evidence_ids = set(promise_data.get('linked_evidence_ids', []))
         
         # Query evidence_items to find what's actually linked via promise_ids
-        evidence_query = db.collection('evidence_items').where('promise_ids', 'array_contains', promise_id)
+        evidence_query = db.collection('evidence_items').where(filter=firestore.FieldFilter('promise_ids', 'array_contains', promise_id))
         evidence_items = list(evidence_query.stream())
         backend_evidence_ids = set([doc.id for doc in evidence_items])
         

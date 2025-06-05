@@ -168,7 +168,7 @@ async def main_async():
         logger.info(f"Scanning flat promises collection for party: {party_code}")
         
         try:
-            promise_docs_stream = db.collection(TARGET_PROMISES_COLLECTION_ROOT).where("party_code", "==", party_code).stream()
+            promise_docs_stream = db.collection(TARGET_PROMISES_COLLECTION_ROOT).where(filter=firestore.FieldFilter('party_code', '==', party_code)).stream()
             party_promises_scanned = 0
             for promise_doc_snap in promise_docs_stream:
                 total_promises_scanned += 1

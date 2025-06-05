@@ -63,7 +63,7 @@ async def test_progress_scorer_data_structure():
     
     try:
         # Get a sample promise ID
-        promises_query = db.collection('promises').where('status', '==', 'active').limit(5)
+        promises_query = db.collection('promises').where(filter=firestore.FieldFilter('status', '==', 'active')).limit(5)
         promises = list(promises_query.stream())
         
         if not promises:
@@ -74,7 +74,7 @@ async def test_progress_scorer_data_structure():
         logger.info(f"Testing with promise ID: {test_promise_id}")
         
         # Query evidence_items that link to this promise
-        evidence_query = db.collection('evidence_items').where('promise_ids', 'array_contains', test_promise_id)
+        evidence_query = db.collection('evidence_items').where(filter=firestore.FieldFilter('promise_ids', 'array_contains', test_promise_id))
         evidence_items = list(evidence_query.stream())
         
         logger.info(f"Found {len(evidence_items)} evidence items linked to promise {test_promise_id}")

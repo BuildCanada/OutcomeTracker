@@ -60,7 +60,7 @@ def extract_and_export_promise_text(limit=None, output_filename="extracted_promi
         logger.info(f"  Querying flat promises collection for party: {party_code}")
         
         try:
-            query = db.collection(TARGET_PROMISES_COLLECTION_ROOT).where("party_code", "==", party_code).where("source_type", "==", target_source_type).select(["text"])
+            query = db.collection(TARGET_PROMISES_COLLECTION_ROOT).where(filter=firestore.FieldFilter('party_code', '==', party_code)).where(filter=firestore.FieldFilter('source_type', '==', target_source_type)).select(["text"])
             results = query.stream()
             
             party_texts_count = 0

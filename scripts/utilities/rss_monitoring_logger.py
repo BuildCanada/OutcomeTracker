@@ -176,8 +176,8 @@ class RSSMonitoringLogger:
         """Check if we should trigger failure alerts."""
         # Query recent failures
         recent_failures = self.db.collection(RSS_MONITORING_COLLECTION)\
-            .where('operation', '==', 'rss_check')\
-            .where('success', '==', False)\
+            .where(filter=firestore.FieldFilter('operation', '==', 'rss_check'))\
+            .where(filter=firestore.FieldFilter('success', '==', False))\
             .order_by('start_time', direction=firestore.Query.DESCENDING)\
             .limit(5)\
             .stream()
@@ -216,7 +216,7 @@ class RSSMonitoringLogger:
         
         # Check for active alerts
         active_alerts = self.db.collection(RSS_ALERTS_COLLECTION)\
-            .where('resolved', '==', False)\
+            .where(filter=firestore.FieldFilter('resolved', '==', False))\
             .limit(1)\
             .stream()
         

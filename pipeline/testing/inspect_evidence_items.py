@@ -40,7 +40,7 @@ def inspect_evidence_items():
         
         # Check for Canada news items specifically
         canada_items = list(db.collection('evidence_items')
-                          .where('evidence_source_type', '==', 'news_release_canada')
+                          .where(filter=firestore.FieldFilter('evidence_source_type', '==', 'news_release_canada'))
                           .limit(10).stream())
         print(f"📰 Canada news evidence items: {len(canada_items)}")
         

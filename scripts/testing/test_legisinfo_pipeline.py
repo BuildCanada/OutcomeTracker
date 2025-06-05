@@ -270,7 +270,7 @@ def test_production_data_compatibility():
     try:
         # Query existing raw bills from Parliament 44
         collection_ref = db.collection('raw_legisinfo_bill_details')
-        query = collection_ref.where('parliament_number', '==', 44).limit(5)
+        query = collection_ref.where(filter=firestore.FieldFilter('parliament_number', '==', 44)).limit(5)
         docs = query.stream()
         
         production_samples = []
