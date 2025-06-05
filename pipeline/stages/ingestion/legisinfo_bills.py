@@ -2,8 +2,7 @@
 LEGISinfo Bills Ingestion Job
 
 Ingests bill information from the LEGISinfo API into the raw_bills collection.
-This replaces the existing ingest_legisinfo_bills.py script with a more robust,
-class-based implementation.
+
 """
 
 import logging
@@ -310,7 +309,7 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
             # Dates
             'ingested_at': latest_activity,
             
-            # Processing status (matching Parliament 44 format)
+            # Processing status 
             'processing_status': 'pending_processing',
             
             # Metadata

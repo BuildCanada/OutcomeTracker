@@ -11,7 +11,7 @@ import sys
 import re
 import json
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -82,6 +82,28 @@ class LegisInfoProcessor(BaseProcessorJob):
     def _get_target_collection(self) -> str:
         """Return the Firestore collection name for evidence items"""
         return self._target_collection_override or "evidence_items"
+    
+    def _get_items_to_process(self) -> List[Dict[str, Any]]:
+        """Get raw LegisInfo items that need processing using the correct field name"""
+        try:
+            # LegisInfo uses 'processing_status' field instead of 'evidence_processing_status'
+            query = (self.db.collection(self.source_collection)
+                    .where('processing_status', '==', 'pending_processing')
+                    .order_by('last_updated_at')
+                    .limit(self.max_items_per_run * 2))  # Get extra to account for filtering
+            
+            items = []
+            for doc in query.stream():
+                item_data = doc.to_dict()
+                item_data['_doc_id'] = doc.id
+                items.append(item_data)
+            
+            self.logger.info(f"Found {len(items)} LegisInfo items with pending processing status")
+            return items
+            
+        except Exception as e:
+            self.logger.error(f"Error querying LegisInfo items to process: {e}")
+            return []
     
     def _process_raw_item(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """

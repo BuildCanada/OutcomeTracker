@@ -177,16 +177,25 @@ class CanadaGazetteIngestion(BaseIngestionJob):
                                since_date: datetime) -> List[Dict[str, Any]]:
         """Filter RSS entries by publication date"""
         filtered_entries = []
+        skipped_count = 0
         
         for entry in entries:
             pub_date = entry.get('publication_date')
-            if pub_date and pub_date >= since_date:
+            entry_title = entry.get('title', 'Unknown')
+            
+            if pub_date:
+                if pub_date >= since_date:
+                    filtered_entries.append(entry)
+                    self.logger.debug(f"Including entry '{entry_title}' published {pub_date}")
+                else:
+                    skipped_count += 1
+                    self.logger.debug(f"Skipping entry '{entry_title}' published {pub_date} (before {since_date})")
+            else:
+                # Include entries without dates to be safe - they might be recent
                 filtered_entries.append(entry)
-            elif not pub_date:
-                # Include entries without dates to be safe
-                filtered_entries.append(entry)
+                self.logger.warning(f"Including entry '{entry_title}' with no publication date")
         
-        self.logger.info(f"Filtered to {len(filtered_entries)} issues since {since_date}")
+        self.logger.info(f"Date filtering: {len(filtered_entries)} entries included, {skipped_count} entries skipped since {since_date}")
         return filtered_entries
     
     def _extract_issue_metadata(self, entry: Dict[str, Any]) -> Dict[str, Any]:
@@ -251,39 +260,99 @@ class CanadaGazetteIngestion(BaseIngestionJob):
         """Extract regulation links from the issue page"""
         regulation_links = []
         
-        # Look for regulation links in various patterns
-        # This may need adjustment based on actual Gazette page structure
-        
-        # Pattern 1: Links in table of contents
-        for link in soup.find_all('a', href=True):
-            href = link.get('href', '')
-            text = link.get_text().strip()
+        # Look for regulation links in the content area
+        # Based on the June 4, 2025 issue structure: <a href="sor-dors131-eng.html"> and <a href="si-tr75-eng.html">
+        content_div = soup.find('div', id='content')
+        if content_div:
+            self.logger.debug("Found content div, searching for regulation links")
             
-            # Check if this looks like a regulation link
-            if self._is_regulation_link(href, text):
-                regulation_links.append({
-                    'url': href,
-                    'text': text,
-                    'element': link
-                })
+            # Look for all links within the content area
+            for link in content_div.find_all('a', href=True):
+                href = link.get('href', '')
+                text = link.get_text().strip()
+                
+                # Check if this looks like a regulation link
+                if self._is_regulation_link(href, text):
+                    # Make URL absolute if needed
+                    if href.startswith('./') or not href.startswith('http'):
+                        if href.startswith('./'):
+                            href = href[2:]  # Remove './'
+                        href = f"https://gazette.gc.ca/rp-pr/p2/2025/2025-06-04/html/{href}"
+                    
+                    regulation_links.append({
+                        'url': href,
+                        'text': text,
+                        'element': link
+                    })
+                    self.logger.debug(f"Found regulation link: {text[:50]}... -> {href}")
+        else:
+            self.logger.warning("Could not find content div with id='content'")
+            
+            # Fallback: Look for regulation links anywhere in the page
+            for link in soup.find_all('a', href=True):
+                href = link.get('href', '')
+                text = link.get_text().strip()
+                
+                if self._is_regulation_link(href, text):
+                    regulation_links.append({
+                        'url': href,
+                        'text': text,
+                        'element': link
+                    })
         
+        self.logger.info(f"Found {len(regulation_links)} regulation links on page")
         return regulation_links
     
     def _is_regulation_link(self, href: str, text: str) -> bool:
         """Determine if a link points to a regulation"""
-        # Look for patterns that indicate regulation links
-        regulation_patterns = [
-            r'SOR/',  # Statutory Orders and Regulations
-            r'SI/',   # Statutory Instruments
-            r'regulation',
-            r'order.*council',
-            r'statutory'
+        # Look for patterns that indicate regulation links based on June 4, 2025 structure
+        href_lower = href.lower()
+        text_lower = text.lower()
+        
+        # Check for specific file patterns from Canada Gazette
+        if (href_lower.endswith('-eng.html') and 
+            (href_lower.startswith('sor-') or href_lower.startswith('si-tr') or 
+             'sor-dors' in href_lower or 'si-tr' in href_lower)):
+            return True
+        
+        # Check for regulation number patterns in href
+        regulation_href_patterns = [
+            r'sor/',  # Statutory Orders and Regulations  
+            r'si/',   # Statutory Instruments
+            r'sor-dors\d+',  # SOR format
+            r'si-tr\d+',     # SI format
         ]
         
-        combined_text = f"{href} {text}".lower()
+        for pattern in regulation_href_patterns:
+            if re.search(pattern, href_lower):
+                return True
         
-        for pattern in regulation_patterns:
-            if re.search(pattern, combined_text, re.IGNORECASE):
+        # Check for regulation indicators in text content
+        regulation_text_patterns = [
+            r'SOR/\d{4}-\d+',  # SOR/2025-131
+            r'SI/\d{4}-\d+',   # SI/2025-75
+            r'order.*amending',
+            r'order.*designating',
+            r'order.*transferring',
+            r'order.*assigning',
+            r'proclamation',
+            r'regulation',
+            r'statutory.*instrument'
+        ]
+        
+        for pattern in regulation_text_patterns:
+            if re.search(pattern, text_lower):
+                return True
+        
+        # Additional check for government department/act names
+        government_indicators = [
+            'act', 'financial administration', 'salaries act', 'farm products',
+            'emergency management', 'physical activity', 'export and import',
+            'ministries and ministers'
+        ]
+        
+        for indicator in government_indicators:
+            if indicator in text_lower and len(text) > 20:  # Ensure it's substantial content
                 return True
         
         return False

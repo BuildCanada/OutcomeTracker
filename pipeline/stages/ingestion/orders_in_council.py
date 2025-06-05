@@ -54,7 +54,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         self.max_consecutive_misses = self.config.get('max_consecutive_misses', 50)
         self.iteration_delay_seconds = self.config.get('iteration_delay_seconds', 2)
         self.max_items_per_run = self.config.get('max_items_per_run', 100)
-        self.start_attach_id = self.config.get('start_attach_id', 47204)  # Default starting point
+        self.start_attach_id = self.config.get('start_attach_id', 47280)  # Updated to recent attach_id
         
         # Request settings
         self.request_timeout = self.config.get('request_timeout', 30)
@@ -407,9 +407,18 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
                 
             config_doc = self.db.collection('script_config').document(config_doc_name).get()
             if config_doc.exists:
-                return config_doc.to_dict().get('last_successfully_scraped_attach_id', self.start_attach_id)
+                config_data = config_doc.to_dict()
+                last_attach_id = config_data.get('last_successfully_scraped_attach_id', self.start_attach_id)
+                self.logger.info(f"Retrieved last scraped attach_id: {last_attach_id}")
+                return last_attach_id
             else:
                 self.logger.info(f"No previous scraping state found, starting from {self.start_attach_id}")
+                # Initialize the config document with current starting point
+                self.db.collection('script_config').document(config_doc_name).set({
+                    'last_successfully_scraped_attach_id': self.start_attach_id,
+                    'initialized_at': datetime.now(timezone.utc),
+                    'updated_at': datetime.now(timezone.utc)
+                })
                 return self.start_attach_id
         except Exception as e:
             self.logger.error(f"Error getting last scraped attach_id: {e}")
