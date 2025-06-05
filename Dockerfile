@@ -31,5 +31,5 @@ USER appuser
 # Expose port
 EXPOSE 8080
 
-# Run the new pipeline orchestrator
-CMD ["python", "-m", "pipeline.orchestrator"] 
+# Run with Gunicorn for production
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "3600", "--preload", "wsgi:app"] 

@@ -86,10 +86,13 @@ class LegisInfoProcessor(BaseProcessorJob):
     def _get_items_to_process(self) -> List[Dict[str, Any]]:
         """Get raw LegisInfo items that need processing using the correct field name"""
         try:
+            # Import firestore for query building
+            from firebase_admin import firestore
+            
             # LegisInfo uses 'processing_status' field instead of 'evidence_processing_status'
+            # Removed order_by to avoid composite index requirement
             query = (self.db.collection(self.source_collection)
                     .where(filter=firestore.FieldFilter('processing_status', '==', 'pending_processing'))
-                    .order_by('last_updated_at')
                     .limit(self.max_items_per_run * 2))  # Get extra to account for filtering
             
             items = []
