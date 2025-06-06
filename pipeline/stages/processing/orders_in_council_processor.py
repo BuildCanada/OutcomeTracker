@@ -80,7 +80,7 @@ class OrdersInCouncilProcessor(BaseProcessorJob):
     def _load_prompt_template(self) -> str:
         """Load the OIC evidence prompt template"""
         try:
-            prompt_path = Path(__file__).parent.parent.parent / "prompts" / "prompt_oic_evidence.md"
+            prompt_path = Path(__file__).parent.parent.parent.parent / "prompts" / "prompt_oic_evidence.md"
             if prompt_path.exists():
                 return prompt_path.read_text()
             else:
@@ -137,13 +137,13 @@ Return ONLY valid JSON with these fields.
             # Basic validation
             if not attach_id or (not oic_number and not title):
                 self.logger.warning(f"OIC missing required fields: {raw_item.get('_doc_id', 'unknown')}")
-                self._update_processing_status(raw_item, 'skipped_missing_data')
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'skipped_missing_data')
                 return None
             
             # Check content length
             if len(full_text) < self.min_content_length:
                 self.logger.debug(f"OIC content too short, skipping: {oic_number}")
-                self._update_processing_status(raw_item, 'skipped_insufficient_content')
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'skipped_insufficient_content')
                 return None
             
             # Analyze OIC content with LLM
@@ -151,20 +151,20 @@ Return ONLY valid JSON with these fields.
             
             if not oic_analysis:
                 self.logger.warning(f"Failed to analyze OIC {oic_number}")
-                self._update_processing_status(raw_item, 'error_processing_script')
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'error_processing_script')
                 return None
             
             # Create evidence item matching the existing structure
             evidence_item = self._create_evidence_item(raw_item, oic_analysis)
             
             # Update processing status to indicate successful processing
-            self._update_processing_status(raw_item, 'evidence_created')
+            self._update_processing_status(raw_item.get('_doc_id', ''), 'evidence_created')
             
             return evidence_item
             
         except Exception as e:
             self.logger.error(f"Error processing OIC {raw_item.get('raw_oic_id', 'unknown')}: {e}")
-            self._update_processing_status(raw_item, 'error_processing_script')
+            self._update_processing_status(raw_item.get('_doc_id', ''), 'error_processing_script')
             return None
     
     def _analyze_oic_with_llm(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -329,12 +329,11 @@ Return ONLY valid JSON with these fields.
         
         return f"{date_str}_{parliament_session}_OIC_{short_hash}"
     
-    def _update_processing_status(self, raw_item: Dict[str, Any], status: str):
+    def _update_processing_status(self, doc_id: str, status: str):
         """Update the processing status of a raw OIC item"""
         try:
-            doc_id = raw_item.get('_doc_id') or raw_item.get('raw_oic_id')
             if not doc_id:
-                self.logger.error("Cannot update processing status: no document ID found")
+                self.logger.error("Cannot update processing status: no document ID provided")
                 return
             
             collection_name = self._get_source_collection()

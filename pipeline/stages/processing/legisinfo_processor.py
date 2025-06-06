@@ -140,12 +140,12 @@ class LegisInfoProcessor(BaseProcessorJob):
             
             if not bill_number or not long_title_en:
                 self.logger.warning(f"Bill missing required fields: {raw_item.get('bill_number_code_feed', 'unknown')}")
-                self._update_processing_status(raw_item, 'error_processing_script')
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'error_processing_script')
                 return None
             
             # Check if we should include this bill
             if not self._should_include_bill_parliament44(raw_item, bill_data):
-                self._update_processing_status(raw_item, 'skipped_not_relevant')
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'skipped_not_relevant')
                 return None
             
             # Extract and analyze bill content
@@ -155,13 +155,13 @@ class LegisInfoProcessor(BaseProcessorJob):
             evidence_item = self._create_parliament44_evidence_item(raw_item, bill_data, bill_analysis)
             
             # Update processing status to indicate successful processing
-            self._update_processing_status(raw_item, 'processed')
+            self._update_processing_status(raw_item.get('_doc_id', ''), 'processed')
             
             return evidence_item
             
         except Exception as e:
             self.logger.error(f"Error processing bill {raw_item.get('bill_number_code_feed', 'unknown')}: {e}")
-            self._update_processing_status(raw_item, 'error_processing_script')
+            self._update_processing_status(raw_item.get('_doc_id', ''), 'error_processing_script')
             return None
     
     def _should_include_bill(self, raw_item: Dict[str, Any]) -> bool:
@@ -247,7 +247,8 @@ class LegisInfoProcessor(BaseProcessorJob):
     def _load_prompt_template(self) -> Optional[str]:
         """Load the prompt template for bill analysis"""
         try:
-            prompt_file = Path("/Users/tscheidt/promise-tracker/PromiseTracker/prompts/prompt_bill_evidence.md")
+            # Use relative path from the PromiseTracker directory (4 levels up from stages/processing/)
+            prompt_file = Path(__file__).parent.parent.parent.parent / "prompts" / "prompt_bill_evidence.md"
             with open(prompt_file, 'r', encoding='utf-8') as f:
                 return f.read()
         except Exception as e:
@@ -785,18 +786,10 @@ class LegisInfoProcessor(BaseProcessorJob):
         cleaned = re.sub(r'<[^>]+>', '', cleaned).strip()
         return cleaned
     
-    def _update_processing_status(self, raw_item: Dict[str, Any], status: str):
+    def _update_processing_status(self, doc_id: str, status: str):
         """Update the processing_status field in the source collection"""
         try:
-            # Get document ID (should match the ingestion pattern)
-            parliament_session = raw_item.get('parliament_session_id', '')
-            bill_code = raw_item.get('bill_number_code_feed', '')
-            
-            if parliament_session and bill_code:
-                doc_id = f"{parliament_session}_{bill_code}"
-            else:
-                doc_id = raw_item.get('parl_id', '')
-            
+            # Use the provided doc_id directly (base class passes raw_item['_doc_id'])
             if doc_id:
                 # Update the processing status and add timestamp
                 update_data = {
