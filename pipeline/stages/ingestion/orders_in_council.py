@@ -51,14 +51,16 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         }
         
         # Processing settings
-        self.max_consecutive_misses = self.config.get('max_consecutive_misses', 50)
-        self.iteration_delay_seconds = self.config.get('iteration_delay_seconds', 2)
-        self.max_items_per_run = self.config.get('max_items_per_run', 100)
+        self.max_consecutive_misses = self.config.get('max_consecutive_misses', 50)  # Keep at 50 due to known gaps up to 36
+        self.iteration_delay_seconds = self.config.get('iteration_delay_seconds', 3)  # Moderate delay between requests
+        self.max_items_per_run = self.config.get('max_items_per_run', 100)  # Standard batch size
         self.start_attach_id = self.config.get('start_attach_id', 47280)  # Updated to first attach_id of 2025 to fix cold start problems
         
-        # Request settings
-        self.request_timeout = self.config.get('request_timeout', 30)
-        self.max_retries = self.config.get('max_retries', 3)
+        # Adaptive timeout strategy
+        self.quick_timeout = self.config.get('quick_timeout', 15)  # Fast timeout to detect non-existent items
+        self.standard_timeout = self.config.get('standard_timeout', 45)  # Longer timeout for slow responses
+        self.max_retries = self.config.get('max_retries', 1)  # Minimal retries to avoid long waits
+        self.max_consecutive_timeouts = self.config.get('max_consecutive_timeouts', 5)  # Exit early after consecutive timeouts
         
         # Parliament sessions cache
         self._parliament_sessions_cache = None
@@ -90,18 +92,26 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         items = []
         current_attach_id = start_id
         consecutive_misses = 0
+        consecutive_timeouts = 0
         items_processed = 0
         
         while (consecutive_misses < self.max_consecutive_misses and 
-               items_processed < self.max_items_per_run):
+               items_processed < self.max_items_per_run and
+               consecutive_timeouts < self.max_consecutive_timeouts):
             
             try:
                 self.logger.info(f"Scraping attach_id: {current_attach_id}")
                 
-                # Scrape OIC page
-                oic_data = self._scrape_oic_page(current_attach_id)
+                # Scrape OIC page with intelligent timeout handling
+                result = self._scrape_oic_page_with_adaptive_timeout(current_attach_id)
+                oic_data = result.get('data')
+                was_timeout = result.get('was_timeout', False)
                 
                 if oic_data:
+                    # Found valid data - reset all counters
+                    consecutive_misses = 0
+                    consecutive_timeouts = 0
+                    
                     # Check if item is newer than since_date
                     if since_date:
                         oic_date = oic_data.get('publication_date')
@@ -111,12 +121,24 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
                             continue
                     
                     items.append(oic_data)
-                    consecutive_misses = 0  # Reset miss counter
                     self.logger.info(f"Successfully scraped OIC: {oic_data.get('oic_number', 'Unknown')}")
                     
                 else:
+                    # No data found
                     consecutive_misses += 1
-                    self.logger.info(f"No valid OIC found for attach_id {current_attach_id} (miss {consecutive_misses}/{self.max_consecutive_misses})")
+                    
+                    if was_timeout:
+                        consecutive_timeouts += 1
+                        self.logger.warning(f"Timeout for attach_id {current_attach_id} (timeout {consecutive_timeouts}/{self.max_consecutive_timeouts}, miss {consecutive_misses}/{self.max_consecutive_misses})")
+                        
+                        # If we're getting many timeouts, we're likely past the end
+                        if consecutive_timeouts >= self.max_consecutive_timeouts:
+                            self.logger.info(f"Stopping due to {consecutive_timeouts} consecutive timeouts - likely reached end of available data")
+                            break
+                    else:
+                        # Reset timeout counter for non-timeout misses (gaps in data)
+                        consecutive_timeouts = 0
+                        self.logger.info(f"No valid OIC found for attach_id {current_attach_id} (miss {consecutive_misses}/{self.max_consecutive_misses})")
                 
                 items_processed += 1
                 current_attach_id += 1
@@ -129,11 +151,96 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
             except Exception as e:
                 self.logger.error(f"Error scraping attach_id {current_attach_id}: {e}")
                 consecutive_misses += 1
+                consecutive_timeouts += 1  # Treat exceptions as potential timeouts
                 current_attach_id += 1
                 continue
         
-        self.logger.info(f"Scraping completed. Found {len(items)} OICs, {consecutive_misses} consecutive misses")
+        self.logger.info(f"Scraping completed. Found {len(items)} OICs, {consecutive_misses} consecutive misses, {consecutive_timeouts} consecutive timeouts")
         return items
+    
+    def _scrape_oic_page_with_adaptive_timeout(self, attach_id: int) -> Dict[str, Any]:
+        """
+        Scrape a single OIC page with adaptive timeout strategy.
+        
+        Args:
+            attach_id: Attachment ID to scrape
+            
+        Returns:
+            Dictionary with 'data' (OIC data or None) and 'was_timeout' (boolean)
+        """
+        url = f"{self.base_url}?attach={attach_id}&lang=en"
+        
+        try:
+            # First attempt with quick timeout to detect non-existent items
+            response = self._make_request(url, timeout=self.quick_timeout)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Check if page contains OIC data
+            if not self._is_valid_oic_page(soup):
+                return {'data': None, 'was_timeout': False}
+            
+            # If we got here, page exists and has content - extract data
+            oic_data = self._extract_oic_data_from_soup(soup, attach_id, url)
+            return {'data': oic_data, 'was_timeout': False}
+            
+        except requests.exceptions.Timeout:
+            # Quick timeout failed - try with standard timeout
+            try:
+                self.logger.debug(f"Quick timeout for {attach_id}, trying standard timeout")
+                response = self._make_request(url, timeout=self.standard_timeout)
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                if not self._is_valid_oic_page(soup):
+                    return {'data': None, 'was_timeout': False}
+                
+                oic_data = self._extract_oic_data_from_soup(soup, attach_id, url)
+                return {'data': oic_data, 'was_timeout': False}
+                
+            except requests.exceptions.Timeout:
+                self.logger.warning(f"Standard timeout also failed for attach_id {attach_id}")
+                return {'data': None, 'was_timeout': True}
+            except Exception as e:
+                self.logger.error(f"Error after timeout retry for attach_id {attach_id}: {e}")
+                return {'data': None, 'was_timeout': True}
+                
+        except Exception as e:
+            self.logger.error(f"Error scraping OIC page {attach_id}: {e}")
+            return {'data': None, 'was_timeout': False}
+    
+    def _extract_oic_data_from_soup(self, soup: BeautifulSoup, attach_id: int, url: str) -> Dict[str, Any]:
+        """Extract OIC data from BeautifulSoup object"""
+        oic_data = {
+            'attach_id': attach_id,
+            'source_url': url,
+            'scraped_at': datetime.now(timezone.utc)
+        }
+        
+        # Extract OIC number
+        oic_number = self._extract_oic_number(soup)
+        if oic_number:
+            oic_data['oic_number'] = oic_number
+            oic_data['oic_number_normalized'] = self._normalize_oic_number(oic_number)
+        
+        # Extract title
+        title = self._extract_title(soup)
+        if title:
+            oic_data['title'] = title
+        
+        # Extract publication date
+        pub_date = self._extract_publication_date(soup)
+        if pub_date:
+            oic_data['publication_date'] = pub_date
+        
+        # Extract full text content
+        content = self._extract_content(soup)
+        if content:
+            oic_data['full_text'] = content
+        
+        # Extract additional metadata
+        metadata = self._extract_metadata(soup)
+        oic_data.update(metadata)
+        
+        return oic_data
     
     def _scrape_oic_page(self, attach_id: int) -> Optional[Dict[str, Any]]:
         """
@@ -422,33 +529,36 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
             return self.start_attach_id
     
 
-    def _make_request(self, url: str) -> requests.Response:
+    def _make_request(self, url: str, timeout: int = None) -> requests.Response:
         """
         Make HTTP request with retries and proper error handling.
         
         Args:
             url: URL to fetch
+            timeout: Request timeout in seconds (uses standard_timeout if not specified)
             
         Returns:
             Response object
         """
-        for attempt in range(self.max_retries):
+        timeout = timeout or self.standard_timeout
+        
+        for attempt in range(self.max_retries + 1):  # +1 because we want at least 1 attempt
             try:
                 response = requests.get(
                     url,
                     headers=self.headers,
-                    timeout=self.request_timeout,
+                    timeout=timeout,
                     allow_redirects=True
                 )
                 response.raise_for_status()
                 return response
                 
             except requests.exceptions.RequestException as e:
-                if attempt < self.max_retries - 1:
-                    self.logger.warning(f"Request failed (attempt {attempt + 1}/{self.max_retries}): {e}")
+                if attempt < self.max_retries:
+                    self.logger.warning(f"Request failed (attempt {attempt + 1}/{self.max_retries + 1}): {e}")
                     continue
                 else:
-                    self.logger.error(f"Request failed after {self.max_retries} attempts: {e}")
+                    self.logger.error(f"Request failed after {self.max_retries + 1} attempts: {e}")
                     raise
     
     def _process_raw_item(self, raw_item: Dict[str, Any]) -> Dict[str, Any]:
