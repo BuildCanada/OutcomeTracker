@@ -1,17 +1,16 @@
 # Promise Tracker Pipeline Job Definitions
-# This file defines all jobs, their configurations, and dependencies
+# 
+# MINIMAL CONFIGURATION: Only job classes and triggers
+# All scheduling, timeouts, retries configured in Google Cloud Scheduler
+#
+# Each Cloud Scheduler job should target:
+# POST https://your-cloud-run-service/jobs/{stage}/{job_name}
 
 stages:
   ingestion:
-    description: "Ingest raw data from government sources"
     jobs:
       canada_news:
         class: "pipeline.stages.ingestion.canada_news.CanadaNewsIngestion"
-        description: "Ingest Canada.ca news releases"
-        schedule: "0 */2 * * *"  # Every 2 hours
-        timeout_minutes: 30
-        retry_attempts: 3
-        dependencies: []
         triggers:
           - stage: "processing"
             job: "news_processor"
@@ -19,11 +18,6 @@ stages:
         
       legisinfo_bills:
         class: "pipeline.stages.ingestion.legisinfo_bills.LegisInfoBillsIngestion"
-        description: "Ingest LEGISinfo bill data"
-        schedule: "0 8,20 * * *"  # 8 AM and 8 PM daily
-        timeout_minutes: 45
-        retry_attempts: 3
-        dependencies: []
         triggers:
           - stage: "processing"
             job: "bill_processor"
@@ -31,11 +25,6 @@ stages:
         
       orders_in_council:
         class: "pipeline.stages.ingestion.orders_in_council.OrdersInCouncilIngestion"
-        description: "Ingest Orders in Council"
-        schedule: "0 9 * * *"  # 9 AM daily
-        timeout_minutes: 30
-        retry_attempts: 3
-        dependencies: []
         triggers:
           - stage: "processing"
             job: "oic_processor"
@@ -43,25 +32,15 @@ stages:
         
       canada_gazette:
         class: "pipeline.stages.ingestion.canada_gazette.CanadaGazetteIngestion"
-        description: "Ingest Canada Gazette Part 2"
-        schedule: "0 10 * * *"  # 10 AM daily
-        timeout_minutes: 30
-        retry_attempts: 3
-        dependencies: []
         triggers:
           - stage: "processing"
             job: "gazette_processor"
             condition: "new_items_found"
 
   processing:
-    description: "Process raw data into evidence items"
     jobs:
       news_processor:
         class: "pipeline.stages.processing.canada_news_processor.CanadaNewsProcessor"
-        description: "Process news releases into evidence items"
-        timeout_minutes: 60
-        retry_attempts: 2
-        dependencies: ["ingestion.canada_news"]
         triggers:
           - stage: "linking"
             job: "evidence_linker"
@@ -69,10 +48,6 @@ stages:
         
       bill_processor:
         class: "pipeline.stages.processing.legisinfo_processor.LegisInfoProcessor"
-        description: "Process bill data into evidence items"
-        timeout_minutes: 60
-        retry_attempts: 2
-        dependencies: ["ingestion.legisinfo_bills"]
         triggers:
           - stage: "linking"
             job: "evidence_linker"
@@ -80,10 +55,6 @@ stages:
         
       oic_processor:
         class: "pipeline.stages.processing.orders_in_council_processor.OrdersInCouncilProcessor"
-        description: "Process OIC data into evidence items"
-        timeout_minutes: 60
-        retry_attempts: 2
-        dependencies: ["ingestion.orders_in_council"]
         triggers:
           - stage: "linking"
             job: "evidence_linker"
@@ -91,24 +62,15 @@ stages:
         
       gazette_processor:
         class: "pipeline.stages.processing.canada_gazette_processor.CanadaGazetteProcessor"
-        description: "Process gazette data into evidence items"
-        timeout_minutes: 60
-        retry_attempts: 2
-        dependencies: ["ingestion.canada_gazette"]
         triggers:
           - stage: "linking"
             job: "evidence_linker"
             condition: "new_evidence_created"
 
   linking:
-    description: "Link evidence to promises and score progress"
     jobs:
       evidence_linker:
         class: "pipeline.stages.linking.evidence_linker.EvidenceLinker"
-        description: "Link evidence items to promises"
-        timeout_minutes: 120
-        retry_attempts: 2
-        dependencies: []  # Triggered by processing jobs
         triggers:
           - stage: "linking"
             job: "progress_scorer"
@@ -116,28 +78,13 @@ stages:
         
       progress_scorer:
         class: "pipeline.stages.linking.progress_scorer.ProgressScorer"
-        description: "Update promise progress scores"
-        timeout_minutes: 60
-        retry_attempts: 2
-        dependencies: ["linking.evidence_linker"]
 
   maintenance:
-    description: "Maintenance and enrichment jobs"
     jobs:
       promise_enricher:
         class: "pipeline.stages.linking.promise_enricher.PromiseEnricher"
-        description: "Enrich promises with explanations and metadata"
-        timeout_minutes: 90
-        retry_attempts: 2
-        dependencies: []  # Manual execution only
-        schedule: null  # No automatic schedule - run on demand
 
-# Global configuration
+# Global settings (only what's not handled by Cloud Scheduler)
 global:
-  max_concurrent_jobs: 3
-  default_timeout_minutes: 30
-  default_retry_attempts: 2
-  error_notification_webhook: "${ERROR_WEBHOOK_URL}"
-  monitoring:
-    enable_metrics: true
-    log_level: "INFO" 
+  max_concurrent_jobs: 3  # For batch execution
+  error_notification_webhook: "${ERROR_WEBHOOK_URL}" 

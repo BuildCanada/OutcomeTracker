@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Promise Tracker data pipeline has been restructured into a unified, class-based system. 
+The Promise Tracker data pipeline has been restructured into a unified, class-based system deployed on Google Cloud Run with scheduling managed by Google Cloud Scheduler.
 
 ## 🏗️ Architecture Summary
 
@@ -14,7 +14,7 @@ PromiseTracker/pipeline/
 ├── __init__.py                           # Package definition with version 2.0.0
 ├── orchestrator.py                      # Main Flask app (replaces cloud_run_main.py) ✅
 ├── config/
-│   ├── jobs.yaml                        # Complete job configuration ✅
+│   ├── jobs.yaml                        # Minimal job configuration (classes & triggers only) ✅
 │   └── evidence_source_types.py        # Centralized source type definitions ✅
 ├── core/
 │   ├── base_job.py                      # Abstract base for all jobs ✅
@@ -43,6 +43,25 @@ PromiseTracker/pipeline/
         └── cleanup_test_collections.py # Test data management ✅
 ```
 
+## 🎛️ Configuration Management
+
+### Separation of Concerns
+
+**Google Cloud Console** manages operational settings:
+- ⏰ **Scheduling** - Cloud Scheduler cron expressions 
+- ⏱️ **Timeouts** - Attempt deadlines per job
+- 🔄 **Retries** - Max retry attempts and backoff strategies  
+- 🔐 **Authentication** - Service accounts and IAM roles
+- 📊 **Monitoring** - Alerting policies and log analysis
+- 🏗️ **Infrastructure** - Cloud Run memory, CPU, scaling
+
+**Code Configuration** (`jobs.yaml`) defines application logic:
+- 🔧 **Job Classes** - Which Python class to execute
+- 🔗 **Triggers** - Downstream job dependencies  
+- ⚙️ **Runtime Settings** - Batch sizes, concurrent job limits
+
+This separation eliminates configuration duplication and follows Google Cloud best practices.
+
 ## 📋 Implementation Status
 
 ### ✅ Completed & Validated Components
@@ -68,13 +87,13 @@ PromiseTracker/pipeline/
   - Firestore monitoring and alerting integration
   - Production-ready with health checks and error handling
 
-#### 2. Configuration System - **PRODUCTION READY**
+#### 2. Configuration System - **PRODUCTION READY & SIMPLIFIED**
 - **Jobs Configuration** (`pipeline/config/jobs.yaml`)
-  - Complete job definitions with 12 configured jobs across 3 stages
-  - Cron schedules for automated execution
-  - Dependency management and conditional triggering
-  - Timeout and retry configurations per job
-  - Global settings for concurrent execution limits
+  - **MINIMAL CONFIG**: Only job classes and trigger relationships
+  - **12 configured jobs** across 3 stages
+  - **Automatic downstream triggering** with conditional logic
+  - **No duplication** - timeouts/retries managed by Cloud Scheduler
+  - **Clean separation** between application logic and operational settings
 
 - **Evidence Source Types** (`pipeline/config/evidence_source_types.py`)
   - Centralized configuration with 15 standardized source types
@@ -203,6 +222,7 @@ CMD ["python", "-m", "pipeline.orchestrator"]
 ```
 
 **Cloud Build Configuration** (`cloudbuild.yaml`):
+- **Purpose**: CI/CD pipeline for automated deployment
 - **Image**: `us-central1-docker.pkg.dev/promisetrackerapp/promise-tracker/promise-tracker-pipeline`
 - **Resources**: 2Gi memory, 2 CPU, 3600s timeout
 - **Scaling**: Max 5 instances, concurrency 10
@@ -215,32 +235,46 @@ CMD ["python", "-m", "pipeline.orchestrator"]
 - **Artifact Registry**: Automated repository creation and image management
 - **Verification**: Health check and deployment status validation
 
-### Cloud Scheduler Integration - **CONFIGURED**
-**Scheduled Jobs**:
-```bash
-# Canada News (Every 2 hours)
-0 */2 * * * → /jobs/ingestion/canada_news
+### Cloud Scheduler Integration - **PRODUCTION CONFIGURED**
 
-# LEGISinfo Bills (8 AM & 8 PM daily)  
-0 8,20 * * * → /jobs/ingestion/legisinfo_bills
+**Management Location**: Google Cloud Console → Cloud Scheduler
 
-# Orders in Council (9 AM daily)
-0 9 * * * → /jobs/ingestion/orders_in_council
+**Current Active Schedules**:
+```
+Job Name: legisinfo-bills-ingestion
+├─ Schedule: 0 8,20 * * * (8 AM & 8 PM daily)
+├─ Target: POST /jobs/ingestion/legisinfo_bills
+├─ Timeout: 30 minutes (Attempt deadline)
+├─ Retries: 2 attempts with exponential backoff
+├─ Body: {"config": {"max_items": 50}}
+└─ Auth: Promise Tracker Scheduler service account
 
-# Canada Gazette (10 AM daily)
-0 10 * * * → /jobs/ingestion/canada_gazette
+Job Name: orders-in-council-ingestion  
+├─ Schedule: 0 9 * * * (9 AM daily)
+├─ Target: POST /jobs/ingestion/orders_in_council
+├─ Timeout: 30 minutes
+├─ Retries: 2 attempts
+└─ Body: {"max_consecutive_misses": 50}
 ```
 
-**Cloud Scheduler Commands**:
-```bash
-# Example: Orders in Council daily ingestion
-gcloud scheduler jobs create http oic-ingestion-job \
-  --location=northamerica-northeast2 \
-  --schedule="0 9 * * *" \
-  --uri="https://promise-tracker-pipeline-[hash].run.app/jobs/ingestion/orders_in_council" \
-  --http-method=POST \
-  --headers="Content-Type=application/json" \
-  --message-body='{"dry_run": false, "max_consecutive_misses": 50}'
+**Required for Each Job**:
+- **Target URL**: `https://promise-tracker-pipeline-[hash]-uc.a.run.app/jobs/{stage}/{job_name}`
+- **HTTP Method**: POST
+- **Content-Type**: application/json
+- **Auth Header**: Add OIDC token
+- **Service Account**: Promise Tracker Scheduler
+- **Body**: Job-specific configuration JSON
+
+**Recommended Schedules**:
+```
+Ingestion Jobs:
+├─ canada_news: Every 2 hours (0 */2 * * *)
+├─ legisinfo_bills: Twice daily (0 8,20 * * *) ✅ CONFIGURED
+├─ orders_in_council: Daily at 9 AM (0 9 * * *) ✅ CONFIGURED
+└─ canada_gazette: Daily at 10 AM (0 10 * * *)
+
+Maintenance Jobs:
+└─ promise_enricher: Weekly (0 2 * * 0)
 ```
 
 ## 🔗 API Endpoints - **PRODUCTION READY**
@@ -252,8 +286,8 @@ gcloud scheduler jobs create http oic-ingestion-job \
 - `POST /jobs/batch` - Execute multiple jobs concurrently
 
 ### Pipeline Management
-- Job execution with timeout and retry handling
-- Automatic downstream triggering based on results
+- Job execution handled by Cloud Scheduler timeouts and retries
+- Automatic downstream triggering based on results (from jobs.yaml)
 - Firestore logging for monitoring and alerting
 - Active job tracking with concurrency limits
 
@@ -307,13 +341,13 @@ gcloud scheduler jobs create http oic-ingestion-job \
 
 ### Reliability - **PRODUCTION TESTED**
 - **Job Success Rate**: 100% (Orders in Council validation)
-- **Error Recovery**: Automatic retry with exponential backoff
+- **Error Recovery**: Automatic retry with exponential backoff (Cloud Scheduler)
 - **Data Consistency**: Field structure validation passed
 
 ### Scalability - **VERIFIED**
 - **Batch Processing**: Configurable batch sizes (default: 10 items)
-- **Concurrent Execution**: 3 concurrent jobs maximum
-- **Timeout Management**: Per-job timeout configuration
+- **Concurrent Execution**: 3 concurrent jobs maximum (jobs.yaml)
+- **Timeout Management**: Per-job timeout configuration (Cloud Scheduler)
 - **Resource Optimization**: 2Gi memory, efficient processing
 
 ### Quality Assurance - **MEASURED**
@@ -327,7 +361,7 @@ gcloud scheduler jobs create http oic-ingestion-job \
 ### ✅ Phase 1: Core Infrastructure (COMPLETE)
 - Pipeline architecture implemented and tested
 - Base classes with standardized patterns
-- Configuration system with job definitions
+- Minimal configuration system with clear separation of concerns
 - Orchestrator with Flask API endpoints
 
 ### ✅ Phase 2: Ingestion Implementation (COMPLETE)
@@ -348,11 +382,11 @@ gcloud scheduler jobs create http oic-ingestion-job \
 - Progress scoring implementation complete but untested with recent changes
 - **Needed**: Enhanced semantic matching and comprehensive testing
 
-### 🔄 Phase 5: Production Deployment (IN PROGRESS)
-- Cloud Run configuration ready
-- GitHub Actions deployment pipeline configured
-- Cloud Scheduler jobs configured
-- **Next**: Full production cutover and monitoring setup
+### ✅ Phase 5: Production Deployment (COMPLETE)
+- Cloud Run configuration deployed and tested
+- GitHub Actions deployment pipeline operational
+- Cloud Scheduler jobs configured for key ingestion workflows
+- Configuration simplified and duplication eliminated
 
 ## 📝 Scripts to be Deprecated
 
@@ -383,8 +417,8 @@ gcloud scheduler jobs create http oic-ingestion-job \
 ### Operational Excellence ✅
 - **Deployment**: Automated CI/CD with GitHub Actions
 - **Scaling**: Cloud Run with auto-scaling configuration
-- **Scheduling**: Cloud Scheduler integration ready
-- **Monitoring**: Pipeline execution tracking and alerting
+- **Scheduling**: Cloud Scheduler integration operational
+- **Configuration**: Clean separation between code and infrastructure
 
 ### Data Quality ✅
 - **Field Standardization**: Consistent field structures across all sources
@@ -407,12 +441,18 @@ gcloud scheduler jobs create http oic-ingestion-job \
 ### Health Monitoring - **READY**
 - Health check endpoint for Cloud Run deployment
 - Job status tracking with active job monitoring
-- Automatic alerting for pipeline failures
+- Automatic alerting for pipeline failures (Cloud Scheduler)
 - Execution history with success/failure metrics
+
+### Cloud Console Monitoring
+- **Cloud Run Logs**: Real-time execution monitoring and debugging
+- **Cloud Scheduler History**: Job execution status and retry tracking
+- **Cloud Monitoring**: Custom metrics and alerting policies
+- **Error Reporting**: Automatic error detection and aggregation
 
 ## 🎉 Conclusion
 
-The Promise Tracker pipeline implementation is **production-ready** with comprehensive testing validation. The Orders in Council pipeline has been **fully tested at scale** with 100% success rates for both ingestion and processing phases. 
+The Promise Tracker pipeline implementation is **production-ready** with comprehensive testing validation and optimized configuration management. The Orders in Council pipeline has been **fully tested at scale** with 100% success rates for both ingestion and processing phases.
 
 Key achievements:
 - **Robust Architecture**: Class-based design with comprehensive error handling
@@ -421,28 +461,36 @@ Key achievements:
 - **Comprehensive Testing**: Full test suite with production validation
 - **Standardized Data**: Consistent field structures and evidence types
 - **Monitoring Ready**: Firestore logging and alerting infrastructure
+- **Simplified Configuration**: Clear separation between application logic and operational settings
+- **Production Scheduling**: Google Cloud Scheduler managing job execution
 
-The system provides a **maintainable, scalable foundation** for government promise tracking with clear upgrade paths and comprehensive observability. Ready for full production deployment and Cloud Scheduler integration. 
+The system provides a **maintainable, scalable foundation** for government promise tracking with clear upgrade paths and comprehensive observability. The configuration architecture follows Google Cloud best practices with operational settings managed through the Cloud Console and application logic defined in code.
 
 ### 🔄 Automatic Job Flow
 ```
-[Ingestion Job] ──▶ raw_* collection (new docs)
+[Cloud Scheduler] ──HTTP POST──▶ [Cloud Run Service]
+        │                            │
+        │                            ▼
+        │                      [Ingestion Job] ──▶ raw_* collection (new docs)
+        │                            │
+        │                            └─ triggers (from jobs.yaml)
+        │                               └──▶ [Processing Job] ──▶ evidence_items (new docs)
+        │                                       │
+        │                                       └─ triggers (items_created)
+        │                                          └──▶ [Evidence Linker] ── updates evidence.promise_ids
+        │                                                  │
+        │                                                  └─ triggers (new_links_created)
+        │                                                     └──▶ [Progress Scorer] ── updates promises.progress_score
         │
-        └─ triggers
-           └──▶ [Processing Job] ──▶ evidence_items (new docs)
-                   │
-                   └─ triggers (items_created)
-                      └──▶ [Evidence Linker] (hybrid) ── updates evidence.promise_ids
-                              │
-                              └─ triggers (new_links_created)
-                                 └──▶ [Progress Scorer] ── updates promises.progress_score
+        └─ (Retries & timeouts managed by Cloud Scheduler)
 ```
-Notes:
-1. Triggers are declared in `pipeline/config/jobs.yaml` and fired by `PipelineOrchestrator`.
-2. All downstream jobs run **asynchronously** today (background threads); they therefore rely on Cloud Run CPU-available instances (Instance-based billing or alternative mechanisms).
-3. If a processing error sets `promise_linking_status = 'error_processing'`, the maintenance script below can bulk-reset them to `pending` for re-linking.
 
-### 🛠️  Maintenance Utilities
+**Configuration Responsibilities**:
+1. **Cloud Scheduler** (Google Cloud Console): When, how often, timeout, retries
+2. **jobs.yaml** (Code): Which Python class, what triggers afterward  
+3. **Cloud Run** (Google Cloud Console): Memory, CPU, scaling, authentication
+
+### 🛠️ Maintenance Utilities
 | Script | Purpose | Typical cadence |
 | ------ | ------- | --------------- |
 | `scripts/utilities/one-time/reset_evidence_error_statuses.py` | Bulk-reset evidence documents whose `promise_linking_status` is `error_processing` back to `pending`, clearing the error message so the Evidence Linker will re-attempt them. | Ad-hoc, or scheduled daily via Cloud Scheduler & Cloud Run job if desired |

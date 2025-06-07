@@ -54,7 +54,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         self.max_consecutive_misses = self.config.get('max_consecutive_misses', 50)
         self.iteration_delay_seconds = self.config.get('iteration_delay_seconds', 2)
         self.max_items_per_run = self.config.get('max_items_per_run', 100)
-        self.start_attach_id = self.config.get('start_attach_id', 47280)  # Updated to recent attach_id
+        self.start_attach_id = self.config.get('start_attach_id', 47280)  # Updated to first attach_id of 2025 to fix cold start problems
         
         # Request settings
         self.request_timeout = self.config.get('request_timeout', 30)
@@ -83,8 +83,9 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         """
         self.logger.info("Starting Orders in Council scraping")
         
-        # Get starting attach_id from last successful run or config
-        start_id = self._get_last_scraped_attach_id()
+        # Get starting attach_id from last ingested item in collection + 1
+        last_attach_id = self._get_last_ingested_attach_id()
+        start_id = last_attach_id + 1
         
         items = []
         current_attach_id = start_id
@@ -112,9 +113,6 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
                     items.append(oic_data)
                     consecutive_misses = 0  # Reset miss counter
                     self.logger.info(f"Successfully scraped OIC: {oic_data.get('oic_number', 'Unknown')}")
-                    
-                    # Update last scraped ID
-                    self._update_last_scraped_attach_id(current_attach_id)
                     
                 else:
                     consecutive_misses += 1
@@ -225,7 +223,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
                 pc_number_raw = pc_strong_tag.next_sibling.strip()
             elif pc_strong_tag.parent:
                 parent_text = pc_strong_tag.parent.get_text(separator=' ', strip=True)
-                match = re.search(r"PC Number:\s*([\w-]+)", parent_text, re.IGNORECASE)
+                match = re.search(r"PC Number:\s*(\d{4}-\d{3,4})", parent_text, re.IGNORECASE)
                 if match: 
                     pc_number_raw = match.group(1)
         
@@ -234,7 +232,7 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
             all_p_tags_in_main = main_content.find_all('p', recursive=False)
             if len(all_p_tags_in_main) > 0:
                 p_pc_text = all_p_tags_in_main[0].get_text(strip=True)
-                match = re.search(r"PC Number:\s*([\w-]+)", p_pc_text, re.IGNORECASE)
+                match = re.search(r"PC Number:\s*(\d{4}-\d{3,4})", p_pc_text, re.IGNORECASE)
                 if match: 
                     pc_number_raw = match.group(1)
         
@@ -396,50 +394,34 @@ class OrdersInCouncilIngestion(BaseIngestionJob):
         self.logger.warning(f"Could not normalize OIC number: '{raw_oic_number}'")
         return raw_oic_number.strip()
     
-    def _get_last_scraped_attach_id(self) -> int:
-        """Get the last successfully scraped attach_id from Firestore"""
+    def _get_last_ingested_attach_id(self) -> int:
+        """Get the highest attach_id from the raw orders in council collection"""
         try:
-            # Use different config document for test collections
-            config_doc_name = 'ingest_raw_oic_config'
             collection_name = self._get_collection_name()
-            if 'test_' in collection_name:
-                config_doc_name = f'test_{config_doc_name}'
-                
-            config_doc = self.db.collection('script_config').document(config_doc_name).get()
-            if config_doc.exists:
-                config_data = config_doc.to_dict()
-                last_attach_id = config_data.get('last_successfully_scraped_attach_id', self.start_attach_id)
-                self.logger.info(f"Retrieved last scraped attach_id: {last_attach_id}")
+            
+            # Query for the highest attach_id in the collection
+            from google.cloud import firestore
+            query = (self.db.collection(collection_name)
+                    .order_by('attach_id', direction=firestore.Query.DESCENDING)
+                    .limit(1))
+            
+            docs = list(query.stream())
+            
+            if docs:
+                last_doc = docs[0]
+                last_attach_id = last_doc.to_dict().get('attach_id', self.start_attach_id)
+                self.logger.info(f"Found last ingested attach_id: {last_attach_id}")
                 return last_attach_id
             else:
-                self.logger.info(f"No previous scraping state found, starting from {self.start_attach_id}")
-                # Initialize the config document with current starting point
-                self.db.collection('script_config').document(config_doc_name).set({
-                    'last_successfully_scraped_attach_id': self.start_attach_id,
-                    'initialized_at': datetime.now(timezone.utc),
-                    'updated_at': datetime.now(timezone.utc)
-                })
+                self.logger.info(f"No existing items found in {collection_name}, starting from {self.start_attach_id}")
                 return self.start_attach_id
+                
         except Exception as e:
-            self.logger.error(f"Error getting last scraped attach_id: {e}")
+            self.logger.error(f"Error getting last ingested attach_id: {e}")
+            self.logger.info(f"Falling back to configured start_attach_id: {self.start_attach_id}")
             return self.start_attach_id
     
-    def _update_last_scraped_attach_id(self, attach_id: int):
-        """Update the last successfully scraped attach_id in Firestore"""
-        try:
-            # Use different config document for test collections
-            config_doc_name = 'ingest_raw_oic_config'
-            collection_name = self._get_collection_name()
-            if 'test_' in collection_name:
-                config_doc_name = f'test_{config_doc_name}'
-                
-            self.db.collection('script_config').document(config_doc_name).set({
-                'last_successfully_scraped_attach_id': attach_id,
-                'updated_at': datetime.now(timezone.utc)
-            }, merge=True)
-        except Exception as e:
-            self.logger.warning(f"Failed to update last scraped attach_id: {e}")
-    
+
     def _make_request(self, url: str) -> requests.Response:
         """
         Make HTTP request with retries and proper error handling.
