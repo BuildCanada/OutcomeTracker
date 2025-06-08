@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+  - 'build'
+  - '--tag'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/promise-tracker/promise-tracker-base:latest'
+  - '--file'
+  - 'Dockerfile.base'
+  - '.'
+
+images:
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/promise-tracker/promise-tracker-base:latest'

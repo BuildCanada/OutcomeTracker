@@ -1,22 +1,21 @@
-# Use Python 3.11 base image
-FROM python:3.11-slim
+# Main Dockerfile for the application
+# --- IMPORTANT CHANGE ---
+# Use your new, stable base image from your project's Artifact Registry.
+FROM us-central1-docker.pkg.dev/promisetrackerapp/promise-tracker/promise-tracker-base:latest
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
+# --- This step will now be CACHED because the base image is stable ---
 # Copy requirements first for better caching
 COPY requirements.txt .
 
+# --- This step will also be CACHED unless requirements.txt changes ---
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
+# --- This step will break the cache, which is what we want ---
+# Copy the application code last
 COPY . .
 
 # Set environment variables
@@ -32,4 +31,4 @@ USER appuser
 EXPOSE 8080
 
 # Run with Gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "3600", "--preload", "wsgi:app"] 
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "3600", "--preload", "wsgi:app"]

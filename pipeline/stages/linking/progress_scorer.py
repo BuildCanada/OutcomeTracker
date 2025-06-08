@@ -21,17 +21,12 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 from google.cloud import firestore
 
-# Handle imports for both module execution and testing
-try:
-    from ...core.base_job import BaseJob
-    from ....lib.langchain_config import get_langchain_instance
-except ImportError:
-    # Add pipeline directory to path for testing
-    pipeline_dir = Path(__file__).parent.parent.parent
-    sys.path.insert(0, str(pipeline_dir))
-    sys.path.insert(0, str(pipeline_dir.parent))
-    from core.base_job import BaseJob
-    from lib.langchain_config import get_langchain_instance
+# Standard imports for pipeline jobs
+sys.path.append(str(Path(__file__).parent.parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent.parent))
+
+from pipeline.core.base_job import BaseJob
+from lib.langchain_config import get_langchain_instance
 
 
 class ProgressScorer(BaseJob):

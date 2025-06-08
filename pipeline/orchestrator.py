@@ -15,6 +15,10 @@ from typing import Dict, Any, List, Optional
 from flask import Flask, request, jsonify
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+from pathlib import Path
+
+# Add pipeline directory to Python path for imports
+sys.path.append(str(Path(__file__).parent))
 
 # Firebase imports
 try:
@@ -24,8 +28,8 @@ try:
 except ImportError:
     FIREBASE_AVAILABLE = False
 
-from .core.base_job import BaseJob, JobResult, JobStatus
-from .core.job_runner import JobRunner
+from pipeline.core.base_job import BaseJob, JobResult, JobStatus
+from pipeline.core.job_runner import JobRunner
 
 
 class PipelineOrchestrator:

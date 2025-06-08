@@ -1,0 +1,8 @@
+# Use Python 3.11 base image
+FROM python:3.11-slim
+
+# Install system dependencies and clean up
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
