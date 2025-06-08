@@ -215,7 +215,8 @@ class PipelineOrchestrator:
             
             # Handle downstream triggers
             if job_instance.should_trigger_downstream(result):
-                self._trigger_downstream_jobs(stage, job_name, job_config, result)
+                trigger_metadata = job_instance.get_trigger_metadata(result)
+                self._trigger_downstream_jobs(stage, job_name, job_config, result, trigger_metadata)
             
             # Log job execution to Firestore
             self._log_job_execution(job_id, stage, job_name, result)
@@ -252,7 +253,7 @@ class PipelineOrchestrator:
                 self.active_jobs.pop(job_id, None)
     
     def _trigger_downstream_jobs(self, stage: str, job_name: str, 
-                                job_config: Dict[str, Any], result: JobResult):
+                                job_config: Dict[str, Any], result: JobResult, trigger_metadata: Dict[str, Any] = None):
         """
         Trigger downstream jobs based on job configuration.
         
@@ -261,6 +262,7 @@ class PipelineOrchestrator:
             job_name: Current job name
             job_config: Current job configuration
             result: Job execution result
+            trigger_metadata: Metadata from triggering job to pass to downstream jobs
         """
         triggers = job_config.get('triggers', [])
         
@@ -281,6 +283,8 @@ class PipelineOrchestrator:
                 should_trigger = True
             elif condition == 'new_links_created' and result.items_created > 0:
                 should_trigger = True
+            elif condition == 'evidence_updated' and result.items_updated > 0:
+                should_trigger = True
             
             if should_trigger:
                 self.logger.info(f"Triggering downstream job: {trigger_stage}.{trigger_job} (condition: {condition})")
@@ -288,21 +292,22 @@ class PipelineOrchestrator:
                 # Execute downstream job asynchronously
                 threading.Thread(
                     target=self._execute_triggered_job,
-                    args=(trigger_stage, trigger_job, result),
+                    args=(trigger_stage, trigger_job, result, trigger_metadata),
                     daemon=True
                 ).start()
             else:
                 self.logger.debug(f"Not triggering {trigger_stage}.{trigger_job}: condition '{condition}' not met (status: {result.status.value}, items_created: {result.items_created})")
     
-    def _execute_triggered_job(self, stage: str, job_name: str, trigger_result: JobResult):
+    def _execute_triggered_job(self, stage: str, job_name: str, trigger_result: JobResult, trigger_metadata: Dict[str, Any] = None):
         """Execute a triggered downstream job"""
         try:
-            # Add trigger metadata to job execution
-            trigger_metadata = {
-                'triggered_by': trigger_result.job_name,
-                'trigger_time': datetime.now(timezone.utc).isoformat(),
-                'trigger_items_created': trigger_result.items_created
-            }
+            # Use provided trigger metadata or create basic metadata
+            if trigger_metadata is None:
+                trigger_metadata = {
+                    'triggered_by': trigger_result.job_name,
+                    'trigger_time': datetime.now(timezone.utc).isoformat(),
+                    'trigger_items_created': trigger_result.items_created
+                }
             
             result = self.execute_job(stage, job_name, trigger_metadata=trigger_metadata)
             self.logger.info(f"Triggered job completed: {stage}.{job_name} - {result.status.value}")

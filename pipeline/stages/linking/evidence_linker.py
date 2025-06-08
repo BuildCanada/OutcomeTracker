@@ -107,6 +107,7 @@ class EvidenceLinker(BaseJob):
                 'promises_collection': self.promises_collection,
                 'semantic_threshold': self.semantic_threshold,
                 'validation_threshold': validation_threshold,
+                'affected_promise_ids': set(),  # Track which promises need rescoring
                 'optimizations': {
                     'bill_linking_bypasses': 0,
                     'high_similarity_bypasses': 0,
@@ -147,6 +148,9 @@ class EvidenceLinker(BaseJob):
                 # Update optimization stats
                 for opt_key in ['bill_linking_bypasses', 'high_similarity_bypasses', 'batch_llm_validations']:
                     stats['metadata']['optimizations'][opt_key] += batch_stats.get('optimizations', {}).get(opt_key, 0)
+                
+                # Update affected promise IDs
+                stats['metadata']['affected_promise_ids'].update(batch_stats.get('affected_promise_ids', set()))
                 
                 self.logger.info(f"Processed batch {i//self.batch_size + 1}: "
                                f"{batch_stats['items_updated']} evidence items updated, "
@@ -278,6 +282,7 @@ class EvidenceLinker(BaseJob):
             'items_updated': 0,
             'items_skipped': 0,
             'errors': 0,
+            'affected_promise_ids': set(),  # Track promises affected in this batch
             'optimizations': {
                 'bill_linking_bypasses': 0,
                 'high_similarity_bypasses': 0,
@@ -307,6 +312,7 @@ class EvidenceLinker(BaseJob):
                     if success:
                         batch_stats['items_updated'] += 1
                         batch_stats['optimizations']['bill_linking_bypasses'] += 1
+                        batch_stats['affected_promise_ids'].update(bill_bypass_promise_ids)  # Track affected promises
                     else:
                         batch_stats['errors'] += 1
                     
@@ -329,6 +335,7 @@ class EvidenceLinker(BaseJob):
                     
                     if success:
                         batch_stats['items_updated'] += 1
+                        batch_stats['affected_promise_ids'].update(promise_ids)  # Track affected promises
                     else:
                         batch_stats['errors'] += 1
                 else:
@@ -583,10 +590,13 @@ class EvidenceLinker(BaseJob):
         Returns:
             Metadata for downstream jobs
         """
+        affected_promise_ids = result.metadata.get('affected_promise_ids', set())
         return {
             'triggered_by': self.job_name,
             'evidence_updated': result.items_updated,
             'evidence_processed': result.items_processed,
+            'affected_promise_ids': list(affected_promise_ids),  # Convert set to list for JSON serialization
+            'affected_promise_count': len(affected_promise_ids),
             'trigger_time': datetime.now(timezone.utc).isoformat(),
             'linking_method': 'hybrid_semantic_llm',
             'optimizations_used': result.metadata.get('optimizations', {})

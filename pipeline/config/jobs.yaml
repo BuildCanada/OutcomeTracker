@@ -74,7 +74,7 @@ stages:
         triggers:
           - stage: "linking"
             job: "progress_scorer"
-            condition: "new_links_created"
+            condition: "evidence_updated"
         
       progress_scorer:
         class: "pipeline.stages.linking.progress_scorer.ProgressScorer"

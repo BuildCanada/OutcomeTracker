@@ -89,7 +89,8 @@ class ProgressScorer(BaseJob):
         Execute the progress scoring job.
         
         Args:
-            **kwargs: Additional job arguments
+            **kwargs: Additional job arguments including:
+                trigger_metadata: Metadata from triggering job (may contain affected_promise_ids)
             
         Returns:
             Job execution statistics
@@ -103,6 +104,10 @@ class ProgressScorer(BaseJob):
             'errors': 0,
             'llm_calls': 0,
             'total_cost_estimate': 0.0,
+            'items_processed': 0,  # For BaseJob compatibility
+            'items_created': 0,    # For BaseJob compatibility  
+            'items_updated': 0,    # For BaseJob compatibility
+            'items_skipped': 0,    # For BaseJob compatibility
             'metadata': {
                 'promises_collection': self.promises_collection,
                 'evidence_collection': self.evidence_collection,
@@ -111,16 +116,29 @@ class ProgressScorer(BaseJob):
         }
         
         try:
-            # Get promises to score
-            promises_to_score = self._get_promises_to_score()
+            # Check if we have specific promise IDs to score from trigger metadata
+            trigger_metadata = kwargs.get('trigger_metadata', {})
+            affected_promise_ids = trigger_metadata.get('affected_promise_ids', [])
             
-            if not promises_to_score:
-                self.logger.info("No promises found for scoring")
+            if not affected_promise_ids:
+                # No specific promise IDs provided - exit gracefully
+                self.logger.info("No affected promise IDs received from evidence linker. Skipping progress scoring to avoid expensive full scan.")
+                self.logger.info("To manually score all promises for maintenance, use a dedicated maintenance script rather than the pipeline.")
+                stats['metadata']['targeting_mode'] = 'no_promises_specified'
+                stats['metadata']['skip_reason'] = 'no_affected_promise_ids'
                 return stats
             
-            # Limit promises if configured
-            if self.max_promises_per_run:
-                promises_to_score = promises_to_score[:self.max_promises_per_run]
+            # Score only the promises that were affected by evidence linking
+            self.logger.info(f"Targeted scoring: {len(affected_promise_ids)} promises affected by evidence linking")
+            promises_to_score = self._get_specific_promises_to_score(affected_promise_ids)
+            stats['metadata']['targeting_mode'] = 'affected_promises_only'
+            stats['metadata']['trigger_source'] = trigger_metadata.get('triggered_by', 'unknown')
+            stats['metadata']['requested_promise_count'] = len(affected_promise_ids)
+            
+            if not promises_to_score:
+                self.logger.warning(f"None of the {len(affected_promise_ids)} affected promise IDs were found as active promises")
+                stats['metadata']['skip_reason'] = 'no_active_promises_found'
+                return stats
             
             self.logger.info(f"Scoring {len(promises_to_score)} promises using {'LLM-based' if self.use_llm_scoring else 'rule-based'} scoring")
             
@@ -133,6 +151,10 @@ class ProgressScorer(BaseJob):
                 for key in ['promises_processed', 'scores_updated', 'status_changes', 'errors', 'llm_calls']:
                     stats[key] += batch_stats.get(key, 0)
                 
+                # Map progress scorer stats to BaseJob-compatible stats
+                stats['items_processed'] = stats['promises_processed']
+                stats['items_updated'] = stats['scores_updated']
+                
                 self.logger.info(f"Scored batch {i//self.batch_size + 1}: "
                                f"{batch_stats['scores_updated']} scores updated, "
                                f"{batch_stats['status_changes']} status changes, "
@@ -143,9 +165,14 @@ class ProgressScorer(BaseJob):
                 cost_summary = self.langchain.get_cost_summary()
                 stats['total_cost_estimate'] = cost_summary.get('total_cost_usd', 0.0)
             
-            self.logger.info(f"Progress scoring completed: {stats['scores_updated']} scores updated, "
-                           f"{stats['status_changes']} status changes, {stats['errors']} errors, "
-                           f"{stats['llm_calls']} LLM calls, ${stats['total_cost_estimate']:.4f} estimated cost")
+            if stats['metadata']['targeting_mode'] == 'no_promises_specified':
+                self.logger.info(f"Progress scoring skipped: No affected promise IDs received from upstream job")
+            elif stats['metadata'].get('skip_reason') == 'no_active_promises_found':
+                self.logger.info(f"Progress scoring skipped: None of {stats['metadata']['requested_promise_count']} affected promises were active")
+            else:
+                self.logger.info(f"Progress scoring completed: {stats['scores_updated']} scores updated, "
+                               f"{stats['status_changes']} status changes, {stats['errors']} errors, "
+                               f"{stats['llm_calls']} LLM calls, ${stats['total_cost_estimate']:.4f} estimated cost")
             
         except Exception as e:
             self.logger.error(f"Fatal error in progress scoring: {e}", exc_info=True)
@@ -155,7 +182,13 @@ class ProgressScorer(BaseJob):
         return stats
     
     def _get_promises_to_score(self) -> List[Dict[str, Any]]:
-        """Get promises that need progress scoring"""
+        """
+        Get all active promises that need progress scoring.
+        
+        WARNING: This method is only for manual/maintenance use. 
+        In normal pipeline operation, progress_scorer should only process 
+        specific promise IDs passed from evidence_linker.
+        """
         try:
             # Get all active promises (simple query to avoid index requirement)
             query = (self.db.collection(self.promises_collection)
@@ -173,6 +206,39 @@ class ProgressScorer(BaseJob):
             
         except Exception as e:
             self.logger.error(f"Error querying promises: {e}")
+            return []
+    
+    def _get_specific_promises_to_score(self, promise_ids: List[str]) -> List[Dict[str, Any]]:
+        """Get specific promises by ID for targeted scoring"""
+        try:
+            promises = []
+            
+            # Batch get promises by ID (Firestore has a limit of 10 for 'in' queries)
+            batch_size = 10
+            for i in range(0, len(promise_ids), batch_size):
+                batch_ids = promise_ids[i:i + batch_size]
+                
+                # Get batch of promises
+                batch_promises = []
+                for promise_id in batch_ids:
+                    try:
+                        doc = self.db.collection(self.promises_collection).document(promise_id).get()
+                        if doc.exists:
+                            promise_data = doc.to_dict()
+                            promise_data['_doc_id'] = doc.id
+                            # Only include active promises
+                            if promise_data.get('status') == 'active':
+                                batch_promises.append(promise_data)
+                    except Exception as e:
+                        self.logger.warning(f"Error getting promise {promise_id}: {e}")
+                
+                promises.extend(batch_promises)
+            
+            self.logger.info(f"Found {len(promises)} specific active promises for targeted scoring")
+            return promises
+            
+        except Exception as e:
+            self.logger.error(f"Error querying specific promises: {e}")
             return []
     
     def _score_promise_batch(self, batch: List[Dict[str, Any]]) -> Dict[str, Any]:
