@@ -1,0 +1,40 @@
+# .gcloudignore
+# This file explicitly tells gcloud which files to ignore.
+# It OVERRIDES .dockerignore for gcloud commands.
+
+# First, let's re-include everything, so we start from a clean slate.
+!*
+
+# Now, let's explicitly EXCLUDE what we don't want.
+# This is a safer approach.
+
+# Exclude Git directory
+.git/
+
+# Exclude local Python virtual environments
+.venv/
+venv/
+env/
+
+# Exclude Node.js dependencies
+node_modules/
+
+# Exclude Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Exclude local environment files and logs
+*.log
+.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.idea/
+.vscode/
+
+# Exclude large data and output directories
+raw-data/
+scripts/JSON_outputs/
+2025-promises/
