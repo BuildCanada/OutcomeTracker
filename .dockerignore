@@ -18,7 +18,7 @@ env/
 .env.production.local
 
 # Development and testing files
-.git/
+.git
 .gitignore
 README.md
 *.md
@@ -26,11 +26,9 @@ README.md
 .vscode/
 .idea/
 
-# Build and deployment files
+# Build and deployment scripts that shouldn't be in the container
 deploy_cloud_run.py
 test_cloud_run_local.py
-Dockerfile
-.dockerignore
 
 # Documentation and examples
 docs/
@@ -43,7 +41,6 @@ scripts/JSON_outputs/
 2025-promises/
 
 # Other Next.js specific
-.next/
 out/
 .swc/
 
@@ -52,4 +49,4 @@ out/
 
 # Testing
 coverage/
-.nyc_output/ 
+.nyc_output/
