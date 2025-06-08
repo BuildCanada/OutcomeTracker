@@ -14,28 +14,28 @@ stages:
         triggers:
           - stage: "processing"
             job: "news_processor"
-            condition: "new_items_found"
+            condition: "successful_run"
         
       legisinfo_bills:
         class: "pipeline.stages.ingestion.legisinfo_bills.LegisInfoBillsIngestion"
         triggers:
           - stage: "processing"
             job: "bill_processor"
-            condition: "new_items_found"
+            condition: "successful_run"
         
       orders_in_council:
         class: "pipeline.stages.ingestion.orders_in_council.OrdersInCouncilIngestion"
         triggers:
           - stage: "processing"
             job: "oic_processor"
-            condition: "new_items_found"
+            condition: "successful_run"
         
       canada_gazette:
         class: "pipeline.stages.ingestion.canada_gazette.CanadaGazetteIngestion"
         triggers:
           - stage: "processing"
             job: "gazette_processor"
-            condition: "new_items_found"
+            condition: "successful_run"
 
   processing:
     jobs:
@@ -44,28 +44,28 @@ stages:
         triggers:
           - stage: "linking"
             job: "evidence_linker"
-            condition: "new_evidence_created"
+            condition: "successful_run"
         
       bill_processor:
         class: "pipeline.stages.processing.legisinfo_processor.LegisInfoProcessor"
         triggers:
           - stage: "linking"
             job: "evidence_linker"
-            condition: "new_evidence_created"
+            condition: "successful_run"
         
       oic_processor:
         class: "pipeline.stages.processing.orders_in_council_processor.OrdersInCouncilProcessor"
         triggers:
           - stage: "linking"
             job: "evidence_linker"
-            condition: "new_evidence_created"
+            condition: "successful_run"
         
       gazette_processor:
         class: "pipeline.stages.processing.canada_gazette_processor.CanadaGazetteProcessor"
         triggers:
           - stage: "linking"
             job: "evidence_linker"
-            condition: "new_evidence_created"
+            condition: "successful_run"
 
   linking:
     jobs:

@@ -273,6 +273,8 @@ class PipelineOrchestrator:
             should_trigger = False
             if condition == 'always':
                 should_trigger = True
+            elif condition == 'successful_run' and result.status == JobStatus.SUCCESS:
+                should_trigger = True
             elif condition == 'new_items_found' and result.items_created > 0:
                 should_trigger = True
             elif condition == 'new_evidence_created' and result.items_created > 0:
@@ -281,7 +283,7 @@ class PipelineOrchestrator:
                 should_trigger = True
             
             if should_trigger:
-                self.logger.info(f"Triggering downstream job: {trigger_stage}.{trigger_job}")
+                self.logger.info(f"Triggering downstream job: {trigger_stage}.{trigger_job} (condition: {condition})")
                 
                 # Execute downstream job asynchronously
                 threading.Thread(
@@ -289,6 +291,8 @@ class PipelineOrchestrator:
                     args=(trigger_stage, trigger_job, result),
                     daemon=True
                 ).start()
+            else:
+                self.logger.debug(f"Not triggering {trigger_stage}.{trigger_job}: condition '{condition}' not met (status: {result.status.value}, items_created: {result.items_created})")
     
     def _execute_triggered_job(self, stage: str, job_name: str, trigger_result: JobResult):
         """Execute a triggered downstream job"""
