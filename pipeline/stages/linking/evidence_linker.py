@@ -293,9 +293,16 @@ class EvidenceLinker(BaseJob):
         for evidence_item in batch:
             try:
                 batch_stats['items_processed'] += 1
-                evidence_id = evidence_item.get('evidence_id', evidence_item.get('_doc_id'))
+                # Use the actual Firestore document ID, not the evidence_id field
+                doc_id = evidence_item.get('_doc_id')
+                evidence_id = evidence_item.get('evidence_id', doc_id)  # For logging only
                 
-                self.logger.debug(f"Processing evidence item: {evidence_id}")
+                if not doc_id:
+                    self.logger.error(f"Evidence item missing _doc_id: {evidence_id}")
+                    batch_stats['errors'] += 1
+                    continue
+                
+                self.logger.debug(f"Processing evidence item: {evidence_id} (doc_id: {doc_id})")
                 
                 # OPTIMIZATION 1: Check bill linking bypass
                 bill_bypass_promise_ids = self._check_bill_linking_bypass(evidence_item)
@@ -303,7 +310,7 @@ class EvidenceLinker(BaseJob):
                     self.logger.info(f"🚀 BILL BYPASS: Auto-linking {evidence_id} to {len(bill_bypass_promise_ids)} promises")
                     
                     success = self._update_evidence_with_promise_links(
-                        evidence_id,
+                        doc_id,  # Use actual document ID
                         bill_bypass_promise_ids,
                         'bill_linking_bypass',
                         [0.95] * len(bill_bypass_promise_ids)  # High confidence for bill links
@@ -327,7 +334,7 @@ class EvidenceLinker(BaseJob):
                     confidence_scores = [match.confidence_score for match in validated_matches]
                     
                     success = self._update_evidence_with_promise_links(
-                        evidence_id,
+                        doc_id,  # Use actual document ID
                         promise_ids,
                         'hybrid_semantic_llm',
                         confidence_scores
@@ -340,7 +347,7 @@ class EvidenceLinker(BaseJob):
                         batch_stats['errors'] += 1
                 else:
                     # No matches found - update status
-                    self._update_evidence_linking_status(evidence_id, 'no_matches', 0)
+                    self._update_evidence_linking_status(doc_id, 'no_matches', 0)
                     batch_stats['items_skipped'] += 1
                     
             except Exception as e:
@@ -509,21 +516,22 @@ class EvidenceLinker(BaseJob):
     
     def _update_evidence_with_promise_links(
         self,
-        evidence_id: str,
+        doc_id: str,
         promise_ids: List[str],
         optimization_method: str,
         confidence_scores: List[float]
     ) -> bool:
         """Update evidence item with promise links and hybrid linking metadata."""
         try:
-            evidence_ref = self.db.collection(self.evidence_collection).document(evidence_id)
+            evidence_ref = self.db.collection(self.evidence_collection).document(doc_id)
             evidence_doc = evidence_ref.get()
             
             if not evidence_doc.exists:
-                self.logger.error(f"Evidence document {evidence_id} not found for update")
+                self.logger.error(f"Evidence document {doc_id} not found for update")
                 return False
             
             evidence_data = evidence_doc.to_dict()
+            evidence_id = evidence_data.get('evidence_id', doc_id)  # For logging
             
             # Get existing promise IDs to merge with new ones
             existing_promise_ids = evidence_data.get('promise_ids', [])
@@ -549,24 +557,24 @@ class EvidenceLinker(BaseJob):
             
             evidence_ref.update(update_data)
             
-            self.logger.info(f"✅ Updated evidence {evidence_id}: Added {len(promise_ids)} new links (method: {optimization_method}, avg confidence: {avg_confidence:.3f})")
+            self.logger.info(f"✅ Updated evidence {evidence_id} (doc: {doc_id}): Added {len(promise_ids)} new links (method: {optimization_method}, avg confidence: {avg_confidence:.3f})")
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to update evidence {evidence_id}: {e}")
+            self.logger.error(f"Failed to update evidence {doc_id}: {e}")
             return False
     
-    def _update_evidence_linking_status(self, evidence_id: str, status: str, links_count: int):
+    def _update_evidence_linking_status(self, doc_id: str, status: str, links_count: int):
         """Update the linking status of an evidence item."""
         try:
-            self.db.collection(self.evidence_collection).document(evidence_id).update({
+            self.db.collection(self.evidence_collection).document(doc_id).update({
                 'promise_linking_status': status,
                 'promise_linking_processed_at': firestore.SERVER_TIMESTAMP,
                 'promise_links_found': links_count,
                 'hybrid_linking_timestamp': firestore.SERVER_TIMESTAMP
             })
         except Exception as e:
-            self.logger.warning(f"Failed to update linking status for {evidence_id}: {e}")
+            self.logger.warning(f"Failed to update linking status for {doc_id}: {e}")
     
     def should_trigger_downstream(self, result) -> bool:
         """
