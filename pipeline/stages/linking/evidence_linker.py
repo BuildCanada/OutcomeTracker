@@ -56,7 +56,7 @@ class EvidenceLinker(BaseJob):
         
         # Processing settings
         self.batch_size = self.config.get('batch_size', 10)
-        self.max_items_per_run = self.config.get('max_items_per_run', 100)
+        self.max_items_per_run = self.config.get('max_items_per_run', 500)
         self.default_parliament_session = self.config.get('default_parliament_session', '45')
         
         # Hybrid approach configuration

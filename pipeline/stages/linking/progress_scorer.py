@@ -43,7 +43,7 @@ class ProgressScorer(BaseJob):
         
         # Processing settings
         self.batch_size = self.config.get('batch_size', 5)  # Very small batches for LLM processing to avoid API issues
-        self.max_promises_per_run = self.config.get('max_promises_per_run', 50)  # Reduced from 200
+        self.max_promises_per_run = self.config.get('max_promises_per_run', 500)  # Reduced from 200
         
         # LLM settings
         self.use_llm_scoring = self.config.get('use_llm_scoring', True)
@@ -114,8 +114,10 @@ class ProgressScorer(BaseJob):
             # Check if we have specific promise IDs to score from trigger metadata
             trigger_metadata = kwargs.get('trigger_metadata', {})
             affected_promise_ids = trigger_metadata.get('affected_promise_ids', [])
+            force_full_scan = kwargs.get('force_full_scan')
+            parliament_session_id = kwargs.get('parliament_session_id')
             
-            if not affected_promise_ids and not kwargs.get('force_full_scan'):
+            if not affected_promise_ids and not force_full_scan:
                 # No specific promise IDs provided and not forced - exit gracefully
                 self.logger.info("No affected promise IDs received. Skipping progress scoring to avoid expensive full scan.")
                 self.logger.info("To manually score all promises, use the --force_full_scan flag when running the script directly.")
@@ -131,9 +133,15 @@ class ProgressScorer(BaseJob):
                 stats['metadata']['trigger_source'] = trigger_metadata.get('triggered_by', 'unknown')
                 stats['metadata']['requested_promise_count'] = len(affected_promise_ids)
             else: # force_full_scan must be true
-                self.logger.info("Forcing full scan of all active promises as requested.")
-                promises_to_score = self._get_promises_to_score()
-                stats['metadata']['targeting_mode'] = 'forced_full_scan'
+                if parliament_session_id:
+                    self.logger.info(f"Forcing full scan of active promises for parliament session: {parliament_session_id}")
+                    promises_to_score = self._get_promises_to_score(parliament_session_id=parliament_session_id)
+                    stats['metadata']['targeting_mode'] = 'forced_session_scan'
+                    stats['metadata']['parliament_session_id'] = parliament_session_id
+                else:
+                    self.logger.info("Forcing full scan of all active promises as requested.")
+                    promises_to_score = self._get_promises_to_score()
+                    stats['metadata']['targeting_mode'] = 'forced_full_scan'
             
             if not promises_to_score:
                 self.logger.warning(f"No promises found to score.")
@@ -181,9 +189,9 @@ class ProgressScorer(BaseJob):
         
         return stats
     
-    def _get_promises_to_score(self) -> List[Dict[str, Any]]:
+    def _get_promises_to_score(self, parliament_session_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Get all active promises that need progress scoring.
+        Get all active promises that need progress scoring, optionally filtered by parliament session.
         
         WARNING: This method is only for manual/maintenance use. 
         In normal pipeline operation, progress_scorer should only process 
@@ -192,8 +200,16 @@ class ProgressScorer(BaseJob):
         try:
             # Get all active promises (simple query to avoid index requirement)
             query = (self.db.collection(self.promises_collection)
-                    .where(filter=firestore.FieldFilter('status', '==', 'active'))
-                    .limit(self.max_promises_per_run or 500))
+                    .where(filter=firestore.FieldFilter('status', '==', 'active')))
+            
+            # Add session filter if provided
+            if parliament_session_id:
+                query = query.where(filter=firestore.FieldFilter('parliament_session_id', '==', parliament_session_id))
+                self.logger.info(f"Querying for active promises in parliament session {parliament_session_id}")
+            else:
+                self.logger.info("Querying for all active promises")
+
+            query = query.limit(self.max_promises_per_run or 500)
             
             promises = []
             for doc in query.stream():
@@ -641,8 +657,23 @@ Please analyze this promise and evidence to provide a progress score (1-5) and s
 if __name__ == "__main__":
     import argparse
     import logging
+    from pathlib import Path
 
-    # ... (dotenv loading)
+    # Optionally load environment variables for local development
+    # This won't break Cloud Run if python-dotenv isn't available
+    try:
+        from dotenv import load_dotenv
+        # Go up to the PromiseTracker directory (4 levels from pipeline/stages/linking/)
+        env_path = Path(__file__).resolve().parent.parent.parent.parent / '.env'
+        if env_path.exists():
+            load_dotenv(env_path)
+            print(f"📋 Loaded environment from: {env_path}")
+        else:
+            print(f"📋 .env file not found at {env_path}, relying on system environment variables.")
+    except ImportError:
+        print("📋 python-dotenv not available, skipping .env file loading")
+    except Exception as e:
+        print(f"📋 Could not load .env file: {e}")
 
     # Setup logging
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
@@ -651,11 +682,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Promise Progress Scorer Job')
     parser.add_argument('--limit', type=int, default=50, help='Maximum number of promises to process per run.')
     parser.add_argument('--force_full_scan', action='store_true', help='Force a full scan of all active promises, ignoring triggers.')
+    parser.add_argument('--parliament_session_id', type=str, default=None, help='Force a scan for a specific parliament session. Requires --force_full_scan.')
     args = parser.parse_args()
 
     print(f"🚀 Starting Progress Scorer")
     print(f"Max Promises: {args.limit}")
     print(f"Force Full Scan: {args.force_full_scan}")
+    if args.parliament_session_id:
+        print(f"Parliament Session: {args.parliament_session_id}")
     print("-" * 60)
 
     try:
@@ -663,7 +697,10 @@ if __name__ == "__main__":
             'max_promises_per_run': args.limit,
         }
         scorer = ProgressScorer("progress_scorer_manual_run", config)
-        result = scorer.execute(force_full_scan=args.force_full_scan)
+        result = scorer.execute(
+            force_full_scan=args.force_full_scan,
+            parliament_session_id=args.parliament_session_id
+        )
 
         # ... (print results)
     except Exception as e:
