@@ -36,29 +36,14 @@ ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 
-# Copy application code
-# This is more specific than 'COPY . .' to improve caching.
+# Copy only the necessary application code for the Python runtime.
+# This improves caching, reduces image size, and enhances security.
 COPY app ./app
 COPY lib ./lib
 COPY monitoring ./monitoring
 COPY pipeline ./pipeline
 COPY prompts ./prompts
 COPY wsgi.py .
-COPY .gcloudignore .
-COPY cloudbuild.yaml .
-COPY cloudbuild.base.yaml .
-COPY package.json .
-COPY tailwind.config.js .
-COPY postcss.config.js .
-COPY next-i18next.config.js .
-COPY next.config.js .
-COPY .dockerignore .
-COPY Dockerfile.base .
-COPY Dockerfile .
-COPY babel.config.js .
-COPY README.md .
-COPY requirements.txt .
-COPY tsconfig.json .
 
 # Create non-root user for security
 # Run as non-root user

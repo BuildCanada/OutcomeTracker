@@ -134,20 +134,30 @@ class LLMEvidenceValidator:
         
         try:
             # Prepare input data for the prompt
+            # Defensive checks to prevent TypeError on .join() if data is not an iterable list
+            key_concepts = evidence_item.get('key_concepts')
+            key_concepts_str = ', '.join(key_concepts) if isinstance(key_concepts, list) else ''
+            
+            linked_departments = evidence_item.get('linked_departments')
+            linked_departments_str = ', '.join(linked_departments) if isinstance(linked_departments, list) else ''
+
+            intended_impact = promise_item.get('intended_impact_and_objectives')
+            intended_impact_str = ', '.join(intended_impact) if isinstance(intended_impact, list) else ''
+
             prompt_data = {
                 'parliament_session_id': evidence_item.get('parliament_session_id', ''),
                 'evidence_source_type': evidence_item.get('evidence_source_type', ''),
                 'evidence_date': str(evidence_item.get('evidence_date', '')),
                 'evidence_title_or_summary': evidence_item.get('title_or_summary', ''),
                 'evidence_description_or_details': evidence_item.get('description_or_details', ''),
-                'evidence_key_concepts': ', '.join(evidence_item.get('key_concepts', [])),
-                'evidence_linked_departments': ', '.join(evidence_item.get('linked_departments', [])),
+                'evidence_key_concepts': key_concepts_str,
+                'evidence_linked_departments': linked_departments_str,
                 
                 'promise_id': promise_item.get('promise_id', promise_item.get('_doc_id', '')),
                 'promise_text': promise_item.get('text', ''),
                 'promise_description': promise_item.get('description', ''),
                 'promise_background_and_context': promise_item.get('background_and_context', ''),
-                'promise_intended_impact_and_objectives': ', '.join(promise_item.get('intended_impact_and_objectives', [])),
+                'promise_intended_impact_and_objectives': intended_impact_str,
                 'promise_responsible_department_lead': promise_item.get('responsible_department_lead', ''),
                 'semantic_similarity_score': semantic_similarity_score
             }
@@ -429,14 +439,21 @@ class LLMEvidenceValidator:
         
         try:
             # Create batch validation prompt
+            # Defensive checks to prevent TypeError on .join() if data is not an iterable list
+            key_concepts = evidence_item.get('key_concepts')
+            key_concepts_str = ', '.join(key_concepts) if isinstance(key_concepts, list) else ''
+
+            linked_departments = evidence_item.get('linked_departments')
+            linked_departments_str = ', '.join(linked_departments) if isinstance(linked_departments, list) else ''
+
             evidence_data = {
                 'parliament_session_id': evidence_item.get('parliament_session_id', ''),
                 'evidence_source_type': evidence_item.get('evidence_source_type', ''),
                 'evidence_date': str(evidence_item.get('evidence_date', '')),
                 'evidence_title_or_summary': evidence_item.get('title_or_summary', ''),
                 'evidence_description_or_details': evidence_item.get('description_or_details', ''),
-                'evidence_key_concepts': ', '.join(evidence_item.get('key_concepts', [])),
-                'evidence_linked_departments': ', '.join(evidence_item.get('linked_departments', [])),
+                'evidence_key_concepts': key_concepts_str,
+                'evidence_linked_departments': linked_departments_str,
             }
             
             # Build promises list for batch evaluation

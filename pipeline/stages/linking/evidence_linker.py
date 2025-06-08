@@ -602,7 +602,7 @@ class EvidenceLinker(BaseJob):
         Returns:
             True if downstream jobs should be triggered
         """
-        return result.items_updated > 0
+        return result and result.items_updated > 0
     
     def get_trigger_metadata(self, result) -> Dict[str, Any]:
         """
@@ -614,16 +614,18 @@ class EvidenceLinker(BaseJob):
         Returns:
             Metadata for downstream jobs
         """
-        affected_promise_ids = result.metadata.get('affected_promise_ids', set())
+        metadata = result.metadata if result else {}
+        affected_promise_ids = metadata.get('affected_promise_ids', set())
+        
         return {
             'triggered_by': self.job_name,
-            'evidence_updated': result.items_updated,
-            'evidence_processed': result.items_processed,
+            'evidence_updated': result.items_updated if result else 0,
+            'evidence_processed': result.items_processed if result else 0,
             'affected_promise_ids': list(affected_promise_ids),  # Convert set to list for JSON serialization
             'affected_promise_count': len(affected_promise_ids),
             'trigger_time': datetime.now(timezone.utc).isoformat(),
             'linking_method': 'hybrid_semantic_llm',
-            'optimizations_used': result.metadata.get('optimizations', {})
+            'optimizations_used': metadata.get('optimizations', {})
         }
 
 if __name__ == "__main__":

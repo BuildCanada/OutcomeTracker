@@ -115,23 +115,28 @@ class ProgressScorer(BaseJob):
             trigger_metadata = kwargs.get('trigger_metadata', {})
             affected_promise_ids = trigger_metadata.get('affected_promise_ids', [])
             
-            if not affected_promise_ids:
-                # No specific promise IDs provided - exit gracefully
-                self.logger.info("No affected promise IDs received from evidence linker. Skipping progress scoring to avoid expensive full scan.")
-                self.logger.info("To manually score all promises for maintenance, use a dedicated maintenance script rather than the pipeline.")
+            if not affected_promise_ids and not kwargs.get('force_full_scan'):
+                # No specific promise IDs provided and not forced - exit gracefully
+                self.logger.info("No affected promise IDs received. Skipping progress scoring to avoid expensive full scan.")
+                self.logger.info("To manually score all promises, use the --force_full_scan flag when running the script directly.")
                 stats['metadata']['targeting_mode'] = 'no_promises_specified'
                 stats['metadata']['skip_reason'] = 'no_affected_promise_ids'
                 return stats
             
-            # Score only the promises that were affected by evidence linking
-            self.logger.info(f"Targeted scoring: {len(affected_promise_ids)} promises affected by evidence linking")
-            promises_to_score = self._get_specific_promises_to_score(affected_promise_ids)
-            stats['metadata']['targeting_mode'] = 'affected_promises_only'
-            stats['metadata']['trigger_source'] = trigger_metadata.get('triggered_by', 'unknown')
-            stats['metadata']['requested_promise_count'] = len(affected_promise_ids)
+            # Score only the promises that were affected by evidence linking or if full scan is forced
+            if affected_promise_ids:
+                self.logger.info(f"Targeted scoring: {len(affected_promise_ids)} promises affected by evidence linking")
+                promises_to_score = self._get_specific_promises_to_score(affected_promise_ids)
+                stats['metadata']['targeting_mode'] = 'affected_promises_only'
+                stats['metadata']['trigger_source'] = trigger_metadata.get('triggered_by', 'unknown')
+                stats['metadata']['requested_promise_count'] = len(affected_promise_ids)
+            else: # force_full_scan must be true
+                self.logger.info("Forcing full scan of all active promises as requested.")
+                promises_to_score = self._get_promises_to_score()
+                stats['metadata']['targeting_mode'] = 'forced_full_scan'
             
             if not promises_to_score:
-                self.logger.warning(f"None of the {len(affected_promise_ids)} affected promise IDs were found as active promises")
+                self.logger.warning(f"No promises found to score.")
                 stats['metadata']['skip_reason'] = 'no_active_promises_found'
                 return stats
             
@@ -363,13 +368,18 @@ class ProgressScorer(BaseJob):
                         'bill_one_sentence_description_llm': evidence.get('bill_one_sentence_description_llm', '')
                     })
                 
+                # Defensive check for iterable
+                objectives = promise_info['intended_impact_and_objectives']
+                if not isinstance(objectives, list):
+                    objectives = [] # Default to empty list if not iterable
+
                 # Create the full prompt
                 full_prompt = f"""{self.progress_prompt}
 
 **Promise Information:**
 - Canonical Commitment Text: {promise_info['canonical_commitment_text']}
 - Background and Context: {promise_info['background_and_context']}
-- Intended Impact and Objectives: {', '.join(promise_info['intended_impact_and_objectives']) if isinstance(promise_info['intended_impact_and_objectives'], list) else promise_info['intended_impact_and_objectives']}
+- Intended Impact and Objectives: {', '.join(objectives)}
 - Responsible Department Lead: {promise_info['responsible_department_lead']}
 
 **Evidence Items ({len(evidence_for_llm)} items):**
@@ -626,4 +636,36 @@ Please analyze this promise and evidence to provide a progress score (1-5) and s
             'llm_calls': result.get('llm_calls', 0),
             'total_cost': result.get('total_cost_estimate', 0.0),
             'trigger_time': datetime.now(timezone.utc).isoformat()
-        } 
+        }
+
+if __name__ == "__main__":
+    import argparse
+    import logging
+
+    # ... (dotenv loading)
+
+    # Setup logging
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Promise Progress Scorer Job')
+    parser.add_argument('--limit', type=int, default=50, help='Maximum number of promises to process per run.')
+    parser.add_argument('--force_full_scan', action='store_true', help='Force a full scan of all active promises, ignoring triggers.')
+    args = parser.parse_args()
+
+    print(f"🚀 Starting Progress Scorer")
+    print(f"Max Promises: {args.limit}")
+    print(f"Force Full Scan: {args.force_full_scan}")
+    print("-" * 60)
+
+    try:
+        config = {
+            'max_promises_per_run': args.limit,
+        }
+        scorer = ProgressScorer("progress_scorer_manual_run", config)
+        result = scorer.execute(force_full_scan=args.force_full_scan)
+
+        # ... (print results)
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        logging.error("Progress scorer failed", exc_info=True) 
