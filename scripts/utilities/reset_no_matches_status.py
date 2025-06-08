@@ -39,6 +39,10 @@ class NoMatchesResetter(BaseJob):
         super().__init__("no_matches_resetter", {})
         self.evidence_collection = 'evidence_items'
     
+    def _execute_job(self, **kwargs):
+        """Required abstract method - not used in this script."""
+        return {}
+    
     def reset_no_matches_items(self, dry_run: bool = False) -> Dict[str, Any]:
         """
         Reset all evidence items with 'no_matches' status to 'pending'.
