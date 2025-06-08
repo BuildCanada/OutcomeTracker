@@ -346,9 +346,18 @@ class EvidenceLinker(BaseJob):
                     else:
                         batch_stats['errors'] += 1
                 else:
-                    # No matches found - update status
-                    self._update_evidence_linking_status(doc_id, 'no_matches', 0)
-                    batch_stats['items_skipped'] += 1
+                    # No matches found - still mark as processed with empty promise_ids
+                    success = self._update_evidence_with_promise_links(
+                        doc_id,  # Use actual document ID
+                        [],  # Empty promise_ids array
+                        'no_semantic_matches',
+                        []  # Empty confidence scores
+                    )
+                    
+                    if success:
+                        batch_stats['items_updated'] += 1
+                    else:
+                        batch_stats['errors'] += 1
                     
             except Exception as e:
                 self.logger.error(f"Error processing evidence item {evidence_item.get('evidence_id', 'unknown')}: {e}")
@@ -356,7 +365,14 @@ class EvidenceLinker(BaseJob):
                 
                 # Mark as linking error
                 try:
-                    self._update_evidence_linking_status(evidence_item.get('_doc_id'), 'error', 0)
+                    doc_id = evidence_item.get('_doc_id')
+                    if doc_id:
+                        self.db.collection(self.evidence_collection).document(doc_id).update({
+                            'promise_linking_status': 'error',
+                            'promise_linking_processed_at': firestore.SERVER_TIMESTAMP,
+                            'hybrid_linking_timestamp': firestore.SERVER_TIMESTAMP,
+                            'error_message': str(e)
+                        })
                 except Exception:
                     pass
         
@@ -549,7 +565,7 @@ class EvidenceLinker(BaseJob):
                 'promise_ids': all_promise_ids,
                 'promise_linking_status': 'processed',
                 'promise_linking_processed_at': firestore.SERVER_TIMESTAMP,
-                'promise_links_found': len(promise_ids),
+                'promise_links_found': len(all_promise_ids),  # Count total links, not just new ones
                 'hybrid_linking_method': optimization_method,
                 'hybrid_linking_avg_confidence': avg_confidence,
                 'hybrid_linking_timestamp': firestore.SERVER_TIMESTAMP
