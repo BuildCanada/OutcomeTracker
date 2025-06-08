@@ -2,7 +2,7 @@
 Pipeline Orchestrator for Promise Tracker
 
 This module provides the main orchestration logic for the Promise Tracker pipeline,
-replacing the previous subprocess-based approach with a class-based system.
+replacing the previous subprocess-based approach with a class-based system.  
 """
 
 import os
