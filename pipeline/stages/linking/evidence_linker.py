@@ -57,6 +57,7 @@ class EvidenceLinker(BaseJob):
         # Processing settings
         self.batch_size = self.config.get('batch_size', 10)
         self.max_items_per_run = self.config.get('max_items_per_run', 100)
+        self.default_parliament_session = self.config.get('default_parliament_session', '45')
         
         # Hybrid approach configuration
         self.semantic_threshold = self.config.get('semantic_threshold', 0.45)
@@ -82,7 +83,6 @@ class EvidenceLinker(BaseJob):
         
         Args:
             **kwargs: Additional job arguments including:
-                parliament_session_id: Session to process (default: 44)
                 limit: Max evidence items to process 
                 validation_threshold: LLM confidence threshold
                 
@@ -92,9 +92,9 @@ class EvidenceLinker(BaseJob):
         self.logger.info("Starting hybrid evidence linking process")
         
         # Extract parameters
-        parliament_session_id = str(kwargs.get('parliament_session_id', '44'))
         limit = kwargs.get('limit', self.max_items_per_run)
         validation_threshold = kwargs.get('validation_threshold', self.llm_validation_threshold)
+        parliament_session_id = kwargs.get('parliament_session_id', self.default_parliament_session)
         
         stats = {
             'items_processed': 0,
@@ -103,7 +103,6 @@ class EvidenceLinker(BaseJob):
             'items_skipped': 0,
             'errors': 0,
             'metadata': {
-                'parliament_session_id': parliament_session_id,
                 'evidence_collection': self.evidence_collection,
                 'promises_collection': self.promises_collection,
                 'semantic_threshold': self.semantic_threshold,
@@ -120,15 +119,15 @@ class EvidenceLinker(BaseJob):
             # Initialize components
             self._init_components()
             
-            # Load and cache promises
+            # Load and cache promises for the specified parliament session
             self._load_promises_cache(parliament_session_id)
             
             if not self._promises_cache:
-                self.logger.warning(f"No promises found for session {parliament_session_id}")
+                self.logger.warning("No promises found")
                 return stats
             
-            # Get evidence items to process
-            evidence_items = self._get_evidence_items_to_process(parliament_session_id, limit)
+            # Get evidence items to process (pending items for specified parliament session)
+            evidence_items = self._get_pending_evidence_items(limit, parliament_session_id)
             
             if not evidence_items:
                 self.logger.info("No evidence items found for linking")
@@ -205,14 +204,20 @@ class EvidenceLinker(BaseJob):
             raise
     
     def _load_promises_cache(self, parliament_session_id: str):
-        """Load all promises and their embeddings into memory for efficient processing."""
+        """Load promises for a specific parliament session and their embeddings into memory for efficient processing."""
         try:
-            self.logger.info(f"Loading promises for session {parliament_session_id}")
+            self.logger.info(f"Loading promises for parliament session {parliament_session_id}")
             
-            # Fetch promises using semantic linker
-            promise_docs, promise_ids = self.semantic_linker.fetch_promises(
-                parliament_session_id, self.promises_collection
+            # Fetch promises from the promises collection for the specified parliament session
+            query = self.db.collection(self.promises_collection).where(
+                filter=firestore.FieldFilter('parliament_session_id', '==', parliament_session_id)
             )
+            
+            promise_docs = []
+            for doc in query.stream():
+                promise_data = doc.to_dict()
+                promise_data['promise_id'] = doc.id
+                promise_docs.append(promise_data)
             
             if promise_docs:
                 # Generate embeddings for all promises
@@ -222,24 +227,32 @@ class EvidenceLinker(BaseJob):
                 self._promises_cache = promise_docs
                 self._promise_embeddings_cache = promise_embeddings
                 
-                self.logger.info(f"Cached {len(promise_docs)} promises with embeddings")
+                self.logger.info(f"Cached {len(promise_docs)} promises with embeddings for parliament session {parliament_session_id}")
             else:
                 self._promises_cache = []
                 self._promise_embeddings_cache = None
+                self.logger.warning(f"No promises found for parliament session {parliament_session_id}")
                 
         except Exception as e:
-            self.logger.error(f"Error loading promises cache: {e}")
+            self.logger.error(f"Error loading promises cache for parliament session {parliament_session_id}: {e}")
             self._promises_cache = []
             self._promise_embeddings_cache = None
     
-    def _get_evidence_items_to_process(self, parliament_session_id: str, limit: int) -> List[Dict[str, Any]]:
-        """Get evidence items that need hybrid linking."""
+    def _get_pending_evidence_items(self, limit: int, parliament_session_id: str = None) -> List[Dict[str, Any]]:
+        """Get evidence items that need hybrid linking for a specific parliament session."""
         try:
             # Query for evidence items with pending promise linking status
-            query = (self.db.collection(self.evidence_collection)
-                    .where(filter=firestore.FieldFilter('parliament_session_id', '==', parliament_session_id))
-                    .where(filter=firestore.FieldFilter('promise_linking_status', '==', 'pending'))
-                    .limit(limit))
+            query = self.db.collection(self.evidence_collection).where(
+                filter=firestore.FieldFilter('promise_linking_status', '==', 'pending')
+            )
+            
+            # Filter by parliament session if specified
+            if parliament_session_id:
+                query = query.where(
+                    filter=firestore.FieldFilter('parliament_session_id', '==', parliament_session_id)
+                )
+            
+            query = query.limit(limit)
             
             items = []
             for doc in query.stream():
@@ -247,7 +260,10 @@ class EvidenceLinker(BaseJob):
                 item_data['_doc_id'] = doc.id
                 items.append(item_data)
             
-            self.logger.info(f"Found {len(items)} evidence items for hybrid linking")
+            if parliament_session_id:
+                self.logger.info(f"Found {len(items)} evidence items for hybrid linking (parliament session {parliament_session_id})")
+            else:
+                self.logger.info(f"Found {len(items)} evidence items for hybrid linking (all sessions)")
             return items
             
         except Exception as e:
@@ -601,10 +617,12 @@ if __name__ == "__main__":
     
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Hybrid Evidence Linker for Promise Tracker')
-    parser.add_argument('--parliament_session_id', type=str, default='44',
-                        help='Parliament session ID to process (default: 44)')
     parser.add_argument('--limit', type=int, default=100,
                         help='Maximum number of evidence items to process (default: 100)')
+    parser.add_argument('--parliament_session_id', type=str, default='45',
+                        help='Parliament session ID to process (default: 45)')
+    parser.add_argument('--all_sessions', action='store_true',
+                        help='Process all parliament sessions instead of default session')
     parser.add_argument('--validation_threshold', type=float, default=0.5,
                         help='LLM validation confidence threshold (default: 0.5)')
     parser.add_argument('--semantic_threshold', type=float, default=0.45,
@@ -616,9 +634,15 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
+    # Determine parliament session to process
+    parliament_session_id = None if args.all_sessions else args.parliament_session_id
+    
     print(f"🔗 Starting Hybrid Evidence Linker")
-    print(f"Parliament Session: {args.parliament_session_id}")
     print(f"Max Items: {args.limit}")
+    if parliament_session_id:
+        print(f"Parliament Session: {parliament_session_id}")
+    else:
+        print(f"Parliament Session: ALL")
     print(f"Validation Threshold: {args.validation_threshold}")
     print(f"Semantic Threshold: {args.semantic_threshold}")
     print(f"Batch Size: {args.batch_size}")
@@ -632,6 +656,7 @@ if __name__ == "__main__":
             'max_items_per_run': args.limit,
             'semantic_threshold': args.semantic_threshold,
             'llm_validation_threshold': args.validation_threshold,
+            'default_parliament_session': args.parliament_session_id,
             'dry_run': args.dry_run
         }
         
@@ -640,9 +665,9 @@ if __name__ == "__main__":
         
         # Execute the job
         result = linker.execute(
-            parliament_session_id=args.parliament_session_id,
             limit=args.limit,
-            validation_threshold=args.validation_threshold
+            validation_threshold=args.validation_threshold,
+            parliament_session_id=parliament_session_id
         )
         
         # Print results

@@ -830,24 +830,26 @@ class LegisInfoProcessor(BaseProcessorJob):
         """Create evidence item in Parliament 44 format"""
         # Extract key information
         bill_number = raw_item.get('bill_number_code_feed', '')
-        parliament_session = raw_item.get('parliament_session_id', '')
+        parliament_session_full = raw_item.get('parliament_session_id', '')
+        # Extract just the parliament number (e.g., '45' from '45-1')
+        parliament_session = parliament_session_full.split('-')[0] if parliament_session_full else ''
         long_title_en = bill_data.get('LongTitleEn', '')
         
-        # Create bill_parl_id in Parliament 44 format
-        bill_parl_id = f"{parliament_session}_{bill_number}"
+        # Create bill_parl_id in Parliament 44 format (using full session for ID)
+        bill_parl_id = f"{parliament_session_full}_{bill_number}"
         
         # Create evidence_id in Parliament 44 format
         # Format: YYYYMMDD_parliament_billnumber_event_chamber_eventid
         ingested_date = raw_item.get('ingested_at') or datetime.now(timezone.utc)
         date_str = ingested_date.strftime('%Y%m%d')
-        # Use a consistent event ID for bill events
-        evidence_id = f"{date_str}_{parliament_session.replace('-', '_')}_{bill_number}_event_senate_60663690"
+        # Use a consistent event ID for bill events (use full session for ID)
+        evidence_id = f"{date_str}_{parliament_session_full.replace('-', '_')}_{bill_number}_event_senate_60663690"
         
-        # Build URLs
-        parliament_num, session_num = parliament_session.split('-')
-        about_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session}/{bill_number}?view=about"
-        details_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session}/{bill_number}?view=details"
-        source_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session}/{bill_number}"
+        # Build URLs (use full session for URLs)
+        parliament_num, session_num = parliament_session_full.split('-') if '-' in parliament_session_full else (parliament_session_full, '1')
+        about_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session_full}/{bill_number}?view=about"
+        details_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session_full}/{bill_number}?view=details"
+        source_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session_full}/{bill_number}"
         
         # Determine chamber based on bill number
         chamber = "Senate" if bill_number.startswith('S-') else "House of Commons"
