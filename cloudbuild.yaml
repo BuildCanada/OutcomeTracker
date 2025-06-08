@@ -1,6 +1,6 @@
 # These setting are not set inline with the cloudrun settings.
 # Build runtime of 20 minutes
-timeout: '1200s'
+timeout: '1800s'
 
 steps:
   # 1. Build the container image using the cache from the 'latest' tag
