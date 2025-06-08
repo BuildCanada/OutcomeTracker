@@ -214,9 +214,19 @@ class PipelineOrchestrator:
             result = self.job_runner.run_job(job_instance, **kwargs)
             
             # Handle downstream triggers
-            if job_instance.should_trigger_downstream(result):
+            triggers = job_config.get('triggers', [])
+
+            if triggers:
+                # Use jobs.yaml configuration as primary source of truth
+                self.logger.info(f"Checking {len(triggers)} configured triggers for {job_id}")
+                self._trigger_downstream_jobs(stage, job_name, job_config, result, None)
+            elif job_instance.should_trigger_downstream(result):
+                # Fallback to job instance logic if no explicit triggers configured
+                self.logger.info(f"No explicit triggers configured, using job instance logic for {job_id}")
                 trigger_metadata = job_instance.get_trigger_metadata(result)
                 self._trigger_downstream_jobs(stage, job_name, job_config, result, trigger_metadata)
+            else:
+                self.logger.debug(f"No triggers fired for {job_id} (no configured triggers and job instance returned False)")
             
             # Log job execution to Firestore
             self._log_job_execution(job_id, stage, job_name, result)
@@ -266,28 +276,44 @@ class PipelineOrchestrator:
         """
         triggers = job_config.get('triggers', [])
         
-        for trigger in triggers:
+        if not triggers:
+            self.logger.debug(f"No triggers configured for {stage}.{job_name}")
+            return
+        
+        self.logger.info(f"Evaluating {len(triggers)} trigger(s) for {stage}.{job_name} (status: {result.status.value}, items_created: {result.items_created}, items_updated: {result.items_updated})")
+        
+        for i, trigger in enumerate(triggers):
             trigger_stage = trigger['stage']
             trigger_job = trigger['job']
             condition = trigger.get('condition', 'always')
+            
+            self.logger.info(f"Trigger {i+1}: {trigger_stage}.{trigger_job} with condition '{condition}'")
             
             # Check trigger condition
             should_trigger = False
             if condition == 'always':
                 should_trigger = True
+                self.logger.info(f"  ✅ Condition 'always' - triggering")
             elif condition == 'successful_run' and result.status == JobStatus.SUCCESS:
                 should_trigger = True
+                self.logger.info(f"  ✅ Condition 'successful_run' met (status: {result.status.value}) - triggering")
             elif condition == 'new_items_found' and result.items_created > 0:
                 should_trigger = True
+                self.logger.info(f"  ✅ Condition 'new_items_found' met (items_created: {result.items_created}) - triggering")
             elif condition == 'new_evidence_created' and result.items_created > 0:
                 should_trigger = True
+                self.logger.info(f"  ✅ Condition 'new_evidence_created' met (items_created: {result.items_created}) - triggering")
             elif condition == 'new_links_created' and result.items_created > 0:
                 should_trigger = True
+                self.logger.info(f"  ✅ Condition 'new_links_created' met (items_created: {result.items_created}) - triggering")
             elif condition == 'evidence_updated' and result.items_updated > 0:
                 should_trigger = True
+                self.logger.info(f"  ✅ Condition 'evidence_updated' met (items_updated: {result.items_updated}) - triggering")
+            else:
+                self.logger.info(f"  ❌ Condition '{condition}' not met (status: {result.status.value}, items_created: {result.items_created}, items_updated: {result.items_updated}) - not triggering")
             
             if should_trigger:
-                self.logger.info(f"Triggering downstream job: {trigger_stage}.{trigger_job} (condition: {condition})")
+                self.logger.info(f"🚀 Triggering downstream job: {trigger_stage}.{trigger_job} (condition: {condition})")
                 
                 # Execute downstream job asynchronously
                 threading.Thread(
@@ -295,8 +321,8 @@ class PipelineOrchestrator:
                     args=(trigger_stage, trigger_job, result, trigger_metadata),
                     daemon=True
                 ).start()
-            else:
-                self.logger.debug(f"Not triggering {trigger_stage}.{trigger_job}: condition '{condition}' not met (status: {result.status.value}, items_created: {result.items_created})")
+        
+        self.logger.info(f"Trigger evaluation completed for {stage}.{job_name}")
     
     def _execute_triggered_job(self, stage: str, job_name: str, trigger_result: JobResult, trigger_metadata: Dict[str, Any] = None):
         """Execute a triggered downstream job"""

@@ -1,0 +1,70 @@
+# Google Cloud Monitoring alerts for OIC ingestion
+displayName: "OIC Ingestion Monitoring"
+conditions:
+  # Alert if job fails
+  - displayName: "OIC Ingestion Job Failure"
+    conditionThreshold:
+      filter: 'resource.type="cloud_run_job" AND resource.label.job_name="oic-ingestion-job" AND severity>=ERROR'
+      comparison: COMPARISON_GT
+      thresholdValue: 0
+      duration: 60s
+    documentation:
+      content: |
+        The OIC ingestion job has failed. Check the logs for details:
+        https://console.cloud.google.com/run/jobs/details/us-central1/oic-ingestion-job
+      mimeType: text/markdown
+
+  # Alert if job hasn't run in 8 hours (should run every 6 hours)
+  - displayName: "OIC Ingestion Job Missing"
+    conditionAbsent:
+      filter: 'resource.type="cloud_run_job" AND resource.label.job_name="oic-ingestion-job" AND severity="INFO" AND textPayload:"🚀 Starting OIC ingestion job"'
+      duration: 28800s  # 8 hours
+    documentation:
+      content: |
+        The OIC ingestion job hasn't run in the last 8 hours. Expected to run every 6 hours.
+        Check the Cloud Scheduler and job status.
+      mimeType: text/markdown
+
+  # Alert if job runtime exceeds 45 minutes
+  - displayName: "OIC Ingestion Job Timeout"
+    conditionThreshold:
+      filter: 'resource.type="cloud_run_job" AND resource.label.job_name="oic-ingestion-job"'
+      comparison: COMPARISON_GT
+      thresholdValue: 2700  # 45 minutes in seconds
+      duration: 60s
+    documentation:
+      content: |
+        The OIC ingestion job is taking longer than expected (>45 minutes).
+        This may indicate network issues or the job getting stuck.
+      mimeType: text/markdown
+
+# Notification channels (configure with your preferences)
+notificationChannels:
+  - displayName: "Email Alerts"
+    type: email
+    labels:
+      email_address: "your-email@example.com"
+  
+  - displayName: "Slack Alerts"
+    type: slack
+    labels:
+      channel_name: "#promise-tracker-alerts"
+      url: "YOUR_SLACK_WEBHOOK_URL"
+
+# Alert policies
+alertPolicies:
+  - displayName: "OIC Ingestion Critical Alerts"
+    conditions:
+      - "OIC Ingestion Job Failure"
+      - "OIC Ingestion Job Missing"
+    notificationChannels:
+      - "Email Alerts"
+      - "Slack Alerts"
+    alertStrategy:
+      autoClose: 86400s  # Auto-close after 24 hours
+    
+  - displayName: "OIC Ingestion Performance Alerts"
+    conditions:
+      - "OIC Ingestion Job Timeout"
+    notificationChannels:
+      - "Slack Alerts" 

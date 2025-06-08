@@ -57,8 +57,9 @@ PromiseTracker/pipeline/
 
 **Code Configuration** (`jobs.yaml`) defines application logic:
 - 🔧 **Job Classes** - Which Python class to execute
-- 🔗 **Triggers** - Downstream job dependencies  
+- 🔗 **Triggers** - Downstream job dependencies with smart conditions (`successful_run`, `evidence_updated`)
 - ⚙️ **Runtime Settings** - Batch sizes, concurrent job limits
+- 📊 **Metadata Passing** - Targeted job execution with specific data (e.g., affected promise IDs)
 
 This separation eliminates configuration duplication and follows Google Cloud best practices.
 
@@ -91,7 +92,8 @@ This separation eliminates configuration duplication and follows Google Cloud be
 - **Jobs Configuration** (`pipeline/config/jobs.yaml`)
   - **MINIMAL CONFIG**: Only job classes and trigger relationships
   - **12 configured jobs** across 3 stages
-  - **Automatic downstream triggering** with conditional logic
+  - **Smart triggering**: `successful_run` for reliable execution, `evidence_updated` for targeted processing
+  - **Metadata passing**: Downstream jobs receive specific data (e.g., affected promise IDs)
   - **No duplication** - timeouts/retries managed by Cloud Scheduler
   - **Clean separation** between application logic and operational settings
 
@@ -191,10 +193,12 @@ All processing jobs implement the BaseProcessorJob pattern with:
 - Link creation directly into `evidence_items.promise_ids` arrays (frontend-compatible)
 - Detailed stats & cost tracking returned in job metadata
 
-**Progress Scorer** ⚠️ **REQUIRES VALIDATION WITH UPDATED PIPELINE**
+**Progress Scorer** ✅ **PRODUCTION READY - TARGETED EXECUTION**
 - LLM-based progress scoring framework complete (1-5 scale)
-- Rule-based fallback implemented
-- Needs comprehensive end-to-end testing with new evidence linking outputs
+- **Targeted Processing**: Only scores promises with new evidence links (no expensive fallbacks)
+- **Metadata Communication**: Receives specific `affected_promise_ids` from evidence_linker
+- **Cost Control**: Exits gracefully when no promise IDs provided (prevents expensive full scans)
+- Rule-based fallback implemented for LLM failures
 
 #### 6. Testing Framework - **PRODUCTION READY**
 **Comprehensive Test Suite** ✅
@@ -349,6 +353,7 @@ Maintenance Jobs:
 - **Concurrent Execution**: 3 concurrent jobs maximum (jobs.yaml)
 - **Timeout Management**: Per-job timeout configuration (Cloud Scheduler)
 - **Resource Optimization**: 2Gi memory, efficient processing
+- **Targeted Processing**: Progress scorer only processes affected promises (cost control)
 
 ### Quality Assurance - **MEASURED**
 - **OIC Number Extraction**: 52.6% success rate (acceptable given format variations)
@@ -376,11 +381,11 @@ Maintenance Jobs:
 - Evidence item standardization complete
 - Status tracking and model logging
 
-### ⚠️ Phase 4: Linking Implementation (PARTIAL)
-- Evidence linking framework implemented but requires algorithm improvement
-- Basic keyword-based matching functional but not production-quality
-- Progress scoring implementation complete but untested with recent changes
-- **Needed**: Enhanced semantic matching and comprehensive testing
+### ✅ Phase 4: Linking Implementation (COMPLETE)
+- Evidence linking framework with semantic similarity and LLM validation
+- Targeted progress scoring with affected promise ID communication
+- Cost-optimized execution (no expensive fallbacks)
+- **Achieved**: Efficient evidence-to-promise matching with targeted downstream processing
 
 ### ✅ Phase 5: Production Deployment (COMPLETE)
 - Cloud Run configuration deployed and tested
@@ -473,14 +478,14 @@ The system provides a **maintainable, scalable foundation** for government promi
         │                            ▼
         │                      [Ingestion Job] ──▶ raw_* collection (new docs)
         │                            │
-        │                            └─ triggers (from jobs.yaml)
+        │                            └─ triggers (successful_run)
         │                               └──▶ [Processing Job] ──▶ evidence_items (new docs)
         │                                       │
-        │                                       └─ triggers (items_created)
+        │                                       └─ triggers (successful_run)
         │                                          └──▶ [Evidence Linker] ── updates evidence.promise_ids
-        │                                                  │
-        │                                                  └─ triggers (new_links_created)
-        │                                                     └──▶ [Progress Scorer] ── updates promises.progress_score
+        │                                                  │               ── tracks affected_promise_ids
+        │                                                  └─ triggers (evidence_updated + promise_ids)
+        │                                                     └──▶ [Progress Scorer] ── targeted scoring only
         │
         └─ (Retries & timeouts managed by Cloud Scheduler)
 ```

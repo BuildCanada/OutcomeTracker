@@ -1,0 +1,65 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: oic-ingestion-job
+  labels:
+    app: promise-tracker
+    component: oic-ingestion
+    version: v1
+spec:
+  template:
+    metadata:
+      labels:
+        app: promise-tracker
+        component: oic-ingestion
+      annotations:
+        # Job-level annotations
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      template:
+        metadata:
+          annotations:
+            # Container-level annotations
+            run.googleapis.com/memory: "1Gi"
+            run.googleapis.com/cpu: "1"
+            run.googleapis.com/execution-environment: gen2
+        spec:
+          maxRetries: 3
+          taskCount: 1
+          parallelism: 1
+          taskTimeoutSeconds: 3600  # 1 hour timeout
+          containers:
+          - name: oic-ingestion
+            image: gcr.io/promisetrackerapp/oic-ingestion-job
+            env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: MEMORY_LIMIT
+              value: "1Gi"
+            - name: TIMEOUT
+              value: "3600"
+            # Firebase environment variables (should be set in deployment)
+            - name: FIREBASE_PROJECT_ID
+              value: "promisetrackerapp"
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: "/secrets/service-account.json"
+            resources:
+              limits:
+                memory: "1Gi"
+                cpu: "1000m"
+              requests:
+                memory: "512Mi"
+                cpu: "500m"
+            # Add volume mounts for service account key if needed
+            volumeMounts:
+            - name: service-account
+              mountPath: /secrets
+              readOnly: true
+          volumes:
+          - name: service-account
+            secret:
+              secretName: promise-tracker-service-account
+          restartPolicy: OnFailure
+          serviceAccountName: promise-tracker-pipeline 
