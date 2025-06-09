@@ -108,9 +108,9 @@ function polarToCartesian(cx: number, cy: number, r: number, angleInDegrees: num
 
 function getPieColor(progressScore: number): string {
   const colorMap = [
-    '#ffb86a', // orange-300
-    '#fcd34d', // amber-300
     '#fde047', // yellow-300
+    '#fcd34d', // amber-300
+    '#ffb86a', // orange-300
     '#a3e635', // lime-400
     '#16a34a', // green-600
   ];

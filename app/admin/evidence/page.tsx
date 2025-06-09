@@ -61,7 +61,7 @@ const EVIDENCE_SOURCE_TYPES = getSourceTypeOptions();
 
 export default function ManageEvidencePage() {
   const { currentSessionId, isLoadingSessions } = useSession();
-  const [evidenceMode, setEvidenceMode] = useState<'create' | 'edit'>('create');
+  const [evidenceMode, setEvidenceMode] = useState<'edit' | 'create'>('edit');
   const [creationMode, setCreationMode] = useState<'automated' | 'manual'>('automated');
   const [formData, setFormData] = useState<EvidenceFormData>({
     source_url: '',
@@ -776,17 +776,6 @@ export default function ManageEvidencePage() {
             <Tabs value={evidenceMode} onValueChange={(value) => setEvidenceMode(value as 'create' | 'edit')}>
               <TabsList className="grid w-full grid-cols-2 max-w-md">
                 <TabsTrigger
-                  value="create"
-                  className={clsx(
-                    'transition-all duration-200',
-                    fontClass,
-                    evidenceMode === 'create' && 'bg-[#8b2332] text-white border border-[#8b2332] shadow',
-                    evidenceMode !== 'create' && 'bg-[#f6ebe3] text-[#0a0a0a]'
-                  )}
-                >
-                  CREATE NEW
-                </TabsTrigger>
-                <TabsTrigger
                   value="edit"
                   className={clsx(
                     'transition-all duration-200',
@@ -796,6 +785,17 @@ export default function ManageEvidencePage() {
                   )}
                 >
                   EDIT EXISTING
+                </TabsTrigger>
+                <TabsTrigger
+                  value="create"
+                  className={clsx(
+                    'transition-all duration-200',
+                    fontClass,
+                    evidenceMode === 'create' && 'bg-[#8b2332] text-white border border-[#8b2332] shadow',
+                    evidenceMode !== 'create' && 'bg-[#f6ebe3] text-[#0a0a0a]'
+                  )}
+                >
+                  CREATE NEW
                 </TabsTrigger>
               </TabsList>
 

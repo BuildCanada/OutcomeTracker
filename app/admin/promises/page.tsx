@@ -490,14 +490,14 @@ export default function ManagePromisesPage() {
           <Input 
             id={key} 
             type="number"
-            step={key === 'progress_score' ? 0.1 : 1}
+            step={key === 'progress_score' ? 1 : 1}
             min={key === 'progress_score' ? 0 : undefined}
-            max={key === 'progress_score' ? 100 : undefined}
+            max={key === 'progress_score' ? 5 : undefined}
             value={displayValue === null ? '' : displayValue} 
             onChange={(e) => validateAndSetFieldValue(key as keyof PromiseData, e.target.value)} 
             className="col-span-3" 
             disabled={isLoading}
-            placeholder={key === 'progress_score' ? '0.0 - 100.0' : 'Enter number'}
+            placeholder={key === 'progress_score' ? '0-5' : 'Enter number'}
           />
         </div>
       );
@@ -752,7 +752,7 @@ export default function ManagePromisesPage() {
                   <TableCell className="text-xs">{promise.responsible_department_lead || 'N/A'}</TableCell>
                   <TableCell className="text-xs">
                     {promise.progress_score !== undefined && promise.progress_score !== null ? 
-                      `${promise.progress_score}%` : 'N/A'}
+                      `${promise.progress_score}` : 'N/A'}
                   </TableCell>
                   <TableCell className="text-xs">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium 
