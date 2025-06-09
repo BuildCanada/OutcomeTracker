@@ -108,15 +108,16 @@ class LegisInfoProcessor(BaseProcessorJob):
             self.logger.error(f"Error querying LegisInfo items to process: {e}")
             return []
     
-    def _process_raw_item(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _process_raw_item(self, raw_item: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
         """
-        Process a single raw bill item from Parliament 44 format into an evidence item.
+        Process a single raw bill item from Parliament 44 format into evidence items.
+        Creates separate evidence items for each new parliamentary stage.
         
         Args:
             raw_item: Raw bill item with raw_json_content string
             
         Returns:
-            Evidence item ready for storage or None if processing failed
+            List of evidence items ready for storage or None if processing failed
         """
         try:
             # Parse the raw JSON content string (Parliament 44 format)
@@ -129,7 +130,7 @@ class LegisInfoProcessor(BaseProcessorJob):
             # Extract the bill data (should be first item in list)
             if not bill_data_list or len(bill_data_list) == 0:
                 self.logger.warning(f"Empty bill data for {raw_item.get('bill_number_code_feed', 'unknown')}")
-                self._update_processing_status(raw_item, 'error_processing_script')
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'error_processing_script')
                 return None
             
             bill_data = bill_data_list[0]
@@ -148,16 +149,43 @@ class LegisInfoProcessor(BaseProcessorJob):
                 self._update_processing_status(raw_item.get('_doc_id', ''), 'skipped_not_relevant')
                 return None
             
-            # Extract and analyze bill content
+            # Detect which stages need evidence items created
+            stages_to_process = self._get_stages_to_process(raw_item, bill_data)
+            
+            if not stages_to_process:
+                self.logger.info(f"No new stages to process for bill {bill_number}")
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'processed')
+                return []
+            
+            # Synthesize XML content once for all stages (expensive operation)
+            raw_xml_content = raw_item.get('raw_xml_content')
+            synthesized_summary = self._synthesize_bill_xml(raw_xml_content)
+            
+            # Extract and analyze bill content once
             bill_analysis = self._analyze_bill_content_parliament44(raw_item, bill_data)
             
-            # Create evidence item in Parliament 44 format
-            evidence_item = self._create_parliament44_evidence_item(raw_item, bill_data, bill_analysis)
+            # Create evidence items for each stage
+            evidence_items = []
+            for stage_info in stages_to_process:
+                try:
+                    evidence_item = self._create_stage_evidence_item(
+                        raw_item, bill_data, bill_analysis, synthesized_summary, stage_info
+                    )
+                    if evidence_item:
+                        evidence_items.append(evidence_item)
+                        self.logger.info(f"Created evidence item for {bill_number} stage: {stage_info.get('stage_name', 'Unknown')}")
+                except Exception as e:
+                    self.logger.error(f"Error creating evidence item for {bill_number} stage {stage_info.get('stage_name', 'Unknown')}: {e}")
+                    continue
             
-            # Update processing status to indicate successful processing
-            self._update_processing_status(raw_item.get('_doc_id', ''), 'processed')
+            if evidence_items:
+                # Update processing status to indicate successful processing
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'evidence_created')
+                self.logger.info(f"Successfully created {len(evidence_items)} evidence items for bill {bill_number}")
+            else:
+                self._update_processing_status(raw_item.get('_doc_id', ''), 'error_processing_script')
             
-            return evidence_item
+            return evidence_items
             
         except Exception as e:
             self.logger.error(f"Error processing bill {raw_item.get('bill_number_code_feed', 'unknown')}: {e}")
@@ -826,7 +854,192 @@ class LegisInfoProcessor(BaseProcessorJob):
         except Exception as e:
             self.logger.warning(f"Could not update processing status: {e}")
     
-    def _create_parliament44_evidence_item(self, raw_item: Dict[str, Any], bill_data: Dict[str, Any], bill_analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_stages_to_process(self, raw_item: Dict[str, Any], bill_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Determine which parliamentary stages need evidence items created.
+        
+        Args:
+            raw_item: Raw bill item
+            bill_data: Parsed bill data
+            
+        Returns:
+            List of stage information dicts for stages that need processing
+        """
+        # For now, always process the current latest completed stage
+        # In future, we could track historical stages and process multiple stages
+        
+        stages_to_process = []
+        
+        # Get current stage information
+        latest_major_stage_id = bill_data.get('LatestCompletedMajorStageId')
+        latest_major_stage_name = bill_data.get('LatestCompletedMajorStageNameEn', '')
+        latest_major_stage_datetime = bill_data.get('LatestCompletedMajorStageDateTime', '')
+        chamber_name = bill_data.get('LatestCompletedMajorStageChamberNameEn', '')
+        
+        # Get bill stage information (more granular)
+        latest_bill_stage_id = bill_data.get('LatestCompletedBillStageId')
+        latest_bill_stage_name = bill_data.get('LatestCompletedBillStageNameEn', '')
+        latest_bill_stage_datetime = bill_data.get('LatestCompletedBillStageDateTime', '')
+        bill_stage_chamber = bill_data.get('LatestCompletedBillStageChamberNameEn', '')
+        
+        # Use the most recent/specific stage info available
+        if latest_bill_stage_id and latest_bill_stage_name:
+            stage_info = {
+                'stage_id': latest_bill_stage_id,
+                'stage_name': latest_bill_stage_name,
+                'stage_datetime': latest_bill_stage_datetime,
+                'chamber_name': bill_stage_chamber or chamber_name,
+                'stage_type': 'bill_stage'
+            }
+        elif latest_major_stage_id and latest_major_stage_name:
+            stage_info = {
+                'stage_id': latest_major_stage_id,
+                'stage_name': latest_major_stage_name,
+                'stage_datetime': latest_major_stage_datetime,
+                'chamber_name': chamber_name,
+                'stage_type': 'major_stage'
+            }
+        else:
+            # Fallback to basic introduction stage
+            stage_info = {
+                'stage_id': 60110,  # Standard introduction stage ID
+                'stage_name': 'First reading',
+                'stage_datetime': raw_item.get('ingested_at', datetime.now(timezone.utc)).isoformat(),
+                'chamber_name': 'Senate' if raw_item.get('bill_number_code_feed', '').startswith('S-') else 'House of Commons',
+                'stage_type': 'fallback'
+            }
+        
+        stages_to_process.append(stage_info)
+        return stages_to_process
+
+    def _create_stage_evidence_item(self, raw_item: Dict[str, Any], bill_data: Dict[str, Any], 
+                                   bill_analysis: Dict[str, Any], synthesized_summary: Optional[str],
+                                   stage_info: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create evidence item for a specific parliamentary stage.
+        
+        Args:
+            raw_item: Raw bill item
+            bill_data: Parsed bill data  
+            bill_analysis: Bill content analysis
+            synthesized_summary: LLM-synthesized XML summary
+            stage_info: Information about the specific stage
+            
+        Returns:
+            Evidence item for this stage
+        """
+        # Extract key information
+        bill_number = raw_item.get('bill_number_code_feed', '')
+        parliament_session_full = raw_item.get('parliament_session_id', '')
+        parliament_session = parliament_session_full.split('-')[0] if parliament_session_full else ''
+        
+        # Parse stage datetime
+        stage_datetime_str = stage_info.get('stage_datetime', '')
+        if stage_datetime_str:
+            try:
+                if 'T' in stage_datetime_str:
+                    stage_date = datetime.fromisoformat(stage_datetime_str.replace('Z', '+00:00'))
+                else:
+                    stage_date = datetime.fromisoformat(stage_datetime_str)
+                stage_date = stage_date.replace(tzinfo=timezone.utc)
+            except Exception:
+                stage_date = datetime.now(timezone.utc)
+        else:
+            stage_date = datetime.now(timezone.utc)
+        
+        # Create unique evidence ID that includes stage information
+        date_str = stage_date.strftime('%Y%m%d')
+        stage_id = stage_info.get('stage_id', '60110')
+        chamber_short = 'senate' if 'senate' in stage_info.get('chamber_name', '').lower() else 'house'
+        evidence_id = f"{date_str}_{parliament_session_full.replace('-', '_')}_{bill_number}_stage_{stage_id}_{chamber_short}"
+        
+        # Create stage-specific title and description
+        stage_name = stage_info.get('stage_name', 'Legislative activity')
+        chamber_name = stage_info.get('chamber_name', 'Parliament')
+        
+        stage_title = f"Bill {bill_number}: {stage_name} in {chamber_name}"
+        
+        # Create stage-specific description
+        stage_description = f"Chamber: {chamber_name}. Stage: {stage_name}. Event: {stage_name}."
+        
+        # Enhance description with XML synthesis if available
+        if synthesized_summary:
+            stage_description = f"{stage_description}\n\n{synthesized_summary}"
+        
+        # Build URLs
+        parliament_num, session_num = parliament_session_full.split('-') if '-' in parliament_session_full else (parliament_session_full, '1')
+        about_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session_full}/{bill_number}?view=about"
+        details_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session_full}/{bill_number}?view=details"
+        source_url = f"https://www.parl.ca/legisinfo/en/bill/{parliament_session_full}/{bill_number}"
+        
+        # Create bill_parl_id
+        bill_parl_id = f"{parliament_session_full}_{bill_number}"
+        
+        # Determine if this is a terminal status (Royal Assent)
+        is_terminal = 'royal assent' in stage_name.lower() or 'assent' in stage_name.lower()
+        
+        # Create evidence item
+        evidence_item = {
+            # Additional information map
+            'additional_information': {
+                'about_url': about_url,
+                'details_url': details_url,
+                'event_specific_details': {
+                    'additional_info': f"Parliamentary stage: {stage_name}",
+                    'chamber': chamber_name,
+                    'event_type_id': stage_id,
+                    'is_terminal_status': is_terminal,
+                    'stage_name': stage_name,
+                    'stage_id': stage_id,
+                    'stage_type': stage_info.get('stage_type', 'unknown')
+                }
+            },
+            
+            # Bill analysis fields
+            'bill_extracted_keywords_concepts': bill_analysis.get('key_concepts', []),
+            'bill_one_sentence_description_llm': bill_analysis.get('description', ''),
+            'bill_parl_id': bill_parl_id,
+            'bill_timeline_summary_llm': bill_analysis.get('summary', ''),
+            
+            # Core evidence fields
+            'description_or_details': stage_description,
+            'evidence_date': stage_date,
+            'evidence_id': evidence_id,
+            'evidence_source_type': 'Bill Event (LEGISinfo)',
+            'ingested_at': raw_item.get('ingested_at') or datetime.now(timezone.utc),
+            
+            # Department and promise linking
+            'linked_departments': bill_analysis.get('departments', []),
+            'promise_ids': [],
+            'promise_linking_status': 'pending',
+            
+            # Source information
+            'source_document_raw_id': bill_number,
+            'source_url': source_url,
+            'evidence_source_document_raw_id': bill_number,  # For linking consistency
+            
+            # Title
+            'title_or_summary': stage_title,
+            
+            # Parliament context
+            'parliament_session_id': parliament_session,
+            
+            # Additional metadata
+            'evidence_type': 'legislative_action',
+            'evidence_subtype': self._classify_bill_type_parliament44(bill_data),
+            'created_at': datetime.now(timezone.utc),
+            'last_updated_at': datetime.now(timezone.utc),
+            
+            # Stage-specific metadata
+            'parliamentary_stage': stage_name,
+            'parliamentary_stage_id': stage_id,
+            'chamber': chamber_name,
+            'is_terminal_stage': is_terminal
+        }
+        
+        return evidence_item
+
+    def _create_parliament44_evidence_item(self, raw_item: Dict[str, Any], bill_data: Dict[str, Any], bill_analysis: Dict[str, Any], synthesized_summary: Optional[str]) -> Dict[str, Any]:
         """Create evidence item in Parliament 44 format"""
         # Extract key information
         bill_number = raw_item.get('bill_number_code_feed', '')
@@ -859,6 +1072,9 @@ class LegisInfoProcessor(BaseProcessorJob):
         stage_name = "First reading"  # Default stage
         event_type_id = 60110  # Introduction and first reading
         
+        # Use the new LLM-synthesized summary if available, otherwise fall back
+        description = synthesized_summary or f"Chamber: {chamber}. Stage: {stage_name}. Event: Introduction and first reading."
+
         # Create evidence item matching Parliament 44 structure
         evidence_item = {
             # Additional information map (contains event_specific_details)
@@ -881,7 +1097,7 @@ class LegisInfoProcessor(BaseProcessorJob):
             'bill_timeline_summary_llm': bill_analysis.get('summary', ''),
             
             # Core evidence fields
-            'description_or_details': f"Chamber: {chamber}. Stage: {stage_name}. Event: Introduction and first reading.",
+            'description_or_details': description,
             'evidence_date': ingested_date,
             'evidence_id': evidence_id,
             'evidence_source_type': 'Bill Event (LEGISinfo)',
@@ -909,4 +1125,52 @@ class LegisInfoProcessor(BaseProcessorJob):
             'last_updated_at': datetime.now(timezone.utc)
         }
         
-        return evidence_item 
+        return evidence_item
+    
+    def _load_synthesis_prompt_template(self) -> str:
+        """Loads the prompt for synthesizing bill XML."""
+        return """You are an expert in Canadian parliamentary matters.
+Please review the XML file below and write a synthesis of the bill with a focus on what it means for Canadians. Focus on providing a bulleted list of the purpose and proposals of each part of the bill. If there are specific facts or values included in the bill, those should be included in your bullet points. For example, "the Purpose of this bill is to reduce capital gains taxes from X% to Y%"
+
+CRITICAL: Your response must be EXACTLY 200 words or fewer. Count your words carefully and edit to stay within this strict limit."""
+
+    def _generate_evidence_id(self, evidence_item: Dict[str, Any], raw_item: Dict[str, Any]) -> str:
+        """
+        Override default evidence ID generation to use the stage-specific evidence_id field.
+        For LegisInfo processor, evidence items already contain their unique evidence_id.
+        """
+        # Use the evidence_id already generated during _create_stage_evidence_item
+        existing_evidence_id = evidence_item.get('evidence_id')
+        if existing_evidence_id:
+            return existing_evidence_id
+        
+        # Fallback to parent method if no evidence_id found
+        return super()._generate_evidence_id(evidence_item, raw_item)
+
+    def _synthesize_bill_xml(self, xml_content: str) -> Optional[str]:
+        """Calls an LLM to synthesize the bill's XML content into a summary."""
+        if not xml_content or not self.langchain_instance:
+            self.logger.debug("Skipping XML synthesis due to missing content or LLM instance.")
+            return None
+        try:
+            prompt_template = self._load_synthesis_prompt_template()
+            
+            # Clean XML content to improve LLM processing
+            cleaned_xml = re.sub(r'<\?xml[^>]*\?>', '', xml_content).strip()
+            # Condense whitespace
+            cleaned_xml = re.sub(r'\s+', ' ', cleaned_xml)
+
+            prompt = f"{prompt_template}\n\n<bill_xml>\n{cleaned_xml}\n</bill_xml>"
+
+            self.logger.info("Synthesizing bill XML content with LLM...")
+            response = self.langchain_instance.llm.invoke(prompt)
+            
+            if response and hasattr(response, 'content'):
+                self.logger.info("Successfully synthesized bill XML.")
+                return response.content.strip()
+
+            self.logger.warning("LLM response for XML synthesis was empty.")
+            return None
+        except Exception as e:
+            self.logger.error(f"Error during bill XML synthesis: {e}", exc_info=True)
+            return None 

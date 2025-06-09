@@ -9,7 +9,7 @@ import logging
 import sys
 from abc import abstractmethod
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 from pathlib import Path
 
 # Handle imports for both module execution and testing
@@ -60,15 +60,18 @@ class BaseProcessorJob(BaseJob):
         pass
     
     @abstractmethod
-    def _process_raw_item(self, raw_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _process_raw_item(self, raw_item: Dict[str, Any]) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
         """
-        Process a single raw item into an evidence item.
+        Process a single raw item into one or more evidence items.
         
         Args:
             raw_item: Raw data item from source collection
             
         Returns:
-            Evidence item ready for storage or None if processing failed
+            Evidence item(s) ready for storage:
+            - Single Dict for one evidence item
+            - List of Dicts for multiple evidence items  
+            - None if processing failed
         """
         pass
     
@@ -173,18 +176,30 @@ class BaseProcessorJob(BaseJob):
             try:
                 batch_stats['items_processed'] += 1
                 
-                # Process the raw item
-                evidence_item = self._process_raw_item(raw_item)
+                # Process the raw item (may return single item or list)
+                evidence_result = self._process_raw_item(raw_item)
                 
-                if evidence_item:
-                    # Save evidence item and update status
-                    result = self._save_evidence_item(evidence_item, raw_item)
+                if evidence_result:
+                    # Handle both single items (backward compatibility) and lists of items
+                    evidence_items = evidence_result if isinstance(evidence_result, list) else [evidence_result]
                     
-                    if result == 'created':
-                        batch_stats['items_created'] += 1
-                    elif result == 'updated':
-                        batch_stats['items_updated'] += 1
-                    else:
+                    item_saved = False
+                    for evidence_item in evidence_items:
+                        if evidence_item:  # Skip None items in the list
+                            # Save evidence item and update status
+                            result = self._save_evidence_item(evidence_item, raw_item)
+                            
+                            if result == 'created':
+                                batch_stats['items_created'] += 1
+                                item_saved = True
+                            elif result == 'updated':
+                                batch_stats['items_updated'] += 1
+                                item_saved = True
+                            else:
+                                batch_stats['items_skipped'] += 1
+                    
+                    # If no items were actually saved from the list, it's effectively skipped
+                    if not item_saved and evidence_items:
                         batch_stats['items_skipped'] += 1
                 else:
                     # Mark as processing error

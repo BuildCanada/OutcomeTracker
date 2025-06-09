@@ -47,8 +47,10 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
         
         # Request settings
         self.headers = {'User-Agent': 'Promise Tracker Pipeline/2.0 (Government Data Ingestion)'}
-        self.request_timeout = self.config.get('request_timeout', 60)
-        self.max_retries = self.config.get('max_retries', 3)
+        self.request_timeout = self.config.get('request_timeout', 90)  # Increased timeout for XML
+        self.max_retries = self.config.get('max_retries', 5)  # More retries for robustness
+        self.xml_request_timeout = self.config.get('xml_request_timeout', 120)  # Special timeout for XML
+        self.xml_max_retries = self.config.get('xml_max_retries', 5)  # Special retries for XML
         
         # Processing settings
         self.min_parliament = self.config.get('min_parliament', 44)  # Start from Parliament 44
@@ -102,11 +104,25 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
                 
                 # Fetch detailed JSON for this bill
                 detailed_data = self._fetch_bill_details(bill)
+
                 if detailed_data:
+                    # Extract the detailed data (API returns list containing one dict)
+                    if isinstance(detailed_data, list) and len(detailed_data) > 0:
+                        bill_details = detailed_data[0]
+                    elif isinstance(detailed_data, list) and len(detailed_data) == 0:
+                        self.logger.warning("Empty bill_details_data list received")
+                        bill_details = {}
+                    else:
+                        bill_details = detailed_data
+
+                    # Fetch the full text XML for this bill using the detailed data (which has IsGovernmentBill)
+                    xml_content = self._fetch_bill_xml(bill_details)
+
                     # Combine list data with detailed data
                     combined_data = {
                         'bill_list_data': bill,
                         'bill_details_data': detailed_data,
+                        'raw_xml_content': xml_content,
                         'fetch_timestamp': datetime.now(timezone.utc)
                     }
                     detailed_bills.append(combined_data)
@@ -153,6 +169,65 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
             self.logger.error(f"Error fetching details for bill {bill_code}: {e}")
             return None
     
+    def _construct_xml_url(self, bill_data: Dict[str, Any]) -> Optional[str]:
+        """Constructs the URL for the bill's full text XML."""
+        # Handle both bill list data and bill details data structures
+        # Bill list data has: ParliamentNumber, SessionNumber, BillNumberFormatted
+        # Bill details data has: ParliamentNumber, SessionNumber, NumberCode, IsGovernmentBill
+        parl = bill_data.get('ParliamentNumber')
+        session = bill_data.get('SessionNumber') 
+        bill_code = (bill_data.get('BillNumberFormatted') or 
+                    bill_data.get('NumberCode'))
+        is_government_bill = bill_data.get('IsGovernmentBill', True)  # Default to True for safety
+
+        if not all([parl, session, bill_code]):
+            self.logger.warning(f"Cannot construct XML URL for bill {bill_code} due to missing basic data.")
+            return None
+
+        # Determine bill type folder based on IsGovernmentBill field
+        # Private member bills use 'Private', government bills use 'Government'
+        if is_government_bill:
+            bill_type_url_part = 'Government'
+        else:
+            bill_type_url_part = 'Private'
+
+        # Per user instructions, assume the first reading (_1) and English version (_E.xml)
+        bill_file_prefix = f"{bill_code}_1"
+
+        url = f"https://www.parl.ca/Content/Bills/{parl}{session}/{bill_type_url_part}/{bill_code}/{bill_file_prefix}/{bill_code}_E.xml"
+        self.logger.info(f"Constructed XML URL for {bill_code}: {url}")
+        return url
+
+    def _fetch_bill_xml(self, bill: Dict[str, Any]) -> Optional[str]:
+        """Fetches the full text XML for a specific bill with robust retry logic."""
+        xml_url = self._construct_xml_url(bill)
+        if not xml_url:
+            return None
+        
+        bill_code = bill.get('NumberCode') or bill.get('BillNumberFormatted', 'Unknown')
+        
+        # Use dedicated XML fetching with enhanced retries and timeout
+        try:
+            response = self._make_xml_request(xml_url, bill_code)
+            if response:
+                response.encoding = response.apparent_encoding or 'utf-8'
+                xml_content = response.text
+                
+                # Validate XML content
+                if self._validate_xml_content(xml_content, bill_code):
+                    self.logger.info(f"Successfully fetched XML for {bill_code}: {len(xml_content)} characters")
+                    return xml_content
+                else:
+                    self.logger.warning(f"Invalid XML content received for {bill_code}")
+                    return None
+            else:
+                return None
+                
+        except Exception as e:
+            # It's common for some bills not to have XML, so log as warning
+            self.logger.warning(f"Could not fetch XML for bill {bill_code} from {xml_url}: {e}")
+            return None
+    
     def _make_request(self, url: str) -> requests.Response:
         """
         Make HTTP request with retries and proper error handling.
@@ -181,6 +256,103 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
                 else:
                     self.logger.error(f"Request failed after {self.max_retries} attempts: {e}")
                     raise
+
+    def _make_xml_request(self, url: str, bill_code: str) -> Optional[requests.Response]:
+        """
+        Make XML-specific HTTP request with enhanced retry logic and exponential backoff.
+        
+        Args:
+            url: XML URL to fetch
+            bill_code: Bill code for logging
+            
+        Returns:
+            Response object or None if all attempts failed
+        """
+        import time
+        
+        for attempt in range(self.xml_max_retries):
+            try:
+                # Calculate exponential backoff delay
+                if attempt > 0:
+                    delay = min(2 ** attempt, 30)  # Cap at 30 seconds
+                    self.logger.info(f"Waiting {delay}s before retry {attempt + 1} for {bill_code} XML...")
+                    time.sleep(delay)
+                
+                self.logger.debug(f"Attempting XML fetch for {bill_code} (attempt {attempt + 1}/{self.xml_max_retries})")
+                
+                response = requests.get(
+                    url,
+                    headers=self.headers,
+                    timeout=self.xml_request_timeout,
+                    allow_redirects=True,
+                    stream=False  # Don't stream for XML to ensure complete download
+                )
+                
+                # Check response status
+                if response.status_code == 200:
+                    return response
+                elif response.status_code == 404:
+                    self.logger.info(f"XML not available for {bill_code} (404 - likely no XML published yet)")
+                    return None
+                else:
+                    response.raise_for_status()
+                
+            except requests.exceptions.Timeout as e:
+                if attempt < self.xml_max_retries - 1:
+                    self.logger.warning(f"XML request timeout for {bill_code} (attempt {attempt + 1}/{self.xml_max_retries}): {e}")
+                    continue
+                else:
+                    self.logger.error(f"XML request timed out for {bill_code} after {self.xml_max_retries} attempts")
+                    return None
+                    
+            except requests.exceptions.RequestException as e:
+                if attempt < self.xml_max_retries - 1:
+                    self.logger.warning(f"XML request failed for {bill_code} (attempt {attempt + 1}/{self.xml_max_retries}): {e}")
+                    continue
+                else:
+                    self.logger.error(f"XML request failed for {bill_code} after {self.xml_max_retries} attempts: {e}")
+                    return None
+        
+        return None
+
+    def _validate_xml_content(self, xml_content: str, bill_code: str) -> bool:
+        """
+        Validate that XML content is reasonable and not an error page.
+        
+        Args:
+            xml_content: XML content to validate
+            bill_code: Bill code for logging
+            
+        Returns:
+            True if content appears valid
+        """
+        if not xml_content:
+            return False
+        
+        # Check minimum length (XML should be substantial)
+        if len(xml_content) < 1000:
+            self.logger.warning(f"XML content for {bill_code} is too short: {len(xml_content)} characters")
+            return False
+        
+        # Check for XML declaration
+        if not xml_content.strip().startswith('<?xml'):
+            self.logger.warning(f"XML content for {bill_code} doesn't start with XML declaration")
+            return False
+        
+        # Check for Bill root element
+        if '<Bill' not in xml_content:
+            self.logger.warning(f"XML content for {bill_code} doesn't contain Bill element")
+            return False
+        
+        # Check for error indicators
+        error_indicators = ['404 Not Found', '500 Internal Server Error', 'Error', 'Exception']
+        xml_lower = xml_content.lower()
+        for indicator in error_indicators:
+            if indicator.lower() in xml_lower:
+                self.logger.warning(f"XML content for {bill_code} contains error indicator: {indicator}")
+                return False
+        
+        return True
     
     def _filter_bills_by_parliament(self, bills: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Filter bills by parliament number range"""
@@ -304,6 +476,7 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
             
             # Store raw JSON as string (like Parliament 44)
             'raw_json_content': raw_json_content,
+            'raw_xml_content': raw_item.get('raw_xml_content'),
             'source_detailed_json_url': source_url,
             
             # Dates
@@ -368,6 +541,10 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
         if status == 'error_processing_script':
             return True
         
+        # Check if bill has progressed to a new stage
+        if self._has_bill_progressed(existing_item, new_item):
+            return True
+        
         # Check if latest activity date has changed
         existing_activity = existing_item.get('ingested_at')
         new_activity = new_item.get('ingested_at')
@@ -379,4 +556,65 @@ class LegisInfoBillsIngestion(BaseIngestionJob):
         if existing_item.get('status') != new_item.get('status'):
             return True
         
-        return False 
+        return False
+
+    def _has_bill_progressed(self, existing_item: Dict[str, Any], new_item: Dict[str, Any]) -> bool:
+        """
+        Check if a bill has progressed to a new parliamentary stage.
+        
+        Args:
+            existing_item: Current item in database
+            new_item: New item from API
+            
+        Returns:
+            True if bill has progressed to new stage(s)
+        """
+        # Extract stage information from raw JSON content
+        existing_stage_info = self._extract_stage_info(existing_item)
+        new_stage_info = self._extract_stage_info(new_item)
+        
+        if not existing_stage_info or not new_stage_info:
+            return False
+        
+        # Compare latest completed major stage IDs
+        existing_stage_id = existing_stage_info.get('LatestCompletedMajorStageId')
+        new_stage_id = new_stage_info.get('LatestCompletedMajorStageId')
+        
+        if existing_stage_id and new_stage_id and new_stage_id > existing_stage_id:
+            self.logger.info(f"Bill {new_item.get('bill_number_code_feed')} progressed from stage {existing_stage_id} to {new_stage_id}")
+            return True
+        
+        # Also check bill stage progression (more granular)
+        existing_bill_stage_id = existing_stage_info.get('LatestCompletedBillStageId')
+        new_bill_stage_id = new_stage_info.get('LatestCompletedBillStageId')
+        
+        if existing_bill_stage_id and new_bill_stage_id and new_bill_stage_id > existing_bill_stage_id:
+            self.logger.info(f"Bill {new_item.get('bill_number_code_feed')} progressed in bill stage from {existing_bill_stage_id} to {new_bill_stage_id}")
+            return True
+        
+        return False
+
+    def _extract_stage_info(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Extract stage information from bill item's raw JSON content.
+        
+        Args:
+            item: Bill item with raw_json_content
+            
+        Returns:
+            Stage information dict or None if not found
+        """
+        try:
+            raw_json_content = item.get('raw_json_content', '[]')
+            if isinstance(raw_json_content, str):
+                bill_data_list = json.loads(raw_json_content)
+            else:
+                bill_data_list = raw_json_content
+            
+            if bill_data_list and len(bill_data_list) > 0:
+                return bill_data_list[0]  # Stage info is in the first (and usually only) item
+            
+        except Exception as e:
+            self.logger.debug(f"Error extracting stage info: {e}")
+        
+        return None 

@@ -1,0 +1,292 @@
+{
+  "bill_c4": {
+    "id": "20250606_45-1_LegisInfo_1cbf1484",
+    "data": {
+      "created_at": "2025-06-06 20:00:21.978468+00:00",
+      "source_document_raw_id": "C-4",
+      "evidence_type": "legislative_action",
+      "source_url": "https://www.parl.ca/legisinfo/en/bill/45-1/C-4",
+      "promise_ids": [],
+      "bill_extracted_keywords_concepts": [
+        "Affordability measures",
+        "Cost of living",
+        "Financial support",
+        "Canadian households",
+        "Economic accessibility",
+        "Budget implementation"
+      ],
+      "bill_parl_id": "45-1_C-4",
+      "source_collection": "raw_legisinfo_bill_details",
+      "parliament_session_id_previous": "45-1",
+      "promise_linking_status": "processed",
+      "evidence_subtype": "government_bill",
+      "last_updated_at": "2025-06-06 20:00:21.978472+00:00",
+      "hybrid_linking_method": "no_semantic_matches",
+      "title_or_summary": "Bill C-4: Introduction and first reading in House of Commons",
+      "parliament_session_id_fixed_at": "2025-06-08 03:21:07.014632+00:00",
+      "source_document_id": "45-1_C-4",
+      "additional_information": {
+        "details_url": "https://www.parl.ca/legisinfo/en/bill/45-1/C-4?view=details",
+        "about_url": "https://www.parl.ca/legisinfo/en/bill/45-1/C-4?view=about",
+        "event_specific_details": {
+          "additional_info": "",
+          "is_terminal_status": false,
+          "chamber": "House of Commons",
+          "stage_name": "First reading",
+          "event_type_id": 60110
+        }
+      },
+      "processing_job": "processing.bill_processor",
+      "description_or_details": "Chamber: House of Commons. Stage: First reading. Event: Introduction and first reading.",
+      "evidence_source_type": "Bill Event (LEGISinfo)",
+      "linked_departments": [],
+      "promise_linking_processed_at": "2025-06-08 06:33:05.430000+00:00",
+      "parliament_session_id": "45",
+      "hybrid_linking_avg_confidence": 0.0,
+      "bill_one_sentence_description_llm": "This Act, titled 'Making Life More Affordable for Canadians Act,' implements various financial measures aimed at reducing the cost of living for Canadians, encompassing diverse provisions to enhance economic accessibility and support household budgets.",
+      "bill_timeline_summary_llm": "Bill introduces measures to enhance affordability for Canadians, addressing various financial aspects to ease cost of living pressures.",
+      "promise_links_found": 0,
+      "hybrid_linking_timestamp": "2025-06-08 06:33:05.430000+00:00",
+      "evidence_id": "20250606_45_1_C-4_event_senate_60663690",
+      "evidence_date": "2025-06-06 12:30:50+00:00",
+      "ingested_at": "2025-06-06 12:30:50+00:00"
+    }
+  },
+  "bill_c5": {
+    "id": "20250606_45_LegisInfo_2668e088",
+    "data": {
+      "created_at": "2025-06-08 03:23:48.974443+00:00",
+      "evidence_type": "legislative_action",
+      "source_document_raw_id": "C-5",
+      "source_url": "https://www.parl.ca/legisinfo/en/bill/45-1/C-5",
+      "promise_ids": [],
+      "bill_extracted_keywords_concepts": [
+        "Free Trade",
+        "Labour Mobility",
+        "Building Canada",
+        "One Canadian Economy",
+        "Interprovincial Trade Barriers",
+        "Nation-building Infrastructure",
+        "Economic Integration",
+        "Internal Trade"
+      ],
+      "bill_parl_id": "45-1_C-5",
+      "source_collection": "raw_legisinfo_bill_details",
+      "promise_linking_status": "processed",
+      "evidence_subtype": "government_bill",
+      "last_updated_at": "2025-06-08 03:23:48.974449+00:00",
+      "hybrid_linking_method": "no_semantic_matches",
+      "title_or_summary": "Bill C-5: Introduction and first reading in House of Commons",
+      "source_document_id": "45-1_C-5",
+      "additional_information": {
+        "details_url": "https://www.parl.ca/legisinfo/en/bill/45-1/C-5?view=details",
+        "about_url": "https://www.parl.ca/legisinfo/en/bill/45-1/C-5?view=about",
+        "event_specific_details": {
+          "additional_info": "",
+          "is_terminal_status": false,
+          "chamber": "House of Commons",
+          "stage_name": "First reading",
+          "event_type_id": 60110
+        }
+      },
+      "evidence_source_type": "Bill Event (LEGISinfo)",
+      "description_or_details": "Chamber: House of Commons. Stage: First reading. Event: Introduction and first reading.",
+      "processing_job": "processing.bill_processor",
+      "linked_departments": [
+        "Employment and Social Development Canada"
+      ],
+      "promise_linking_processed_at": "2025-06-08 06:33:05.516000+00:00",
+      "parliament_session_id": "45",
+      "hybrid_linking_avg_confidence": 0.0,
+      "bill_one_sentence_description_llm": "This bill enacts the Free Trade and Labour Mobility in Canada Act and the Building Canada Act, aiming to eliminate interprovincial trade barriers, enhance labour mobility, and facilitate nation-building infrastructure projects to foster a unified Canadian economy.",
+      "bill_timeline_summary_llm": "Bill enacts the Free Trade and Labour Mobility in Canada Act and the Building Canada Act, aiming to foster a single Canadian economy.",
+      "promise_links_found": 0,
+      "hybrid_linking_timestamp": "2025-06-08 06:33:05.516000+00:00",
+      "evidence_id": "20250606_45_1_C-5_event_senate_60663690",
+      "evidence_date": "2025-06-06 12:11:36.473000+00:00",
+      "ingested_at": "2025-06-06 12:11:36.473000+00:00"
+    }
+  },
+  "promise_for_c5": {
+    "id": "LPC_20250419_OTHER_21670141",
+    "data": {
+      "policy_areas": [],
+      "explanation_enrichment_model": "gemini-2.5-flash-preview-05-20",
+      "canonical_commitment_text": "Remove barriers to internal trade. Reduce internal trade costs by up to 15% and expand our economy by up to $200 billion, that is up to $5,000 for every Canadian.",
+      "source_url": "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
+      "status": "active",
+      "commitment_history_rationale": [
+        {
+          "date": "2016-06-21",
+          "source_url": "",
+          "action": "The Standing Senate Committee on Banking, Trade and Commerce released its report 'Tear Down These Walls: Dismantling Interprovincial Trade Barriers,' which highlighted the significant economic costs of internal trade barriers and recommended concrete actions to reduce them."
+        },
+        {
+          "date": "2017-07-01",
+          "source_url": "",
+          "action": "The Canadian Free Trade Agreement (CFTA) came into effect, replacing the Agreement on Internal Trade (AIT). The CFTA aimed to reduce and eliminate barriers to the free movement of people, goods, services, and investments within Canada."
+        },
+        {
+          "date": "2018-04-19",
+          "source_url": "",
+          "action": "The Supreme Court of Canada delivered its decision in R. v. Comeau, a landmark case concerning interprovincial trade barriers, particularly in alcohol. While upholding provincial regulatory powers, the case brought national attention to the complexities and ongoing challenges of internal trade."
+        },
+        {
+          "date": "2019-03-19",
+          "source_url": "",
+          "action": "Federal Budget 2019 committed to working with provinces and territories to reduce internal trade barriers, including through the Canadian Free Trade Agreement, recognizing the economic benefits of a more integrated national market."
+        }
+      ],
+      "last_updated_at": "2025-05-29 18:59:26.666000+00:00",
+      "bc_promise_direction": "positive",
+      "progress_summary": "The government has taken meaningful action towards reducing internal trade barriers. A news release from Intergovernmental Affairs indicates the intent to enact legislation, specifically \"An Act to enact the Free Trade and Labour Mobility in Canada Act and the Building Canada Act,\" which directly addresses the commitment's objectives. While other evidence of regulations and Orders in Council exists, their specific relevance to internal trade barriers cannot be determined from the provided details. One news release regarding border security is not relevant to this commitment.",
+      "party": "Liberal Party of Canada",
+      "reporting_lead_title": "President of the King\\u2019s Privy Council for Canada and Minister responsible for Canada-U.S. Trade, Intergovernmental Affairs and One Canadian Economy",
+      "party_code": "LPC",
+      "keywords_extracted_at": "2025-05-28 16:18:22.412000+00:00",
+      "explanation_enriched_at": "2025-05-28 22:17:40.378000+00:00",
+      "description": "This commitment aims to eliminate interprovincial trade barriers, reducing costs by up to 15% and expanding Canada's economy by $200 billion, or $5,000 per Canadian.",
+      "bc_ranked_at": "2025-05-27 18:42:05.622000+00:00",
+      "explanation_enrichment_status": "processed",
+      "linked_evidence_ids": [],
+      "bc_promise_rank": "strong",
+      "extracted_keywords_concepts": [
+        "Internal Trade Barriers",
+        "Trade Costs",
+        "Economy",
+        "Canadian Free Trade Agreement (CFTA)",
+        "Provincial Regulations",
+        "Canadians"
+      ],
+      "source_document_url": "",
+      "appears_in": "Platform Only",
+      "background_and_context": "Internal trade barriers have long been identified as a significant impediment to Canada's economic growth and productivity. These barriers, stemming from differing provincial regulations, licensing, and standards, inflate costs for businesses and consumers, hinder interprovincial commerce, and limit market access for Canadian companies. The commitment aims to address this fragmentation, which prevents goods, services, capital, and labour from flowing freely across provincial borders. By streamlining regulations and reducing red tape, the government seeks to unlock Canada's full economic potential, fostering a more competitive national market and driving prosperity. This promise reflects a broader recognition of the need for greater economic integration within Canada to enhance national competitiveness and deliver tangible benefits directly to citizens.",
+      "commitment_id": "LPC-002",
+      "parliament_session_id": "45",
+      "evidence_count": 5,
+      "target_groups": [],
+      "action_type_rationale": null,
+      "linking_preprocessing_done_at": null,
+      "category": null,
+      "progress_score": 3,
+      "rationale_format_fixed_at": "2025-05-28 04:55:55.037000+00:00",
+      "ingested_at": "2025-05-27 17:49:26.751000+00:00",
+      "history_generated_at": "2025-05-27 18:42:05.622000+00:00",
+      "migration_status_added_at": "2025-05-29 02:20:18.260000+00:00",
+      "last_progress_update_at": "2025-05-28 22:21:48.193000+00:00",
+      "notes_and_differences": "Platform-specific commitment focusing on economic outcomes of removing internal trade barriers. Related to LPC-004 and SFT_007/SFT_008.",
+      "text": "Remove barriers to internal trade. Reduce internal trade costs by up to 15% and expand our economy by up to $200 billion, that is up to $5,000 for every Canadian.",
+      "last_enrichment_at": "2025-05-28 22:17:40.405000+00:00",
+      "progress_status": "in_progress",
+      "implied_action_type": "legislative",
+      "keywords_context_used": "enhanced_with_background_and_description",
+      "date_issued": "2025-04-19",
+      "concise_title": "Streamline Internal Trade for Economic Growth",
+      "key_points": [],
+      "source_type": "2025 LPC Consolidated",
+      "migration_version": "1.0",
+      "linked_evidence": [
+        {
+          "created_at": "2025-05-28 17:22:10.283313+00:00",
+          "algorithm": "enhanced_multi_metric",
+          "confidence_level": "high_confidence",
+          "similarity_details": {
+            "common_keywords": [
+              "concept_economic_growth",
+              "council",
+              "from",
+              "privy",
+              "economic_important",
+              "president",
+              "king",
+              "growth",
+              "economic"
+            ],
+            "weighted_jaccard": 0.36716417910447763,
+            "jaccard": 0.06716417910447761,
+            "common_departments": [],
+            "department_boost": 0.0,
+            "common_important_terms": [
+              "economic"
+            ],
+            "final_score": 0.5671641791044776,
+            "common_concepts": [
+              "concept_economic_growth"
+            ],
+            "important_terms_boost": 0.05,
+            "conceptual_boost": 0.15
+          },
+          "evidence_id": "20250326_45_Gazette2_d5c3d0607f",
+          "similarity_score": 0.5671641791044776,
+          "promise_id": "LPC_20250419_OTHER_21670141"
+        },
+        {
+          "created_at": "2025-05-28 17:22:18.869381+00:00",
+          "algorithm": "enhanced_multi_metric",
+          "confidence_level": "high_confidence",
+          "similarity_details": {
+            "common_keywords": [
+              "council",
+              "privy",
+              "economy",
+              "intergovernmental",
+              "president",
+              "trade",
+              "responsible",
+              "trade_important",
+              "economy_important",
+              "affairs",
+              "king"
+            ],
+            "weighted_jaccard": 0.38396946564885504,
+            "jaccard": 0.08396946564885496,
+            "common_departments": [],
+            "department_boost": 0.0,
+            "common_important_terms": [
+              "economy"
+            ],
+            "final_score": 0.433969465648855,
+            "common_concepts": [],
+            "important_terms_boost": 0.05,
+            "conceptual_boost": 0.0
+          },
+          "evidence_id": "20250513_45_OIC_ccd093e688",
+          "similarity_score": 0.433969465648855,
+          "promise_id": "LPC_20250419_OTHER_21670141"
+        }
+      ],
+      "progress_scoring_model": "gemini-2.5-flash-preview-05-20",
+      "region_code": "Canada",
+      "last_scored_at": "2025-06-08 06:19:13.663081+00:00",
+      "action_type_confidence": 0.0,
+      "responsible_department_lead": "President of the King\\u2019s Privy Council for Canada and Minister responsible for Canada-U.S. Trade, Intergovernmental Affairs and One Canadian Economy",
+      "what_it_means_for_canadians": [
+        "Canadians could experience increased prosperity through a $5,000 boost in economic activity per person, fostering job creation and innovation.",
+        "Reduced internal trade costs may lead to lower prices for goods and services, improving affordability and purchasing power for consumers.",
+        "Businesses will benefit from easier market access across provinces, reducing red tape and fostering a more competitive and efficient national market.",
+        "Implementing this requires complex negotiations among provinces, potentially leading to slow progress or disagreements on specific regulations.",
+        "Some regions or industries might face increased competition, potentially impacting local businesses unaccustomed to broader market forces."
+      ],
+      "promise_id": "LPC-002",
+      "intended_impact_and_objectives": [
+        "Canadians could experience increased prosperity through a $5,000 boost in economic activity per person, fostering job creation and innovation.",
+        "Reduced internal trade costs may lead to lower prices for goods and services, improving affordability and purchasing power for consumers.",
+        "Businesses will benefit from easier market access across provinces, reducing red tape and fostering a more competitive and efficient national market.",
+        "Implementing this requires complex negotiations among provinces, potentially leading to slow progress or disagreements on specific regulations.",
+        "Some regions or industries might face increased competition, potentially impacting local businesses unaccustomed to broader market forces."
+      ],
+      "last_evidence_date": "2025-05-13 00:00:00+00:00",
+      "action_type_classified_at": "2025-05-27 18:42:05.622000+00:00",
+      "candidate_or_government": "Liberal Party of Canada (2025 Platform)",
+      "scoring_method": "llm_based",
+      "bc_priority_score": 95.0,
+      "relevant_departments": [
+        "Minister of Finance",
+        "Minister of Industry",
+        "Minister of Transport and Internal Trade"
+      ],
+      "bc_promise_rank_rationale": "Removing internal trade barriers directly targets bureaucratic inertia and boosts productivity, promising significant economic expansion aligned with multiple core tenets.",
+      "all_other_ministers_involved": "Minister of Finance; Minister of Industry; Minister of Transport and Internal Trade"
+    }
+  }
+}

@@ -59,11 +59,35 @@ class EvidenceLinker(BaseJob):
         self.max_items_per_run = self.config.get('max_items_per_run', 500)
         self.default_parliament_session = self.config.get('default_parliament_session', '45')
         
-        # Hybrid approach configuration
-        self.semantic_threshold = self.config.get('semantic_threshold', 0.45)
-        self.high_similarity_bypass_threshold = self.config.get('high_similarity_bypass_threshold', 0.50)
-        self.llm_validation_threshold = self.config.get('llm_validation_threshold', 0.5)
-        self.max_llm_candidates = self.config.get('max_llm_candidates', 5)
+        # Hybrid approach configuration with higher standards
+        self.semantic_threshold = self.config.get('semantic_threshold', 0.55)  # Increased from 0.47
+        self.high_similarity_bypass_threshold = self.config.get('high_similarity_bypass_threshold', 0.65)  # Increased from 0.50
+        self.llm_validation_threshold = self.config.get('llm_validation_threshold', 0.7)  # Increased from 0.5
+        self.max_llm_candidates = self.config.get('max_llm_candidates', 3)  # Reduced from 5 for quality
+        
+        # Source-type-specific thresholds for higher quality
+        self.source_type_thresholds = self.config.get('source_type_thresholds', {
+            'Bill Event (LEGISinfo)': {
+                'semantic_threshold': 0.50,  # Bills get slightly lower threshold
+                'llm_threshold': 0.58,         # Still high quality requirement
+                'bypass_threshold': 0.60
+            },
+            'News Article': {
+                'semantic_threshold': 0.60,  # Higher standard for news
+                'llm_threshold': 0.75,       # Very high certainty for news
+                'bypass_threshold': 0.70
+            },
+            'Order in Council': {
+                'semantic_threshold': 0.58,  # High standard for OIC
+                'llm_threshold': 0.72,       # High certainty required
+                'bypass_threshold': 0.68
+            },
+            'Canada Gazette': {
+                'semantic_threshold': 0.58,  # High standard for gazette
+                'llm_threshold': 0.72,       # High certainty required
+                'bypass_threshold': 0.68
+            }
+        })
         
         # Collections
         self.evidence_collection = self.config.get('evidence_collection', 'evidence_items')
@@ -418,6 +442,16 @@ class EvidenceLinker(BaseJob):
             self.logger.error(f"Error in bill linking bypass check: {e}")
             return []
     
+    def _get_source_specific_thresholds(self, evidence_source_type: str) -> Dict[str, float]:
+        """Get thresholds specific to the evidence source type."""
+        source_config = self.source_type_thresholds.get(evidence_source_type, {})
+        
+        return {
+            'semantic_threshold': source_config.get('semantic_threshold', self.semantic_threshold),
+            'llm_threshold': source_config.get('llm_threshold', self.llm_validation_threshold),
+            'bypass_threshold': source_config.get('bypass_threshold', self.high_similarity_bypass_threshold)
+        }
+    
     def _hybrid_evidence_linking(
         self, 
         evidence_item: Dict[str, Any], 
@@ -428,6 +462,12 @@ class EvidenceLinker(BaseJob):
         Perform hybrid evidence linking: semantic pre-filtering + LLM validation.
         """
         try:
+            # Get source-specific thresholds for higher quality linking
+            evidence_source_type = evidence_item.get('evidence_source_type', '')
+            thresholds = self._get_source_specific_thresholds(evidence_source_type)
+            
+            self.logger.debug(f"Using thresholds for {evidence_source_type}: {thresholds}")
+            
             # Generate evidence embedding
             evidence_text = self.semantic_linker.create_evidence_text(evidence_item)
             evidence_embedding = self.semantic_linker.generate_embeddings([evidence_text])
@@ -436,21 +476,23 @@ class EvidenceLinker(BaseJob):
                 self.logger.warning(f"Failed to generate embedding for evidence {evidence_item.get('evidence_id')}")
                 return []
             
-            # Find semantic matches
+            # Find semantic matches using source-specific threshold
+            self.semantic_linker.similarity_threshold = thresholds['semantic_threshold']
             semantic_matches = self.semantic_linker.find_semantic_matches(
                 evidence_embedding[0], self._promise_embeddings_cache, self._promises_cache
             )
             
             if not semantic_matches:
-                self.logger.debug(f"No semantic matches found above threshold {self.semantic_threshold}")
+                self.logger.debug(f"No semantic matches found above threshold {thresholds['semantic_threshold']} for {evidence_source_type}")
                 return []
             
             # OPTIMIZATION 3: Separate high similarity matches from those needing LLM validation
+            # Use source-specific thresholds for higher quality
             high_similarity_matches = []
             llm_validation_matches = []
             
             for match in semantic_matches:
-                if match['similarity_score'] >= self.high_similarity_bypass_threshold:
+                if match['similarity_score'] >= thresholds['bypass_threshold']:
                     high_similarity_matches.append(match)
                 else:
                     llm_validation_matches.append(match)
@@ -472,24 +514,24 @@ class EvidenceLinker(BaseJob):
             
             if high_similarity_matches:
                 batch_stats['optimizations']['high_similarity_bypasses'] += len(high_similarity_matches)
-                self.logger.debug(f"🚀 HIGH SIMILARITY BYPASS: {len(high_similarity_matches)} matches ≥{self.high_similarity_bypass_threshold}")
+                self.logger.debug(f"🚀 HIGH SIMILARITY BYPASS: {len(high_similarity_matches)} matches ≥{thresholds['bypass_threshold']} for {evidence_source_type}")
             
-            # LLM validate the remaining matches
+            # LLM validate the remaining matches using source-specific threshold
             if llm_validation_matches:
-                self.logger.debug(f"🔍 LLM VALIDATION: {len(llm_validation_matches)} matches need validation")
+                self.logger.debug(f"🔍 LLM VALIDATION: {len(llm_validation_matches)} matches need validation for {evidence_source_type}")
                 
                 llm_validated = self.llm_validator.batch_validate_matches(
                     evidence_item,
                     llm_validation_matches,
-                    validation_threshold=validation_threshold
+                    validation_threshold=thresholds['llm_threshold']  # Use source-specific threshold
                 )
                 validated_matches.extend(llm_validated)
                 batch_stats['optimizations']['batch_llm_validations'] += 1
             
-            # Filter for high confidence matches
+            # Filter for high confidence matches using source-specific threshold
             final_matches = [
                 match for match in validated_matches 
-                if match.confidence_score >= validation_threshold
+                if match.confidence_score >= thresholds['llm_threshold']
             ]
             
             self.logger.info(f"Hybrid linking result: {len(final_matches)} final matches from {len(semantic_matches)} semantic candidates")
@@ -537,49 +579,67 @@ class EvidenceLinker(BaseJob):
         optimization_method: str,
         confidence_scores: List[float]
     ) -> bool:
-        """Update evidence item with promise links and hybrid linking metadata."""
+        """Update evidence item with promise links and also update the corresponding promises."""
         try:
+            # First, update the evidence item itself
             evidence_ref = self.db.collection(self.evidence_collection).document(doc_id)
             evidence_doc = evidence_ref.get()
-            
+
             if not evidence_doc.exists:
                 self.logger.error(f"Evidence document {doc_id} not found for update")
                 return False
-            
+
             evidence_data = evidence_doc.to_dict()
-            evidence_id = evidence_data.get('evidence_id', doc_id)  # For logging
-            
-            # Get existing promise IDs to merge with new ones
+            evidence_id_for_logging = evidence_data.get('evidence_id', doc_id)
+
             existing_promise_ids = evidence_data.get('promise_ids', [])
             if not isinstance(existing_promise_ids, list):
                 existing_promise_ids = []
-            
-            # Merge promise IDs (avoid duplicates)
+
             all_promise_ids = list(set(existing_promise_ids + promise_ids))
-            
-            # Calculate average confidence for logging
             avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.0
-            
-            # Update the evidence document
+
             update_data = {
                 'promise_ids': all_promise_ids,
                 'promise_linking_status': 'processed',
                 'promise_linking_processed_at': firestore.SERVER_TIMESTAMP,
-                'promise_links_found': len(all_promise_ids),  # Count total links, not just new ones
+                'promise_links_found': len(all_promise_ids),
                 'hybrid_linking_method': optimization_method,
                 'hybrid_linking_avg_confidence': avg_confidence,
                 'hybrid_linking_timestamp': firestore.SERVER_TIMESTAMP
             }
-            
             evidence_ref.update(update_data)
-            
-            self.logger.info(f"✅ Updated evidence {evidence_id} (doc: {doc_id}): Added {len(promise_ids)} new links (method: {optimization_method}, avg confidence: {avg_confidence:.3f})")
+            self.logger.info(f"✅ Updated evidence {evidence_id_for_logging} (doc: {doc_id}): Added {len(promise_ids)} new links (method: {optimization_method}, avg confidence: {avg_confidence:.3f})")
+
+            # Second, update each of the linked promises
+            if promise_ids:
+                self._update_promises_with_new_evidence(promise_ids, doc_id)
+
             return True
-            
+
         except Exception as e:
-            self.logger.error(f"Failed to update evidence {doc_id}: {e}")
+            self.logger.error(f"Failed to update evidence {doc_id} and associated promises: {e}")
             return False
-    
+
+    def _update_promises_with_new_evidence(self, promise_ids: List[str], evidence_doc_id: str):
+        """
+        Atomically add a new evidence ID to the 'linked_evidence_ids' array of multiple promises.
+        """
+        if not promise_ids:
+            return
+
+        self.logger.info(f"Updating {len(promise_ids)} promises with new evidence link: {evidence_doc_id}")
+        
+        for promise_id in promise_ids:
+            try:
+                promise_ref = self.db.collection(self.promises_collection).document(promise_id)
+                promise_ref.update({
+                    'linked_evidence_ids': firestore.ArrayUnion([evidence_doc_id])
+                })
+                self.logger.debug(f"  -> Successfully updated promise {promise_id} with evidence {evidence_doc_id}")
+            except Exception as e:
+                self.logger.error(f"  -> Failed to update promise {promise_id} with evidence {evidence_doc_id}: {e}")
+
     def _update_evidence_linking_status(self, doc_id: str, status: str, links_count: int):
         """Update the linking status of an evidence item."""
         try:

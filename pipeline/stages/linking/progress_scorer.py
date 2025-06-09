@@ -309,7 +309,7 @@ class ProgressScorer(BaseJob):
         
         try:
             # Get all evidence items for this promise
-            evidence_items = self._get_promise_evidence_items(promise_id)
+            evidence_items = self._get_promise_evidence_items(promise)
             
             if not evidence_items:
                 # No evidence found - return score of 1 (No Progress)
@@ -541,22 +541,44 @@ Please analyze this promise and evidence to provide a progress score (1-5) and s
         }
         return status_map.get(score, 'not_started')
     
-    def _get_promise_evidence_items(self, promise_id: str) -> List[Dict[str, Any]]:
-        """Get all evidence items for a promise"""
+    def _get_promise_evidence_items(self, promise: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Get all evidence items for a promise using the 'linked_evidence_ids' field.
+        """
+        promise_id = promise['_doc_id']
+        linked_evidence_ids = promise.get('linked_evidence_ids', [])
+
+        if not linked_evidence_ids:
+            self.logger.debug(f"No linked_evidence_ids found for promise {promise_id}")
+            return []
+            
+        self.logger.info(f"Fetching {len(linked_evidence_ids)} evidence items for promise {promise_id} using linked_evidence_ids")
+
         try:
             evidence_items = []
-            query = (self.db.collection(self.evidence_collection)
-                    .where(filter=firestore.FieldFilter('promise_ids', 'array_contains', promise_id)))
+            # Fetch documents in batches of 10, as 'in' query has a limit of 10
+            batch_size = 10
+            for i in range(0, len(linked_evidence_ids), batch_size):
+                batch_ids = linked_evidence_ids[i:i + batch_size]
+                
+                # Convert string IDs to full DocumentReference objects for the query
+                batch_refs = [self.db.collection(self.evidence_collection).document(doc_id) for doc_id in batch_ids]
+
+                # Use 'in' query to get a batch of evidence documents
+                docs = self.db.collection(self.evidence_collection).where(
+                    filter=firestore.FieldFilter('__name__', 'in', batch_refs)
+                ).stream()
+
+                for doc in docs:
+                    evidence_data = doc.to_dict()
+                    evidence_data['_doc_id'] = doc.id
+                    evidence_items.append(evidence_data)
             
-            for doc in query.stream():
-                evidence_data = doc.to_dict()
-                evidence_data['_doc_id'] = doc.id
-                evidence_items.append(evidence_data)
-            
+            self.logger.debug(f"Successfully fetched {len(evidence_items)} of {len(linked_evidence_ids)} evidence items for promise {promise_id}")
             return evidence_items
             
         except Exception as e:
-            self.logger.error(f"Error getting evidence items for promise {promise_id}: {e}")
+            self.logger.error(f"Error getting evidence items for promise {promise_id} using linked_evidence_ids: {e}")
             return []
     
     def _get_latest_evidence_date(self, evidence_items: List[Dict[str, Any]]) -> Optional[datetime]:

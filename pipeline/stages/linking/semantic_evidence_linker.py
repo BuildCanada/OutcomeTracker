@@ -151,25 +151,33 @@ class SemanticEvidenceLinker:
         if evidence_item.get('description_or_details'):
             text_parts.append(evidence_item['description_or_details'])
         
-        # LLM analysis content if available
+        # LLM analysis content if available (from evidence processing)
         llm_analysis = evidence_item.get('llm_analysis_raw', {})
         if isinstance(llm_analysis, dict):
             if llm_analysis.get('one_sentence_description'):
                 text_parts.append(llm_analysis['one_sentence_description'])
             
-            # Add key concepts
             key_concepts = llm_analysis.get('key_concepts', [])
             if isinstance(key_concepts, list) and key_concepts:
                 text_parts.append(', '.join(key_concepts))
+
+        # Additional check for LLM content from bill processing (bill_processor job)
+        if evidence_item.get('bill_one_sentence_description_llm'):
+            text_parts.append(evidence_item['bill_one_sentence_description_llm'])
+        
+        if evidence_item.get('bill_timeline_summary_llm'):
+            text_parts.append(evidence_item['bill_timeline_summary_llm'])
         
         # Fallback to top-level key_concepts if no LLM analysis
-        if not text_parts and evidence_item.get('key_concepts'):
-            key_concepts = evidence_item['key_concepts']
-            if isinstance(key_concepts, list):
-                text_parts.append(', '.join(key_concepts))
+        # Also checks for bill_extracted_keywords_concepts for compatibility
+        if not any('key_concepts' in part for part in text_parts):
+            key_concepts = evidence_item.get('key_concepts') or evidence_item.get('bill_extracted_keywords_concepts')
+            if isinstance(key_concepts, list) and key_concepts:
+                text_parts.append('Concepts: ' + ', '.join(key_concepts))
         
-        # Join all parts
-        combined_text = ' '.join(text_parts).strip()
+        # Join all parts, removing duplicates and stripping whitespace
+        unique_parts = list(dict.fromkeys(p for p in text_parts if p))
+        combined_text = ' '.join(unique_parts).strip()
         
         # Fallback if no text available
         if not combined_text:
