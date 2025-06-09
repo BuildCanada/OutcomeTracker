@@ -474,7 +474,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
           >
             <DefenseSpendingChart
-              title="Defense Spending (% of GDP)"
+              title="Defence Spending (% of GDP)"
               startYear={2000}
               endYear={2029}
               showTarget={true}
