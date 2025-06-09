@@ -71,7 +71,7 @@ export default function DefenseSpendingChart({
 
   const datasets: ChartDataset[] = [
     {
-      label: "Defense Spending (% of GDP)",
+      label: "Defence Spending (% of GDP)",
       data: chartValues,
       borderColor: "rgb(54, 162, 235)",
       backgroundColor: "rgba(54, 162, 235, 0.1)",
