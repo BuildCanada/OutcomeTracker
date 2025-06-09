@@ -68,23 +68,23 @@ class EvidenceLinker(BaseJob):
         # Source-type-specific thresholds for higher quality
         self.source_type_thresholds = self.config.get('source_type_thresholds', {
             'Bill Event (LEGISinfo)': {
-                'semantic_threshold': 0.50,  # Bills get slightly lower threshold
-                'llm_threshold': 0.58,         # Still high quality requirement
-                'bypass_threshold': 0.60
+                'semantic_threshold': 0.5,  # Bills get slightly lower threshold
+                'llm_threshold': 0.55,         # Still high quality requirement
+                'bypass_threshold': 0.55
             },
             'News Article': {
-                'semantic_threshold': 0.60,  # Higher standard for news
-                'llm_threshold': 0.75,       # Very high certainty for news
-                'bypass_threshold': 0.70
+                'semantic_threshold': 0.47,  # Higher standard for news
+                'llm_threshold': 0.68,       # Very high certainty for news
+                'bypass_threshold': 0.60
             },
             'Order in Council': {
-                'semantic_threshold': 0.58,  # High standard for OIC
-                'llm_threshold': 0.72,       # High certainty required
-                'bypass_threshold': 0.68
+                'semantic_threshold': 0.47,  # High standard for OIC
+                'llm_threshold': 0.68,       # High certainty required
+                'bypass_threshold': 0.60
             },
             'Canada Gazette': {
-                'semantic_threshold': 0.58,  # High standard for gazette
-                'llm_threshold': 0.72,       # High certainty required
+                'semantic_threshold': 0.47,  # High standard for gazette
+                'llm_threshold': 0.68,       # High certainty required
                 'bypass_threshold': 0.68
             }
         })

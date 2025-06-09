@@ -98,24 +98,29 @@ class ComprehensiveParliament45CleanupJob(BaseJob):
             
             for doc in query.stream():
                 doc_data = doc.to_dict()
-                evidence_item_ids = doc_data.get('evidence_item_ids', [])
+                linked_evidence_ids = doc_data.get('linked_evidence_ids', [])
+                evidence_item_ids = doc_data.get('evidence_item_ids', [])  # Legacy field, also clean
                 
-                if not evidence_item_ids:
-                    continue
+                # Filter out Parliament 45 evidence IDs from both fields
+                original_linked_count = len(linked_evidence_ids)
+                original_evidence_count = len(evidence_item_ids)
                 
-                # Filter out Parliament 45 evidence IDs
-                original_count = len(evidence_item_ids)
-                cleaned_evidence_ids = [eid for eid in evidence_item_ids if eid not in evidence_ids_to_remove]
-                removed_count = original_count - len(cleaned_evidence_ids)
+                cleaned_linked_evidence_ids = [eid for eid in linked_evidence_ids if eid not in evidence_ids_to_remove]
+                cleaned_evidence_item_ids = [eid for eid in evidence_item_ids if eid not in evidence_ids_to_remove]
                 
-                if removed_count > 0:
-                    self.logger.info(f"Promise {doc.id}: removing {removed_count} Parliament 45 evidence links")
+                removed_linked_count = original_linked_count - len(cleaned_linked_evidence_ids)
+                removed_evidence_count = original_evidence_count - len(cleaned_evidence_item_ids)
+                total_removed = removed_linked_count + removed_evidence_count
+                
+                if total_removed > 0:
+                    self.logger.info(f"Promise {doc.id}: removing {removed_linked_count} from linked_evidence_ids, {removed_evidence_count} from evidence_item_ids")
                     
-                    # Add update to batch
+                    # Add update to batch - clean both fields
                     batch.update(doc.reference, {
-                        'evidence_item_ids': cleaned_evidence_ids,
+                        'linked_evidence_ids': cleaned_linked_evidence_ids,
+                        'evidence_item_ids': cleaned_evidence_item_ids,
                         'last_comprehensive_cleanup': firestore.SERVER_TIMESTAMP,
-                        'parliament_45_links_removed': removed_count
+                        'parliament_45_links_removed': total_removed
                     })
                     
                     cleaned_count += 1

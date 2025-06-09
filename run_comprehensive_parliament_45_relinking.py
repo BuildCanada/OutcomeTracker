@@ -13,6 +13,20 @@ import time
 from pathlib import Path
 from datetime import datetime, timezone
 
+# Load environment variables first
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+        print(f"📋 Loaded environment from: {env_path}")
+    else:
+        print(f"📋 .env file not found at {env_path}")
+except ImportError:
+    print("📋 python-dotenv not available, relying on system environment variables")
+except Exception as e:
+    print(f"📋 Could not load .env file: {e}")
+
 # Add pipeline directory to path
 pipeline_dir = Path(__file__).parent / "pipeline"
 sys.path.insert(0, str(pipeline_dir))
@@ -137,6 +151,62 @@ def run_high_quality_linking():
     
     return result.status.value == 'success', result
 
+def run_progress_scoring(linking_result):
+    """Run progress scoring for promises affected by evidence linking"""
+    print("\n📊 STEP 3: PROGRESS SCORING UPDATE")
+    print("=" * 50)
+    
+    # Get affected promise IDs from linking result
+    affected_promise_ids = set()
+    if linking_result and linking_result.metadata:
+        affected_promise_ids = linking_result.metadata.get('affected_promise_ids', set())
+    
+    if not affected_promise_ids:
+        print("⚠️  No affected promise IDs found from linking process")
+        print("✅ Skipping progress scoring (no promises were affected)")
+        return True
+    
+    print(f"🎯 Updating progress scores for {len(affected_promise_ids)} affected promises")
+    
+    # Configuration for progress scoring
+    config = {
+        'batch_size': 5,  # Small batches for LLM processing
+        'max_promises_per_run': len(affected_promise_ids),
+        'use_llm_scoring': True,  # Use high-quality LLM scoring
+        'max_evidence_per_promise': 20
+    }
+    
+    # Create and run the progress scorer
+    scorer = ProgressScorer("parliament_45_progress_scoring", config)
+    
+    print("🚀 Starting progress scoring for affected promises...")
+    start_time = time.time()
+    
+    # Pass affected promise IDs as trigger metadata
+    trigger_metadata = {
+        'affected_promise_ids': list(affected_promise_ids),
+        'triggered_by': 'parliament_45_comprehensive_relinking'
+    }
+    
+    result = scorer.execute(trigger_metadata=trigger_metadata)
+    
+    duration = time.time() - start_time
+    
+    print(f"\n✅ PROGRESS SCORING COMPLETED")
+    print("=" * 40)
+    print(f"📊 Status: {result.status.value}")
+    print(f"⏰ Duration: {duration:.2f} seconds")
+    print(f"📈 Promises Processed: {result.items_processed}")
+    print(f"📈 Scores Updated: {result.items_updated}")
+    
+    # Try to get additional stats from metadata if available
+    if result.metadata:
+        print(f"📈 Status Changes: {result.metadata.get('status_changes', 0)}")
+        print(f"🤖 LLM Calls: {result.metadata.get('llm_calls', 0)}")
+        print(f"💰 Estimated Cost: ${result.metadata.get('total_cost_estimate', 0.0):.4f}")
+    
+    return result.status.value == 'success'
+
 def main():
     """Main execution function"""
     print("🎯 COMPREHENSIVE PARLIAMENT 45 RE-LINKING")
@@ -147,6 +217,7 @@ def main():
     print("2. Reset ALL Parliament 45 evidence items to pending")
     print("3. Re-link with much higher quality thresholds")
     print("4. Use source-specific standards to reduce false positives")
+    print("5. Update progress scores for all affected promises")
     print()
     
     # Step 1: Comprehensive cleanup
@@ -160,15 +231,29 @@ def main():
     time.sleep(5)
     
     # Step 2: High-quality linking
-    linking_success = run_high_quality_linking()
+    linking_success, linking_result = run_high_quality_linking()
     
-    if linking_success:
-        print("\n🎉 COMPREHENSIVE RE-LINKING SUCCESSFUL!")
+    if not linking_success:
+        print("\n❌ Re-linking failed, aborting progress scoring")
+        return False
+    
+    # Wait a moment for database consistency
+    print("\n⏳ Waiting 3 seconds for database consistency...")
+    time.sleep(3)
+    
+    # Step 3: Progress scoring for affected promises
+    scoring_success = run_progress_scoring(linking_result)
+    
+    if linking_success and scoring_success:
+        print("\n🎉 COMPREHENSIVE RE-LINKING & SCORING SUCCESSFUL!")
         print("✨ Parliament 45 evidence now linked with higher quality standards")
-        print("✨ Timeline should show fewer false positives")
+        print("✨ Progress scores updated for all affected promises")
+        print("✨ Timeline should show fewer false positives with accurate progress")
         return True
     else:
-        print("\n⚠️  Re-linking completed with issues")
+        print("\n⚠️  Process completed with some issues")
+        print(f"   - Linking: {'✅' if linking_success else '❌'}")
+        print(f"   - Progress Scoring: {'✅' if scoring_success else '❌'}")
         return False
 
 if __name__ == "__main__":
