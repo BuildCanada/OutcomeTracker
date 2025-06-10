@@ -48,7 +48,6 @@ const nextConfig = {
         source: '/fr/admin/:path*',
         destination: '/admin/:path*',
       },
-
       {
         source: '/admin/:path*',
         destination: '/admin/:path*',
