@@ -30,11 +30,6 @@ README.md
 deploy_cloud_run.py
 test_cloud_run_local.py
 
-# Documentation and examples
-docs/
-stories/
-.storybook/
-
 # Raw data and outputs (can be large)
 raw-data/
 scripts/JSON_outputs/
