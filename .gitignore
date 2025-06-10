@@ -37,3 +37,6 @@ __pycache__
 
 # JSON outputs
 scripts/JSON_outputs
+
+#local firebase access
+firebase-service-account.json
