@@ -41,8 +41,12 @@ const nextConfig = {
         destination: "/fr/tracker",
       },
       {
-        source: "/admin/:path*",
-        destination: "/admin/:path*",
+        source: "/en/admin",
+        destination: "/admin",
+      },
+      {
+        source: "/fr/admin",
+        destination: "/admin",
       },
       {
         source: "/api/:path*",
