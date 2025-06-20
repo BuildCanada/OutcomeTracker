@@ -40,7 +40,7 @@ export interface PromiseListing {
   progress_score: number | null;
   progress_summary: string;
   text: string;
-  last_evidence_at: string;
+  last_evidence_date: string;
 }
 
 export interface MinisterDetails {

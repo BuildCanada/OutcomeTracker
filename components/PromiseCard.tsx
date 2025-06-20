@@ -307,8 +307,8 @@ export default function PromiseCard({
                         : "In Progress"}
                   </span>
                   <span className="text-xs text-gray-400">
-                    {promise.last_evidence_at
-                      ? `Last update ${new Date(promise.last_evidence_at).toLocaleString()}`
+                    {promise.last_evidence_date
+                      ? `Last update ${new Date(promise.last_evidence_date).toLocaleString()}`
                       : "No update yet"}
                   </span>
                 </div>

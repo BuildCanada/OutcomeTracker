@@ -278,8 +278,8 @@ export function MinisterHeader({ minister }: { minister: Minister }) {
 }
 
 const getLastEvidenceDate = (promise: PromiseListing): number => {
-  if (!promise.last_evidence_at) return 0;
-  return new Date(promise.last_evidence_at).getTime();
+  if (!promise.last_evidence_date) return 0;
+  return new Date(promise.last_evidence_date).getTime();
 };
 
 const getImpactScore = (promise: PromiseListing): number => {
