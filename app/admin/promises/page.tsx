@@ -589,7 +589,7 @@ export default function ManagePromisesPage() {
     try {
       console.log('Deleting promise:', promiseToDelete.id);
 
-      const response = await fetch(`/api/admin/promises/${promiseToDelete.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/promises/${promiseToDelete.id}`, {
         method: 'DELETE',
       });
 
