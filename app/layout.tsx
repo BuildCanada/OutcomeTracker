@@ -2,7 +2,6 @@ import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/header";
-import { SessionProvider } from "@/context/SessionContext";
 import { Toaster } from "@/components/ui/toaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 import Script from "next/script";
@@ -62,37 +61,35 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className="bg-background">
       <body className={`text-neutral-800 bg-background`}>
         <div className="border-2 border-black m-5">
-          <SessionProvider>
-            <Header />
-            <main className="container mx-auto bg-background site-main-content">
-              <SWRProvider>{children}</SWRProvider>
-            </main>
+          <Header />
+          <main className="container mx-auto bg-background site-main-content">
+            <SWRProvider>{children}</SWRProvider>
+          </main>
 
-            {/* Footer styled to mimic buildcanada.com */}
-            <footer
-              className="mt-16 py-12 text-neutral-300"
-              style={{ backgroundColor: "#272727" }}
-            >
-              <div className="container mx-auto">
-                <div className="mb-8">
-                  <h1 className="text-3xl font-semibold text-white">
-                    Build Canada
-                  </h1>
-                </div>
-                <div className="mb-8">
-                  <p className="text-white">
-                    A non-partisan platform tracking progress of key commitments
-                    during the 45th Parliament of Canada.
-                  </p>
-                </div>
-                <div className="footprint">
-                  <div className="copyright text-white mb-6">
-                    <div className="text-sm">🏗️🇨🇦 &copy; Build Canada 2025</div>
-                  </div>
+          {/* Footer styled to mimic buildcanada.com */}
+          <footer
+            className="mt-16 py-12 text-neutral-300"
+            style={{ backgroundColor: "#272727" }}
+          >
+            <div className="container mx-auto">
+              <div className="mb-8">
+                <h1 className="text-3xl font-semibold text-white">
+                  Build Canada
+                </h1>
+              </div>
+              <div className="mb-8">
+                <p className="text-white">
+                  A non-partisan platform tracking progress of key commitments
+                  during the 45th Parliament of Canada.
+                </p>
+              </div>
+              <div className="footprint">
+                <div className="copyright text-white mb-6">
+                  <div className="text-sm">🏗️🇨🇦 &copy; Build Canada 2025</div>
                 </div>
               </div>
-            </footer>
-          </SessionProvider>
+            </div>
+          </footer>
         </div>
         <Toaster />
         <SimpleAnalytics />

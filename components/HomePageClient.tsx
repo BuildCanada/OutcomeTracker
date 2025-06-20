@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { DepartmentConfig, DepartmentListing } from "@/lib/types";
+import type { DepartmentListing } from "@/lib/types";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";

@@ -1,17 +1,8 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type {
-  DepartmentPageData,
-  PromiseData,
-  DepartmentSlug,
-  Minister,
-  PromiseListing,
-} from "@/lib/types";
-import Image from "next/image";
+import type { Minister, PromiseListing } from "@/lib/types";
 import PromiseCard from "./PromiseCard";
-import PopulationChart from "./charts/PopulationChart";
-import MetricChart from "./MetricChart";
 import { useState } from "react";
 import {
   Select,
@@ -20,18 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Timestamp } from "firebase/firestore";
-import DepartmentMetrics from "./DepartmentMetrics";
-
-interface MinisterSectionProps {
-  departmentPageData: DepartmentPageData | null;
-  departmentSlug: DepartmentSlug;
-  departmentFullName: string;
-  departmentShortName?: string;
-}
 
 const DEFAULT_MINISTER_NAME = "Minister Information Not Available";
-const DEFAULT_MINISTER_TITLE = "Title Not Available";
 const DEFAULT_AVATAR_FALLBACK_INITIALS = "N/A";
 
 const getFallbackInitials = (name: string) => {
@@ -45,10 +26,10 @@ const getFallbackInitials = (name: string) => {
 
 export function Commitments({
   promises,
-  departmentShortName,
+  departmentSlug,
 }: {
   promises: PromiseListing[];
-  departmentShortName: string | undefined;
+  departmentSlug: string;
 }) {
   const [progressFilter, setProgressFilter] = useState<string>("all");
   const [impactFilter, setImpactFilter] = useState<string>("all");
@@ -132,7 +113,11 @@ export function Commitments({
       {currentPagePromises && currentPagePromises.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {currentPagePromises.map((promise: PromiseListing) => (
-            <PromiseCard key={promise.id} promise={promise} />
+            <PromiseCard
+              key={promise.id}
+              promise={promise}
+              departmentSlug={departmentSlug}
+            />
           ))}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[#d3c7b9]">
             {/* Page Info */}
