@@ -50,6 +50,61 @@ export interface MinisterInfo {
   effectiveDepartmentId?: string; // Added for remapped department ID
 }
 
+export interface DepartmentListing {
+  created_at: string;
+  display_name: string;
+  government_id: number;
+  id: number;
+  official_name: string;
+  priority: number;
+  slug: string;
+  updated_at: string;
+}
+
+export interface Department {
+  display_name: string;
+  official_name: string;
+  priority: number;
+  slug: string;
+
+  minister: Minister;
+  promises: PromiseListing[];
+}
+
+export interface Minister {
+  order_of_precedence: number;
+  started_at: string;
+  ended_at: string | null;
+  first_name: string;
+  last_name: string;
+  title: string;
+  avatar_url: string;
+  person_short_honorific: string;
+}
+
+// {
+// 	"0": {
+// 		"concise_title": "Double Indigenous Loan Guarantee Program and Scope",
+// 		"description": "The Indigenous Loan Guarantee Program (ILGP) will double its capacity to $10 billion and broaden the types of projects eligible for loan guarantees, fostering Indigenous economic growth.",
+// 		"bc_promise_direction": "positive",
+// 		"bc_promise_rank": "strong",
+// 		"bc_promise_rank_rationale": "Expands a major loan guarantee program to $10B, encouraging significant investment and economic participation, positively aligning with tenets for investment and ambition at a large scale.",
+// 		"progress_score": null
+// 	}
+// }
+export interface PromiseListing {
+  id: number;
+  concise_title: string;
+  description: string;
+  bc_promise_direction: string;
+  bc_promise_rank: string;
+  bc_promise_rank_rationale: string;
+  progress_score: number | null;
+  progress_summary: string;
+  text: string;
+  last_evidence_at: string;
+}
+
 export interface DepartmentConfig {
   id: string; // Firestore document ID (e.g., "health-canada")
   display_short_name: string; // New: e.g., "Health" (used for sorting and display)

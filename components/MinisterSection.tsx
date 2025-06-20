@@ -4,9 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type {
   DepartmentPageData,
   PromiseData,
-  MinisterInfo,
-  EvidenceItem,
   DepartmentSlug,
+  Minister,
+  PromiseListing,
 } from "@/lib/types";
 import Image from "next/image";
 import PromiseCard from "./PromiseCard";
@@ -34,48 +34,6 @@ const DEFAULT_MINISTER_NAME = "Minister Information Not Available";
 const DEFAULT_MINISTER_TITLE = "Title Not Available";
 const DEFAULT_AVATAR_FALLBACK_INITIALS = "N/A";
 
-export default function MinisterSection({
-  departmentPageData,
-  departmentSlug,
-  departmentFullName,
-  departmentShortName,
-}: MinisterSectionProps) {
-  if (!departmentPageData) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-gray-500">
-          Loading details for {departmentFullName}...
-        </p>
-        {/* You could add a spinner here */}
-      </div>
-    );
-  }
-
-  const { ministerInfo, promises, evidenceItems } = departmentPageData!;
-
-  return (
-    <div>
-      {/* Minister Info Header */}
-      {ministerInfo && <MinisterHeader ministerInfo={ministerInfo} />}
-
-      {/* Key Metrics Section */}
-      <div>
-        <h3 className="text-2xl">Key Metrics</h3>
-        <div className="mb-8">
-          <DepartmentMetrics departmentSlug={departmentSlug} />
-        </div>
-
-        {/* Promises Section */}
-        <Commitments
-          promises={promises}
-          evidenceItems={evidenceItems}
-          departmentShortName={departmentShortName}
-        />
-      </div>
-    </div>
-  );
-}
-
 const getFallbackInitials = (name: string) => {
   if (name === DEFAULT_MINISTER_NAME) return DEFAULT_AVATAR_FALLBACK_INITIALS;
   return name
@@ -87,11 +45,9 @@ const getFallbackInitials = (name: string) => {
 
 export function Commitments({
   promises,
-  evidenceItems,
   departmentShortName,
 }: {
-  promises: PromiseData[];
-  evidenceItems: EvidenceItem[];
+  promises: PromiseListing[];
   departmentShortName: string | undefined;
 }) {
   const [progressFilter, setProgressFilter] = useState<string>("all");
@@ -175,14 +131,8 @@ export function Commitments({
 
       {currentPagePromises && currentPagePromises.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
-          {currentPagePromises.map((promise: PromiseData) => (
-            <PromiseCard
-              key={promise.id}
-              promise={promise}
-              departmentShortName={
-                departmentShortName ? departmentShortName : undefined
-              }
-            />
+          {currentPagePromises.map((promise: PromiseListing) => (
+            <PromiseCard key={promise.id} promise={promise} />
           ))}
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t border-[#d3c7b9]">
             {/* Page Info */}
@@ -231,7 +181,7 @@ export function Commitments({
 }
 
 function sortPromises(
-  promises: PromiseData[],
+  promises: PromiseListing[],
   progressFilter: string,
   impactFilter: string,
   alignmentFilter: string,
@@ -311,14 +261,10 @@ function sortPromises(
   return sortedPromises;
 }
 
-export function MinisterHeader({
-  ministerInfo,
-}: {
-  ministerInfo: MinisterInfo;
-}) {
-  const ministerName = ministerInfo?.name || DEFAULT_MINISTER_NAME;
-  const ministerTitle = ministerInfo?.title || DEFAULT_MINISTER_TITLE;
-  const avatarUrl = ministerInfo?.avatarUrl;
+export function MinisterHeader({ minister }: { minister: Minister }) {
+  const ministerName = `${minister.first_name} ${minister.last_name}`;
+  const ministerTitle = minister.title;
+  const avatarUrl = minister.avatar_url;
 
   return (
     <div className="flex items-center mb-8">
@@ -346,24 +292,12 @@ export function MinisterHeader({
   );
 }
 
-const getLastEvidenceDate = (promise: PromiseData): number => {
-  if (!promise.evidence || promise.evidence.length === 0) return 0;
-
-  return Math.max(
-    ...promise.evidence.map((ev) => {
-      if (!ev.evidence_date) return 0;
-      if (ev.evidence_date instanceof Timestamp) {
-        return ev.evidence_date.toMillis();
-      }
-      if (typeof ev.evidence_date === "string") {
-        return new Date(ev.evidence_date).getTime();
-      }
-      return 0;
-    }),
-  );
+const getLastEvidenceDate = (promise: PromiseListing): number => {
+  if (!promise.last_evidence_at) return 0;
+  return new Date(promise.last_evidence_at).getTime();
 };
 
-const getImpactScore = (promise: PromiseData): number => {
+const getImpactScore = (promise: PromiseListing): number => {
   const impactRank = promise.bc_promise_rank?.toLowerCase() || "";
   const impactNum = Number(promise.bc_promise_rank) || 0;
 

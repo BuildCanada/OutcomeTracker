@@ -6,6 +6,7 @@ import { SessionProvider } from "@/context/SessionContext";
 import { Toaster } from "@/components/ui/toaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 import Script from "next/script";
+import SWRProvider from "@/components/SWRProvider";
 
 // SVG for the emoji favicon: 🏗️🇨🇦 using separate text elements, further reduced font
 // and Unicode escape for the Canadian flag emoji.
@@ -21,7 +22,9 @@ const emojiFaviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10
 const faviconDataUrl = `data:image/svg+xml,${encodeURIComponent(emojiFaviconSvg)}`;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://buildcanada.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || "https://buildcanada.com",
+  ),
   title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
   description: "Track the progress of Canada's government initiatives",
   icons: {
@@ -62,7 +65,7 @@ export default function RootLayout({
           <SessionProvider>
             <Header />
             <main className="container mx-auto bg-background site-main-content">
-              {children}
+              <SWRProvider>{children}</SWRProvider>
             </main>
 
             {/* Footer styled to mimic buildcanada.com */}
@@ -93,7 +96,10 @@ export default function RootLayout({
         </div>
         <Toaster />
         <SimpleAnalytics />
-        <Script src="https://frenglish.ai/frenglish.bundle.js" strategy="beforeInteractive" />
+        <Script
+          src="https://frenglish.ai/frenglish.bundle.js"
+          strategy="beforeInteractive"
+        />
         <Script id="frenglish-init" strategy="afterInteractive">
           {`
             window.frenglishSettings = {

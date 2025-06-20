@@ -25,6 +25,11 @@ const nextConfig = {
         destination: "https://us-assets.i.posthog.com/static/:path*",
       },
       {
+        source: "/api/v1/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
+      },
+
+      {
         source: "/en/tracker",
         destination: "/en/tracker",
       },
@@ -41,16 +46,16 @@ const nextConfig = {
         destination: "/fr/tracker",
       },
       {
-        source: '/en/admin/:path*',
-        destination: '/admin/:path*',
+        source: "/en/admin/:path*",
+        destination: "/admin/:path*",
       },
       {
-        source: '/fr/admin/:path*',
-        destination: '/admin/:path*',
+        source: "/fr/admin/:path*",
+        destination: "/admin/:path*",
       },
       {
-        source: '/admin/:path*',
-        destination: '/admin/:path*',
+        source: "/admin/:path*",
+        destination: "/admin/:path*",
       },
       {
         source: "/api/:path*",

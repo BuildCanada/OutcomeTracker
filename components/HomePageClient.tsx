@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 
-import type { DepartmentConfig } from "@/lib/types";
+import type { DepartmentConfig, DepartmentListing } from "@/lib/types";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import FAQModal from "@/components/FAQModal";
+import useSWR from "swr";
+import { DEPARTMENT_DISPLAY_ORDER } from "@/app/[lang]/tracker/_constants";
 
 export const Sidebar = ({ pageTitle }: { pageTitle: string }) => {
   const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
@@ -35,31 +37,36 @@ export const Sidebar = ({ pageTitle }: { pageTitle: string }) => {
   );
 };
 
-const DEFAULT_TAB = "prime-minister-office";
+export function DepartmentPillLinks() {
+  const { data: departments } = useSWR<DepartmentListing[]>(
+    "/api/v1/departments",
+  );
 
-export function DepartmentPillLinks({
-  mainTabConfigs,
-}: {
-  mainTabConfigs: DepartmentConfig[];
-}) {
-  const params = useParams<{ lang: string; department?: string }>();
+  const filteredDepartments = departments
+    ?.filter((department) => DEPARTMENT_DISPLAY_ORDER[department.slug] != null)
+    ?.sort(
+      (a, b) =>
+        DEPARTMENT_DISPLAY_ORDER[a.slug] - DEPARTMENT_DISPLAY_ORDER[b.slug],
+    );
 
-  const activeTabId = params.department || DEFAULT_TAB;
+  const params = useParams<{ lang: string; department: string }>();
+
+  const activeTabId = params.department;
 
   return (
     <div className="flex flex-wrap gap-2 mb-8">
-      {mainTabConfigs.map((dept) => (
+      {filteredDepartments?.map((dept) => (
         <Link
           key={dept.id}
-          href={`/en/tracker/${dept.id}`}
+          href={`/en/tracker/${dept.slug}`}
           className={`px-4 py-2 text-sm font-mono transition-colors
                         ${
-                          activeTabId === dept.id
+                          activeTabId === dept.slug
                             ? "bg-[#8b2332] text-white"
                             : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
                         }`}
         >
-          {dept.display_short_name}
+          {dept.display_name}
         </Link>
       ))}
     </div>

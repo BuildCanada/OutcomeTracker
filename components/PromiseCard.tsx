@@ -1,17 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { PromiseData, EvidenceItem } from "@/lib/types";
+import { useState } from "react";
+import type { PromiseListing } from "@/lib/types";
 import { Timestamp } from "firebase/firestore";
 import { TrendingUpIcon, XIcon, MinusIcon } from "lucide-react";
 import PromiseModal from "./PromiseModal";
-import { fetchParliamentSessionDates } from "@/lib/data";
-import { useDepartments } from "@/context/DepartmentContext";
-
-interface PromiseCardProps {
-  promise: PromiseData;
-  departmentShortName?: string;
-}
 
 const formatDate = (dateInput: Timestamp | string): string | null => {
   if (!dateInput) return null;
@@ -81,92 +74,93 @@ const getDateMillis = (dateInput: Timestamp | string): number => {
   return d.getTime();
 };
 
-export default function PromiseCard({ promise }: PromiseCardProps) {
+export default function PromiseCard({ promise }: { promise: PromiseListing }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showProgressTooltip, setShowProgressTooltip] = useState(false);
   const [showImpactTooltip, setShowImpactTooltip] = useState(false);
   const [showAlignmentTooltip, setShowAlignmentTooltip] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
 
-  const [loadedEvidence, setLoadedEvidence] = useState<EvidenceItem[]>(
-    promise.evidence || [],
-  );
-  const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
+  // const [loadedEvidence, setLoadedEvidence] = useState<EvidenceItem[]>(
+  //   promise.evidence || [],
+  // );
 
-  const { sessionId } = useDepartments();
+  // const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
 
-  useEffect(() => {
-    const loadEvidence = async () => {
-      if (!promise?.linked_evidence_ids?.length) {
-        setLoadedEvidence([]);
-        return;
-      }
+  // const { sessionId } = useDepartments();
 
-      setIsLoadingEvidence(true);
-      try {
-        const sessionDates = sessionId
-          ? await fetchParliamentSessionDates(sessionId)
-          : null;
+  // useEffect(() => {
+  //   const loadEvidence = async () => {
+  //     if (!promise?.linked_evidence_ids?.length) {
+  //       setLoadedEvidence([]);
+  //       return;
+  //     }
 
-        const response = await fetch("/api/evidence", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            evidenceIds: promise.linked_evidence_ids,
-            sessionsStartDate: sessionDates?.sessionStartDate,
-            sessionEndDate: sessionDates?.sessionEndDate,
-          }),
-        });
+  //     setIsLoadingEvidence(true);
+  //     try {
+  //       const sessionDates = sessionId
+  //         ? await fetchParliamentSessionDates(sessionId)
+  //         : null;
 
-        if (!response.ok) {
-          throw new Error(`Evidence API error: ${response.statusText}`);
-        }
+  //       const response = await fetch("/api/evidence", {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({
+  //           evidenceIds: promise.linked_evidence_ids,
+  //           sessionsStartDate: sessionDates?.sessionStartDate,
+  //           sessionEndDate: sessionDates?.sessionEndDate,
+  //         }),
+  //       });
 
-        const data = await response.json();
-        setLoadedEvidence(data.evidenceItems || []);
-      } catch (error) {
-        console.error("Error loading evidence for promise:", error);
-        setLoadedEvidence([]);
-      } finally {
-        setIsLoadingEvidence(false);
-      }
-    };
+  //       if (!response.ok) {
+  //         throw new Error(`Evidence API error: ${response.statusText}`);
+  //       }
 
-    loadEvidence();
-  }, [promise?.linked_evidence_ids, sessionId]);
+  //       const data = await response.json();
+  //       setLoadedEvidence(data.evidenceItems || []);
+  //     } catch (error) {
+  //       console.error("Error loading evidence for promise:", error);
+  //       setLoadedEvidence([]);
+  //     } finally {
+  //       setIsLoadingEvidence(false);
+  //     }
+  //   };
+
+  //   loadEvidence();
+  // }, [promise?.linked_evidence_ids, sessionId]);
 
   // Create a combined promise object with loaded evidence for the timeline
-  const promiseWithEvidence = useMemo(() => {
-    if (!promise) return null;
+  // const promiseWithEvidence = useMemo(() => {
+  //   if (!promise) return null;
 
-    return {
-      ...promise,
-      evidence: loadedEvidence,
-    };
-  }, [promise, loadedEvidence]);
+  //   return {
+  //     ...promise,
+  //     evidence: loadedEvidence,
+  //   };
+  // }, [promise, loadedEvidence]);
 
-  console.log({ evidence: promise.evidence });
+  // console.log({ evidence: promise.evidence });
   // Find the most recent evidence date for "Last Update"
-  let lastUpdateDate: string | null = null;
-  if (!!promiseWithEvidence && promiseWithEvidence.evidence.length > 0) {
-    const sorted = promiseWithEvidence.evidence.sort((a, b) => {
-      const dateAMillis = getDateMillis(a.evidence_date);
-      const dateBMillis = getDateMillis(b.evidence_date);
+  // let lastUpdateDate: string | null = null;
+  // if (!!promiseWithEvidence && promiseWithEvidence.evidence.length > 0) {
+  //   const sorted = promiseWithEvidence.evidence.sort((a, b) => {
+  //     const dateAMillis = getDateMillis(a.evidence_date);
+  //     const dateBMillis = getDateMillis(b.evidence_date);
 
-      if (isNaN(dateAMillis) && isNaN(dateBMillis)) return 0;
-      if (isNaN(dateAMillis)) return 1; // Treat NaN as earlier (pushes it to the end of a descending sort)
-      if (isNaN(dateBMillis)) return -1; // Treat NaN as earlier
+  //     if (isNaN(dateAMillis) && isNaN(dateBMillis)) return 0;
+  //     if (isNaN(dateAMillis)) return 1; // Treat NaN as earlier (pushes it to the end of a descending sort)
+  //     if (isNaN(dateBMillis)) return -1; // Treat NaN as earlier
 
-      return dateBMillis - dateAMillis; // Descending
-    });
-    if (sorted[0]) {
-      lastUpdateDate = formatDate(sorted[0].evidence_date);
-    }
-  }
+  //     return dateBMillis - dateAMillis; // Descending
+  //   });
+  //   if (sorted[0]) {
+  //     lastUpdateDate = formatDate(sorted[0].evidence_date);
+  //   }
+  // }
 
-  const handleCardClick = () => {
-    setIsModalOpen(true);
-  };
+  // const handleCardClick = () => {
+  //   setIsModalOpen(true);
+  // };
 
   // Progress Indicator
   const progressScore = promise.progress_score || 0; // 1-5
@@ -347,11 +341,11 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
   }
   function getPieColor(progressScore: number): string {
     const colorMap = [
-      '#fde047', // yellow-300
-      '#fcd34d', // amber-300
-      '#ffb86a', // orange-300
-      '#a3e635', // lime-400
-      '#16a34a', // green-600
+      "#fde047", // yellow-300
+      "#fcd34d", // amber-300
+      "#ffb86a", // orange-300
+      "#a3e635", // lime-400
+      "#16a34a", // green-600
     ];
     return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
   }
@@ -370,10 +364,10 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
         className="bg-white border border-[#cdc4bd] flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 group relative"
         tabIndex={0}
         aria-label={promise.text}
-        onClick={handleCardClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") handleCardClick();
-        }}
+        // onClick={handleCardClick}
+        // onKeyDown={(e) => {
+        //   if (e.key === "Enter" || e.key === " ") handleCardClick();
+        // }}
       >
         <div className="p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -454,8 +448,8 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
                       : "In Progress"}
                 </span>
                 <span className="text-xs text-gray-400">
-                  {lastUpdateDate
-                    ? `Last update ${lastUpdateDate}`
+                  {promise.last_evidence_at
+                    ? `Last update ${new Date(promise.last_evidence_at).toLocaleString()}`
                     : "No update yet"}
                 </span>
               </div>
@@ -533,11 +527,11 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
           </div>
         </div>
       )}
-      <PromiseModal
+      {/* <PromiseModal
         promise={promiseWithEvidence}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-      />
+      /> */}
     </>
   );
 }
