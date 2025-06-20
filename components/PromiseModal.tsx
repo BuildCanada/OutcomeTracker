@@ -170,7 +170,7 @@ export default function PromiseModal({
     what_it_means_for_canadians,
     progress_score = 0,
     progress_summary,
-    last_evidence_data,
+    last_evidence_date,
   } = promise;
 
   const [isRationaleExpanded, setIsRationaleExpanded] = useState(false);
@@ -197,9 +197,9 @@ export default function PromiseModal({
             )}
 
             {/* Last Updated Date */}
-            {last_evidence_data && (
+            {last_evidence_date && (
               <DialogDescription className="text-xs text-gray-400">
-                Last Updated: {last_evidence_data}
+                Last Updated: {last_evidence_date}
               </DialogDescription>
             )}
           </DialogHeader>

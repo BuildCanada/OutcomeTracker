@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { PromiseDetail, Evidence, EvidenceItem } from "../lib/types";
+import { PromiseDetail } from "../lib/types";
 import { Timestamp } from "firebase/firestore";
 import TimelineNode from "./TimelineNode"; // Import the new component
 // import EvidenceDetailsDisplay from './EvidenceDetailsDisplay'; // Keep for later if needed
@@ -132,29 +132,24 @@ const PromiseProgressTimeline: React.FC<PromiseProgressTimelineProps> = ({
 
     // // 2. Add evidence items
     // // This component will use promise.evidence directly, which should be populated by the data fetching logic
-    // const evidenceEvents: TimelineDisplayEvent[] = promise.evidences.map(
-    //   (evidence, index) => {
-    //     // Create a brief description for the timeline node (max 60 chars)
-    //     const briefDescription = evidence.title_or_summary
-    //       ? item.title_or_summary.length > 60
-    //         ? item.title_or_summary.substring(0, 60) + "..."
-    //         : item.title_or_summary
-    //       : "Evidence item";
+    const evidenceEvents: TimelineDisplayEvent[] =
+      promise?.evidences?.map((evidence) => {
+        // Create a brief description for the timeline node (max 60 chars)
+        const briefDescription = evidence.title;
 
-    //     return {
-    //       id: evidence.id,
-    //       type: "evidence" as const,
-    //       date: item.evidence_date || new Date().toISOString(),
-    //       title: briefDescription, // Brief description for the node
-    //       fullTitle: item.title_or_summary,
-    //       fullText:item.description_or_details,
-    //       sourceUrl: item.source_url,
-    //       evidenceSourceType: item.evidence_source_type, // Pass the source type
-    //     };
-    //   },
-    // );
+        return {
+          id: `ev-${evidence.id}`,
+          type: "evidence" as const,
+          date: evidence.published_at || new Date().toISOString(),
+          title: briefDescription, // Brief description for the node
+          fullTitle: evidence.title,
+          fullText: evidence.summary,
+          sourceUrl: evidence.source_url,
+          // evidenceSourceType: item.evidence_source_type, // Pass the source type
+        };
+      }) || [];
 
-    // events.push(...evidenceEvents);
+    events.push(...evidenceEvents);
 
     // Sort events by date (ascending for timeline)
     events.sort((a, b) => {

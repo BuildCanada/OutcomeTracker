@@ -66,14 +66,20 @@ export interface PromiseDetail {
   progress_summary?: string;
   evidences?: Evidence[];
   source_url?: string;
-  last_evidence_data?: string;
+  last_evidence_date?: string;
   source_type: string;
   date_issued?: string;
 }
 
 export interface Evidence {
   id: number;
-  title_or_summary: string;
+  title: string;
+  summary: string;
+  source_url: string;
+  published_at: string;
+  impact: string;
+  impact_magnitude: string;
+  impact_reason: string;
 }
 
 export type DepartmentSlug =
