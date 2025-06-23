@@ -73,17 +73,17 @@ async function scrapeWebpage(url: string): Promise<{ title: string; content: str
     $('script, style, nav, header, footer, aside, .advertisement, .ads, #comments').remove();
 
     // Extract title
-    const title = $('title').text().trim() || 
-                  $('h1').first().text().trim() || 
-                  $('meta[property="og:title"]').attr('content') || '';
+    const title = $('title').text().trim() ||
+      $('h1').first().text().trim() ||
+      $('meta[property="og:title"]').attr('content') || '';
 
     // Extract main content
     let content = '';
-    
+
     // Try common content selectors
     const contentSelectors = [
       'main',
-      'article', 
+      'article',
       '.content',
       '.main-content',
       '.post-content',
@@ -110,10 +110,10 @@ async function scrapeWebpage(url: string): Promise<{ title: string; content: str
     return { title, content };
   } catch (error) {
     console.error('Error scraping webpage:', error);
-    return { 
-      title: '', 
-      content: '', 
-      error: error instanceof Error ? error.message : 'Unknown scraping error' 
+    return {
+      title: '',
+      content: '',
+      error: error instanceof Error ? error.message : 'Unknown scraping error'
     };
   }
 }
@@ -163,10 +163,10 @@ Focus on:
       model: "gemini-2.5-flash-preview-05-20",
       contents: prompt
     });
-    
+
     // Extract text from response
     let responseText = response.text;
-    
+
     if (!responseText) {
       throw new Error('Empty response from LLM');
     }
@@ -184,16 +184,16 @@ Focus on:
         responseText = codeMatch[1].trim();
       }
     }
-    
+
     try {
       const parsed = JSON.parse(responseText);
-      
+
       // Validate that the suggested source type is valid
       if (parsed.evidence_source_type && !isValidSourceType(parsed.evidence_source_type)) {
         console.warn(`LLM suggested invalid source type: ${parsed.evidence_source_type}, defaulting to 'other'`);
         parsed.evidence_source_type = 'other';
       }
-      
+
       return parsed;
     } catch (parseError) {
       console.error('Error parsing LLM response:', parseError);
@@ -246,16 +246,16 @@ async function checkForDuplicateUrl(sourceUrl: string, parliamentSessionId: stri
 // Function to trigger progress rescoring for specific promises using the 1-5 scale LLM methodology
 async function triggerPromiseRescoring(promiseIds: string[]) {
   if (!promiseIds || promiseIds.length === 0) return;
-  
+
   try {
     console.log(`Triggering LLM-based progress rescoring for ${promiseIds.length} promises:`, promiseIds);
-    
+
     // For now, just log that we would trigger rescoring
     // TODO: Implement actual LLM-based progress scoring using prompt_progress_scoring.md
     console.log('LLM-based progress scoring would be triggered here using the 1-5 scale methodology');
     console.log('This will use the official prompt_progress_scoring.md file and the correct evidence structure');
     console.log('Promise IDs to score:', promiseIds);
-    
+
   } catch (error) {
     console.error('Error triggering LLM-based progress rescoring:', error);
   }
@@ -264,21 +264,21 @@ async function triggerPromiseRescoring(promiseIds: string[]) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      source_url, 
-      title_or_summary, 
-      description_or_details, 
-      evidence_source_type, 
+    const {
+      source_url,
+      title_or_summary,
+      description_or_details,
+      evidence_source_type,
       selected_promise_ids = [],
       creation_mode,
-      parliament_session_id 
+      parliament_session_id
     } = body;
 
-    console.log('POST /api/admin/evidence called with:', { 
-      creation_mode, 
-      source_url, 
+    console.log('POST /api/admin/evidence called with:', {
+      creation_mode,
+      source_url,
       parliament_session_id,
-      selected_promise_ids 
+      selected_promise_ids
     });
 
     if (!source_url) {
@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
     // Check for duplicate URL
     const duplicateCheck = await checkForDuplicateUrl(source_url, parliament_session_id);
     if (duplicateCheck.exists) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'An evidence item with this URL already exists',
         duplicate: true,
         existing_item: duplicateCheck.existingItem
@@ -305,8 +305,8 @@ export async function POST(request: NextRequest) {
     if (creation_mode === 'manual') {
       // Manual mode: use provided data directly
       if (!title_or_summary || !description_or_details || !evidence_source_type) {
-        return NextResponse.json({ 
-          error: 'Manual mode requires title_or_summary, description_or_details, and evidence_source_type' 
+        return NextResponse.json({
+          error: 'Manual mode requires title_or_summary, description_or_details, and evidence_source_type'
         }, { status: 400 });
       }
 
@@ -332,8 +332,8 @@ export async function POST(request: NextRequest) {
 
       await triggerPromiseRescoring(selected_promise_ids);
 
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         evidence_id: evidenceId,
         message: 'Evidence item created successfully',
         evidence_data: evidenceData  // Return the full evidence data for frontend
@@ -342,18 +342,18 @@ export async function POST(request: NextRequest) {
     } else {
       // Automated mode: scrape and analyze with LLM
       console.log('Starting automated processing for URL:', source_url);
-      
+
       // Step 1: Scrape the webpage
       const scrapedData = await scrapeWebpage(source_url);
       if (scrapedData.error) {
-        return NextResponse.json({ 
-          error: `Failed to scrape webpage: ${scrapedData.error}` 
+        return NextResponse.json({
+          error: `Failed to scrape webpage: ${scrapedData.error}`
         }, { status: 400 });
       }
 
       if (!scrapedData.content || scrapedData.content.length < 100) {
-        return NextResponse.json({ 
-          error: 'Insufficient content found on webpage' 
+        return NextResponse.json({
+          error: 'Insufficient content found on webpage'
         }, { status: 400 });
       }
 
@@ -361,9 +361,9 @@ export async function POST(request: NextRequest) {
 
       // Step 2: Analyze with Gemini LLM
       const analysisResult = await analyzeContent(
-        source_url, 
-        scrapedData.title, 
-        scrapedData.content, 
+        source_url,
+        scrapedData.title,
+        scrapedData.content,
         parliament_session_id
       );
 
@@ -374,7 +374,7 @@ export async function POST(request: NextRequest) {
       const suggestedSourceTypeKey = analysisResult.evidence_source_type || 'other';
       console.log('Using source type key:', suggestedSourceTypeKey);
       console.log('Mapped to label:', EVIDENCE_SOURCE_TYPE_MAPPING[suggestedSourceTypeKey]);
-      
+
       const evidenceData = {
         evidence_id: evidenceId,
         promise_ids: selected_promise_ids,
@@ -407,8 +407,8 @@ export async function POST(request: NextRequest) {
 
       await triggerPromiseRescoring(selected_promise_ids);
 
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         evidence_id: evidenceId,
         message: 'Evidence item created successfully with automated analysis',
         analysis: analysisResult,
@@ -418,8 +418,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in POST /api/admin/evidence:', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Internal server error' 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Internal server error'
     }, { status: 500 });
   }
 }
@@ -443,10 +443,10 @@ export async function GET(request: NextRequest) {
       // This is a basic implementation - you might want to use Algolia or similar for better search
       const evidenceItems = await query.limit(200).get();
       const searchLower = search.toLowerCase();
-      
+
       const filteredItems = evidenceItems.docs
         .map(doc => ({ id: doc.id, ...doc.data() } as EvidenceItem))
-        .filter((item: EvidenceItem) => 
+        .filter((item: EvidenceItem) =>
           item.title_or_summary?.toLowerCase().includes(searchLower) ||
           item.description_or_details?.toLowerCase().includes(searchLower) ||
           item.source_url?.toLowerCase().includes(searchLower)
@@ -462,8 +462,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in GET /api/admin/evidence:', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Internal server error' 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Internal server error'
     }, { status: 500 });
   }
 }
@@ -472,24 +472,24 @@ export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const evidenceId = searchParams.get('id');
-    
+
     if (!evidenceId) {
       return NextResponse.json({ error: 'Evidence ID is required' }, { status: 400 });
     }
 
     const body = await request.json();
-    const { 
-      source_url, 
-      title_or_summary, 
-      description_or_details, 
-      evidence_source_type, 
+    const {
+      source_url,
+      title_or_summary,
+      description_or_details,
+      evidence_source_type,
       selected_promise_ids = [],
       parliament_session_id
     } = body;
 
     if (!source_url || !title_or_summary || !description_or_details || !evidence_source_type) {
-      return NextResponse.json({ 
-        error: 'All fields are required for updates' 
+      return NextResponse.json({
+        error: 'All fields are required for updates'
       }, { status: 400 });
     }
 
@@ -498,10 +498,10 @@ export async function PUT(request: NextRequest) {
     if (!currentDoc.exists) {
       return NextResponse.json({ error: 'Evidence item not found' }, { status: 404 });
     }
-    
+
     const currentData = currentDoc.data();
     const sessionId = parliament_session_id || currentData?.parliament_session_id;
-    
+
     if (!sessionId) {
       return NextResponse.json({ error: 'Parliament session ID is required' }, { status: 400 });
     }
@@ -514,10 +514,10 @@ export async function PUT(request: NextRequest) {
 
     // Filter out the current item being edited
     const duplicateItems = duplicateQuery.docs.filter(doc => doc.id !== evidenceId);
-    
+
     if (duplicateItems.length > 0) {
       const existingItem = duplicateItems[0];
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'An evidence item with this URL already exists',
         duplicate: true,
         existing_item: {
@@ -539,19 +539,83 @@ export async function PUT(request: NextRequest) {
     };
 
     await db.collection('evidence_items').doc(evidenceId).update(updateData);
+    console.log(`Updated evidence item: ${evidenceId}`);
+
+    // Synchronize promise documents based on changes to linked promises
+    const previousPromiseIds: string[] = currentData?.promise_ids || [];
+    const updatedPromiseIds: string[] = selected_promise_ids || [];
+
+    const removedPromiseIds = previousPromiseIds.filter(id => !updatedPromiseIds.includes(id));
+    const addedPromiseIds = updatedPromiseIds.filter(id => !previousPromiseIds.includes(id));
+
+    console.log(`Removed promise IDs: ${JSON.stringify(removedPromiseIds)}`);
+    console.log(`Added promise IDs: ${JSON.stringify(addedPromiseIds)}`);
+
+    const batch = db.batch();
+
+    for (const promiseId of removedPromiseIds) {
+      const promiseRef = db.collection('promises').doc(promiseId);
+      const promiseSnap = await promiseRef.get();
+
+      if (promiseSnap.exists) {
+        const promiseData = promiseSnap.data();
+        const existingLinks = Array.isArray(promiseData?.linked_evidence) ? promiseData.linked_evidence : [];
+
+        const updatedLinks = existingLinks.filter((entry: any) => {
+          if (typeof entry === 'string') return entry !== evidenceId;
+          if (typeof entry === 'object' && entry?.evidence_id) return entry.evidence_id !== evidenceId;
+          return true;
+        });
+
+        batch.update(promiseRef, { linked_evidence: updatedLinks });
+        console.log(`Removed evidence ${evidenceId} from promise ${promiseId}`);
+      } else {
+        console.log(`Promise ${promiseId} not found during removal`);
+      }
+    }
+
+    for (const promiseId of addedPromiseIds) {
+      const promiseRef = db.collection('promises').doc(promiseId);
+      const promiseSnap = await promiseRef.get();
+
+      if (promiseSnap.exists) {
+        const promiseData = promiseSnap.data();
+        const existingLinks = Array.isArray(promiseData?.linked_evidence) ? promiseData.linked_evidence : [];
+
+        const alreadyLinked = existingLinks.some((entry: any) => {
+          if (typeof entry === 'string') return entry === evidenceId;
+          if (typeof entry === 'object' && entry?.evidence_id) return entry.evidence_id === evidenceId;
+          return false;
+        });
+
+        if (!alreadyLinked) {
+          batch.update(promiseRef, {
+            linked_evidence: [...existingLinks, { evidence_id: evidenceId }]
+          });
+          console.log(`Added evidence ${evidenceId} to promise ${promiseId}`);
+        } else {
+          console.log(`Evidence ${evidenceId} already linked to promise ${promiseId}`);
+        }
+      } else {
+        console.log(`Promise ${promiseId} not found during addition`);
+      }
+    }
+
+    await batch.commit();
+    console.log(`Batch update committed for evidence ${evidenceId}`);
 
     await triggerPromiseRescoring(selected_promise_ids);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       evidence_id: evidenceId,
-      message: 'Evidence item updated successfully' 
+      message: 'Evidence item updated successfully'
     });
 
   } catch (error) {
     console.error('Error in PUT /api/admin/evidence:', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Internal server error' 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Internal server error'
     }, { status: 500 });
   }
 }
@@ -560,14 +624,14 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const evidenceId = searchParams.get('id');
-    
+
     if (!evidenceId) {
       return NextResponse.json({ error: 'Evidence ID is required' }, { status: 400 });
     }
 
     // Step 1: Get the evidence item to find linked promises
     const evidenceDoc = await db.collection('evidence_items').doc(evidenceId).get();
-    
+
     if (!evidenceDoc.exists) {
       return NextResponse.json({ error: 'Evidence item not found' }, { status: 404 });
     }
@@ -580,16 +644,16 @@ export async function DELETE(request: NextRequest) {
     // Step 2: Remove evidence reference from all linked promises
     if (linkedPromiseIds.length > 0) {
       const batch = db.batch();
-      
+
       for (const promiseId of linkedPromiseIds) {
         try {
           const promiseRef = db.collection('promises').doc(promiseId);
           const promiseDoc = await promiseRef.get();
-          
+
           if (promiseDoc.exists) {
             const promiseData = promiseDoc.data();
             const linkedEvidence = promiseData?.linked_evidence || [];
-            
+
             // Remove this evidence from the linked_evidence array
             const updatedLinkedEvidence = linkedEvidence.filter((link: any) => {
               // Handle both object and string formats
@@ -606,7 +670,7 @@ export async function DELETE(request: NextRequest) {
               linked_evidence: updatedLinkedEvidence,
               evidence_cleanup_timestamp: admin.firestore.Timestamp.now()
             });
-            
+
             console.log(`Removed evidence ${evidenceId} from promise ${promiseId}`);
           }
         } catch (error) {
@@ -614,28 +678,28 @@ export async function DELETE(request: NextRequest) {
           // Continue with other promises even if one fails
         }
       }
-      
+
       // Commit all promise updates
       await batch.commit();
     }
 
     // Step 3: Delete the evidence item
     await db.collection('evidence_items').doc(evidenceId).delete();
-    
+
     console.log(`Successfully deleted evidence ${evidenceId} and cleaned up ${linkedPromiseIds.length} promise references`);
 
     await triggerPromiseRescoring(linkedPromiseIds);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Evidence item deleted successfully and references cleaned up',
       cleaned_promises: linkedPromiseIds.length
     });
 
   } catch (error) {
     console.error('Error in DELETE /api/admin/evidence:', error);
-    return NextResponse.json({ 
-      error: error instanceof Error ? error.message : 'Internal server error' 
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Internal server error'
     }, { status: 500 });
   }
 } 
