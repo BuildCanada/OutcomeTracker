@@ -110,7 +110,7 @@ export default function RootLayout({
         </div>
         <Toaster />
         <SimpleAnalytics />
-        <Script
+        {/* <Script
           src="https://frenglish.ai/frenglish.bundle.js"
           strategy="beforeInteractive"
         />
@@ -123,7 +123,7 @@ export default function RootLayout({
               window.Frenglish.initialize(window.frenglishSettings);
             }
           `}
-        </Script>
+        </Script> */}
       </body>
     </html>
   );
