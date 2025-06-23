@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  basePath: "/tracker",
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -9,15 +10,15 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  async redirects() {
-    return [
-      {
-        source: "/tracker",
-        destination: "/en/tracker",
-        permanent: false,
-      },
-    ];
-  },
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: "/tracker",
+  //       destination: "/en/tracker",
+  //       permanent: false,
+  //     },
+  //   ];
+  // },
   async rewrites() {
     return [
       {
@@ -27,45 +28,6 @@ const nextConfig = {
       {
         source: "/api/v1/:path*",
         destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
-      },
-
-      {
-        source: "/en/tracker",
-        destination: "/en/tracker",
-      },
-      {
-        source: "/en/tracker/:path*",
-        destination: "/en/tracker/:path*",
-      },
-      {
-        source: "/promise/:path*",
-        destination: "/promise/:path*",
-      },
-      {
-        source: "/fr/tracker",
-        destination: "/fr/tracker",
-      },
-      {
-        source: "/en/admin/:path*",
-        destination: "/admin/:path*",
-      },
-      {
-        source: "/fr/admin/:path*",
-        destination: "/admin/:path*",
-      },
-      {
-        source: "/admin/:path*",
-        destination: "/admin/:path*",
-      },
-      {
-        source: "/api/:path*",
-        destination: "/api/:path*",
-      },
-      {
-        source: "/:path*",
-        // TODO: switch this over on webflow to be the main page that other things redirect to.
-        destination: "https://flying-buffalo.buildcanada.com/:path*",
-        // destination: "https://www.buildcanada.com/:path*",
       },
     ];
   },

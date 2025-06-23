@@ -6,6 +6,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 import Script from "next/script";
 import SWRProvider from "@/components/SWRProvider";
+import { DEPARTMENTS } from "./_constants";
+import Link from "next/link";
+import { Sidebar } from "@/components/HomePageClient";
 
 // SVG for the emoji favicon: 🏗️🇨🇦 using separate text elements, further reduced font
 // and Unicode escape for the Canadian flag emoji.
@@ -54,8 +57,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  params: { department },
 }: Readonly<{
   children: React.ReactNode;
+  params: { department?: string };
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">
@@ -63,7 +68,19 @@ export default function RootLayout({
         <div className="border-2 border-black m-5">
           <Header />
           <main className="container mx-auto bg-background site-main-content">
-            <SWRProvider>{children}</SWRProvider>
+            <SWRProvider>
+              <div className="min-h-screen">
+                <div className="container px-4 py-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <Sidebar pageTitle="Outcomes Tracker" />
+                    <div className="col-span-3">
+                      <DepartmentPillLinks currentDepartmentSlug={department} />
+                      {children}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </SWRProvider>
           </main>
 
           {/* Footer styled to mimic buildcanada.com */}
@@ -109,5 +126,47 @@ export default function RootLayout({
         </Script>
       </body>
     </html>
+  );
+}
+
+function DepartmentPillLinks({
+  currentDepartmentSlug,
+}: {
+  currentDepartmentSlug?: string;
+}) {
+  // const { data: departments } = useSWR<DepartmentListing[]>(
+  //   "/api/v1/departments",
+  // );
+
+  // const filteredDepartments = departments
+  //   ?.filter((department) => DEPARTMENT_DISPLAY_ORDER[department.slug] != null)
+  //   ?.sort(
+  //     (a, b) =>
+  //       DEPARTMENT_DISPLAY_ORDER[a.slug] - DEPARTMENT_DISPLAY_ORDER[b.slug],
+  //   );
+
+  // const params = useParams<{department: string }>();
+
+  // const activeTabId = currentDepartmentSlug;
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-8">
+      {DEPARTMENTS.map(({ slug, name }) => {
+        return (
+          <Link
+            key={slug}
+            href={`/${slug}`}
+            className={`px-4 py-2 text-sm font-mono transition-colors
+                        ${
+                          currentDepartmentSlug == slug
+                            ? "bg-[#8b2332] text-white"
+                            : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
+                        }`}
+          >
+            {name}
+          </Link>
+        );
+      })}
+    </div>
   );
 }

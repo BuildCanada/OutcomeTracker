@@ -13,7 +13,7 @@ export default function Layout({
   params,
 }: Readonly<{
   children: React.ReactNode;
-  params: Usable<{ lang: string; department: DepartmentSlug }>;
+  params: Usable<{ department: DepartmentSlug }>;
 }>) {
   const { department: slug } = React.use(params);
 

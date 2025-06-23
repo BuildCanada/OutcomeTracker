@@ -9,7 +9,6 @@ import React from "react";
 
 export default function PromisePage() {
   const params = useParams<{
-    lang: string;
     department: string;
     promise_id: string;
   }>();
@@ -28,7 +27,7 @@ export default function PromisePage() {
 
   // Handle close modal - navigate to parent department page
   const handleClose = () => {
-    router.push(`/${params.lang}/tracker/${params.department}`);
+    router.push(`/${params.department}`);
   };
 
   // Loading state
