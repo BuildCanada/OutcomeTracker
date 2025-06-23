@@ -10,15 +10,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // async redirects() {
-  //   return [
-  //     {
-  //       source: "/tracker",
-  //       destination: "/en/tracker",
-  //       permanent: false,
-  //     },
-  //   ];
-  // },
   async rewrites() {
     return [
       {

@@ -22,7 +22,7 @@ export default function PromisePage() {
     error,
     isLoading,
   } = useSWR<PromiseDetail>(
-    promise_id ? `/api/v1/promises/${promise_id}` : null,
+    promise_id ? `/tracker/api/v1/promises/${promise_id}` : null,
   );
 
   // Handle close modal - navigate to parent department page
