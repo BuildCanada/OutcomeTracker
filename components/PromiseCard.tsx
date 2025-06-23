@@ -1,172 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { PromiseData, EvidenceItem } from "@/lib/types";
-import { Timestamp } from "firebase/firestore";
+import { useState } from "react";
+import type { PromiseListing } from "@/lib/types";
 import { TrendingUpIcon, XIcon, MinusIcon } from "lucide-react";
-import PromiseModal from "./PromiseModal";
-import { fetchParliamentSessionDates } from "@/lib/data";
-import { useDepartments } from "@/context/DepartmentContext";
+import Link from "next/link";
 
-interface PromiseCardProps {
-  promise: PromiseData;
-  departmentShortName?: string;
-}
-
-const formatDate = (dateInput: Timestamp | string): string | null => {
-  if (!dateInput) return null;
-  let dateObj: Date;
-
-  if (dateInput instanceof Timestamp) {
-    dateObj = dateInput.toDate();
-  } else if (
-    typeof dateInput === "object" &&
-    dateInput !== null &&
-    typeof (dateInput as any).seconds === "number" &&
-    typeof (dateInput as any).nanoseconds === "number"
-  ) {
-    // Handle serialized Timestamp plain object
-    dateObj = new Date((dateInput as any).seconds * 1000);
-  } else if (typeof dateInput === "string") {
-    // Prefer parsing YYYY-MM-DD as local date components to avoid UTC issues with new Date(str)
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-      const [year, month, day] = dateInput.split("-").map(Number);
-      dateObj = new Date(year, month - 1, day);
-    } else {
-      dateObj = new Date(dateInput); // For other string formats like ISO with timezone
-    }
-  } else {
-    console.warn("[PromiseCard formatDate] Unknown dateInput type:", dateInput);
-    return null;
-  }
-
-  if (isNaN(dateObj.getTime())) {
-    console.warn(
-      "[PromiseCard formatDate] Invalid date constructed for input:",
-      dateInput,
-    );
-    return null;
-  }
-
-  return dateObj.toLocaleDateString("en-CA", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const getDateMillis = (dateInput: Timestamp | string): number => {
-  if (!dateInput) return NaN;
-  let d: Date;
-  if (dateInput instanceof Timestamp) {
-    d = dateInput.toDate();
-  } else if (
-    typeof dateInput === "object" &&
-    dateInput !== null &&
-    typeof (dateInput as any).seconds === "number" &&
-    typeof (dateInput as any).nanoseconds === "number"
-  ) {
-    // Handle serialized Timestamp
-    d = new Date((dateInput as any).seconds * 1000);
-  } else if (typeof dateInput === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
-      const [year, month, day] = dateInput.split("-").map(Number);
-      d = new Date(year, month - 1, day);
-    } else {
-      d = new Date(dateInput);
-    }
-  } else {
-    return NaN; // Unknown type
-  }
-  return d.getTime();
-};
-
-export default function PromiseCard({ promise }: PromiseCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function PromiseCard({
+  promise,
+  departmentSlug,
+}: {
+  promise: PromiseListing;
+  departmentSlug: string;
+}) {
   const [showProgressTooltip, setShowProgressTooltip] = useState(false);
   const [showImpactTooltip, setShowImpactTooltip] = useState(false);
   const [showAlignmentTooltip, setShowAlignmentTooltip] = useState(false);
   const [showProgressModal, setShowProgressModal] = useState(false);
-
-  const [loadedEvidence, setLoadedEvidence] = useState<EvidenceItem[]>(
-    promise.evidence || [],
-  );
-  const [isLoadingEvidence, setIsLoadingEvidence] = useState(false);
-
-  const { sessionId } = useDepartments();
-
-  useEffect(() => {
-    const loadEvidence = async () => {
-      if (!promise?.linked_evidence_ids?.length) {
-        setLoadedEvidence([]);
-        return;
-      }
-
-      setIsLoadingEvidence(true);
-      try {
-        const sessionDates = sessionId
-          ? await fetchParliamentSessionDates(sessionId)
-          : null;
-
-        const response = await fetch("/api/evidence", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            evidenceIds: promise.linked_evidence_ids,
-            sessionsStartDate: sessionDates?.sessionStartDate,
-            sessionEndDate: sessionDates?.sessionEndDate,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`Evidence API error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setLoadedEvidence(data.evidenceItems || []);
-      } catch (error) {
-        console.error("Error loading evidence for promise:", error);
-        setLoadedEvidence([]);
-      } finally {
-        setIsLoadingEvidence(false);
-      }
-    };
-
-    loadEvidence();
-  }, [promise?.linked_evidence_ids, sessionId]);
-
-  // Create a combined promise object with loaded evidence for the timeline
-  const promiseWithEvidence = useMemo(() => {
-    if (!promise) return null;
-
-    return {
-      ...promise,
-      evidence: loadedEvidence,
-    };
-  }, [promise, loadedEvidence]);
-
-  console.log({ evidence: promise.evidence });
-  // Find the most recent evidence date for "Last Update"
-  let lastUpdateDate: string | null = null;
-  if (!!promiseWithEvidence && promiseWithEvidence.evidence.length > 0) {
-    const sorted = promiseWithEvidence.evidence.sort((a, b) => {
-      const dateAMillis = getDateMillis(a.evidence_date);
-      const dateBMillis = getDateMillis(b.evidence_date);
-
-      if (isNaN(dateAMillis) && isNaN(dateBMillis)) return 0;
-      if (isNaN(dateAMillis)) return 1; // Treat NaN as earlier (pushes it to the end of a descending sort)
-      if (isNaN(dateBMillis)) return -1; // Treat NaN as earlier
-
-      return dateBMillis - dateAMillis; // Descending
-    });
-    if (sorted[0]) {
-      lastUpdateDate = formatDate(sorted[0].evidence_date);
-    }
-  }
-
-  const handleCardClick = () => {
-    setIsModalOpen(true);
-  };
 
   // Progress Indicator
   const progressScore = promise.progress_score || 0; // 1-5
@@ -347,11 +196,11 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
   }
   function getPieColor(progressScore: number): string {
     const colorMap = [
-      '#fde047', // yellow-300
-      '#fcd34d', // amber-300
-      '#ffb86a', // orange-300
-      '#a3e635', // lime-400
-      '#16a34a', // green-600
+      "#fde047", // yellow-300
+      "#fcd34d", // amber-300
+      "#ffb86a", // orange-300
+      "#a3e635", // lime-400
+      "#16a34a", // green-600
     ];
     return colorMap[Math.max(0, Math.min(progressScore - 1, 4))];
   }
@@ -366,178 +215,178 @@ export default function PromiseCard({ promise }: PromiseCardProps) {
 
   return (
     <>
-      <div
-        className="bg-white border border-[#cdc4bd] flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 group relative"
-        tabIndex={0}
-        aria-label={promise.text}
-        onClick={handleCardClick}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") handleCardClick();
-        }}
+      <Link
+        href={`/en/tracker/${departmentSlug}/promises/${promise.id}`}
+        className="w-full"
       >
-        <div className="p-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            {/* Progress Indicator - Column 1 */}
-            <div className="flex-shrink-0 flex flex-row items-center gap-2 w-[170px]">
-              <div
-                className="relative w-6 h-6 cursor-pointer focus:outline-none"
-                onMouseEnter={() => setShowProgressTooltip(true)}
-                onMouseLeave={() => setShowProgressTooltip(false)}
-                onFocus={() => setShowProgressTooltip(true)}
-                onBlur={() => setShowProgressTooltip(false)}
-                tabIndex={0}
-                aria-label={`Commitment Progress`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowProgressModal(true);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
+        <div
+          className="bg-white border border-[#cdc4bd] flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 group relative"
+          tabIndex={0}
+          aria-label={promise.text}
+          // onClick={handleCardClick}
+          // onKeyDown={(e) => {
+          //   if (e.key === "Enter" || e.key === " ") handleCardClick();
+          // }}
+        >
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              {/* Progress Indicator - Column 1 */}
+              <div className="flex-shrink-0 flex flex-row items-center gap-2 w-[170px]">
+                <div
+                  className="relative w-6 h-6 cursor-pointer focus:outline-none"
+                  onMouseEnter={() => setShowProgressTooltip(true)}
+                  onMouseLeave={() => setShowProgressTooltip(false)}
+                  onFocus={() => setShowProgressTooltip(true)}
+                  onBlur={() => setShowProgressTooltip(false)}
+                  tabIndex={0}
+                  aria-label={`Commitment Progress`}
+                  onClick={(e) => {
                     e.stopPropagation();
                     setShowProgressModal(true);
-                  }
-                }}
-              >
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
-                  {/* Full colored circle as background - only if progress > 0 */}
-                  {progressScore > 0 && (
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      setShowProgressModal(true);
+                    }
+                  }}
+                >
+                  <svg className="w-6 h-6" viewBox="0 0 24 24">
+                    {/* Full colored circle as background - only if progress > 0 */}
+                    {progressScore > 0 && (
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill={getPieColor(progressScore)}
+                        stroke={getPieColor(progressScore)}
+                        strokeWidth="2"
+                      />
+                    )}
+                    {/* White arc for incomplete portion (only if not complete) */}
+                    {progressScore < 5 && progressScore > 0 && (
+                      <path
+                        d={getPieArcPath(
+                          12,
+                          12,
+                          10,
+                          0,
+                          (1 - progressScore / 5) * 360,
+                        )}
+                        fill="#fff"
+                      />
+                    )}
+                    {/* Outline circle */}
                     <circle
                       cx="12"
                       cy="12"
                       r="10"
-                      fill={getPieColor(progressScore)}
-                      stroke={getPieColor(progressScore)}
+                      fill="none"
+                      stroke={
+                        progressScore === 0
+                          ? isOverdue
+                            ? "#ef4444"
+                            : "#d3c7b9"
+                          : getPieColor(progressScore)
+                      }
                       strokeWidth="2"
                     />
-                  )}
-                  {/* White arc for incomplete portion (only if not complete) */}
-                  {progressScore < 5 && progressScore > 0 && (
-                    <path
-                      d={getPieArcPath(
-                        12,
-                        12,
-                        10,
-                        0,
-                        (1 - progressScore / 5) * 360,
-                      )}
-                      fill="#fff"
-                    />
-                  )}
-                  {/* Outline circle */}
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    fill="none"
-                    stroke={
-                      progressScore === 0
-                        ? isOverdue
-                          ? "#ef4444"
-                          : "#d3c7b9"
-                        : getPieColor(progressScore)
-                    }
-                    strokeWidth="2"
-                  />
-                </svg>
-                {showProgressTooltip && (
-                  <div className="absolute z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm max-w-xs top-full mt-1 left-1/2 -translate-x-1/2 animate-fade-in whitespace-nowrap">
-                    {progressTooltip}
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col items-start justify-start">
-                <span className="text-xs font-medium text-gray-700">
-                  {progressScore === 0
-                    ? "Not started"
-                    : progressScore === 5
-                      ? "Complete"
-                      : "In Progress"}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {lastUpdateDate
-                    ? `Last update ${lastUpdateDate}`
-                    : "No update yet"}
-                </span>
-              </div>
-            </div>
-            {/* Title and Description - Column 2 */}
-            <div className="md:flex-1">
-              <div className="text-lg font-semibold leading-snug">
-                {promise.concise_title}
-              </div>
-              <div className="text-sm text-gray-600 line-clamp-2">
-                {promise.description}
-              </div>
-            </div>
-            {/* Impact and Alignment - Column 3 */}
-            <div className="flex gap-2 md:w-auto md:flex-shrink-0 justify-start md:justify-end">
-              {/* Impact pill */}
-              {impactIcon && (
-                <div className="relative">
-                  <div
-                    className={`flex items-center justify-center w-6 h-6 rounded-full ${impactPillBg} cursor-help`}
-                    onMouseEnter={() => setShowImpactTooltip(true)}
-                    onMouseLeave={() => setShowImpactTooltip(false)}
-                    onFocus={() => setShowImpactTooltip(true)}
-                    onBlur={() => setShowImpactTooltip(false)}
-                    tabIndex={0}
-                    aria-label={`Impact`}
-                  >
-                    {impactIcon}
-                  </div>
-                  {showImpactTooltip && (
-                    <div className="absolute w-64 z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0 animate-fade-in">
-                      {impactTooltip}
+                  </svg>
+                  {showProgressTooltip && (
+                    <div className="absolute z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm max-w-xs top-full mt-1 left-1/2 -translate-x-1/2 animate-fade-in whitespace-nowrap">
+                      {progressTooltip}
                     </div>
                   )}
                 </div>
-              )}
-              {/* Alignment pill */}
-              <div className="relative">
-                <div
-                  className={`flex items-center justify-center w-6 h-6 rounded-full ${alignmentBg} ${alignmentColor} cursor-help`}
-                  onMouseEnter={() => setShowAlignmentTooltip(true)}
-                  onMouseLeave={() => setShowAlignmentTooltip(false)}
-                  onFocus={() => setShowAlignmentTooltip(true)}
-                  onBlur={() => setShowAlignmentTooltip(false)}
-                  tabIndex={0}
-                  aria-label={`Alignment: ${alignmentLabel}`}
-                >
-                  {alignmentIcon}
+                <div className="flex flex-col items-start justify-start">
+                  <span className="text-xs font-medium text-gray-700">
+                    {progressScore === 0
+                      ? "Not started"
+                      : progressScore === 5
+                        ? "Complete"
+                        : "In Progress"}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {promise.last_evidence_date
+                      ? `Last update ${new Date(promise.last_evidence_date).toLocaleString()}`
+                      : "No update yet"}
+                  </span>
                 </div>
-                {showAlignmentTooltip && (
-                  <div className="absolute w-48 z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0 animate-fade-in">
-                    {alignmentTooltip}
+              </div>
+              {/* Title and Description - Column 2 */}
+              <div className="md:flex-1">
+                <div className="text-lg font-semibold leading-snug">
+                  {promise.concise_title}
+                </div>
+                <div className="text-sm text-gray-600 line-clamp-2">
+                  {promise.description}
+                </div>
+              </div>
+              {/* Impact and Alignment - Column 3 */}
+              <div className="flex gap-2 md:w-auto md:flex-shrink-0 justify-start md:justify-end">
+                {/* Impact pill */}
+                {impactIcon && (
+                  <div className="relative">
+                    <div
+                      className={`flex items-center justify-center w-6 h-6 rounded-full ${impactPillBg} cursor-help`}
+                      onMouseEnter={() => setShowImpactTooltip(true)}
+                      onMouseLeave={() => setShowImpactTooltip(false)}
+                      onFocus={() => setShowImpactTooltip(true)}
+                      onBlur={() => setShowImpactTooltip(false)}
+                      tabIndex={0}
+                      aria-label={`Impact`}
+                    >
+                      {impactIcon}
+                    </div>
+                    {showImpactTooltip && (
+                      <div className="absolute w-64 z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0 animate-fade-in">
+                        {impactTooltip}
+                      </div>
+                    )}
                   </div>
                 )}
+                {/* Alignment pill */}
+                <div className="relative">
+                  <div
+                    className={`flex items-center justify-center w-6 h-6 rounded-full ${alignmentBg} ${alignmentColor} cursor-help`}
+                    onMouseEnter={() => setShowAlignmentTooltip(true)}
+                    onMouseLeave={() => setShowAlignmentTooltip(false)}
+                    onFocus={() => setShowAlignmentTooltip(true)}
+                    onBlur={() => setShowAlignmentTooltip(false)}
+                    tabIndex={0}
+                    aria-label={`Alignment: ${alignmentLabel}`}
+                  >
+                    {alignmentIcon}
+                  </div>
+                  {showAlignmentTooltip && (
+                    <div className="absolute w-48 z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0 animate-fade-in">
+                      {alignmentTooltip}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      {/* Progress Summary Modal */}
-      {showProgressModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative animate-fade-in">
-            <button
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 focus:outline-none"
-              onClick={() => setShowProgressModal(false)}
-              aria-label="Close progress summary"
-            >
-              <XIcon className="w-5 h-5" />
-            </button>
-            <h2 className="text-lg font-bold mb-4">Commitment Progress</h2>
-            <div className="text-gray-800 whitespace-pre-line">
-              {progressSummary}
+        {/* Progress Summary Modal */}
+        {showProgressModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative animate-fade-in">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 focus:outline-none"
+                onClick={() => setShowProgressModal(false)}
+                aria-label="Close progress summary"
+              >
+                <XIcon className="w-5 h-5" />
+              </button>
+              <h2 className="text-lg font-bold mb-4">Commitment Progress</h2>
+              <div className="text-gray-800 whitespace-pre-line">
+                {progressSummary}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      <PromiseModal
-        promise={promiseWithEvidence}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+        )}
+      </Link>
     </>
   );
 }

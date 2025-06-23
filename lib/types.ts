@@ -1,88 +1,46 @@
-// lib/types.ts
-
-import { Timestamp } from "firebase/firestore";
-
-// --- Data structures from Firestore ---
-
-export interface ParliamentSession {
-  id: string; // parliament_number, e.g., "44"
-  parliament_number: string;
-  session_label: string;
-  start_date: string;
-  end_date?: string | null;
-  prime_minister_name?: string;
-  governing_party?: string;
-  governing_party_code?: string;
-  election_date_preceding?: string | null;
-  election_called_date?: string | null;
-  notes?: string | null;
+export interface DepartmentListing {
+  created_at: string;
+  display_name: string;
+  government_id: number;
+  id: number;
+  official_name: string;
+  priority: number;
+  slug: string;
+  updated_at: string;
 }
 
-// --- NEW TYPES FOR MINISTER FETCHING ---
-export interface ParliamentaryPosition {
+export interface Department {
+  display_name: string;
+  official_name: string;
+  priority: number;
+  slug: string;
+
+  minister?: Minister;
+  promises: PromiseListing[];
+}
+
+export interface Minister {
+  order_of_precedence: number;
+  started_at: string;
+  ended_at: string | null;
+  first_name: string;
+  last_name: string;
   title: string;
-  title_en?: string;
-  title_fr?: string;
-  from: string;
-  to?: string | null;
+  avatar_url: string;
+  person_short_honorific: string;
 }
 
-export interface Member {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  party?: string;
-  parliamentNumber?: number | string;
-  parliamentaryPositions?: ParliamentaryPosition[];
-  // avatarUrl?: string; // If you add this to your Member documents
-}
-
-export interface MinisterInfo {
-  name: string;
-  firstName?: string;
-  lastName?: string;
-  party?: string;
-  title: string;
-  avatarUrl?: string;
-  positionStart?: string; // ISO date string
-  positionEnd?: string | null; // ISO date string or null if ongoing
-  effectiveDepartmentOfficialFullName?: string; // Added for remapped department name
-  effectiveDepartmentId?: string; // Added for remapped department ID
-}
-
-export interface DepartmentConfig {
-  id: string; // Firestore document ID (e.g., "health-canada")
-  display_short_name: string; // New: e.g., "Health" (used for sorting and display)
-  official_full_name: string; // New: e.g., "Health Canada"
-  official_full_name_en?: string;
-  official_full_name_fr?: string;
-  department_slug: DepartmentSlug; // New: e.g., "health-canada" (often same as id)
-  display_order?: number; // Used for manual ordering of departments
-
-  // Optional fields from screenshot and common usage:
-  bc_priority?: number;
-  name_variants?: string[];
-  notes?: string | null;
-  last_updated_at?: Timestamp | string; // Can be Timestamp or serialized string
-  last_updated_by?: string;
-
-  // Include other fields from your Firestore documents if needed by the application
-  // For example, if 'french_name', 'category_tags', 'priority_score',
-  // 'alternative_names' from your earlier summary are indeed in Firestore and used:
-  french_name?: string | null;
-  category_tags?: string[] | null;
-  priority_score?: number; // This was in your Phase 2 summary for department_config
-  alternative_names?: string[]; // This was also in your Phase 2 summary
-
-  // Field for historical remapping
-  historical_mapping?: {
-    [parliamentSessionId: string]: {
-      // e.g., "44-1"
-      minister_lookup_slug: string; // The department_slug to use for minister lookup in that session
-      promise_query_department_name: string; // The official_full_name to use for promise queries in that session
-      promise_query_slug_override?: string; // Optional: if promise query needs a slug different from minister_lookup_slug
-    };
-  };
+export interface PromiseListing {
+  id: number;
+  concise_title: string;
+  description: string;
+  bc_promise_direction: string;
+  bc_promise_rank: string;
+  bc_promise_rank_rationale: string;
+  progress_score: number | null;
+  progress_summary: string;
+  text: string;
+  last_evidence_date: string;
 }
 
 export interface MinisterDetails {
@@ -97,49 +55,31 @@ export interface MinisterDetails {
   avatarUrl?: string;
 }
 
-export interface PromiseData {
-  id: string; // Firestore document ID - ALIGNED with fetching logic
-  fullPath?: string; // Full Firestore path for the promise document
+export interface PromiseDetail {
+  id: number;
   text: string;
-  responsible_department_lead: string;
-  category?: string; // Primary policy category (e.g., "Economy", "Healthcare", "Environment")
-  source_type?: string; // Made optional as it's not used client-side
-  source_url?: string; // URL to the source document
-  commitment_history_rationale?: RationaleEvent[]; // Added optional field
-  date_issued?: string; // Optional
-  linked_evidence_ids?: string[];
-  evidence?: EvidenceItem[];
-  parliament_session_id?: string; // Ensure this field exists on your promise docs if filtering by it
+  description: string;
+  commitment_history_rationale?: RationaleEvent[];
+  what_it_means_for_canadians?: string;
+  concise_title: string;
   progress_score?: number;
   progress_summary?: string;
-  bc_promise_rank?: string;
-  bc_promise_rank_rationale?: string;
-  bc_promise_direction?: string;
-  concise_title?: string;
-  description?: string;
-  what_it_means_for_canadians?: string;
-  intended_impact_and_objectives?: string;
-  background_and_context?: string;
+  evidences?: Evidence[];
+  source_url?: string;
+  last_evidence_date?: string;
+  source_type: string;
+  date_issued?: string;
+}
 
-  // CONSOLIDATED PROMISE FIELDS (from bulk_ingest_consolidated_promises.py)
-  appears_in?: string; // "Platform Only", "Both", "SFT Only" - indicates source document(s)
-  commitment_id?: string; // The consolidated commitment ID
-  canonical_commitment_text?: string; // The canonical text from consolidation
-  reporting_lead_title?: string; // Lead minister/department title
-  all_other_ministers_involved?: string; // Other ministers involved
-  notes_and_differences?: string; // Notes about differences between sources
-
-  // NEW FIELDS FOR FLAT STRUCTURE MIGRATION
-  region_code?: string; // e.g., "Canada" - region identifier
-  party_code?: string; // e.g., "LPC", "CPC", "NDP", "BQ" - party identifier
-  migration_metadata?: {
-    migrated_at?: Timestamp | string;
-    source_path?: string; // Original subcollection path
-    migration_version?: string;
-    original_id?: string; // Original document ID if changed
-    conflict_resolved?: boolean; // True if ID conflict was resolved
-    new_id?: string; // New ID if conflict was resolved
-  };
+export interface Evidence {
+  id: number;
+  title: string;
+  summary: string;
+  source_url: string;
+  published_at: string;
+  impact: string;
+  impact_magnitude: string;
+  impact_reason: string;
 }
 
 export type DepartmentSlug =
@@ -185,13 +125,6 @@ export interface Metric {
   goal: number;
 }
 
-// This will represent the combined data needed to render a department's page/tab content
-export interface DepartmentPageData {
-  ministerInfo: MinisterInfo | null;
-  promises: PromiseData[];
-  evidenceItems: EvidenceItem[]; // Added field for evidence
-}
-
 // PrimeMinister can be kept if there's a separate PM section with hardcoded/different data source
 export interface PrimeMinister {
   name: string;
@@ -207,21 +140,4 @@ export interface RationaleEvent {
   date: string; // "YYYY-MM-DD"
   action: string;
   source_url: string;
-}
-
-// Define the structure for Evidence Items
-export interface EvidenceItem {
-  id: string; // Firestore document ID
-  evidence_id: string; // The specific 'evidence_id' field from the document data
-  promise_ids: string[];
-  evidence_source_type: string;
-  evidence_date: Timestamp | string; // Allow string for flexibility if already serialized
-  title_or_summary: string;
-  description_or_details?: string;
-  source_url?: string;
-  source_document_raw_id?: string;
-  linked_departments?: string[];
-  status_impact_on_promise?: string;
-  ingested_at: Timestamp | string; // Allow string for flexibility
-  additional_metadata?: Record<string, any>;
 }

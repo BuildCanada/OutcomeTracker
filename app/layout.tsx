@@ -2,10 +2,13 @@ import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/header";
-import { SessionProvider } from "@/context/SessionContext";
 import { Toaster } from "@/components/ui/toaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 import Script from "next/script";
+import SWRProvider from "@/components/SWRProvider";
+import { DEPARTMENTS } from "./_constants";
+import Link from "next/link";
+import { Sidebar } from "@/components/HomePageClient";
 
 // SVG for the emoji favicon: 🏗️🇨🇦 using separate text elements, further reduced font
 // and Unicode escape for the Canadian flag emoji.
@@ -21,7 +24,9 @@ const emojiFaviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10
 const faviconDataUrl = `data:image/svg+xml,${encodeURIComponent(emojiFaviconSvg)}`;
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://buildcanada.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || "https://buildcanada.com",
+  ),
   title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
   description: "Track the progress of Canada's government initiatives",
   icons: {
@@ -52,48 +57,63 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  params: { department },
 }: Readonly<{
   children: React.ReactNode;
+  params: { department?: string };
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">
       <body className={`text-neutral-800 bg-background`}>
         <div className="border-2 border-black m-5">
-          <SessionProvider>
-            <Header />
-            <main className="container mx-auto bg-background site-main-content">
-              {children}
-            </main>
-
-            {/* Footer styled to mimic buildcanada.com */}
-            <footer
-              className="mt-16 py-12 text-neutral-300"
-              style={{ backgroundColor: "#272727" }}
-            >
-              <div className="container mx-auto">
-                <div className="mb-8">
-                  <h1 className="text-3xl font-semibold text-white">
-                    Build Canada
-                  </h1>
-                </div>
-                <div className="mb-8">
-                  <p className="text-white">
-                    A non-partisan platform tracking progress of key commitments
-                    during the 45th Parliament of Canada.
-                  </p>
-                </div>
-                <div className="footprint">
-                  <div className="copyright text-white mb-6">
-                    <div className="text-sm">🏗️🇨🇦 &copy; Build Canada 2025</div>
+          <Header />
+          <main className="container mx-auto bg-background site-main-content">
+            <SWRProvider>
+              <div className="min-h-screen">
+                <div className="container px-4 py-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <Sidebar pageTitle="Outcomes Tracker" />
+                    <div className="col-span-3">
+                      <DepartmentPillLinks currentDepartmentSlug={department} />
+                      {children}
+                    </div>
                   </div>
                 </div>
               </div>
-            </footer>
-          </SessionProvider>
+            </SWRProvider>
+          </main>
+
+          {/* Footer styled to mimic buildcanada.com */}
+          <footer
+            className="mt-16 py-12 text-neutral-300"
+            style={{ backgroundColor: "#272727" }}
+          >
+            <div className="container mx-auto">
+              <div className="mb-8">
+                <h1 className="text-3xl font-semibold text-white">
+                  Build Canada
+                </h1>
+              </div>
+              <div className="mb-8">
+                <p className="text-white">
+                  A non-partisan platform tracking progress of key commitments
+                  during the 45th Parliament of Canada.
+                </p>
+              </div>
+              <div className="footprint">
+                <div className="copyright text-white mb-6">
+                  <div className="text-sm">🏗️🇨🇦 &copy; Build Canada 2025</div>
+                </div>
+              </div>
+            </div>
+          </footer>
         </div>
         <Toaster />
         <SimpleAnalytics />
-        <Script src="https://frenglish.ai/frenglish.bundle.js" strategy="beforeInteractive" />
+        {/* <Script
+          src="https://frenglish.ai/frenglish.bundle.js"
+          strategy="beforeInteractive"
+        />
         <Script id="frenglish-init" strategy="afterInteractive">
           {`
             window.frenglishSettings = {
@@ -103,8 +123,50 @@ export default function RootLayout({
               window.Frenglish.initialize(window.frenglishSettings);
             }
           `}
-        </Script>
+        </Script> */}
       </body>
     </html>
+  );
+}
+
+function DepartmentPillLinks({
+  currentDepartmentSlug,
+}: {
+  currentDepartmentSlug?: string;
+}) {
+  // const { data: departments } = useSWR<DepartmentListing[]>(
+  //   "/api/v1/departments",
+  // );
+
+  // const filteredDepartments = departments
+  //   ?.filter((department) => DEPARTMENT_DISPLAY_ORDER[department.slug] != null)
+  //   ?.sort(
+  //     (a, b) =>
+  //       DEPARTMENT_DISPLAY_ORDER[a.slug] - DEPARTMENT_DISPLAY_ORDER[b.slug],
+  //   );
+
+  // const params = useParams<{department: string }>();
+
+  // const activeTabId = currentDepartmentSlug;
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-8">
+      {DEPARTMENTS.map(({ slug, name }) => {
+        return (
+          <Link
+            key={slug}
+            href={`/${slug}`}
+            className={`px-4 py-2 text-sm font-mono transition-colors
+                        ${
+                          currentDepartmentSlug == slug
+                            ? "bg-[#8b2332] text-white"
+                            : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
+                        }`}
+          >
+            {name}
+          </Link>
+        );
+      })}
+    </div>
   );
 }
