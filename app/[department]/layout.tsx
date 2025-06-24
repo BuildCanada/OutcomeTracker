@@ -18,7 +18,7 @@ export default function Layout({
   const { department: slug } = React.use(params);
 
   const { data: department } = useSWR<Department>(
-    `/tracker/api/v1/departments/${slug}`,
+    `/tracker/api/v1/departments/${slug}.json`,
   );
 
   if (!department) {

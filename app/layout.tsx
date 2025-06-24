@@ -135,7 +135,7 @@ function DepartmentPillLinks({
   currentDepartmentSlug?: string;
 }) {
   // const { data: departments } = useSWR<DepartmentListing[]>(
-  //   "/api/v1/departments",
+  //   "/api/v1/departments.json",
   // );
 
   // const filteredDepartments = departments
