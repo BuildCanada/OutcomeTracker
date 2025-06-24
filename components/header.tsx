@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -8,13 +7,13 @@ export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
     <header className="border-b-2 border-black font-founders bg-background sticky top-0 z-50">
       <div className="mx-auto grid grid-cols-[160px_1fr] min-h-[72px]">
         <div className="bg-[#932f2f] flex items-center justify-center">
-          <Link href="/" className="block">
+          <a href="/" className="block">
             <img
               src="https://cdn.prod.website-files.com/679d23fc682f2bf860558c9a/679d23fc682f2bf860558cc6_build_canada-wordmark.svg"
               alt="Build Canada"
               className="w-[110px] h-auto p-2"
             />
-          </Link>
+          </a>
         </div>
         {/* Desktop Navigation */}
         <div className="flex items-center justify-end h-full">
