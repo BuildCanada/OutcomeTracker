@@ -1,2 +1,16 @@
-# Deployment test - Tue Jun  3 22:27:28 EDT 2025
-# WIF repository fix - Tue Jun  3 22:35:14 EDT 2025
+# Outcome Tracker
+
+This is the frontend to the Build Canada Outcome Tracker. The API repo is [OutcomeTrackerAPI](https://github.com/BuildCanada/OutcomeTrackerAPI).
+
+
+## Getting Started
+
+- Fork the repo, clone it, and install dependencies:
+  ```bash
+  git clone https://github.com/your-username/OutcomeTracker.git
+  cd OutcomeTracker
+  pnpm install
+  ```
+  
+- If you're using the production API, set NEXT_PUBLIC_API_URL=https://buildcanada.com/tracker/api/v1
+- If you're using the production API, set NEXT_PUBLIC_API_URL=https://buildcanada.com/tracker/api/v1

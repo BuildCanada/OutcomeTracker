@@ -1,9 +1,0 @@
-name: promise-tracker-auto-deploy
-description: Auto-deploy Promise Tracker Pipeline on main branch changes
-github:
-  owner: BuildCanada
-  name: PromiseTracker
-  push:
-    branch: ^main$
-filename: cloudbuild.yaml
-includeBuildLogs: INCLUDE_BUILD_LOGS_WITH_STATUS 
