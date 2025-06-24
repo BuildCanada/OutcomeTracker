@@ -18,3 +18,7 @@ Source code for the frontend of the [Build Canada Outcome Tracker](https://www.b
 ## Metrics
 
 Metrics are scraped using github actions which automatically updates the repo with up to date data. 
+
+## Contributing
+
+We would love to have your help! Please fill in our vounteer intake form 

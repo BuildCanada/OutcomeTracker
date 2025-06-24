@@ -19,68 +19,75 @@ export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
         {/* Desktop Navigation */}
         <div className="flex items-center justify-end h-full">
           <nav className="hidden md:flex w-full h-full items-stretch">
-            <Link
+            <a
               href="/memos"
               className="flex-1 flex items-center justify-center text-[16px] tracking-wide uppercase hover:bg-[#eae0d8] h-full first:border-l-0 border-l-2 border-black"
             >
               Memos
-            </Link>
-            <Link
+            </a>
+            <a
               // TODO: Make this dynamic based on language
-              href="/en/tracker"
+              href="/tracker"
               className="flex-1 flex items-center justify-center text-[16px] tracking-wide uppercase hover:bg-[#eae0d8] h-full first:border-l-0 border-l-2 border-black"
             >
               Outcomes Tracker
-            </Link>
-            <Link
+            </a>
+            <a
               href="/about"
               className="flex-1 flex items-center justify-center text-[16px] tracking-wide uppercase hover:bg-[#eae0d8] h-full first:border-l-0 border-l-2 border-black"
             >
               About
-            </Link>
-            <Link
+            </a>
+            <a
               href="/contact"
               className="flex-1 flex items-center justify-center text-[16px] tracking-wide uppercase hover:bg-[#eae0d8] h-full first:border-l-0 border-l-2 border-black"
             >
               Contact
-            </Link>
+            </a>
           </nav>
 
           {/* Mobile Navigation */}
           <div className="flex items-center justify-end mr-3 md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 hover:none">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 hover:none"
+                >
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="top" className="w-full bg-[#272727] text-white border-none">
+              <SheetContent
+                side="top"
+                className="w-full bg-[#272727] text-white border-none"
+              >
                 <nav className="flex flex-col space-y-6 mt-8">
-                  <Link
+                  <a
                     href="/memos"
                     className="text-5xl font-medium tracking-wide hover:bg-black"
                   >
                     Memos
-                  </Link>
-                  <Link
-                    href="/en/tracker"
+                  </a>
+                  <a
+                    href="/tracker"
                     className="text-5xl font-medium tracking-wide hover:bg-black"
                   >
                     Promise Tracker
-                  </Link>
-                  <Link
+                  </a>
+                  <a
                     href="/about"
                     className="text-5xl font-medium tracking-wide hover:bg-black"
                   >
                     About
-                  </Link>
-                  <Link
+                  </a>
+                  <a
                     href="/contact"
                     className="text-5xl font-medium tracking-wide hover:bg-black"
                   >
                     Contact
-                  </Link>
+                  </a>
                 </nav>
               </SheetContent>
             </Sheet>
