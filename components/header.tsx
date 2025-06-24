@@ -25,11 +25,10 @@ export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
               Memos
             </a>
             <a
-              // TODO: Make this dynamic based on language
-              href="/tracker"
+              href="/projects"
               className="flex-1 flex items-center justify-center text-[16px] tracking-wide uppercase hover:bg-[#eae0d8] h-full first:border-l-0 border-l-2 border-black"
             >
-              Outcomes Tracker
+              Projects
             </a>
             <a
               href="/about"
@@ -70,10 +69,10 @@ export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
                     Memos
                   </a>
                   <a
-                    href="/tracker"
+                    href="/projects"
                     className="text-5xl font-medium tracking-wide hover:bg-black"
                   >
-                    Promise Tracker
+                    Projects
                   </a>
                   <a
                     href="/about"
