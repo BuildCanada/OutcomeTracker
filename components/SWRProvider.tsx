@@ -6,7 +6,7 @@ async function fetcher(...args: Parameters<typeof fetch>) {
   const [url, ...restArgs] = args;
   const options = restArgs[0] || {};
   const headers = {
-    "Content-Type": "application/json",
+    Accept: "application/json",
     ...options.headers,
   };
 
