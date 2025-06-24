@@ -1,8 +1,6 @@
 name: Scrape Non-Permanent Residents Data
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
   schedule:
     # Daily at 7:23 AM UTC

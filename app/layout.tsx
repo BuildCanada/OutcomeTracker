@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     description: "Track the progress of Canada's government initiatives",
     images: [
       {
-        url: "/outcomes-tracker-seo-image.png",
+        url: "/tracker/outcomes-tracker-seo-image.png",
         width: 1200,
         height: 630,
         alt: "Build Canada Outcomes Tracker",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
     description: "Track the progress of Canada's government initiatives",
-    images: ["/outcomes-tracker-seo-image.png"],
+    images: ["/tracker/outcomes-tracker-seo-image.png"],
   },
 };
 
@@ -74,9 +74,7 @@ export default function RootLayout({
                 <div className="container px-4 py-12">
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <Sidebar pageTitle="Outcomes Tracker" />
-                    <div className="col-span-3">
-                      {children}
-                    </div>
+                    <div className="col-span-3">{children}</div>
                   </div>
                 </div>
               </div>
@@ -128,4 +126,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -1,8 +1,6 @@
 name: Scrape Primary Energy Production Data
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
   schedule:
     # Daily at 10:23 AM UTC
