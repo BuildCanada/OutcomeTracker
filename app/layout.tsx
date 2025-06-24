@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 import Script from "next/script";
 import SWRProvider from "@/components/SWRProvider";
-import { DEPARTMENTS } from "./_constants";
+import { DEPARTMENTS } from "./[department]/_constants";
 import Link from "next/link";
 import { Sidebar } from "@/components/HomePageClient";
 
@@ -62,6 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
   params: { department?: string };
 }>) {
+  console.log({ department });
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">
       <body className={`text-neutral-800 bg-background`}>
@@ -74,7 +75,6 @@ export default function RootLayout({
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <Sidebar pageTitle="Outcomes Tracker" />
                     <div className="col-span-3">
-                      <DepartmentPillLinks currentDepartmentSlug={department} />
                       {children}
                     </div>
                   </div>
@@ -129,44 +129,3 @@ export default function RootLayout({
   );
 }
 
-function DepartmentPillLinks({
-  currentDepartmentSlug,
-}: {
-  currentDepartmentSlug?: string;
-}) {
-  // const { data: departments } = useSWR<DepartmentListing[]>(
-  //   "/api/v1/departments.json",
-  // );
-
-  // const filteredDepartments = departments
-  //   ?.filter((department) => DEPARTMENT_DISPLAY_ORDER[department.slug] != null)
-  //   ?.sort(
-  //     (a, b) =>
-  //       DEPARTMENT_DISPLAY_ORDER[a.slug] - DEPARTMENT_DISPLAY_ORDER[b.slug],
-  //   );
-
-  // const params = useParams<{department: string }>();
-
-  // const activeTabId = currentDepartmentSlug;
-
-  return (
-    <div className="flex flex-wrap gap-2 mb-8">
-      {DEPARTMENTS.map(({ slug, name }) => {
-        return (
-          <Link
-            key={slug}
-            href={`/${slug}`}
-            className={`px-4 py-2 text-sm font-mono transition-colors
-                        ${
-                          currentDepartmentSlug == slug
-                            ? "bg-[#8b2332] text-white"
-                            : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
-                        }`}
-          >
-            {name}
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
