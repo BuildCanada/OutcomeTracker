@@ -3,7 +3,14 @@
 import { SWRConfig } from "swr";
 
 async function fetcher(...args: Parameters<typeof fetch>) {
-  return (await fetch(...args)).json();
+  const [url, ...restArgs] = args;
+  const options = restArgs[0] || {};
+  const headers = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+
+  return (await fetch(url, { ...options, headers })).json();
 }
 
 export default function SWRProvider({
