@@ -68,7 +68,6 @@ function DepartmentPillLinks({
 
   // const activeTabId = currentDepartmentSlug;
 
-  console.log({ currentDepartmentSlug });
 
   return (
     <div className="flex flex-wrap gap-2 mb-8">

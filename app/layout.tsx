@@ -62,7 +62,6 @@ export default function RootLayout({
   children: React.ReactNode;
   params: { department?: string };
 }>) {
-  console.log({ department });
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">
       <body className={`text-neutral-800 bg-background`}>
