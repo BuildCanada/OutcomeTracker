@@ -216,7 +216,7 @@ export default function PromiseCard({
   return (
     <>
       <Link
-        href={`/en/tracker/${departmentSlug}/promises/${promise.id}`}
+        href={`/${departmentSlug}/promises/${promise.id}`}
         className="w-full"
       >
         <div
