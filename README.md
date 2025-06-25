@@ -6,7 +6,7 @@ Source code for the frontend of the [Build Canada Outcome Tracker](https://www.b
 
 - Fork the repo, clone it, and install dependencies:
   ```bash
-  git clone https://github.com/your-username/OutcomeTracker.git
+  git clone https://github.com/BuildCanada/OutcomeTracker.git
   cd OutcomeTracker
   pnpm install
   pnpm turbo
