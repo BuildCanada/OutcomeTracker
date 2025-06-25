@@ -12,6 +12,7 @@ Source code for the frontend of the [Build Canada Outcome Tracker](https://www.b
   pnpm turbo
   ```
 
+### Add/update .env
 - If you're using the production API, set NEXT_PUBLIC_API_URL=https://www.buildcanada.com/tracker/api/v1
 - If you're running the API locally, set NEXT_PUBLIC_API_URL=http://localhost:3000/
 
