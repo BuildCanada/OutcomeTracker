@@ -42,7 +42,6 @@ export default function PopulationChart({
 }: PopulationChartProps) {
   // Get data for selected region
   const regionData = populationData.data[region] || [];
-  console.log({ populationData });
   // Filter data by year range
   const filteredData = regionData.filter(([dateStr]) => {
     const year = parseInt(dateStr.split("-")[0]);
