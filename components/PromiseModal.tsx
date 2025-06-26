@@ -180,6 +180,10 @@ export default function PromiseModal({
   const [isCopying, setIsCopying] = useState(false);
   const { toast } = useToast();
 
+  const shareUrl = typeof window !== "undefined"
+      ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
+      : "";
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -443,11 +447,7 @@ export default function PromiseModal({
                               : promise && promise.text
                                 ? promise.text
                                 : "";
-                        const url = encodeURIComponent(
-                          typeof window !== "undefined"
-                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
-                            : "",
-                        );
+                        const url = encodeURIComponent(shareUrl);
                         const tweetText = encodeURIComponent(
                           `Check out this promise: ${shareText.slice(0, 100)}`,
                         );
@@ -481,11 +481,7 @@ export default function PromiseModal({
                               : promise && promise.text
                                 ? promise.text
                                 : "";
-                        const url = encodeURIComponent(
-                          typeof window !== "undefined"
-                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
-                            : "",
-                        );
+                        const url = encodeURIComponent(shareUrl);
                         const fbText = encodeURIComponent(
                           `Check out this promise: ${shareText.slice(0, 100)}`,
                         );
@@ -519,11 +515,7 @@ export default function PromiseModal({
                               : promise && promise.text
                                 ? promise.text
                                 : "";
-                        const url = encodeURIComponent(
-                          typeof window !== "undefined"
-                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
-                            : "",
-                        );
+                        const url = encodeURIComponent(shareUrl);
                         const title = encodeURIComponent(
                           `Government Promise: ${shareText.slice(0, 100)}`,
                         );
@@ -557,21 +549,13 @@ export default function PromiseModal({
                     </div>
                     <div className="flex space-x-2">
                       <Input
-                        value={
-                          typeof window !== "undefined"
-                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
-                            : ""
-                        }
+                        value={shareUrl}
                         readOnly
                         className="flex-1 text-sm bg-gray-50 border-gray-200"
                         placeholder="Loading..."
                       />
                       <Button
                         onClick={async () => {
-                          const shareUrl =
-                            typeof window !== "undefined"
-                              ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
-                              : "";
                           setIsCopying(true);
                           try {
                             await navigator.clipboard.writeText(shareUrl);
