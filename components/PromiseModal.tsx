@@ -33,6 +33,7 @@ interface PromiseModalProps {
   promise: PromiseDetail;
   isOpen: boolean;
   onClose: () => void;
+  departmentSlug: string;
 }
 
 // Helper to format Firestore Timestamp or ISO string date
@@ -161,6 +162,7 @@ export default function PromiseModal({
   promise,
   isOpen,
   onClose,
+  departmentSlug,
 }: PromiseModalProps) {
   const {
     text,
@@ -443,7 +445,7 @@ export default function PromiseModal({
                                 : "";
                         const url = encodeURIComponent(
                           typeof window !== "undefined"
-                            ? `${window.location.origin}/promise/${promise.id}`
+                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
                             : "",
                         );
                         const tweetText = encodeURIComponent(
@@ -481,7 +483,7 @@ export default function PromiseModal({
                                 : "";
                         const url = encodeURIComponent(
                           typeof window !== "undefined"
-                            ? `${window.location.origin}/promise/${promise.id}`
+                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
                             : "",
                         );
                         const fbText = encodeURIComponent(
@@ -519,7 +521,7 @@ export default function PromiseModal({
                                 : "";
                         const url = encodeURIComponent(
                           typeof window !== "undefined"
-                            ? `${window.location.origin}/promise/${promise.id}`
+                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
                             : "",
                         );
                         const title = encodeURIComponent(
@@ -557,7 +559,7 @@ export default function PromiseModal({
                       <Input
                         value={
                           typeof window !== "undefined"
-                            ? `${window.location.origin}/promise/${promise.id}`
+                            ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
                             : ""
                         }
                         readOnly
@@ -568,7 +570,7 @@ export default function PromiseModal({
                         onClick={async () => {
                           const shareUrl =
                             typeof window !== "undefined"
-                              ? `${window.location.origin}/promise/${promise.id}`
+                              ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
                               : "";
                           setIsCopying(true);
                           try {

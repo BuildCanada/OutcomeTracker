@@ -90,5 +90,5 @@ export default function PromisePage() {
   }
 
   // Render the PromiseModal with the fetched data
-  return <PromiseModal promise={promise} isOpen={true} onClose={handleClose} />;
+  return <PromiseModal promise={promise} isOpen={true} onClose={handleClose} departmentSlug={params.department} />;
 }
