@@ -22,13 +22,14 @@ const emojiFaviconSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10
 // The y='72' and font-size='60' are estimations to make them fit side-by-side.
 
 const faviconDataUrl = `data:image/svg+xml,${encodeURIComponent(emojiFaviconSvg)}`;
-
+const title = `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`;
+const description = "Track the progress of Canada's government initiatives";
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_BASE_URL || "https://buildcanada.com",
   ),
-  title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
-  description: "Track the progress of Canada's government initiatives",
+  title,
+  description,
   icons: {
     icon: faviconDataUrl,
     // You could also specify other icon types if needed, e.g.:
@@ -36,8 +37,8 @@ export const metadata: Metadata = {
     // shortcut: faviconDataUrl, // For older browsers
   },
   openGraph: {
-    title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
-    description: "Track the progress of Canada's government initiatives",
+    title,
+    description,
     images: [
       {
         url: "/tracker/outcomes-tracker-seo-image.png",
@@ -49,8 +50,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `Outcomes Tracker - Build Canada 🏗️${canadianFlagEmoji}`,
-    description: "Track the progress of Canada's government initiatives",
+    title,
+    description,
     images: ["/tracker/outcomes-tracker-seo-image.png"],
   },
 };
