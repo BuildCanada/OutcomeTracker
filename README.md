@@ -20,6 +20,8 @@ Source code for the frontend of the [Build Canada Outcome Tracker](https://www.b
   pnpm turbo
   ```
 
+- 🎉 **Time to explore!** Head over to [http://localhost:4444/tracker](http://localhost:4444/tracker) to see your local instance in action!
+
 ## Metrics
 
 Metrics are scraped using github actions which automatically updates the repo with up to date data. 
