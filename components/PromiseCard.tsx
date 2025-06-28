@@ -4,6 +4,12 @@ import { useState } from "react";
 import type { PromiseListing } from "@/lib/types";
 import { TrendingUpIcon, XIcon, MinusIcon } from "lucide-react";
 import Link from "next/link";
+import { mutate } from "swr";
+
+// For SWR preload/mutate
+async function fetcher(...args: Parameters<typeof fetch>) {
+  return (await fetch(...args)).json();
+}
 
 export default function PromiseCard({
   promise,
@@ -218,15 +224,16 @@ export default function PromiseCard({
       <Link
         href={`/${departmentSlug}/promises/${promise.id}`}
         className="w-full"
+        onMouseEnter={async () => { // Prefetch the promise data on hover
+          const data = await fetcher(`/tracker/api/v1/promises/${promise.id}.json`);
+          mutate(`/tracker/api/v1/promises/${promise.id}.json`, data);
+        }}
+        scroll={false}
       >
         <div
           className="bg-white border border-[#cdc4bd] flex flex-col cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-300 group relative"
           tabIndex={0}
           aria-label={promise.text}
-          // onClick={handleCardClick}
-          // onKeyDown={(e) => {
-          //   if (e.key === "Enter" || e.key === " ") handleCardClick();
-          // }}
         >
           <div className="p-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
