@@ -9,6 +9,12 @@ import React, { Usable } from "react";
 import useSWR from "swr";
 import { DEPARTMENTS } from "./_constants";
 import Link from "next/link";
+import { mutate } from "swr";
+
+// For Deparment preload/mutate on hover
+async function fetcher(...args: Parameters<typeof fetch>) {
+  return (await fetch(...args)).json();
+}
 
 export default function Layout({
   children,
@@ -21,6 +27,9 @@ export default function Layout({
 
   const { data: department } = useSWR<Department>(
     `/tracker/api/v1/departments/${slug}.json`,
+    {
+      revalidateIfStale: false,
+    }
   );
 
   if (!department) {
@@ -68,7 +77,6 @@ function DepartmentPillLinks({
 
   // const activeTabId = currentDepartmentSlug;
 
-
   return (
     <div className="flex flex-wrap gap-2 mb-8">
       {DEPARTMENTS.map(({ slug, name }) => {
@@ -77,11 +85,15 @@ function DepartmentPillLinks({
             key={slug}
             href={`/${slug}`}
             className={`px-4 py-2 text-sm font-mono transition-colors
-                        ${
-                          currentDepartmentSlug == slug
-                            ? "bg-[#8b2332] text-white"
-                            : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
-                        }`}
+              ${currentDepartmentSlug == slug
+                ? "bg-[#8b2332] text-white"
+                : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
+              }`}
+            onMouseEnter={async () => { // Prefetch department data on hover
+              const data = await fetcher(`/tracker/api/v1/departments/${slug}.json`);
+              mutate(`/tracker/api/v1/departments/${slug}.json`, data);
+            }}
+            scroll={false}
           >
             {name}
           </Link>
