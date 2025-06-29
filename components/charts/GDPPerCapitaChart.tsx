@@ -13,20 +13,10 @@ import {
 } from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
 import populationData from "@/metrics/statscan/population.json";
-import {
-  calculatePerCapita,
-  TimeSeriesDataPoint,
-} from "./utils/PerCapitaCalculator";
+import { calculatePerCapita, TimeSeriesDataPoint } from "./utils/PerCapitaCalculator";
+import { TARGET_BORDER_COLOR, TARGET_BG_COLOR } from "./utils/constants";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface GDPPerCapitaChartProps {
   title?: string;
@@ -54,11 +44,7 @@ export default function GDPPerCapitaChart({
   const populationCanadaData = (populationData as any).data["Canada"] || [];
 
   // Calculate per capita values (in thousands of dollars)
-  const perCapitaValues = calculatePerCapita(
-    gdpMetricData,
-    populationCanadaData,
-    1000000,
-  );
+  const perCapitaValues = calculatePerCapita(gdpMetricData, populationCanadaData, 1000000);
 
   // Filter data by year range
   const filteredData = perCapitaValues.filter((dataPoint) => {
@@ -66,8 +52,20 @@ export default function GDPPerCapitaChart({
     return year >= startYear && year <= endYear;
   });
 
+  // Calculate year-over-year growth rates
+  const growthRates: (number | null)[] = filteredData.map((dataPoint, index) => {
+    if (index < 4) return null; // Need at least 4 quarters for YoY comparison
+
+    const currentValue = dataPoint.value;
+    const previousYearValue = filteredData[index - 4].value;
+
+    if (previousYearValue === 0 || previousYearValue === null || currentValue === null) return null;
+
+    return ((currentValue - previousYearValue) / previousYearValue) * 100;
+  });
+
   // Format dates for display
-  const labels = filteredData.map((dataPoint) => {
+  let labels = filteredData.map((dataPoint) => {
     if (quarterlyData) {
       const [year, month] = dataPoint.date.split("-");
       // Convert month number to quarter (01->Q1, 04->Q2, 07->Q3, 10->Q4)
@@ -78,8 +76,10 @@ export default function GDPPerCapitaChart({
     }
   });
 
-  // GDP per capita values
-  const perCapitaDataValues = filteredData.map((dataPoint) => dataPoint.value);
+
+  // Align labels and data arrays to start from first valid growth rate (index 4)
+  labels = labels.slice(4);
+  const alignedGrowthRates = growthRates.slice(4);
 
   // Calculate annual average if requested
   let annualAverages: number[] = [];
@@ -87,15 +87,18 @@ export default function GDPPerCapitaChart({
     // Group data by year to calculate averages
     const yearlyGroups: Record<string, number[]> = {};
 
-    filteredData.forEach((dataPoint) => {
-      const year = dataPoint.date.split("-")[0];
-      if (!yearlyGroups[year]) yearlyGroups[year] = [];
-      yearlyGroups[year].push(dataPoint.value);
+    alignedGrowthRates.forEach((growthRate, index) => {
+      if (growthRate !== null) {
+        const year = labels[index].split(" ")[0]; // Extract year from "YYYY QX" format
+        if (!yearlyGroups[year]) yearlyGroups[year] = [];
+        yearlyGroups[year].push(growthRate);
+      }
     });
 
     // For each quarter datapoint, find its year's average
-    annualAverages = filteredData.map((dataPoint) => {
-      const year = dataPoint.date.split("-")[0];
+    annualAverages = alignedGrowthRates.map((growthRate, index) => {
+      if (growthRate === null) return 0;
+      const year = labels[index].split(" ")[0];
       const yearValues = yearlyGroups[year] || [];
       if (yearValues.length === 0) return 0;
       return yearValues.reduce((sum, val) => sum + val, 0) / yearValues.length;
@@ -105,18 +108,19 @@ export default function GDPPerCapitaChart({
   // Define dataset interface to prevent TS errors
   interface ChartDataset {
     label: string;
-    data: number[];
+    data: (number | null)[];
     borderColor: string;
     backgroundColor: string;
     tension: number;
     borderWidth?: number;
     borderDash?: number[];
+    pointRadius?: number;
   }
 
   const datasets: ChartDataset[] = [
     {
-      label: "GDP Per Capita",
-      data: perCapitaDataValues,
+      label: "YoY Growth Rate (%)",
+      data: alignedGrowthRates,
       borderColor: "rgb(53, 162, 235)",
       backgroundColor: "rgba(53, 162, 235, 0.5)",
       tension: 0.3,
@@ -136,15 +140,16 @@ export default function GDPPerCapitaChart({
   }
 
   // Add target line if requested
-  if (showTarget) {
+  if (showTarget && targetValue) {
     datasets.push({
-      label: "Target",
+      label: `Target (${targetValue}%)`,
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(75, 192, 192)",
-      backgroundColor: "rgba(75, 192, 192, 0.5)",
+      borderColor: TARGET_BORDER_COLOR,
+      backgroundColor: TARGET_BG_COLOR,
       borderWidth: 2,
+      borderDash: [5, 5],
+      pointRadius: 0,
       tension: 0,
-      borderDash: [10, 5],
     });
   }
 
@@ -182,11 +187,14 @@ export default function GDPPerCapitaChart({
       tooltip: {
         callbacks: {
           label: function (context: any) {
-            // Different format for target value
-            if (context.dataset.label === "Target") {
-              return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`;
+            if (context.dataset.label && context.dataset.label.includes("Target")) {
+              return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
             }
-            return `${context.dataset.label}: $${context.parsed.y.toLocaleString()} per person`;
+            if (context.dataset.label && context.dataset.label.includes("Growth Rate")) {
+              if (context.parsed.y === null) return null;
+              return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
+            }
+            return null;
           },
         },
       },
@@ -196,7 +204,7 @@ export default function GDPPerCapitaChart({
         beginAtZero: false,
         title: {
           display: true,
-          text: `${gdpMeasure} Per Capita`,
+          text: "Growth Rate (%)",
           font: {
             size: 14,
           },
@@ -207,7 +215,7 @@ export default function GDPPerCapitaChart({
         ticks: {
           padding: 8,
           callback: function (value: any) {
-            return `$${value.toLocaleString()}`;
+            return `${value.toFixed(1)}%`;
           },
         },
       },
@@ -238,6 +246,10 @@ export default function GDPPerCapitaChart({
         top: 20,
         bottom: 20,
       },
+    },
+    interaction: {
+      mode: "index" as const,
+      intersect: false,
     },
   };
 
