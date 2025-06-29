@@ -310,7 +310,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             targetSource={departmentData.metrics[0].targetSource}
             targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
           >
-            <GDPPerCapitaChart title="Growth in GDP per capita" startYear={2015} />
+            <GDPPerCapitaChart title="Growth in GDP per capita" showTarget={true} targetValue={2.0} startYear={2015} />
           </ChartWithSource>
         </div>
       );
