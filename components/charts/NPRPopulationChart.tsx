@@ -47,7 +47,7 @@ interface ChartDataset {
 export default function NPRPopulationChart({
   title = "Proportion of the Canadian population that is made up of non-permanent residents",
   startYear = 2021,
-  endYear = 2024,
+  endYear = new Date().getFullYear(),
   quarterlyData = true,
   showTarget = true,
   targetValue = 5.0,
