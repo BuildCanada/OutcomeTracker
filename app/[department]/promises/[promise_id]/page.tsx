@@ -22,20 +22,37 @@ export default function PromisePage() {
     error,
     isLoading,
   } = useSWR<PromiseDetail>(
-    promise_id ? `/tracker/api/v1/promises/${promise_id}.json` : null,
+    promise_id ? `/tracker/api/v1/promises/${promise_id}.json` : null, {
+    revalidateIfStale: false,
+  }
   );
 
   // Handle close modal - navigate to parent department page
   const handleClose = () => {
-    router.push(`/${params.department}`);
+    router.push(`/${params.department}`, { scroll: false });
   };
 
+  // Only show loading if we don't have data AND we're loading
+  const shouldShowLoading = isLoading && !promise;
+
   // Loading state
-  if (isLoading) {
+  if (shouldShowLoading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4">
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div className="bg-white p-8 rounded-lg mx-4 max-w-3xl w-full h-[90vh]">
           <Skeleton className="h-8 w-3/4 mb-4" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-2/3 mb-4" />
+          <Skeleton className="h-32 w-full" />
+
+          <Skeleton className="h-8 w-3/4 mb-4 mt-4" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-2/3 mb-4" />
+          <Skeleton className="h-32 w-full" />
+
+          <Skeleton className="h-8 w-3/4 mb-4 mt-4" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-2/3 mb-4" />
@@ -48,7 +65,7 @@ export default function PromisePage() {
   // Error state
   if (error) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4 text-center">
           <h2 className="text-xl font-semibold text-red-600 mb-4">
             Error Loading Promise
@@ -70,7 +87,7 @@ export default function PromisePage() {
   // Promise not found
   if (!promise) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div className="bg-white p-8 rounded-lg max-w-md w-full mx-4 text-center">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Promise Not Found
