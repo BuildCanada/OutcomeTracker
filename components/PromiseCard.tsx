@@ -21,7 +21,6 @@ export default function PromiseCard({
   const [showProgressTooltip, setShowProgressTooltip] = useState(false);
   const [showImpactTooltip, setShowImpactTooltip] = useState(false);
   const [showAlignmentTooltip, setShowAlignmentTooltip] = useState(false);
-  const [showProgressModal, setShowProgressModal] = useState(false);
 
   // Progress Indicator
   const progressScore = promise.progress_score || 0; // 1-5
@@ -247,16 +246,6 @@ export default function PromiseCard({
                   onBlur={() => setShowProgressTooltip(false)}
                   tabIndex={0}
                   aria-label={`Commitment Progress`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowProgressModal(true);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.stopPropagation();
-                      setShowProgressModal(true);
-                    }
-                  }}
                 >
                   <svg className="w-6 h-6" viewBox="0 0 24 24">
                     {/* Full colored circle as background - only if progress > 0 */}
@@ -375,24 +364,6 @@ export default function PromiseCard({
             </div>
           </div>
         </div>
-        {/* Progress Summary Modal */}
-        {showProgressModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative animate-fade-in">
-              <button
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 focus:outline-none"
-                onClick={() => setShowProgressModal(false)}
-                aria-label="Close progress summary"
-              >
-                <XIcon className="w-5 h-5" />
-              </button>
-              <h2 className="text-lg font-bold mb-4">Commitment Progress</h2>
-              <div className="text-gray-800 whitespace-pre-line">
-                {progressSummary}
-              </div>
-            </div>
-          </div>
-        )}
       </Link>
     </>
   );
