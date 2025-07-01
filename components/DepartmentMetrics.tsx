@@ -58,8 +58,8 @@ const DEPARTMENT_METRICS: Record<
         dataSource: "Statcan",
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610010401",
-        targetSource: "Build Canada",
-        targetSourceUrl: "",
+        targetSource: "Statcan",
+        targetSourceUrl: "https://www150.statcan.gc.ca/n1/pub/36-28-0001/2024004/article/00001-eng.htm",
         brendanStatus: "Done, need to add to PM page",
       },
     ],
@@ -310,7 +310,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             targetSource={departmentData.metrics[0].targetSource}
             targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
           >
-            <GDPPerCapitaChart title="GDP Per Capita" startYear={2015} />
+            <GDPPerCapitaChart title="Growth in GDP per capita" showTarget={true} targetValue={2.0} startYear={2021} />
           </ChartWithSource>
         </div>
       );
