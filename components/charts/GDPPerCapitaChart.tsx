@@ -14,7 +14,8 @@ import {
 import gdpData from "@/metrics/statscan/gdp.json";
 import populationData from "@/metrics/statscan/population.json";
 import { calculatePerCapita, TimeSeriesDataPoint } from "./utils/PerCapitaCalculator";
-import { TARGET_BORDER_COLOR, TARGET_BG_COLOR } from "./utils/constants";
+import { getPrimaryLineStyling, getTargetLineStyling } from "./utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -105,25 +106,12 @@ export default function GDPPerCapitaChart({
     });
   }
 
-  // Define dataset interface to prevent TS errors
-  interface ChartDataset {
-    label: string;
-    data: (number | null)[];
-    borderColor: string;
-    backgroundColor: string;
-    tension: number;
-    borderWidth?: number;
-    borderDash?: number[];
-    pointRadius?: number;
-  }
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "YoY Growth Rate (%)",
       data: alignedGrowthRates,
-      borderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
-      tension: 0.3,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -131,11 +119,7 @@ export default function GDPPerCapitaChart({
     datasets.push({
       label: "Annual Average",
       data: annualAverages,
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-      borderWidth: 2,
-      tension: 0,
-      borderDash: [5, 5],
+      ...getTargetLineStyling({ tension: 0 }),
     });
   }
 
@@ -144,12 +128,7 @@ export default function GDPPerCapitaChart({
     datasets.push({
       label: `Target (${targetValue}%)`,
       data: Array(labels.length).fill(targetValue),
-      borderColor: TARGET_BORDER_COLOR,
-      backgroundColor: TARGET_BG_COLOR,
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0,
+      ...getTargetLineStyling(),
     });
   }
 

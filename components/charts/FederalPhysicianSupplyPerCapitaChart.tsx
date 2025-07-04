@@ -13,6 +13,8 @@ import {
 } from "chart.js/auto";
 import physicianData from "@/metrics/cihi/physician_supply.json";
 import populationData from "@/metrics/statscan/population.json";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
   CategoryScale,
@@ -31,18 +33,6 @@ interface FederalPhysicianSupplyPerCapitaChartProps {
   height?: number;
   showTarget?: boolean;
   targetValue?: number;
-}
-
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth: number;
-  pointRadius: number;
-  pointHoverRadius: number;
-  borderDash?: number[];
 }
 
 export default function FederalPhysicianSupplyPerCapitaChart({
@@ -96,16 +86,11 @@ export default function FederalPhysicianSupplyPerCapitaChart({
     return item[1]; // Per capita value
   });
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "Physicians per 1,000 people",
       data: chartValues,
-      borderColor: "rgb(54, 162, 235)",
-      backgroundColor: "rgba(54, 162, 235, 0.1)",
-      tension: 0.3,
-      borderWidth: 3,
-      pointRadius: 6,
-      pointHoverRadius: 8,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -114,13 +99,7 @@ export default function FederalPhysicianSupplyPerCapitaChart({
     datasets.push({
       label: `Target (${targetValue} per 1,000)`,
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.1)",
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      pointHoverRadius: 0,
-      tension: 0,
+      ...getTargetLineStyling(),
     });
   }
 
@@ -135,12 +114,12 @@ export default function FederalPhysicianSupplyPerCapitaChart({
     plugins: {
       legend: {
         position: "top" as const,
+        padding: 20,
         labels: {
           padding: 15,
           font: {
             size: 12,
           },
-          usePointStyle: true,
         },
       },
       title: {
@@ -222,15 +201,6 @@ export default function FederalPhysicianSupplyPerCapitaChart({
         right: 15,
         top: 20,
         bottom: 20,
-      },
-    },
-    elements: {
-      line: {
-        tension: 0.3,
-      },
-      point: {
-        radius: 6,
-        hoverRadius: 8,
       },
     },
   };

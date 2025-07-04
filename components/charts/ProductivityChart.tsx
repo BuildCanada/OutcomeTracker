@@ -12,7 +12,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
-import {TARGET_BG_COLOR, TARGET_BORDER_COLOR} from "@/components/charts/utils/constants";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
   CategoryScale,
@@ -35,16 +36,6 @@ interface ProductivityChartProps {
   showGrowthRate?: boolean;
 }
 
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth?: number;
-  borderDash?: number[];
-  pointRadius?: number;
-}
 
 export default function ProductivityChart({
   title = "Public Service Productivity",
@@ -102,13 +93,11 @@ export default function ProductivityChart({
     growthRates = [...padding, ...growthRates];
   }
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "Productivity Index",
       data: productivityValues,
-      borderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
-      tension: 0.3,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -117,10 +106,7 @@ export default function ProductivityChart({
     datasets.push({
       label: "YoY Growth Rate (%)",
       data: growthRates,
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-      tension: 0.3,
-      borderDash: [5, 5],
+      ...getTrendLineStyling(),
     });
   }
 
@@ -129,12 +115,7 @@ export default function ProductivityChart({
     datasets.push({
       label: "Target (20% increase)",
       data: Array(labels.length).fill(targetValue),
-      borderColor: TARGET_BORDER_COLOR,
-      backgroundColor: TARGET_BG_COLOR,
-      borderWidth: 2,
-      borderDash: [10, 5],
-      pointRadius: 0,
-      tension: 0,
+      ...getTargetLineStyling({ borderDash: [10, 5] }),
     });
   }
 

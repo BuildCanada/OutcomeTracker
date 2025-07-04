@@ -12,6 +12,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import primaryEnergyData from "@/metrics/statscan/primary-energy.json";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
   CategoryScale,
@@ -32,17 +34,6 @@ interface PrimaryEnergyChartProps {
   showTarget?: boolean;
   targetValue?: number;
   showTrend?: boolean;
-}
-
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth?: number;
-  borderDash?: number[];
-  pointRadius?: number;
 }
 
 export default function PrimaryEnergyChart({
@@ -120,12 +111,11 @@ export default function PrimaryEnergyChart({
   }
 
   // Configure datasets for the chart
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: `${category} Production`,
       data: energyValues,
-      borderColor: "rgb(54, 162, 235)",
-      backgroundColor: "rgba(54, 162, 235, 0.1)",
+      ...getPrimaryLineStyling(),
       tension: 0.3,
     },
   ];
@@ -135,10 +125,7 @@ export default function PrimaryEnergyChart({
     datasets.push({
       label: "12-Month Moving Average",
       data: trendValues,
-      borderColor: "rgb(255, 140, 0)",
-      backgroundColor: "rgba(255, 140, 0, 0.5)",
-      tension: 0.5,
-      borderDash: [5, 5],
+      ...getTrendLineStyling(),
     });
   }
 
@@ -147,12 +134,7 @@ export default function PrimaryEnergyChart({
     datasets.push({
       label: "Target",
       data: Array(labels.length).fill(targetValue / 1000), // Convert target to petajoules
-      borderColor: "rgb(220, 20, 60)",
-      backgroundColor: "rgba(220, 20, 60, 0.5)",
-      borderWidth: 2,
-      borderDash: [10, 5],
-      pointRadius: 0,
-      tension: 0,
+      ...getTargetLineStyling(),
     });
   }
 
