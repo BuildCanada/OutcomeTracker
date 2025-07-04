@@ -2,21 +2,8 @@
 
 import React from "react";
 import { DepartmentSlug } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { ExternalLink } from "lucide-react";
 import GDPPerCapitaChart from "@/components/charts/GDPPerCapitaChart";
 import CapitalFormationChart from "@/components/charts/CapitalFormationChart";
-import BalanceSheetChart from "@/components/charts/BalanceSheetChart";
-import HousingStartsChart from "@/components/charts/HousingStartsChart";
 import NPRPopulationChart from "@/components/charts/NPRPopulationChart";
 import AnnualizedHousingChart from "./charts/AnnualizedHousingChart";
 import ProductivityChart from "@/components/charts/ProductivityChart";
