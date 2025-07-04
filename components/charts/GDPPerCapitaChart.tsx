@@ -119,7 +119,7 @@ export default function GDPPerCapitaChart({
     datasets.push({
       label: "Annual Average",
       data: annualAverages,
-      ...getTargetLineStyling({ tension: 0 }),
+      ...getTargetLineStyling(),
     });
   }
 

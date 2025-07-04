@@ -115,7 +115,7 @@ export default function ProductivityChart({
     datasets.push({
       label: "Target (20% increase)",
       data: Array(labels.length).fill(targetValue),
-      ...getTargetLineStyling({ borderDash: [10, 5] }),
+      ...getTargetLineStyling(),
     });
   }
 

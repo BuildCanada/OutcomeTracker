@@ -91,7 +91,7 @@ export default function GDPChart({
     datasets.push({
       label: "Target",
       data: Array(labels.length).fill(targetValue / 1000),
-      ...getTargetLineStyling({ tension: 0.3 }),
+      ...getTargetLineStyling(),
     });
   }
 
