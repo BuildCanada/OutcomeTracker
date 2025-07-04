@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { CopyIcon, XIcon } from "lucide-react";
+import { CopyIcon } from "lucide-react";
 
 interface ShareModalProps {
   isOpen: boolean;

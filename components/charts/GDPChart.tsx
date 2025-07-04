@@ -16,12 +16,6 @@ import gdpData from "@/metrics/statscan/gdp.json";
 // Define TypeScript interfaces for our data structure
 type GDPDataPoint = [string, number];
 
-interface GDPDataStructure {
-  data: {
-    [key: string]: Array<[string, number]>;
-  };
-}
-
 // Type for chart datasets
 interface ChartDataset {
   label: string;
