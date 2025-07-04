@@ -2,7 +2,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-export default function Header({ lang = "en" }: { lang?: "fr" | "en" }) {
+export default function Header() {
   return (
     <header className="border-b-2 border-black font-founders bg-background sticky top-0 z-50">
       <div className="mx-auto grid grid-cols-[160px_1fr] min-h-[72px]">

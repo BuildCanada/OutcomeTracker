@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { CopyIcon } from "lucide-react";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState } from "react";
 
 interface PromiseModalProps {
   promise: PromiseDetail;
@@ -94,15 +94,6 @@ const formatSimpleDate = (dateString: string | undefined): string => {
     return dateString; // Fallback
   }
 };
-
-// Progress dot color scale (red to green) - moved here for use in modal
-const progressDotColors = [
-  "bg-yellow-300", // Score 1
-  "bg-amber-300", // Score 2
-  "bg-orange-300", // Score 3
-  "bg-lime-400", // Score 4
-  "bg-green-600", // Score 5
-];
 
 // Helper function to get SVG arc path for pie fill
 function getPieArcPath(
@@ -564,7 +555,7 @@ export default function PromiseModal({
                               description:
                                 "The promise link has been copied to your clipboard.",
                             });
-                          } catch (error) {
+                          } catch {
                             toast({
                               title: "Copy failed",
                               description:

@@ -13,7 +13,7 @@ import {
 } from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
 import populationData from "@/metrics/statscan/population.json";
-import { calculatePerCapita, TimeSeriesDataPoint } from "./utils/PerCapitaCalculator";
+import { calculatePerCapita } from "./utils/PerCapitaCalculator";
 import { TARGET_BORDER_COLOR, TARGET_BG_COLOR } from "./utils/constants";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
