@@ -1,11 +1,12 @@
 import { PRIMARY_BORDER_COLOR, PRIMARY_BG_COLOR, TARGET_BORDER_COLOR, TARGET_BG_COLOR } from "./constants";
+import type { LineChartDataset } from "../types";
 
 /**
  * Get standard styling for primary data series (blue color scheme)
  * @param options - Optional properties to override defaults
  * @returns Style object for primary datasets
  */
-export const getPrimaryLineStyling = (options = {}) => ({
+export const getPrimaryLineStyling = (options: Partial<LineChartDataset> = {}): Partial<LineChartDataset> => ({
   borderColor: PRIMARY_BORDER_COLOR,
   backgroundColor: PRIMARY_BG_COLOR,
   tension: 0.3,
@@ -17,7 +18,7 @@ export const getPrimaryLineStyling = (options = {}) => ({
  * @param options - Optional properties to override defaults
  * @returns Style object for target datasets
  */
-export const getTargetLineStyling = (options = {}) => ({
+export const getTargetLineStyling = (options: Partial<LineChartDataset> = {}): Partial<LineChartDataset> => ({
   borderColor: TARGET_BORDER_COLOR,
   backgroundColor: TARGET_BG_COLOR,
   borderWidth: 2,
@@ -32,7 +33,7 @@ export const getTargetLineStyling = (options = {}) => ({
  * @param options - Optional properties to override defaults
  * @returns Style object for trend datasets
  */
-export const getTrendLineStyling = (options = {}) => ({
+export const getTrendLineStyling = (options: Partial<LineChartDataset> = {}): Partial<LineChartDataset> => ({
   borderColor: TARGET_BORDER_COLOR,
   backgroundColor: TARGET_BG_COLOR,
   borderDash: [5, 5],
