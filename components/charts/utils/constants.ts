@@ -8,3 +8,5 @@ export const PRIMARY_BORDER_COLOR = "rgb(53, 162, 235)";
 export const PRIMARY_BG_COLOR = "rgba(53, 162, 235, 0.5)";
 export const TARGET_BORDER_COLOR = "rgb(220, 20, 60)";
 export const TARGET_BG_COLOR = "rgba(220, 20, 60, 0.5)";
+export const TREND_BORDER_COLOR = "rgb(255, 140, 0)";
+export const TREND_BG_COLOR = "rgba(255, 140, 0, 0.5)";
