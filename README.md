@@ -22,10 +22,21 @@ Source code for the frontend of the [Build Canada Outcome Tracker](https://www.b
 
 - 🎉 **Time to explore!** Head over to [http://localhost:4444/tracker](http://localhost:4444/tracker) to see your local instance in action!
 
+## Linting
+
+This project uses ESLint with Next.js configuration. Run linting with:
+
+```bash
+pnpm lint          # Check for linting issues
+pnpm lint:fix      # Auto-fix auto-fixable issues
+```
+
+The linting configuration enforces TypeScript best practices, React rules, and Next.js optimizations while keeping most issues as warnings (temporarily) to avoid blocking development.
+
 ## Metrics
 
 Metrics are scraped using github actions which automatically updates the repo with up to date data. 
 
 ## Contributing
 
-We would love to have your help! Please fill in our vounteer intake form 
+We would love to have your help! Please fill in our volunteer [intake form](https://5nneq7.share-na3.hsforms.com/2l9iIH2gFSomphjDe-ci5OQ). 
