@@ -28,4 +28,4 @@ Metrics are scraped using github actions which automatically updates the repo wi
 
 ## Contributing
 
-We would love to have your help! Please fill in our vounteer intake form 
+We would love to have your help! Please fill in our volunteer [intake form](https://5nneq7.share-na3.hsforms.com/2l9iIH2gFSomphjDe-ci5OQ). 
