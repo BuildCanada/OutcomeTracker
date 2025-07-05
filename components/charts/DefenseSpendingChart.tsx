@@ -12,6 +12,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import defenseData from "@/metrics/worldbank/defense-spending.json";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
   CategoryScale,
@@ -31,16 +33,6 @@ interface DefenseSpendingChartProps {
   targetValue?: number;
 }
 
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth?: number;
-  borderDash?: number[];
-  pointRadius?: number;
-}
 
 export default function DefenseSpendingChart({
   title = "Military expenditure (% of GDP)",
@@ -69,13 +61,11 @@ export default function DefenseSpendingChart({
     return item[1]; // Defense spending percentage
   });
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "Defence Spending (% of GDP)",
       data: chartValues,
-      borderColor: "rgb(54, 162, 235)",
-      backgroundColor: "rgba(54, 162, 235, 0.1)",
-      tension: 0.3,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -84,12 +74,7 @@ export default function DefenseSpendingChart({
     datasets.push({
       label: "NATO Target (2%)",
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0,
+      ...getTargetLineStyling(),
     });
   }
 

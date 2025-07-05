@@ -12,7 +12,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
-import {TARGET_BORDER_COLOR, TARGET_BG_COLOR} from "@/components/charts/utils/constants";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
   CategoryScale,
@@ -35,17 +36,6 @@ interface LabourProductivityGrowthChartProps {
   showProductivityIndex?: boolean;
 }
 
-interface ChartDataset {
-  label: string;
-  data: (number | null)[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth?: number;
-  borderDash?: number[];
-  pointRadius?: number;
-  yAxisID?: string;
-}
 
 export default function LabourProductivityGrowthChart({
   title = "Labour Productivity Growth",
@@ -110,14 +100,11 @@ export default function LabourProductivityGrowthChart({
   const alignedGrowthRates = growthRates.slice(4);
   const alignedProductivityValues = showProductivityIndex ? productivityValues.slice(4) : [];
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "YoY Growth Rate (%)",
       data: alignedGrowthRates,
-      borderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
-      tension: 0.3,
-      yAxisID: "y",
+      ...getPrimaryLineStyling({ yAxisID: "y" }),
     },
   ];
 
@@ -139,13 +126,7 @@ export default function LabourProductivityGrowthChart({
     datasets.push({
       label: `Target (${targetValue}%)`,
       data: Array(labels.length).fill(targetValue),
-      borderColor: TARGET_BORDER_COLOR,
-      backgroundColor: TARGET_BG_COLOR,
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0,
-      yAxisID: "y",
+      ...getTargetLineStyling({ yAxisID: "y" }),
     });
   }
 

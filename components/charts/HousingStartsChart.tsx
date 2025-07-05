@@ -12,6 +12,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import housingStartsData from "@/metrics/statscan/housing-starts.json";
+import { getPrimaryLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 // Register Chart.js components
 ChartJS.register(
@@ -34,15 +36,6 @@ interface HousingStartsChartProps {
   showTrend?: boolean;
 }
 
-// Type for datasets
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderDash?: number[];
-}
 
 export default function HousingStartsChart({
   title = "Housing Starts",
@@ -118,13 +111,11 @@ export default function HousingStartsChart({
   }
 
   // Configure datasets for the chart
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: `${category}`,
       data: housingValues,
-      borderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
-      tension: 0.3,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -133,10 +124,7 @@ export default function HousingStartsChart({
     datasets.push({
       label: "12-Month Moving Average",
       data: trendValues,
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-      tension: 0.5,
-      borderDash: [5, 5],
+      ...getTrendLineStyling(),
     });
   }
 

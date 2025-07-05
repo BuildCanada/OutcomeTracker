@@ -13,6 +13,8 @@ import {
 } from "chart.js/auto";
 import nprData from "@/metrics/statscan/non-permanent-residents.json";
 import populationData from "@/metrics/statscan/population.json";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
   CategoryScale,
@@ -33,16 +35,6 @@ interface NPRPopulationChartProps {
   targetValue?: number;
 }
 
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth?: number;
-  borderDash?: number[];
-  pointRadius?: number;
-}
 
 export default function NPRPopulationChart({
   title = "Proportion of the Canadian population that is made up of non-permanent residents",
@@ -114,13 +106,11 @@ export default function NPRPopulationChart({
     return item.value;
   });
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "NPR %",
       data: chartValues,
-      borderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
-      tension: 0.3,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -129,12 +119,7 @@ export default function NPRPopulationChart({
     datasets.push({
       label: "Target (5%)",
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0,
+      ...getTargetLineStyling(),
     });
   }
 
