@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { PromiseListing } from "@/lib/types";
-import { TrendingUpIcon, XIcon, MinusIcon } from "lucide-react";
+import { TrendingUpIcon, MinusIcon } from "lucide-react";
 import Link from "next/link";
 import { mutate } from "swr";
 
@@ -24,9 +24,6 @@ export default function PromiseCard({
 
   // Progress Indicator
   const progressScore = promise.progress_score || 0; // 1-5
-  const progressSummary =
-    promise.progress_summary || "No progress summary available.";
-  const isDelivered = progressScore === 5;
 
   // Human-friendly progress tooltip
   let progressTooltip = "";
@@ -148,15 +145,6 @@ export default function PromiseCard({
       alignmentIcon = <MinusIcon className="w-3.5 h-3.5 text-gray-400" />;
   }
   const alignmentTooltip = `${alignmentLabel} with Build Canada`;
-
-  // Progress dot color scale (red to green)
-  const dotColors = [
-    "bg-yellow-300", // Score 1
-    "bg-amber-300", // Score 2
-    "bg-orange-300", // Score 3
-    "bg-lime-400", // Score 4
-    "bg-green-600", // Score 5
-  ];
 
   // Helper function to get SVG arc path for pie fill
   function getPieArcPath(
