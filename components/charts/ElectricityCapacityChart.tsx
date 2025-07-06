@@ -10,6 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartOptions,
 } from "chart.js/auto";
 import electricityCapacityData from "@/metrics/statscan/electricity-capacity.json";
 
@@ -52,21 +53,27 @@ export default function ElectricityCapacityChart({
   showTrend = true,
 }: ElectricityCapacityChartProps) {
   // Get electricity capacity data
-  const capacityDataObj = electricityCapacityData as any;
+  const capacityDataObj = electricityCapacityData as {
+    data: {
+      [key: string]: {
+        [key: string]: (string | number)[][]
+      }
+    }
+  };
   const capacityData = capacityDataObj.data["National Electricity Capacity"]?.["Total Capacity (GW)"] || [];
 
   // Filter data by year range
-  const filteredData = capacityData.filter((dataPoint: [string, number]) => {
-    const year = parseInt(dataPoint[0]);
+  const filteredData = capacityData.filter((dataPoint) => {
+    const year = parseInt(dataPoint[0] as string);
     return year >= startYear && year <= endYear;
   });
 
   // Get labels (years)
-  const labels = filteredData.map((dataPoint: [string, number]) => dataPoint[0]);
+  const labels = filteredData.map((dataPoint) => dataPoint[0] as string);
 
   // Get capacity values
   const capacityValues = filteredData.map(
-    (dataPoint: [string, number]) => dataPoint[1]
+    (dataPoint) => dataPoint[1] as number
   );
 
   // Calculate linear trend line if requested
@@ -74,15 +81,15 @@ export default function ElectricityCapacityChart({
   if (showTrend && capacityValues.length > 1) {
     // Calculate linear regression
     const n = capacityValues.length;
-    const sumX = labels.reduce((sum, _, index) => sum + index, 0);
+    const sumX = labels.reduce((sum: number, _: string, index: number) => sum + index, 0);
     const sumY = capacityValues.reduce((sum: number, val: number) => sum + val, 0);
     const sumXY = capacityValues.reduce((sum: number, val: number, index: number) => sum + (index * val), 0);
-    const sumX2 = labels.reduce((sum, _, index) => sum + (index * index), 0);
+    const sumX2 = labels.reduce((sum: number, _: string, index: number) => sum + (index * index), 0);
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
 
-    trendValues = labels.map((_, index) => intercept + slope * index);
+    trendValues = labels.map((_: string, index: number) => intercept + slope * index);
   }
 
   // Configure datasets for the chart
@@ -131,13 +138,12 @@ export default function ElectricityCapacityChart({
     datasets,
   };
 
-  const options: any = {
+  const options: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top" as const,
-        padding: 20,
         labels: {
           padding: 15,
           font: {
@@ -159,7 +165,7 @@ export default function ElectricityCapacityChart({
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: function (context) {
             return `${context.dataset.label}: ${context.parsed.y.toFixed(2)} GW`;
           },
         },
@@ -181,8 +187,8 @@ export default function ElectricityCapacityChart({
         },
         ticks: {
           padding: 8,
-          callback: function (value: any) {
-            return `${value.toFixed(0)} GW`;
+          callback: function (value) {
+            return `${Number(value).toFixed(0)} GW`;
           },
         },
       },

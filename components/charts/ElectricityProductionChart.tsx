@@ -10,6 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartOptions,
 } from "chart.js/auto";
 import electricityProductionData from "@/metrics/statscan/electricity-production.json";
 
@@ -52,16 +53,22 @@ export default function ElectricityProductionChart({
   showTrend = true,
 }: ElectricityProductionChartProps) {
   // Get electricity production data
-  const productionDataObj = electricityProductionData as any;
+  const productionDataObj = electricityProductionData as {
+    data: {
+      [key: string]: {
+        [key: string]: (string | number)[][]
+      }
+    }
+  };
   const allProductionData = productionDataObj.data["National Electricity Production"]?.["Total Production (TWh)"] || [];
 
   // Calculate annual totals
   const annualTotals: { [year: string]: number } = {};
   
-  allProductionData.forEach((dataPoint: [string, number]) => {
-    const dateStr = dataPoint[0];
+  allProductionData.forEach((dataPoint) => {
+    const dateStr = dataPoint[0] as string;
     const year = dateStr.split("-")[0];
-    const value = dataPoint[1];
+    const value = dataPoint[1] as number;
     
     if (!annualTotals[year]) {
       annualTotals[year] = 0;
@@ -75,7 +82,7 @@ export default function ElectricityProductionChart({
   
   Object.keys(annualTotals)
     .sort()
-    .forEach(year => {
+    .forEach((year: string) => {
       const yearNum = parseInt(year);
       if (yearNum >= startYear && yearNum <= endYear) {
         years.push(year);
@@ -87,15 +94,15 @@ export default function ElectricityProductionChart({
   let trendValues: number[] = [];
   if (showTrend && productionValues.length > 1) {
     const n = productionValues.length;
-    const sumX = years.reduce((sum, _, index) => sum + index, 0);
+    const sumX = years.reduce((sum: number, _: string, index: number) => sum + index, 0);
     const sumY = productionValues.reduce((sum: number, val: number) => sum + val, 0);
     const sumXY = productionValues.reduce((sum: number, val: number, index: number) => sum + (index * val), 0);
-    const sumX2 = years.reduce((sum, _, index) => sum + (index * index), 0);
+    const sumX2 = years.reduce((sum: number, _: string, index: number) => sum + (index * index), 0);
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
 
-    trendValues = years.map((_, index) => intercept + slope * index);
+    trendValues = years.map((_: string, index: number) => intercept + slope * index);
   }
 
   // Configure datasets for the chart
@@ -144,13 +151,12 @@ export default function ElectricityProductionChart({
     datasets,
   };
 
-  const options: any = {
+  const options: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top" as const,
-        padding: 20,
         labels: {
           padding: 15,
           font: {
@@ -172,7 +178,7 @@ export default function ElectricityProductionChart({
       },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: function (context) {
             return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} TWh`;
           },
         },
@@ -194,8 +200,8 @@ export default function ElectricityProductionChart({
         },
         ticks: {
           padding: 8,
-          callback: function (value: any) {
-            return `${value.toFixed(0)} TWh`;
+          callback: function (value) {
+            return `${Number(value).toFixed(0)} TWh`;
           },
         },
       },
