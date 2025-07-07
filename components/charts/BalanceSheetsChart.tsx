@@ -12,6 +12,7 @@ import {
   Legend,
 } from "chart.js/auto";
 import balanceSheetsData from "@/metrics/statscan/balance-sheets.json";
+import { getPrimaryLineStyling } from "@/components/charts/utils/styling";
 
 ChartJS.register(
   CategoryScale,
@@ -86,9 +87,7 @@ export default function BalanceSheetsChart({
       datasets.push({
         label: comparisonCategory,
         data: comparisonValues,
-        borderColor: "rgb(53, 162, 235)",
-        backgroundColor: "rgba(53, 162, 235, 0.5)",
-        tension: 0.3,
+        ...getPrimaryLineStyling(),
       });
     }
   }

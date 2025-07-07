@@ -12,19 +12,11 @@ import {
   Legend,
 } from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 // Define TypeScript interfaces for our data structure
 type GDPDataPoint = [string, number];
-
-// Type for chart datasets
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderDash?: number[];
-}
 
 ChartJS.register(
   CategoryScale,
@@ -84,13 +76,11 @@ export default function GDPChart({
     (dataPoint: GDPDataPoint) => dataPoint[1] / 1000,
   ); // Convert to billions for readability
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: `${metric}`,
       data: gdpValues,
-      borderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
-      tension: 0.3,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -99,10 +89,7 @@ export default function GDPChart({
     datasets.push({
       label: "Target",
       data: Array(labels.length).fill(targetValue / 1000),
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-      tension: 0.3,
-      borderDash: [5, 5],
+      ...getTargetLineStyling(),
     });
   }
 

@@ -13,6 +13,8 @@ import {
   ChartOptions,
 } from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 type RawDataPoint = [string, number]; // [date, value]
 
@@ -35,16 +37,6 @@ interface CapitalFormationChartProps {
   targetValue?: number;
 }
 
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension?: number;
-  borderWidth?: number;
-  borderDash?: number[];
-  pointRadius?: number;
-}
 
 export default function CapitalFormationChart({
   title = "% of GDP in capital-focused public and private investment",
@@ -124,13 +116,11 @@ export default function CapitalFormationChart({
     return item.value;
   });
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "Non-residential Capital Formation % of GDP",
       data: chartValues,
-      borderColor: "rgb(53, 162, 235)",
-      backgroundColor: "rgba(53, 162, 235, 0.5)",
-      tension: 0.3,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -139,12 +129,7 @@ export default function CapitalFormationChart({
     datasets.push({
       label: "Target",
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-      borderWidth: 2,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      tension: 0,
+      ...getTargetLineStyling(),
     });
   }
 

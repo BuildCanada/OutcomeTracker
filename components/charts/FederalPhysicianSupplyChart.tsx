@@ -12,6 +12,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import physicianData from "@/metrics/cihi/physician_supply.json";
+import { LineChartDataset } from "@/components/charts/types";
+import { getPrimaryLineStyling } from "./utils/styling";
 
 ChartJS.register(
   CategoryScale,
@@ -28,17 +30,6 @@ interface FederalPhysicianSupplyChartProps {
   startYear?: number;
   endYear?: number;
   height?: number;
-}
-
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth: number;
-  pointRadius: number;
-  pointHoverRadius: number;
 }
 
 export default function FederalPhysicianSupplyChart({
@@ -66,16 +57,11 @@ export default function FederalPhysicianSupplyChart({
     return item[1]; // Number of physicians
   });
 
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "Total Physicians",
       data: chartValues,
-      borderColor: "rgb(54, 162, 235)",
-      backgroundColor: "rgba(54, 162, 235, 0.1)",
-      tension: 0.3,
-      borderWidth: 3,
-      pointRadius: 6,
-      pointHoverRadius: 8,
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -95,7 +81,6 @@ export default function FederalPhysicianSupplyChart({
           font: {
             size: 12,
           },
-          usePointStyle: true,
         },
       },
       title: {
@@ -172,15 +157,6 @@ export default function FederalPhysicianSupplyChart({
         right: 15,
         top: 20,
         bottom: 20,
-      },
-    },
-    elements: {
-      line: {
-        tension: 0.3,
-      },
-      point: {
-        radius: 6,
-        hoverRadius: 8,
       },
     },
   };

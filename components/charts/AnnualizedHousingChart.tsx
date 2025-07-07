@@ -1,6 +1,6 @@
 "use client";
 
-import { Chart } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +13,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import housingStartsData from "@/metrics/statscan/housing-starts.json";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { LineChartDataset } from "@/components/charts/types";
 
 // Register Chart.js components
 ChartJS.register(
@@ -36,33 +38,7 @@ interface AnnualizedHousingChartProps {
   targetValue?: number;
 }
 
-// Type for bar dataset
-interface BarDataset {
-  type?: "bar";
-  label: string;
-  data: number[];
-  backgroundColor: string;
-  borderColor?: string;
-  borderWidth?: number;
-  hoverBackgroundColor?: string;
-}
 
-// Type for line dataset
-interface LineDataset {
-  type: "line";
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  borderWidth?: number;
-  borderDash?: number[];
-  tension?: number;
-  pointRadius?: number;
-  pointHoverRadius?: number;
-}
-
-// Combined dataset type
-type ChartDataset = BarDataset | LineDataset;
 
 export default function AnnualizedHousingChart({
   title = "Annualized Housing Starts",
@@ -131,15 +107,11 @@ export default function AnnualizedHousingChart({
   const annualizedValues = trailingData.map((item) => item.sum);
 
   // Configure datasets for the chart
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
-      type: "bar",
       label: `Annualized ${category}`,
       data: annualizedValues,
-      backgroundColor: "rgba(53, 162, 235, 0.7)",
-      borderColor: "rgb(53, 162, 235)",
-      borderWidth: 1,
-      hoverBackgroundColor: "rgba(53, 162, 235, 0.9)",
+      ...getPrimaryLineStyling(),
     },
   ];
 
@@ -149,13 +121,7 @@ export default function AnnualizedHousingChart({
       type: "line",
       label: "Target (500,000)",
       data: Array(labels.length).fill(targetValue),
-      borderColor: "rgb(255, 99, 132)",
-      backgroundColor: "rgba(255, 99, 132, 0.3)",
-      borderWidth: 2,
-      borderDash: [5, 5],
-      tension: 0.1,
-      pointRadius: 0,
-      pointHoverRadius: 4,
+      ...getTargetLineStyling(),
     });
   }
 
@@ -262,7 +228,7 @@ export default function AnnualizedHousingChart({
         position: "relative",
       }}
     >
-      <Chart type="bar" data={chartData} options={options} />
+      <Line data={chartData} options={options} />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "chart.js/auto";
 import { Line } from "react-chartjs-2";
 import cftaData from "@/metrics/cfib/cfta-expections.json";
+import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
 
 ChartJS.register(
   CategoryScale,
@@ -65,9 +66,7 @@ const greyBorderColors = [
   "rgba(152, 152, 152, 1)",
 ];
 
-// Blue color for federal government
-const federalColor = "rgba(54, 162, 235, 0.8)";
-const federalBorderColor = "rgba(54, 162, 235, 1)";
+const federalStyling = getPrimaryLineStyling();
 
 export default function CFTAExceptionsChart({
   title = "Canadian Free Trade Agreement Exceptions by Province/Territory",
@@ -106,10 +105,10 @@ export default function CFTAExceptionsChart({
     // Use blue for federal, grey for provinces
     const isFederal = entityName === "Federal";
     const backgroundColor = isFederal
-      ? federalColor
+      ? federalStyling.backgroundColor
       : greyColors[(index - 1) % greyColors.length];
     const borderColor = isFederal
-      ? federalBorderColor
+      ? federalStyling.borderColor
       : greyBorderColors[(index - 1) % greyBorderColors.length];
 
     return {
@@ -125,19 +124,14 @@ export default function CFTAExceptionsChart({
     };
   });
 
-  // Add target line dataset
   const targetDataset = {
     label: "Target (0 exceptions)",
     data: years.map(() => 0),
-    borderColor: "rgba(255, 0, 0, 0.8)",
-    backgroundColor: "rgba(255, 99, 132, 0.3)",
-    borderWidth: 2,
-    borderDash: [5, 5],
-    fill: false,
-    pointRadius: 0,
-    tension: 0,
-    stack: "target",
-    order: 99,
+    ...getTargetLineStyling({
+      fill: false,
+      stack: "target",
+      order: 99,
+    }),
   };
 
   const chartData = {
@@ -161,8 +155,6 @@ export default function CFTAExceptionsChart({
           font: {
             size: 11,
           },
-          usePointStyle: true,
-          pointStyle: "rect",
         },
       },
       title: {
