@@ -33,6 +33,17 @@ pnpm lint:fix      # Auto-fix auto-fixable issues
 
 The linting configuration enforces TypeScript best practices, React rules, and Next.js optimizations while keeping most issues as warnings (temporarily) to avoid blocking development.
 
+## Git Hooks
+
+This project uses [Husky](https://typicode.github.io/husky/) for pre-commit hooks. When you commit, it automatically runs `pnpm lint` first.
+
+**If linting fails:**
+- The commit is blocked
+- Fix the errors and try again
+- Use `pnpm lint:fix` to auto-fix issues
+
+Husky is installed automatically when you run `pnpm install`. For more information, see [Husky](https://typicode.github.io/husky/how-to.html).
+
 ## Metrics
 
 Metrics are scraped using github actions which automatically updates the repo with up to date data. 

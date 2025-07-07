@@ -55,7 +55,7 @@ export default function BalanceSheetsChart({
     return `${year}-${month}`;
   });
 
-  const categoryValues = filteredData.map(([_, value]) => value);
+  const categoryValues = filteredData.map((data) => data[1]);
 
   const datasets = [
     {
@@ -79,9 +79,7 @@ export default function BalanceSheetsChart({
 
     // Only add comparison if there's data available
     if (filteredComparisonData.length > 0) {
-      const comparisonValues = filteredComparisonData.map(
-        ([_, value]) => value,
-      );
+      const comparisonValues = filteredComparisonData.map((data) => data[1]);
 
       datasets.push({
         label: comparisonCategory,
