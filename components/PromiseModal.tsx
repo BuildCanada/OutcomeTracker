@@ -16,7 +16,6 @@ import {
   PaperclipIcon,
   ShareIcon,
 } from "lucide-react";
-import { Timestamp } from "firebase/firestore";
 import PromiseProgressTimeline from "./PromiseProgressTimeline";
 import {
   Popover,
@@ -35,48 +34,6 @@ interface PromiseModalProps {
   onClose: () => void;
   departmentSlug: string;
 }
-
-// Helper to format Firestore Timestamp or ISO string date
-const formatDate = (date: Timestamp | string | undefined): string => {
-  if (!date) return "Date unknown";
-  try {
-    let jsDate: Date;
-    if (date instanceof Timestamp) {
-      jsDate = date.toDate();
-    } else if (
-      typeof date === "object" &&
-      date !== null &&
-      typeof (date as any).seconds === "number" &&
-      typeof (date as any).nanoseconds === "number"
-    ) {
-      // Handle serialized Timestamp objects
-      jsDate = new Date((date as any).seconds * 1000);
-    } else if (typeof date === "string") {
-      // Handle YYYY-MM-DD format
-      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        const [year, month, day] = date.split("-").map(Number);
-        jsDate = new Date(year, month - 1, day);
-      } else {
-        jsDate = new Date(date);
-      }
-    } else {
-      return "Invalid date format";
-    }
-
-    if (isNaN(jsDate.getTime())) {
-      return "Invalid date";
-    }
-
-    return jsDate.toLocaleDateString("en-CA", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch (e) {
-    console.error("Error formatting date:", date, e);
-    return "Invalid date";
-  }
-};
 
 // Helper to format YYYY-MM-DD date string
 const formatSimpleDate = (dateString: string | undefined): string => {

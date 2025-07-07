@@ -297,18 +297,6 @@ const DEPARTMENT_METRICS: Record<
     ],
   },
 };
-const getStatusBadgeVariant = (status: string) => {
-  if (status.toLowerCase().includes("done")) {
-    return "default";
-  }
-  if (status.toLowerCase().includes("need")) {
-    return "secondary";
-  }
-  if (status === "") {
-    return "outline";
-  }
-  return "destructive";
-};
 
 const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
   const departmentData = DEPARTMENT_METRICS[departmentSlug];
