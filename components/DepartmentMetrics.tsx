@@ -2,21 +2,8 @@
 
 import React from "react";
 import { DepartmentSlug } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { ExternalLink } from "lucide-react";
 import GDPPerCapitaChart from "@/components/charts/GDPPerCapitaChart";
 import CapitalFormationChart from "@/components/charts/CapitalFormationChart";
-import BalanceSheetChart from "@/components/charts/BalanceSheetChart";
-import HousingStartsChart from "@/components/charts/HousingStartsChart";
 import NPRPopulationChart from "@/components/charts/NPRPopulationChart";
 import AnnualizedHousingChart from "./charts/AnnualizedHousingChart";
 import ProductivityChart from "@/components/charts/ProductivityChart";
@@ -27,6 +14,8 @@ import DefenseSpendingChart from "@/components/charts/DefenseSpendingChart";
 import CFTAExceptionsChart from "./charts/CFTAExceptionsChart";
 import FederalPhysicianSupplyChart from "./charts/FederalPhysicianSupplyChart";
 import FederalPhysicianSupplyPerCapitaChart from "./charts/FederalPhysicianSupplyPerCapitaChart";
+import ElectricityCapacityChart from "./charts/ElectricityCapacityChart";
+import ElectricityProductionChart from "./charts/ElectricityProductionChart";
 
 interface MetricData {
   metric: string;
@@ -278,6 +267,31 @@ const DEPARTMENT_METRICS: Record<
         dataSourceUrl: "https://www.cfib-fcei.ca/",
         targetSource: "Liberal Party",
         targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
+        brendanStatus: "Done, chart added",
+      },
+    ],
+  },
+  "artificial-intelligence-and-digital-innovation": {
+    displayName: "Digital Innovation",
+    metrics: [
+      {
+        metric: "National Electricity Capacity",
+        definition: "Total electricity generating capacity in Canada",
+        target2029: "145.96 GW → 175.15 GW (20% increase)",
+        dataSource: "Statistics Canada",
+        dataSourceUrl: "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510002201",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
+        brendanStatus: "Done, chart added",
+      },
+      {
+        metric: "National Electricity Production",
+        definition: "Total electricity generated in Canada (annualized)",
+        target2029: "626 TWh/year → 751 TWh/year (20% above 2020-2024 avg)",
+        dataSource: "Statistics Canada",
+        dataSourceUrl: "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510001501",
+        targetSource: "Build Canada",
+        targetSourceUrl: "",
         brendanStatus: "Done, chart added",
       },
     ],
@@ -534,6 +548,46 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
                 startYear={2019}
                 endYear={2029}
                 height={450}
+              />
+            </ChartWithSource>
+          </div>
+        </>
+      );
+
+    case "artificial-intelligence-and-digital-innovation":
+      return (
+        <>
+          <div className="col-span-1">
+            <ChartWithSource
+              dataSource={departmentData.metrics[0].dataSource}
+              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+              targetSource={departmentData.metrics[0].targetSource}
+              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+            >
+              <ElectricityCapacityChart
+                title="National Electricity Capacity"
+                startYear={2015}
+                endYear={2023}
+                showTarget={true}
+                targetValue={175.15}
+                showTrend={true}
+              />
+            </ChartWithSource>
+          </div>
+          <div className="col-span-1">
+            <ChartWithSource
+              dataSource={departmentData.metrics[1].dataSource}
+              dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
+              targetSource={departmentData.metrics[1].targetSource}
+              targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
+            >
+              <ElectricityProductionChart
+                title="National Electricity Production"
+                startYear={2015}
+                endYear={2024}
+                showTarget={true}
+                targetValue={751}
+                showTrend={true}
               />
             </ChartWithSource>
           </div>

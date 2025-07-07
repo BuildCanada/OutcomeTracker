@@ -4,10 +4,7 @@ import "./globals.css";
 import Header from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
-import Script from "next/script";
 import SWRProvider from "@/components/SWRProvider";
-import { DEPARTMENTS } from "./[department]/_constants";
-import Link from "next/link";
 import { Sidebar } from "@/components/HomePageClient";
 
 // SVG for the emoji favicon: 🏗️🇨🇦 using separate text elements, further reduced font
@@ -58,10 +55,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  params: { department },
 }: Readonly<{
   children: React.ReactNode;
-  params: { department?: string };
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="bg-background">

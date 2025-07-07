@@ -18,8 +18,6 @@ import { LineChartDataset } from "@/components/charts/types";
 // Define TypeScript interfaces for our data structure
 type GDPDataPoint = [string, number];
 
-
-
 ChartJS.register(
   CategoryScale,
   LinearScale,

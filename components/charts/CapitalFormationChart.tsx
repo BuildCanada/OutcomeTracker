@@ -12,16 +12,9 @@ import {
   Legend,
   ChartOptions,
 } from "chart.js/auto";
-import type { ChartData } from "chart.js";
 import gdpData from "@/metrics/statscan/gdp.json";
 import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
-
-// Define types for our data
-type DateValuePair = {
-  date: string;
-  value: number;
-};
 
 type RawDataPoint = [string, number]; // [date, value]
 
