@@ -16,6 +16,7 @@ import FederalPhysicianSupplyChart from "./charts/FederalPhysicianSupplyChart";
 import FederalPhysicianSupplyPerCapitaChart from "./charts/FederalPhysicianSupplyPerCapitaChart";
 import ElectricityCapacityChart from "./charts/ElectricityCapacityChart";
 import ElectricityProductionChart from "./charts/ElectricityProductionChart";
+import PermanentResidentsAdmissionsChart from "./charts/PermanentResidentsAdmissionsChart";
 
 interface MetricData {
   metric: string;
@@ -106,12 +107,12 @@ const DEPARTMENT_METRICS: Record<
         metric: "% of PR admissions",
         definition: "PR admissions as a share of total Canadian population",
         target2029: "1.2% → 1%",
-        dataSource: "IRCC",
+        dataSource: "Statcan",
         dataSourceUrl:
-          "https://open.canada.ca/data/en/dataset/f7e5498e-0ad8-4417-85c9-9b8aff9b9eda",
+          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710004001",
         targetSource: "Liberal Party",
         targetSourceUrl:
-          "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf/notices/supplementary-immigration-levels-2024-2026.html",
+          "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "",
       },
       {
@@ -383,6 +384,20 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               startYear={2015}
               showTarget={true}
               targetValue={5}
+            />
+          </ChartWithSource>
+
+          <ChartWithSource
+            dataSource={departmentData.metrics[0].dataSource}
+            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+            targetSource={departmentData.metrics[0].targetSource}
+            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+          >
+            <PermanentResidentsAdmissionsChart
+              title="Permanent Residents Admissions (% of Population)"
+              startYear={2015}
+              showTarget={true}
+              targetValue={1.0}
             />
           </ChartWithSource>
         </div>
