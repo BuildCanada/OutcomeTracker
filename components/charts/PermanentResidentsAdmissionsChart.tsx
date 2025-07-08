@@ -208,7 +208,7 @@ export default function PermanentResidentsAdmissionsChart({
         beginAtZero: false,
         title: {
           display: true,
-          text: "Permanent Residents (% of Population)",
+          text: "# of new Permanent Residents (%)",
           font: {
             size: 14,
           },
@@ -226,7 +226,7 @@ export default function PermanentResidentsAdmissionsChart({
       x: {
         title: {
           display: true,
-          text: quarterlyData ? "Year-Quarter" : "Year",
+          text: "Total Population",
           font: {
             size: 14,
           },
