@@ -206,6 +206,7 @@ export default function PermanentResidentsAdmissionsChart({
     scales: {
       y: {
         beginAtZero: false,
+        min: 0.8,
         title: {
           display: true,
           text: "# of new Permanent Residents (%)",

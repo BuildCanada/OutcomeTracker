@@ -372,35 +372,40 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
 
     case "immigration-refugees-and-citizenship-canada":
       return (
-        <div className="col-span-1 lg:col-span-2">
-          <ChartWithSource
-            dataSource={departmentData.metrics[1].dataSource}
-            dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
-            targetSource={departmentData.metrics[1].targetSource}
-            targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
-          >
-            <NPRPopulationChart
-              title="Non-Permanent Residents as % of Population"
-              startYear={2015}
-              showTarget={true}
-              targetValue={5}
-            />
-          </ChartWithSource>
+        <>
+          <div className="col-span-1">
+            <ChartWithSource
+              dataSource={departmentData.metrics[1].dataSource}
+              dataSourceUrl={departmentData.metrics[1].dataSourceUrl}
+              targetSource={departmentData.metrics[1].targetSource}
+              targetSourceUrl={departmentData.metrics[1].targetSourceUrl}
+            >
+              <NPRPopulationChart
+                title="Non-Permanent Residents as % of Population"
+                startYear={2015}
+                showTarget={true}
+                targetValue={5}
+              />
+            </ChartWithSource>
+          </div>
 
-          <ChartWithSource
-            dataSource={departmentData.metrics[0].dataSource}
-            dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
-            targetSource={departmentData.metrics[0].targetSource}
-            targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
-          >
-            <PermanentResidentsAdmissionsChart
-              title="Permanent Residents Admissions (% of Population)"
-              startYear={2015}
-              showTarget={true}
-              targetValue={1.0}
-            />
-          </ChartWithSource>
-        </div>
+          <div className="col-span-1">
+
+            <ChartWithSource
+              dataSource={departmentData.metrics[0].dataSource}
+              dataSourceUrl={departmentData.metrics[0].dataSourceUrl}
+              targetSource={departmentData.metrics[0].targetSource}
+              targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
+            >
+              <PermanentResidentsAdmissionsChart
+                title="Permanent Residents Admissions (% of Population)"
+                startYear={2015}
+                showTarget={true}
+                targetValue={1.0}
+              />
+            </ChartWithSource>
+          </div>
+        </>
       );
 
     case "treasury-board-of-canada-secretariat":
