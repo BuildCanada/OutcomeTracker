@@ -1,0 +1,35 @@
+name: Scrape Components of Population Growth Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily at 7:23 AM UTC
+    - cron: "23 7 * * *"
+  # For hourly at 42 minutes past the hour: '42 * * * *'
+
+permissions:
+  contents: write
+
+env:
+  STATS_CAN_URL: https://www150.statcan.gc.ca/t1/tbl1/en/dtl!downloadDbLoadingData.action?pid=1710004001&latestN=0&startDate=20210101&endDate=&csvLocale=en&selectedMembers=%5B%5B%5D%2C%5B%5D%5D&checkedLevels=0D1%2C1D1%2C1D2%2C1D3
+  COMMIT_MSG: Update Components of Population Growth Data
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.repository.is_template }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run the scraper
+        run: |
+          python scrape.py '${{ env.STATS_CAN_URL }}' metrics/statscan/components-population-growth.json "Components of population growth"
+      # Commit as brendan so vercel will deploy it
+      - name: Commit and push
+        run: |-
+          git config user.name "Automated"
+          git config user.email "brendan@brendansamek.com"
+          git add -A
+          timestamp=$(date -u)
+          git commit -m "${{ env.COMMIT_MSG }} - ${timestamp}" || exit 0
+          git pull --rebase
+          git push
