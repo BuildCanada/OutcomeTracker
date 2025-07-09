@@ -33,6 +33,16 @@ pnpm lint:fix      # Auto-fix auto-fixable issues
 
 The linting configuration enforces TypeScript best practices, React rules, and Next.js optimizations while keeping most issues as warnings (temporarily) to avoid blocking development.
 
+## Git Hooks
+
+This project automatically runs linting checks before each commit using `simple-git-hooks`. This is enabled automatically when you run `pnpm install`. If you need to enable it manually:
+
+```bash
+npx simple-git-hooks
+```
+
+If linting fails, the commit will be blocked until issues are resolved.
+
 ## Metrics
 
 Metrics are scraped using github actions which automatically updates the repo with up to date data. 
