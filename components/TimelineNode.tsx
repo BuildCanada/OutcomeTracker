@@ -63,9 +63,9 @@ const TimelineNode: React.FC<TimelineNodeProps> = ({ event, isSelected, onClick,
   const isFirstMention = isFirst;
 
   let boxClasses = "w-full md:w-auto max-w-[150px] md:max-w-[200px] cursor-pointer hover:shadow-md transition-shadow p-3 border border-gray-200 text-gray-900";
-  let titleClasses = "font-medium line-clamp-2 text-sm";
-  let dateClasses = "text-xs mt-2 text-gray-500 font-mono";
-  let pillClasses = "inline-flex items-center border px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs border-gray-200";
+  const titleClasses = "font-medium line-clamp-2 text-sm";
+  const dateClasses = "text-xs mt-2 text-gray-500 font-mono";
+  const pillClasses = "inline-flex items-center border px-2.5 py-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 mb-2 text-xs border-gray-200";
 
   // Retaining isSelected styling for accessibility / alternative interaction model
   if (isSelected) {

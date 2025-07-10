@@ -54,7 +54,7 @@ export default function PopulationChart({
     return `${year}-${month}`;
   });
 
-  const populationValues = filteredData.map(([_, value]) => value);
+  const populationValues = filteredData.map((data) => data[1]);
 
   const datasets = [
     {

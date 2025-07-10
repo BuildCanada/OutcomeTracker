@@ -2,12 +2,12 @@ export default function AboutPage() {
   return (
     <main className="container mx-auto py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6">About Canada's Promise Tracker</h1>
+        <h1 className="text-4xl font-bold mb-6">About Canada&apos;s Promise Tracker</h1>
 
         <div className="prose dark:prose-invert max-w-none">
           <p>
-            Canada's Promise Tracker is a non-partisan tool designed to help Canadians monitor the progress of the
-            federal government's promises. Our goal is to promote transparency and accountability in government by
+            Canada&apos;s Promise Tracker is a non-partisan tool designed to help Canadians monitor the progress of the
+            federal government&apos;s promises. Our goal is to promote transparency and accountability in government by
             providing clear, accessible information about what the government has committed to do and how those
             commitments are being fulfilled.
           </p>

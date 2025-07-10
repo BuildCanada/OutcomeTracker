@@ -39,8 +39,8 @@ export default function PromiseCard({
   const impactRationale =
     promise.bc_promise_rank_rationale || "No rationale provided.";
   let impactIcon = null;
-  let impactRankStr = String(impactRankRaw).toLowerCase();
-  let impactRankNum = Number(impactRankRaw);
+  const impactRankStr = String(impactRankRaw).toLowerCase();
+  const impactRankNum = Number(impactRankRaw);
   let filledBars = 0;
   let impactLevelLabel = "";
   if (impactRankStr === "strong" || impactRankNum >= 8) {
@@ -181,7 +181,7 @@ export default function PromiseCard({
     r: number,
     angleInDegrees: number,
   ): { x: number; y: number } {
-    var angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
     return {
       x: cx + r * Math.cos(angleInRadians),
       y: cy + r * Math.sin(angleInRadians),
