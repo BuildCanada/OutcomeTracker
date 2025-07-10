@@ -25,14 +25,14 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
           <div>
             <h3 className="text-lg font-semibold mb-2">Where do commitments come from?</h3>
             <p className="text-gray-700">
-              We have pulled commitments from the Liberal Party's platform. We show the original text and the source in each commitment's details. As new commitments are made,we will add these in.
+              We have pulled commitments from the Liberal Party&apos;s platform. We show the original text and the source in each commitment&apos;s details. As new commitments are made,we will add these in.
             </p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">Where do metrics and targets come from?</h3>
             <p className="text-gray-700">
-              In cases where the Liberal Party has provided a metric and/or target, we use that. In other cases, we set a metric based on the policy's intention. In each graph, we show where the target source comes from.
+              In cases where the Liberal Party has provided a metric and/or target, we use that. In other cases, we set a metric based on the policy&apos;s intention. In each graph, we show where the target source comes from.
             </p>
           </div>
 

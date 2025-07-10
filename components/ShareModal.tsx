@@ -61,11 +61,12 @@ export default function ShareModal({ isOpen, onClose, shareUrl, promiseTitle }: 
         // Facebook sharing - use the sharer.php endpoint with URL and quote parameter for text
         shareLink = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
         break;
-      case 'linkedin':
+      case 'linkedin': {
         // LinkedIn sharing - use the sharing/share-offsite endpoint with title and summary
         const encodedTitle = encodeURIComponent(`Government Promise: ${promiseSnippet}`);
         shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedText}`;
         break;
+      }
     }
     
     if (shareLink) {

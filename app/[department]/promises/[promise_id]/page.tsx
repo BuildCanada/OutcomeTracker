@@ -71,7 +71,7 @@ export default function PromisePage() {
             Error Loading Promise
           </h2>
           <p className="text-gray-600 mb-4">
-            We couldn't load the promise details. Please try again.
+            We couldn&apos;t load the promise details. Please try again.
           </p>
           <button
             onClick={handleClose}
@@ -93,7 +93,7 @@ export default function PromisePage() {
             Promise Not Found
           </h2>
           <p className="text-gray-600 mb-4">
-            The promise you're looking for doesn't exist or has been removed.
+            The promise you&apos;re looking for doesn&apos;t exist or has been removed.
           </p>
           <button
             onClick={handleClose}
