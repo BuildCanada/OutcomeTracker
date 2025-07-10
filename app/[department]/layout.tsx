@@ -42,7 +42,7 @@ export default function Layout({
 
       <div className="space-y-4">
         {department.minister && (
-          <MinisterHeader minister={department.minister} />
+          <MinisterHeader minister={department.minister} promises={department.promises} />
         )}
         <div className="space-y-4">
           <h3 className="text-2xl">Key Metrics</h3>
