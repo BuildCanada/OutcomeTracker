@@ -307,24 +307,23 @@ const ProgressIndicator = ({ promises }: { promises: PromiseListing[] }) => {
     return progressA - progressB;
   });
 
-  // Count the different progress scores
-  const notStarted = promises.filter(p => (p.progress_score ?? 0) === 0).length;
-  const inProgress = promises.filter(p => p.progress_score && p.progress_score > 0 && p.progress_score < 5).length;
-  const done = promises.filter(p => p.progress_score === 5).length;
-
   return (
     <>
-      <h3 className="text-xl font-semibold mb-1">Promises <span className="text-sm text-gray-600">({promises.length})</span></h3>
+      <h3 className="text-xl font-semibold mb-1">Promises</h3>
 
       {/* Progress Indicator */}
       <div className="w-full md:w-64">
-        <div className="flex h-4 w-full rounded overflow-hssidden border border-gray-200 mb-2">
+        <div className="flex h-4 w-full rounded border border-gray-200 mb-2">
           {promises.map((p, index) => {
+            let progressColor = "bg-gray-300"; // 0 (not started, default color)
 
-            // Progress color
-            let progressColor = "bg-gray-300";
-            if (p.progress_score && p.progress_score > 0 && p.progress_score < 5) progressColor = "bg-yellow-400";
-            else if (p.progress_score === 5) progressColor = "bg-green-500";
+            if (p.progress_score && p.progress_score > 0 && p.progress_score < 5) {
+              // 5-point scale for in-progress promises
+              if (p.progress_score === 1) progressColor = "bg-yellow-300"; // Early progress made
+              else if (p.progress_score === 2) progressColor = "bg-amber-300"; // Some progress made
+              else if (p.progress_score === 3) progressColor = "bg-orange-300"; // Good progress made
+              else if (p.progress_score === 4) progressColor = "bg-lime-400"; // Almost complete
+            } else if (p.progress_score === 5) progressColor = "bg-green-600"; // Done
 
             // Add a tiny right border except for the last chunk (to view each promise easily)
             const border = index < promises.length - 1 ? "border-r border-white" : "";
@@ -332,7 +331,7 @@ const ProgressIndicator = ({ promises }: { promises: PromiseListing[] }) => {
             return (
               <div
                 key={p.id}
-                className={`h-full flex-1 min-w-0 ${progressColor} ${border} cursor-pointer relative`}
+                className={`h-full flex-1 min-w-0 ${progressColor} ${border} cursor-help relative`}
                 style={{ minWidth: 0 }}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
@@ -349,23 +348,23 @@ const ProgressIndicator = ({ promises }: { promises: PromiseListing[] }) => {
           })}
         </div>
 
-        {/* Colored progress bars */}
-        <div className="flex gap-4 text-xs text-gray-600 mt-1 relative">
+        {/* Legend with 3 categories */}
+        <div className="flex gap-4 text-xs text-gray-600 mt-1">
           <span>
             <span className="inline-block w-3 h-3 bg-gray-300 mr-1 rounded-sm align-middle" />
-            Not started ({notStarted})
+            Not started
           </span>
           <span>
-            <span className="inline-block w-3 h-3 bg-yellow-400 mr-1 rounded-sm align-middle" />
-            In progress ({inProgress})
+            <span className="inline-block w-3 h-3 bg-yellow-300 mr-1 rounded-sm align-middle" />
+            <span className="inline-block w-3 h-3 bg-lime-400 mr-1 rounded-sm align-middle" />
+            In progress
           </span>
           <span>
-            <span className="inline-block w-3 h-3 bg-green-500 mr-1 rounded-sm align-middle" />
-            Done ({done})
+            <span className="inline-block w-3 h-3 bg-green-600 mr-1 rounded-sm align-middle" />
+            Done
           </span>
         </div>
       </div>
-
     </>
   );
 }
