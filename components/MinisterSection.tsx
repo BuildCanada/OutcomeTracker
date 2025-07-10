@@ -252,8 +252,8 @@ export function MinisterHeader({ minister, promises }: { minister: Minister, pro
   const avatarUrl = minister.avatar_url;
 
   return (
-    <div className="flex items-center mb-8 w-full justify-between">
-      <div className="flex items-center">
+    <div className="flex flex-col md:flex-row md:items-center mb-8 w-full md:justify-between">
+      <div className="flex items-center mb-4 md:mb-0">
         {avatarUrl ? (
           <Avatar className="h-20 w-20 mr-6 bg-gray-100">
             <AvatarImage
@@ -275,7 +275,7 @@ export function MinisterHeader({ minister, promises }: { minister: Minister, pro
           <p className="mt-1 text-sm font-mono">{ministerTitle}</p>
         </div>
       </div>
-      <div className="flex flex-col items-start">
+      <div className="flex flex-col">
         <ProgressIndicator promises={promises} />
       </div>
     </div>
@@ -317,7 +317,7 @@ const ProgressIndicator = ({ promises }: { promises: PromiseListing[] }) => {
       <h3 className="text-xl font-semibold mb-1">Promises <span className="text-sm text-gray-600">({promises.length})</span></h3>
 
       {/* Progress Indicator */}
-      <div className="w-64">
+      <div className="w-full md:w-64">
         <div className="flex h-4 w-full rounded overflow-hssidden border border-gray-200 mb-2">
           {promises.map((p, index) => {
 
