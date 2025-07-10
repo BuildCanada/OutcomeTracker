@@ -10,7 +10,7 @@ interface TimelineNodeProps {
   isLast: boolean;  // To potentially style the last event as "Most Recent"
 }
 
-const formatDateForNode = (dateInput: Timestamp | string | any): string => {
+const formatDateForNode = (dateInput: Timestamp | string | { seconds: number; nanoseconds: number }): string => {
   if (!dateInput) return 'Date N/A';
   let dateObj: Date;
   

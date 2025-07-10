@@ -29,11 +29,21 @@ module.exports = [
       '@typescript-eslint/no-unused-vars': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
       // Override all other rules to warnings temporarily
-      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
       '@next/next/no-img-element': 'warn',
       '@next/next/no-html-link-for-pages': 'warn',
     },
+  },
+  // Override for chart files to disable no-explicit-any rule (excluding utils)
+  // "any" types are often necessary for Chart.js compatibility
+  {
+    files: ['**/charts/**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+    // Exclude utils directory from this override
+    ignores: ['**/charts/utils/**/*.{js,jsx,ts,tsx}'],
   },
 ]; 
