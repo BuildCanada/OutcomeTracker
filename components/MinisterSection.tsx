@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Minister, PromiseListing } from "@/lib/types";
-import PromiseCard from "./PromiseCard";
+import PromiseCard, { getProgressTooltip } from "./PromiseCard";
 import { useState } from "react";
 import {
   Select,
@@ -246,32 +246,37 @@ function sortPromises(
   return sortedPromises;
 }
 
-export function MinisterHeader({ minister }: { minister: Minister }) {
+export function MinisterHeader({ minister, promises }: { minister: Minister, promises: PromiseListing[] }) {
   const ministerName = `${minister.first_name} ${minister.last_name}`;
   const ministerTitle = minister.title;
   const avatarUrl = minister.avatar_url;
 
   return (
-    <div className="flex items-center mb-8">
-      {avatarUrl ? (
-        <Avatar className="h-20 w-20 mr-6 bg-gray-100">
-          <AvatarImage
-            src={avatarUrl}
-            alt={`Official portrait of ${ministerName}`}
-            className="object-cover"
-          />
-          <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
-        </Avatar>
-      ) : (
-        <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200">
-          <span className="text-2xl text-gray-500">
-            {getFallbackInitials(ministerName)}
-          </span>
+    <div className="flex items-center mb-8 w-full justify-between">
+      <div className="flex items-center">
+        {avatarUrl ? (
+          <Avatar className="h-20 w-20 mr-6 bg-gray-100">
+            <AvatarImage
+              src={avatarUrl}
+              alt={`Official portrait of ${ministerName}`}
+              className="object-cover"
+            />
+            <AvatarFallback>{getFallbackInitials(ministerName)}</AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="h-20 w-20 mr-6 flex items-center justify-center bg-gray-200">
+            <span className="text-2xl text-gray-500">
+              {getFallbackInitials(ministerName)}
+            </span>
+          </div>
+        )}
+        <div>
+          <h2 className="text-3xl">{ministerName}</h2>
+          <p className="mt-1 text-sm font-mono">{ministerTitle}</p>
         </div>
-      )}
-      <div>
-        <h2 className="text-3xl">{ministerName}</h2>
-        <p className="mt-1 text-sm font-mono">{ministerTitle}</p>
+      </div>
+      <div className="flex flex-col items-start">
+        <ProgressIndicator promises={promises} />
       </div>
     </div>
   );
@@ -291,3 +296,76 @@ const getImpactScore = (promise: PromiseListing): number => {
   if (impactRank === "low" || (impactNum > 0 && impactNum < 5)) return 1;
   return 0;
 };
+
+const ProgressIndicator = ({ promises }: { promises: PromiseListing[] }) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  // Sort promises by progress score (lowest to highest)
+  promises = [...promises].sort((a, b) => {
+    const progressA = a.progress_score || 0;
+    const progressB = b.progress_score || 0;
+    return progressA - progressB;
+  });
+
+  // Count the different progress scores
+  const notStarted = promises.filter(p => (p.progress_score ?? 0) === 0).length;
+  const inProgress = promises.filter(p => p.progress_score && p.progress_score > 0 && p.progress_score < 5).length;
+  const done = promises.filter(p => p.progress_score === 5).length;
+
+  return (
+    <>
+      <h3 className="text-xl font-semibold mb-1">Promises <span className="text-sm text-gray-600">({promises.length})</span></h3>
+
+      {/* Progress Indicator */}
+      <div className="w-64">
+        <div className="flex h-4 w-full rounded overflow-hssidden border border-gray-200 mb-2">
+          {promises.map((p, index) => {
+
+            // Progress color
+            let progressColor = "bg-gray-300";
+            if (p.progress_score && p.progress_score > 0 && p.progress_score < 5) progressColor = "bg-yellow-400";
+            else if (p.progress_score === 5) progressColor = "bg-green-500";
+
+            // Add a tiny right border except for the last chunk (to view each promise easily)
+            const border = index < promises.length - 1 ? "border-r border-white" : "";
+
+            return (
+              <div
+                key={p.id}
+                className={`h-full flex-1 min-w-0 ${progressColor} ${border} cursor-pointer relative`}
+                style={{ minWidth: 0 }}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              >
+                {/* Tooltip on hover */}
+                {hoveredIndex === index && (
+                  <div className="absolute w-min z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0">
+                    <div className="font-medium whitespace-nowrap">{p.concise_title}</div>
+                    <div>{getProgressTooltip(p.progress_score ?? 0)} ({p.progress_score ?? 0}/5)</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Colored progress bars */}
+        <div className="flex gap-4 text-xs text-gray-600 mt-1 relative">
+          <span>
+            <span className="inline-block w-3 h-3 bg-gray-300 mr-1 rounded-sm align-middle" />
+            Not started ({notStarted})
+          </span>
+          <span>
+            <span className="inline-block w-3 h-3 bg-yellow-400 mr-1 rounded-sm align-middle" />
+            In progress ({inProgress})
+          </span>
+          <span>
+            <span className="inline-block w-3 h-3 bg-green-500 mr-1 rounded-sm align-middle" />
+            Done ({done})
+          </span>
+        </div>
+      </div>
+
+    </>
+  );
+}
