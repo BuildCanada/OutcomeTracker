@@ -30,6 +30,8 @@ module.exports = [
       'prefer-const': 'error',
       'no-var': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
+      // Disallow console.log but allow warn and error
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       // Override all other rules to warnings temporarily
       '@typescript-eslint/ban-ts-comment': 'warn',
       '@next/next/no-img-element': 'warn',

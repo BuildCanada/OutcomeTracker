@@ -13,6 +13,9 @@ import {
   ChartOptions,
 } from "chart.js/auto";
 import electricityCapacityData from "@/metrics/statscan/electricity-capacity.json";
+import { calculateLinearTrend } from "./utils/trendCalculator";
+import { LineChartDataset } from "./types";
+import { getTrendLineStyling } from "./utils/styling";
 
 ChartJS.register(
   CategoryScale,
@@ -33,16 +36,7 @@ interface ElectricityCapacityChartProps {
   showTrend?: boolean;
 }
 
-interface ChartDataset {
-  label: string;
-  data: number[];
-  borderColor: string;
-  backgroundColor: string;
-  tension: number;
-  borderWidth?: number;
-  borderDash?: number[];
-  pointRadius?: number;
-}
+
 
 export default function ElectricityCapacityChart({
   title = "National Electricity Capacity",
@@ -79,21 +73,11 @@ export default function ElectricityCapacityChart({
   // Calculate linear trend line if requested
   let trendValues: number[] = [];
   if (showTrend && capacityValues.length > 1) {
-    // Calculate linear regression
-    const n = capacityValues.length;
-    const sumX = labels.reduce((sum: number, _: string, index: number) => sum + index, 0);
-    const sumY = capacityValues.reduce((sum: number, val: number) => sum + val, 0);
-    const sumXY = capacityValues.reduce((sum: number, val: number, index: number) => sum + (index * val), 0);
-    const sumX2 = labels.reduce((sum: number, _: string, index: number) => sum + (index * index), 0);
-
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-
-    trendValues = labels.map((_: string, index: number) => intercept + slope * index);
+    trendValues = calculateLinearTrend(capacityValues);
   }
 
   // Configure datasets for the chart
-  const datasets: ChartDataset[] = [
+  const datasets: LineChartDataset[] = [
     {
       label: "Electricity Capacity",
       data: capacityValues,
@@ -110,12 +94,7 @@ export default function ElectricityCapacityChart({
     datasets.push({
       label: "Trend",
       data: trendValues,
-      borderColor: "rgb(255, 140, 0)",
-      backgroundColor: "rgba(255, 140, 0, 0.5)",
-      tension: 0,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      borderWidth: 2,
+      ...getTrendLineStyling(),
     });
   }
 
