@@ -14,7 +14,8 @@ import {
 import gdpData from "@/metrics/statscan/gdp.json";
 import populationData from "@/metrics/statscan/population.json";
 import { calculatePerCapita } from "./utils/PerCapitaCalculator";
-import { getPrimaryLineStyling, getTargetLineStyling } from "./utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "./utils/styling";
+import { calculateLinearTrend } from "./utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -28,6 +29,7 @@ interface GDPPerCapitaChartProps {
   showAnnual?: boolean;
   showTarget?: boolean;
   targetValue?: number;
+  showTrend?: boolean;
 }
 
 export default function GDPPerCapitaChart({
@@ -39,6 +41,7 @@ export default function GDPPerCapitaChart({
   showAnnual = false,
   showTarget = false,
   targetValue = 50,
+  showTrend = true,
 }: GDPPerCapitaChartProps) {
   // Get data sources
   const gdpMetricData = (gdpData as any).data[gdpMeasure] || [];
@@ -77,7 +80,6 @@ export default function GDPPerCapitaChart({
     }
   });
 
-
   // Align labels and data arrays to start from first valid growth rate (index 4)
   labels = labels.slice(4);
   const alignedGrowthRates = growthRates.slice(4);
@@ -106,7 +108,6 @@ export default function GDPPerCapitaChart({
     });
   }
 
-
   const datasets: LineChartDataset[] = [
     {
       label: "YoY Growth Rate (%)",
@@ -120,6 +121,21 @@ export default function GDPPerCapitaChart({
       label: "Annual Average",
       data: annualAverages,
       ...getTargetLineStyling(),
+    });
+  }
+
+  // Calculate linear trend if requested
+  let trendValues: (number | null)[] = [];
+  if (showTrend && alignedGrowthRates.length > 1) {
+    trendValues = calculateLinearTrend(alignedGrowthRates as number[]);
+  }
+  
+  // Add trend line if requested
+  if (showTrend && trendValues.length > 0) {
+    datasets.push({
+      label: "Trend",
+      data: trendValues,
+      ...getTrendLineStyling(),
     });
   }
 

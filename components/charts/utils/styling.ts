@@ -36,7 +36,9 @@ export const getTargetLineStyling = (options: Partial<LineChartDataset> = {}): P
 export const getTrendLineStyling = (options: Partial<LineChartDataset> = {}): Partial<LineChartDataset> => ({
   borderColor: TREND_BORDER_COLOR,
   backgroundColor: TREND_BG_COLOR,
+  tension: 0,
   borderDash: [5, 5],
-  tension: 0.3,
+  pointRadius: 0,
+  borderWidth: 2,
   ...options,
 });
