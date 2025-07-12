@@ -49,11 +49,6 @@ The `primary-energy.json` file format was updated, requiring changes to the Prim
 - **Before**: `energyDataObj.data.Production[category]`
 - **After**: `energyDataObj.data[category]?.Production`
 
-### PrimaryEnergyChart.stories.ts
-**Lines 24-36**: Updated category options to reflect new available energy sources:
-- Added: 'Coke', 'Secondary electricity, thermal', 'Secondary energy', 'Total primary and secondary energy'
-- Maintained: All existing categories
-
 ## Available Energy Categories
 
 The new format supports the following energy categories:
@@ -87,7 +82,6 @@ Each energy category now includes multiple data points:
 - ✅ Data visualization: No impact
 - ✅ Trend analysis: No impact
 - ✅ Target lines: No impact
-- ✅ Storybook stories: Updated with new categories
 - ✅ Build process: Successful compilation
 
 ## Testing Status
