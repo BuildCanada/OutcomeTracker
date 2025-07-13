@@ -12,9 +12,7 @@
     "test:watch": "vitest --watch",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-    "prepare": "node -e \"if (!process.env.CI) { require('child_process').execSync('npx simple-git-hooks', {stdio: 'inherit'}) }\"",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "prepare": "node -e \"if (!process.env.CI) { require('child_process').execSync('npx simple-git-hooks', {stdio: 'inherit'}) }\""
   },
   "dependencies": {
     "@radix-ui/react-avatar": "1.1.2",
@@ -38,13 +36,6 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^3",
-    "@storybook/addon-essentials": "^8.6.14",
-    "@storybook/addon-onboarding": "^8.6.14",
-    "@storybook/experimental-addon-test": "^8.6.14",
-    "@storybook/experimental-nextjs-vite": "8.6.14",
-    "@storybook/react": "^8.6.14",
-    "@storybook/test": "^8.6.14",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22",
@@ -59,7 +50,6 @@
     "lint-staged": "^16.1.2",
     "postcss": "^8",
     "simple-git-hooks": "^2.13.0",
-    "storybook": "^8.6.14",
     "tailwindcss": "^3.4.17",
     "typescript": "^5",
     "vite-tsconfig-paths": "^5.1.4",
