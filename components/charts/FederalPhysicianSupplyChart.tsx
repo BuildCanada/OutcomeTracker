@@ -13,7 +13,8 @@ import {
 } from "chart.js/auto";
 import physicianData from "@/metrics/cihi/physician_supply.json";
 import { LineChartDataset } from "@/components/charts/types";
-import { getPrimaryLineStyling } from "./utils/styling";
+import { getPrimaryLineStyling, getTrendLineStyling } from "./utils/styling";
+import { calculateLinearTrend } from "./utils/trendCalculator";
 
 ChartJS.register(
   CategoryScale,
@@ -30,6 +31,7 @@ interface FederalPhysicianSupplyChartProps {
   startYear?: number;
   endYear?: number;
   height?: number;
+  showTrend?: boolean;
 }
 
 export default function FederalPhysicianSupplyChart({
@@ -37,6 +39,7 @@ export default function FederalPhysicianSupplyChart({
   startYear = 2019,
   endYear = 2029,
   height = 400,
+  showTrend = true,
 }: FederalPhysicianSupplyChartProps) {
   // Get federal physician supply data
   const physicianDataObj = physicianData as any;
@@ -64,6 +67,16 @@ export default function FederalPhysicianSupplyChart({
       ...getPrimaryLineStyling(),
     },
   ];
+
+  // Calculate and add trend line
+  if (showTrend && chartValues.length > 1) {
+    const trendValues = calculateLinearTrend(chartValues);
+    datasets.push({
+      label: "Trend",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   const chartData = {
     labels,

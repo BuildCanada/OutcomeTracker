@@ -70,12 +70,6 @@ export default function ElectricityCapacityChart({
     (dataPoint) => dataPoint[1] as number
   );
 
-  // Calculate linear trend line if requested
-  let trendValues: number[] = [];
-  if (showTrend && capacityValues.length > 1) {
-    trendValues = calculateLinearTrend(capacityValues);
-  }
-
   // Configure datasets for the chart
   const datasets: LineChartDataset[] = [
     {
@@ -89,8 +83,9 @@ export default function ElectricityCapacityChart({
     },
   ];
 
-  // Add trend line if requested
-  if (showTrend && trendValues.length > 0) {
+  // Calculate and add trend line if requested
+  if (showTrend && capacityValues.length > 1) {
+    const trendValues = calculateLinearTrend(capacityValues);
     datasets.push({
       label: "Trend",
       data: trendValues,

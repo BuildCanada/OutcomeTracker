@@ -12,8 +12,9 @@ import {
   Legend,
 } from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
+import { calculateLinearTrend } from "./utils/trendCalculator";
 
 ChartJS.register(
   CategoryScale,
@@ -34,6 +35,7 @@ interface LabourProductivityGrowthChartProps {
   showTarget?: boolean;
   targetValue?: number;
   showProductivityIndex?: boolean;
+  showTrend?: boolean;
 }
 
 
@@ -46,6 +48,7 @@ export default function LabourProductivityGrowthChart({
   showTarget = true,
   targetValue = 2.0,
   showProductivityIndex = false,
+  showTrend = true,
 }: LabourProductivityGrowthChartProps) {
   // Get data for selected sector
   const productivityDataObj = labourProductivityData as any;
@@ -107,6 +110,16 @@ export default function LabourProductivityGrowthChart({
       ...getPrimaryLineStyling({ yAxisID: "y" }),
     },
   ];
+
+  // Calculate and add trend line
+  if (showTrend && alignedGrowthRates.length > 1) {
+    const trendValues = calculateLinearTrend(alignedGrowthRates as number[]);
+    datasets.push({
+      label: "Trend",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   // Add productivity index if requested
   if (showProductivityIndex) {
