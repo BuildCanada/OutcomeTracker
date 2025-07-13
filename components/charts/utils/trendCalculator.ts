@@ -30,3 +30,29 @@ export function calculateLinearTrend(data: number[]): number[] {
   // Generate trend values for all data points
   return data.map((_, index) => intercept + slope * index);
 }
+
+/**
+ * Calculate moving average for a series of data points
+ * @param data - Array of numeric values
+ * @param period - Number of periods for the moving average (e.g., 4 for quarterly, 12 for monthly)
+ * @returns Array of moving average values with same length as input data (null for incomplete periods)
+ */
+export function calculateMovingAverage(data: number[], period: number): (number | null)[] {
+  if (period <= 0 || period > data.length) {
+    console.error(
+      `calculateMovingAverage: Invalid period ${period}. Period must be > 0 and <= data length (${data.length}). ` +
+        `Returning empty array to prevent chart errors.`
+    );
+    return [];
+  }
+
+  return data.map((_: number, index: number, array: number[]) => {
+    if (index < period - 1) return null;
+
+    let sum = 0;
+    for (let i = 0; i < period; i++) {
+      sum += array[index - i];
+    }
+    return sum / period;
+  });
+}

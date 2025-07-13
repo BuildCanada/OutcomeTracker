@@ -13,7 +13,8 @@ import {
   Legend,
 } from "chart.js/auto";
 import housingStartsData from "@/metrics/statscan/housing-starts.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
 // Register Chart.js components
@@ -36,6 +37,7 @@ interface AnnualizedHousingChartProps {
   endYear?: number;
   showTarget?: boolean;
   targetValue?: number;
+  showTrend?: boolean;
 }
 
 
@@ -47,6 +49,7 @@ export default function AnnualizedHousingChart({
   endYear = 2029,
   showTarget = false,
   targetValue = 300000,
+  showTrend = true,
 }: AnnualizedHousingChartProps) {
   // Get data for selected housing category
   const housingData = housingStartsData as any;
@@ -114,6 +117,17 @@ export default function AnnualizedHousingChart({
       ...getPrimaryLineStyling(),
     },
   ];
+
+  // Add moving average line if requested
+  if (showTrend) {
+    const period = 12; // 12-month moving average
+    const trendValues = calculateMovingAverage(annualizedValues, period);
+    datasets.push({
+      label: "12-Month Moving Average",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   // Add target line if requested
   if (showTarget && targetValue) {

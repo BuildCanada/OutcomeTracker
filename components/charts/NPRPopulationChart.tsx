@@ -13,7 +13,8 @@ import {
 } from "chart.js/auto";
 import nprData from "@/metrics/statscan/non-permanent-residents.json";
 import populationData from "@/metrics/statscan/population.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
@@ -33,6 +34,7 @@ interface NPRPopulationChartProps {
   quarterlyData?: boolean;
   showTarget?: boolean;
   targetValue?: number;
+  showTrend?: boolean;
 }
 
 
@@ -43,6 +45,7 @@ export default function NPRPopulationChart({
   quarterlyData = true,
   showTarget = true,
   targetValue = 5.0,
+  showTrend = true,
 }: NPRPopulationChartProps) {
   // Get data sources
   const nprDataObj = nprData as any;
@@ -113,6 +116,17 @@ export default function NPRPopulationChart({
       ...getPrimaryLineStyling(),
     },
   ];
+
+  // Add moving average line if requested
+  if (showTrend) {
+    const period = 4; // 4-quarter moving average
+    const trendValues = calculateMovingAverage(chartValues, period);
+    datasets.push({
+      label: "4-Quarter Moving Average",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   // Add target line if requested
   if (showTarget && targetValue) {

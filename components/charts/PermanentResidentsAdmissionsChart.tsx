@@ -13,7 +13,8 @@ import {
 } from "chart.js/auto";
 import permanentResidentsAdmissionsData from "@/metrics/statscan/components-population-growth.json";
 import populationData from "@/metrics/statscan/population.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(
@@ -33,6 +34,7 @@ interface PermanentResidentsAdmissionsChartProps {
   quarterlyData?: boolean;
   showTarget?: boolean;
   targetValue?: number;
+  showTrend?: boolean;
 }
 
 export default function PermanentResidentsAdmissionsChart({
@@ -42,6 +44,7 @@ export default function PermanentResidentsAdmissionsChart({
   quarterlyData = true,
   showTarget = true,
   targetValue = 1.0,
+  showTrend = true,
 }: PermanentResidentsAdmissionsChartProps) {
   // Get data sources
   const prAdmissionsDataObj = permanentResidentsAdmissionsData as any;
@@ -151,6 +154,17 @@ export default function PermanentResidentsAdmissionsChart({
       ...getPrimaryLineStyling(),
     },
   ];
+
+  // Add moving average line if requested
+  if (showTrend) {
+    const period = 4; // 4-quarter moving average
+    const trendValues = calculateMovingAverage(chartValues, period);
+    datasets.push({
+      label: "4-Quarter Moving Average",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   // Add target line if requested
   if (showTarget && targetValue) {

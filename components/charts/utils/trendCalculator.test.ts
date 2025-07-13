@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { calculateLinearTrend } from "./trendCalculator";
+import { calculateLinearTrend, calculateMovingAverage } from "./trendCalculator";
 
 describe("calculateLinearTrend", () => {
   it("should calculate linear trend for perfect sequences", () => {
@@ -51,5 +51,64 @@ describe("calculateLinearTrend", () => {
     expect(consoleSpy).toHaveBeenCalled();
 
     consoleSpy.mockRestore();
+  });
+});
+
+describe("calculateMovingAverage", () => {
+  it("should calculate 3-period moving average correctly", () => {
+    const data = [1, 2, 3, 4, 5, 6];
+    const result = calculateMovingAverage(data, 3);
+
+    expect(result).toEqual([null, null, 2, 3, 4, 5]);
+  });
+
+  it("should calculate 4-period moving average correctly", () => {
+    const data = [10, 20, 30, 40, 50, 60];
+    const result = calculateMovingAverage(data, 4);
+
+    expect(result).toEqual([null, null, null, 25, 35, 45]);
+  });
+
+  it("should handle period equal to data length", () => {
+    const data = [1, 2, 3];
+    const result = calculateMovingAverage(data, 3);
+
+    expect(result).toEqual([null, null, 2]);
+  });
+
+  it("should handle period greater than data length", () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const data = [1, 2, 3];
+    const result = calculateMovingAverage(data, 5);
+
+    expect(result).toEqual([]);
+    expect(consoleSpy).toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should handle invalid period (zero or negative)", () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const data = [1, 2, 3, 4, 5];
+    
+    expect(calculateMovingAverage(data, 0)).toEqual([]);
+    expect(calculateMovingAverage(data, -1)).toEqual([]);
+    expect(consoleSpy).toHaveBeenCalledTimes(2);
+
+    consoleSpy.mockRestore();
+  });
+
+  it("should work with decimal values", () => {
+    const data = [1.5, 2.5, 3.5, 4.5, 5.5];
+    const result = calculateMovingAverage(data, 2);
+
+    expect(result).toEqual([null, 2, 3, 4, 5]);
+  });
+
+  it("should work with negative values", () => {
+    const data = [-3, -1, 1, 3, 5];
+    const result = calculateMovingAverage(data, 3);
+
+    expect(result).toEqual([null, null, -1, 1, 3]);
   });
 });
