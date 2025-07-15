@@ -13,8 +13,7 @@ async function fetcher(...args: Parameters<typeof fetch>) {
 
 // Human-friendly progress tooltip
 export function getProgressTooltip(progressScore: number): string {
-  if (progressScore === 0) return "No progress made yet";
-  else if (progressScore === 1) return "Early progress made";
+  if (progressScore === 1) return "No progress made";
   else if (progressScore === 2) return "Some progress made";
   else if (progressScore === 3) return "Good progress made";
   else if (progressScore === 4) return "Almost complete";
@@ -37,7 +36,7 @@ export default function PromiseCard({
   const progressScore = promise.progress_score || 0; // 1-5
 
   // Human-friendly progress tooltip
-  let progressTooltip = getProgressTooltip(progressScore);
+  const progressTooltip = getProgressTooltip(progressScore);
 
   // Impact Indicator
   const impactRankRaw = promise.bc_promise_rank ?? "";
@@ -216,8 +215,11 @@ export default function PromiseCard({
       <Link
         href={`/${departmentSlug}/promises/${promise.id}`}
         className="w-full"
-        onMouseEnter={async () => { // Prefetch the promise data on hover
-          const data = await fetcher(`/tracker/api/v1/promises/${promise.id}.json`);
+        onMouseEnter={async () => {
+          // Prefetch the promise data on hover
+          const data = await fetcher(
+            `/tracker/api/v1/promises/${promise.id}.json`,
+          );
           mutate(`/tracker/api/v1/promises/${promise.id}.json`, data);
         }}
         scroll={false}
@@ -242,7 +244,7 @@ export default function PromiseCard({
                 >
                   <svg className="w-6 h-6" viewBox="0 0 24 24">
                     {/* Full colored circle as background - only if progress > 0 */}
-                    {progressScore > 0 && (
+                    {progressScore > 1 && (
                       <circle
                         cx="12"
                         cy="12"
@@ -253,7 +255,7 @@ export default function PromiseCard({
                       />
                     )}
                     {/* White arc for incomplete portion (only if not complete) */}
-                    {progressScore < 5 && progressScore > 0 && (
+                    {progressScore < 5 && progressScore > 1 && (
                       <path
                         d={getPieArcPath(
                           12,
@@ -272,7 +274,7 @@ export default function PromiseCard({
                       r="10"
                       fill="none"
                       stroke={
-                        progressScore === 0
+                        progressScore === 1
                           ? isOverdue
                             ? "#ef4444"
                             : "#d3c7b9"
@@ -289,7 +291,7 @@ export default function PromiseCard({
                 </div>
                 <div className="flex flex-col items-start justify-start">
                   <span className="text-xs font-medium text-gray-700">
-                    {progressScore === 0
+                    {progressScore === 1
                       ? "Not started"
                       : progressScore === 5
                         ? "Complete"
