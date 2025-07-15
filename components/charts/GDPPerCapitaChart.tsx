@@ -125,13 +125,8 @@ export default function GDPPerCapitaChart({
   }
 
   // Calculate linear trend if requested
-  let trendValues: (number | null)[] = [];
   if (showTrend && alignedGrowthRates.length > 1) {
-    trendValues = calculateLinearTrend(alignedGrowthRates as number[]);
-  }
-  
-  // Add trend line if requested
-  if (showTrend && trendValues.length > 0) {
+    const trendValues = calculateLinearTrend(alignedGrowthRates as number[]);
     datasets.push({
       label: "Trend",
       data: trendValues,

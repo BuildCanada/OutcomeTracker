@@ -12,8 +12,9 @@ import {
   Legend,
 } from "chart.js/auto";
 import defenseData from "@/metrics/worldbank/defense-spending.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
+import { calculateLinearTrend } from "./utils/trendCalculator";
 
 ChartJS.register(
   CategoryScale,
@@ -31,6 +32,7 @@ interface DefenseSpendingChartProps {
   endYear?: number;
   showTarget?: boolean;
   targetValue?: number;
+  showTrend?: boolean;
 }
 
 
@@ -40,6 +42,7 @@ export default function DefenseSpendingChart({
   endYear = 2029,
   showTarget = true,
   targetValue = 2.0,
+  showTrend = true,
 }: DefenseSpendingChartProps) {
   // Get defense spending data
   const defenseDataObj = defenseData as any;
@@ -68,6 +71,16 @@ export default function DefenseSpendingChart({
       ...getPrimaryLineStyling(),
     },
   ];
+
+  // Calculate and add trend line
+  if (showTrend && chartValues.length > 1) {
+    const trendValues = calculateLinearTrend(chartValues);
+    datasets.push({
+      label: "Trend",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   // Add target line if requested
   if (showTarget && targetValue) {

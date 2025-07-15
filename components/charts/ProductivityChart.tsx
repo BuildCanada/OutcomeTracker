@@ -96,12 +96,6 @@ export default function ProductivityChart({
     growthRates = [...padding, ...growthRates];
   }
 
-  // Calculate linear trend if requested
-  let trendValues: number[] = [];
-  if (showTrend && productivityValues.length > 1) {
-    trendValues = calculateLinearTrend(productivityValues);
-  }
-
   const datasets: LineChartDataset[] = [
     {
       label: "Productivity Index",
@@ -110,8 +104,9 @@ export default function ProductivityChart({
     },
   ];
 
-  // Add trend line if requested
-  if (showTrend && trendValues.length > 0) {
+  // Calculate linear trend if requested
+  if (showTrend && productivityValues.length > 1) {
+    const trendValues = calculateLinearTrend(productivityValues);
     datasets.push({
       label: "Trend",
       data: trendValues,

@@ -13,8 +13,9 @@ import {
 } from "chart.js/auto";
 import physicianData from "@/metrics/cihi/physician_supply.json";
 import populationData from "@/metrics/statscan/population.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
+import { calculateLinearTrend } from "./utils/trendCalculator";
 
 ChartJS.register(
   CategoryScale,
@@ -33,6 +34,7 @@ interface FederalPhysicianSupplyPerCapitaChartProps {
   height?: number;
   showTarget?: boolean;
   targetValue?: number;
+  showTrend?: boolean;
 }
 
 export default function FederalPhysicianSupplyPerCapitaChart({
@@ -42,6 +44,7 @@ export default function FederalPhysicianSupplyPerCapitaChart({
   height = 400,
   showTarget = true,
   targetValue = 3.5,
+  showTrend = true,
 }: FederalPhysicianSupplyPerCapitaChartProps) {
   // Get federal physician supply data
   const physicianDataObj = physicianData as any;
@@ -93,6 +96,16 @@ export default function FederalPhysicianSupplyPerCapitaChart({
       ...getPrimaryLineStyling(),
     },
   ];
+
+  // Calculate and add trend line
+  if (showTrend && chartValues.length > 1) {
+    const trendValues = calculateLinearTrend(chartValues);
+    datasets.push({
+      label: "Trend",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   // Add target line if requested
   if (showTarget && targetValue) {

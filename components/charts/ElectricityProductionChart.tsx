@@ -13,6 +13,8 @@ import {
   ChartOptions,
 } from "chart.js/auto";
 import electricityProductionData from "@/metrics/statscan/electricity-production.json";
+import { calculateLinearTrend } from "./utils/trendCalculator";
+import { getTrendLineStyling } from "./utils/styling";
 
 ChartJS.register(
   CategoryScale,
@@ -90,21 +92,6 @@ export default function ElectricityProductionChart({
       }
     });
 
-  // Calculate linear trend line if requested
-  let trendValues: number[] = [];
-  if (showTrend && productionValues.length > 1) {
-    const n = productionValues.length;
-    const sumX = years.reduce((sum: number, _: string, index: number) => sum + index, 0);
-    const sumY = productionValues.reduce((sum: number, val: number) => sum + val, 0);
-    const sumXY = productionValues.reduce((sum: number, val: number, index: number) => sum + (index * val), 0);
-    const sumX2 = years.reduce((sum: number, _: string, index: number) => sum + (index * index), 0);
-
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-
-    trendValues = years.map((_: string, index: number) => intercept + slope * index);
-  }
-
   // Configure datasets for the chart
   const datasets: ChartDataset[] = [
     {
@@ -118,17 +105,13 @@ export default function ElectricityProductionChart({
     },
   ];
 
-  // Add trend line if requested
-  if (showTrend && trendValues.length > 0) {
+  // Calculate and add trend line if requested
+  if (showTrend && productionValues.length > 1) {
+    const trendValues = calculateLinearTrend(productionValues);
     datasets.push({
       label: "Trend",
       data: trendValues,
-      borderColor: "rgb(255, 140, 0)",
-      backgroundColor: "rgba(255, 140, 0, 0.5)",
-      tension: 0,
-      borderDash: [5, 5],
-      pointRadius: 0,
-      borderWidth: 2,
+      ...getTrendLineStyling(),
     });
   }
 
