@@ -13,7 +13,8 @@ import {
   ChartOptions,
 } from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
 type RawDataPoint = [string, number]; // [date, value]
@@ -35,6 +36,7 @@ interface CapitalFormationChartProps {
   quarterlyData?: boolean;
   showTarget?: boolean;
   targetValue?: number;
+  showTrend?: boolean;
 }
 
 
@@ -45,6 +47,7 @@ export default function CapitalFormationChart({
   quarterlyData = true,
   showTarget = true,
   targetValue = 17,
+  showTrend = true,
 }: CapitalFormationChartProps) {
   // Get required data series
   const gdpDataObj = gdpData as any;
@@ -123,6 +126,17 @@ export default function CapitalFormationChart({
       ...getPrimaryLineStyling(),
     },
   ];
+
+  // Add moving average line if requested
+  if (showTrend) {
+    const period = 4; // 4-quarter moving average
+    const trendValues = calculateMovingAverage(chartValues, period);
+    datasets.push({
+      label: "4-Quarter Moving Average",
+      data: trendValues,
+      ...getTrendLineStyling(),
+    });
+  }
 
   // Add target line if requested
   if (showTarget && targetValue) {
