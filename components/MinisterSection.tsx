@@ -258,7 +258,7 @@ export function MinisterHeader({
   const avatarUrl = minister.avatar_url;
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center mb-8 w-full md:justify-between">
+    <div className="flex flex-col md:flex-row md:items-start mb-8 w-full">
       <div className="flex items-center mb-4 md:mb-0">
         {avatarUrl ? (
           <Avatar className="h-20 w-20 mr-6 bg-gray-100">
@@ -279,10 +279,10 @@ export function MinisterHeader({
         <div>
           <h2 className="text-3xl">{ministerName}</h2>
           <p className="mt-1 text-sm font-mono">{ministerTitle}</p>
+          <div className="mt-1">
+            <ProgressIndicator promises={promises} />
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col">
-        <ProgressIndicator promises={promises} />
       </div>
     </div>
   );
@@ -306,8 +306,8 @@ const getImpactScore = (promise: PromiseListing): number => {
 const progressColor = (score: number | null): string => {
   if (score === null) return "bg-gray-300";
   if (score === 1) return "bg-gray-300";
-  if (score === 2) return "bg-orange-300";
-  if (score === 3) return "bg-amber-300";
+  if (score === 2) return "bg-amber-300";
+  if (score === 3) return "bg-orange-300";
   if (score === 4) return "bg-lime-400";
   if (score === 5) return "bg-green-600";
   return "bg-green-500";
@@ -324,70 +324,37 @@ const ProgressIndicator = ({ promises }: { promises: PromiseListing[] }) => {
   });
 
   return (
-    <>
-      <h3 className="text-xl font-semibold mb-1">Promises</h3>
+    <div className="w-full md:w-72">
+      <div className="flex h-4 w-full rounded border border-gray-200">
+        {promises.map((p, index) => {
+          // Add a tiny right border except for the last chunk (to view each promise easily)
+          const border =
+            index < promises.length - 1 ? "border-r border-white" : "";
 
-      {/* Progress Indicator */}
-      <div className="w-full md:w-72">
-        <div className="flex h-4 w-full rounded border border-gray-200 mb-2">
-          {promises.map((p, index) => {
-            // Add a tiny right border except for the last chunk (to view each promise easily)
-            const border =
-              index < promises.length - 1 ? "border-r border-white" : "";
-
-            return (
-              <div
-                key={p.id}
-                className={`h-full flex-1 min-w-0 ${progressColor(p.progress_score)} ${border} cursor-help relative`}
-                style={{ minWidth: 0 }}
-                onMouseEnter={() => setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
-              >
-                {/* Tooltip on hover */}
-                {hoveredIndex === index && (
-                  <div className="absolute w-min z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0">
-                    <div className="font-medium whitespace-nowrap">
-                      {p.concise_title}
-                    </div>
-                    <div>
-                      {getProgressTooltip(p.progress_score ?? 1)} (
-                      {p.progress_score ?? 1}/5)
-                    </div>
+          return (
+            <div
+              key={p.id}
+              className={`h-full flex-1 min-w-0 ${progressColor(p.progress_score)} ${border} cursor-help relative`}
+              style={{ minWidth: 0 }}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              {/* Tooltip on hover */}
+              {hoveredIndex === index && (
+                <div className="absolute w-min z-20 p-2 bg-white border border-gray-200 shadow-lg text-sm top-full mt-1 right-0">
+                  <div className="font-medium whitespace-nowrap">
+                    {p.concise_title}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Legend with 3 categories */}
-        <div className="flex gap-4 text-xs text-gray-600 mt-1">
-          <span className="flex justify-center items-center">
-            <span
-              className={`#d3c7b9 inline-block w-3 h-3 ${progressColor(1)} mr-1 rounded-sm align-middle`}
-            />
-            Not started
-          </span>
-          <span className="flex justify-center items-center">
-            <span
-              className={`#d3c7b9 inline-block w-3 h-3 ${progressColor(2)} mr-1 rounded-sm align-middle`}
-            />
-            <span
-              className={`#d3c7b9 inline-block w-3 h-3 ${progressColor(3)} mr-1 rounded-sm align-middle`}
-            />
-            <span
-              className={`#d3c7b9 inline-block w-3 h-3 ${progressColor(4)} mr-1 rounded-sm align-middle`}
-            />
-            In progress
-          </span>
-          <span className="flex justify-center items-center">
-            <span
-              className={`#d3c7b9 inline-block w-3 h-3 ${progressColor(5)} mr-1 rounded-sm align-middle`}
-            />
-            Done
-          </span>
-        </div>
+                  <div>
+                    {getProgressTooltip(p.progress_score ?? 1)} (
+                    {p.progress_score ?? 1}/5)
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 };
