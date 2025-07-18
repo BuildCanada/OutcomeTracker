@@ -1,81 +1,95 @@
 {
   "metadata": {
     "title": "Canadian Free Trade Agreement Exceptions by Province/Territory",
-    "description": "Number of exceptions to the Canadian Free Trade Agreement (CFTA) by province and territory from 2022-2024",
+    "description": "Number of exceptions to the Canadian Free Trade Agreement (CFTA) by province and territory from 2022-2025",
     "source": "Canadian Federation of Independent Business (CFIB)",
-    "lastUpdated": "2024",
+    "lastUpdated": "2025",
     "unit": "Number of exceptions"
   },
   "data": {
     "Alberta": [
       [2022, 6],
       [2023, 6],
-      [2024, 8]
+      [2024, 8],
+      [2025, 8]
     ],
     "Manitoba": [
       [2022, 10],
       [2023, 7],
-      [2024, 8]
+      [2024, 8],
+      [2025, 8]
     ],
     "Saskatchewan": [
       [2022, 11],
       [2023, 11],
-      [2024, 11]
+      [2024, 11],
+      [2025, 11]
     ],
     "British Columbia": [
       [2022, 13],
       [2023, 13],
-      [2024, 15]
+      [2024, 15],
+      [2025, 15]
     ],
     "Nova Scotia": [
       [2022, 17],
       [2023, 17],
-      [2024, 19]
+      [2024, 19],
+      [2025, 19]
     ],
     "Northwest Territories": [
       [2022, 19],
       [2023, 18],
-      [2024, 20]
+      [2024, 20],
+      [2025, 20]
     ],
     "Newfoundland and Labrador": [
       [2022, 21],
       [2023, 18],
-      [2024, 20]
+      [2024, 20],
+      [2025, 20]
     ],
     "Prince Edward Island": [
       [2022, 20],
       [2023, 20],
-      [2024, 22]
+      [2024, 22],
+      [2025, 22]
     ],
     "Ontario": [
       [2022, 21],
       [2023, 21],
-      [2024, 23]
+      [2024, 23],
+      [2025, 23]
     ],
     "Nunavut": [
       [2022, 21],
       [2023, 21],
-      [2024, 22]
+      [2024, 22],
+      [2025, 22]
     ],
     "Yukon": [
       [2022, 33],
       [2023, 28],
-      [2024, 29]
+      [2024, 29],
+      [2025, 29]
     ],
     "New Brunswick": [
       [2022, 29],
       [2023, 29],
-      [2024, 31]
+      [2024, 31],
+      [2025, 31]
     ],
     "Federal": [
       [2022, 29],
       [2023, 29],
-      [2024, 21]
+      [2024, 21],
+      [2025, 0]
     ],
     "Quebec": [
       [2022, 35],
       [2023, 35],
-      [2024, 36]
+      [2024, 36],
+      [2025, 36]
     ]
   }
 }
