@@ -7,6 +7,7 @@ The `primary-energy.json` file format was updated, requiring changes to the Prim
 ## Old vs New JSON Structure
 
 ### Old Format
+
 ```json
 {
   "data": {
@@ -23,6 +24,7 @@ The `primary-energy.json` file format was updated, requiring changes to the Prim
 ```
 
 ### New Format
+
 ```json
 {
   "data": {
@@ -45,13 +47,16 @@ The `primary-energy.json` file format was updated, requiring changes to the Prim
 ## Code Changes Made
 
 ### PrimaryEnergyChart.tsx
+
 **Line 60**: Changed data access pattern
+
 - **Before**: `energyDataObj.data.Production[category]`
 - **After**: `energyDataObj.data[category]?.Production`
 
 ## Available Energy Categories
 
 The new format supports the following energy categories:
+
 - Primary energy
 - Coal
 - Coke
@@ -68,6 +73,7 @@ The new format supports the following energy categories:
 ## Data Points Available
 
 Each energy category now includes multiple data points:
+
 - **Production**: Energy production values
 - **Availability**: Available energy supply
 - **Exports**: Energy export volumes
@@ -94,6 +100,7 @@ Each energy category now includes multiple data points:
 ## Future Considerations
 
 The new format provides access to additional data points beyond just production values. Future enhancements could include:
+
 - Export vs production comparison charts
 - Net supply analysis
 - Import dependency tracking

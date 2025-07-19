@@ -12,7 +12,11 @@ import {
   Legend,
 } from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { calculateLinearTrend } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
@@ -37,7 +41,6 @@ interface ProductivityChartProps {
   showGrowthRate?: boolean;
   showTrend?: boolean;
 }
-
 
 export default function ProductivityChart({
   title = "Public Service Productivity",

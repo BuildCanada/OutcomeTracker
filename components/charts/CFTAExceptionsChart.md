@@ -15,15 +15,16 @@ The `CFTAExceptionsChart` component displays Canadian Free Trade Agreement (CFTA
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | `"Canadian Free Trade Agreement Exceptions by Province/Territory"` | Chart title |
-| `showLegend` | `boolean` | `true` | Whether to display the legend |
-| `height` | `number` | `400` | Chart height in pixels |
+| Prop         | Type      | Default                                                            | Description                   |
+| ------------ | --------- | ------------------------------------------------------------------ | ----------------------------- |
+| `title`      | `string`  | `"Canadian Free Trade Agreement Exceptions by Province/Territory"` | Chart title                   |
+| `showLegend` | `boolean` | `true`                                                             | Whether to display the legend |
+| `height`     | `number`  | `400`                                                              | Chart height in pixels        |
 
 ## Data Source
 
 The component uses data from the Canadian Federation of Independent Business (CFIB) located at:
+
 ```
 /metrics/cfib/cfta-expections.json
 ```
@@ -40,8 +41,16 @@ The component uses data from the Canadian Federation of Independent Business (CF
     "unit": "Number of exceptions"
   },
   "data": {
-    "Alberta": [[2022, 6], [2023, 6], [2024, 8]],
-    "Quebec": [[2022, 35], [2023, 35], [2024, 36]],
+    "Alberta": [
+      [2022, 6],
+      [2023, 6],
+      [2024, 8]
+    ],
+    "Quebec": [
+      [2022, 35],
+      [2023, 35],
+      [2024, 36]
+    ]
     // ... other provinces
   }
 }
@@ -52,14 +61,14 @@ The component uses data from the Canadian Federation of Independent Business (CF
 ### Basic Usage
 
 ```tsx
-import CFTAExceptionsChart from '@/components/charts/CFTAExceptionsChart'
+import CFTAExceptionsChart from "@/components/charts/CFTAExceptionsChart";
 
 function Dashboard() {
   return (
     <div className="w-full h-96">
       <CFTAExceptionsChart />
     </div>
-  )
+  );
 }
 ```
 
@@ -77,10 +86,7 @@ function Dashboard() {
 
 ```tsx
 <div className="bg-white border rounded-lg p-6">
-  <CFTAExceptionsChart
-    title="CFTA Exceptions by Province"
-    height={400}
-  />
+  <CFTAExceptionsChart title="CFTA Exceptions by Province" height={400} />
 </div>
 ```
 

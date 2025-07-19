@@ -12,7 +12,11 @@ import {
   Legend,
 } from "chart.js/auto";
 import primaryEnergyData from "@/metrics/statscan/primary-energy.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
 
 ChartJS.register(

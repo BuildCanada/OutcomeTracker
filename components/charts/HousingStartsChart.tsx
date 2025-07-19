@@ -12,7 +12,10 @@ import {
   Legend,
 } from "chart.js/auto";
 import housingStartsData from "@/metrics/statscan/housing-starts.json";
-import { getPrimaryLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
 
 // Register Chart.js components
@@ -35,7 +38,6 @@ interface HousingStartsChartProps {
   monthlyData?: boolean;
   showTrend?: boolean;
 }
-
 
 export default function HousingStartsChart({
   title = "Housing Starts",

@@ -16,18 +16,19 @@ The `FederalPhysicianSupplyPerCapitaChart` component displays federal physician 
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | `"Federal Physician Supply Per Capita"` | Chart title |
-| `startYear` | `number` | `2019` | Starting year for data display |
-| `endYear` | `number` | `2023` | Ending year for data display |
-| `height` | `number` | `400` | Chart height in pixels |
-| `showTarget` | `boolean` | `true` | Show/hide target line |
-| `targetValue` | `number` | `3.5` | Target physicians per 1,000 people |
+| Prop          | Type      | Default                                 | Description                        |
+| ------------- | --------- | --------------------------------------- | ---------------------------------- |
+| `title`       | `string`  | `"Federal Physician Supply Per Capita"` | Chart title                        |
+| `startYear`   | `number`  | `2019`                                  | Starting year for data display     |
+| `endYear`     | `number`  | `2023`                                  | Ending year for data display       |
+| `height`      | `number`  | `400`                                   | Chart height in pixels             |
+| `showTarget`  | `boolean` | `true`                                  | Show/hide target line              |
+| `targetValue` | `number`  | `3.5`                                   | Target physicians per 1,000 people |
 
 ## Data Sources
 
 The component uses data from two sources:
+
 1. **CIHI Physician Supply**: `/metrics/cihi/physician_supply.json`
 2. **StatCan Population**: `/metrics/statscan/population.json`
 
@@ -66,14 +67,14 @@ The component uses data from two sources:
 ### Basic Usage
 
 ```tsx
-import FederalPhysicianSupplyPerCapitaChart from '@/components/charts/FederalPhysicianSupplyPerCapitaChart'
+import FederalPhysicianSupplyPerCapitaChart from "@/components/charts/FederalPhysicianSupplyPerCapitaChart";
 
 function HealthDashboard() {
   return (
     <div className="w-full h-96">
       <FederalPhysicianSupplyPerCapitaChart />
     </div>
-  )
+  );
 }
 ```
 
@@ -127,6 +128,7 @@ This component is specifically designed for the **Department of Health** and pro
 ## Target Context
 
 The default target of 3.5 physicians per 1,000 people represents:
+
 - **Policy Goal**: Federal healthcare workforce expansion target
 - **International Benchmark**: Aligned with developed nation standards
 - **Healthcare Capacity**: Improved access and reduced wait times

@@ -36,8 +36,6 @@ interface ElectricityCapacityChartProps {
   showTrend?: boolean;
 }
 
-
-
 export default function ElectricityCapacityChart({
   title = "National Electricity Capacity",
   startYear = 2015,
@@ -50,11 +48,14 @@ export default function ElectricityCapacityChart({
   const capacityDataObj = electricityCapacityData as {
     data: {
       [key: string]: {
-        [key: string]: (string | number)[][]
-      }
-    }
+        [key: string]: (string | number)[][];
+      };
+    };
   };
-  const capacityData = capacityDataObj.data["National Electricity Capacity"]?.["Total Capacity (GW)"] || [];
+  const capacityData =
+    capacityDataObj.data["National Electricity Capacity"]?.[
+      "Total Capacity (GW)"
+    ] || [];
 
   // Filter data by year range
   const filteredData = capacityData.filter((dataPoint) => {
@@ -67,7 +68,7 @@ export default function ElectricityCapacityChart({
 
   // Get capacity values
   const capacityValues = filteredData.map(
-    (dataPoint) => dataPoint[1] as number
+    (dataPoint) => dataPoint[1] as number,
   );
 
   // Configure datasets for the chart
