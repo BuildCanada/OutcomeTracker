@@ -5,6 +5,7 @@ Source code for the frontend of the [Build Canada Outcome Tracker](https://www.b
 ## Getting Started
 
 - Fork the repo, clone it, and install dependencies:
+
   ```bash
   git clone https://github.com/BuildCanada/OutcomeTracker.git
   cd OutcomeTracker
@@ -16,6 +17,7 @@ Source code for the frontend of the [Build Canada Outcome Tracker](https://www.b
   - If you're running the API locally, set NEXT_PUBLIC_API_URL=http://localhost:3000/
 
 - Run the Frontend
+
   ```bash
   pnpm turbo
   ```
@@ -45,8 +47,8 @@ If linting fails, the commit will be blocked until issues are resolved.
 
 ## Metrics
 
-Metrics are scraped using github actions which automatically updates the repo with up to date data. 
+Metrics are scraped using github actions which automatically updates the repo with up to date data.
 
 ## Contributing
 
-We would love to have your help! Please fill in our volunteer [intake form](https://5nneq7.share-na3.hsforms.com/2l9iIH2gFSomphjDe-ci5OQ). 
+We would love to have your help! Please fill in our volunteer [intake form](https://5nneq7.share-na3.hsforms.com/2l9iIH2gFSomphjDe-ci5OQ).

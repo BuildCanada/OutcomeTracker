@@ -5,6 +5,7 @@ Analyze semantic matches between government evidence and promises to validate th
 
 **Input Data Structure:**
 You will receive:
+
 1. **Evidence Item Information:**
    - `evidence_source_type`: Type of evidence (e.g., "Bill Event (LEGISinfo)", "Canada Gazette Part II", "OIC", "News")
    - `evidence_date`: When this action occurred (YYYY-MM-DD format)
@@ -26,6 +27,7 @@ You will receive:
 **Evaluation Criteria:**
 
 **Direct Implementation (High Confidence: 0.8-1.0):**
+
 - Evidence represents concrete implementation of the specific promise
 - Clear policy area alignment with substantial content overlap
 - Direct departmental responsibility match
@@ -33,6 +35,7 @@ You will receive:
 - Chronological coherence (evidence follows promise appropriately)
 
 **Supporting Action (Medium-High Confidence: 0.6-0.8):**
+
 - Evidence supports or enables promise fulfillment but is not direct implementation
 - Strong policy area alignment with meaningful content connections
 - Evidence represents preparatory work, consultation, or enabling legislation
@@ -40,6 +43,7 @@ You will receive:
 - Clear contribution to promise objectives
 
 **Related Policy (Medium Confidence: 0.4-0.6):**
+
 - Evidence relates to the same policy domain but may be indirect
 - Some policy area overlap with supporting thematic connections
 - Evidence may address broader policy objectives that include the promise
@@ -47,6 +51,7 @@ You will receive:
 - Contextual relationship that provides relevant background
 
 **Not Related (Low Confidence: 0.0-0.4):**
+
 - Evidence is unrelated to promise policy area despite semantic similarity
 - Evidence contradicts or works against the promise objective
 - No meaningful connection despite potential keyword/topic overlap
@@ -54,6 +59,7 @@ You will receive:
 - Semantic match appears to be coincidental or superficial
 
 **Analysis Framework:**
+
 1. **Thematic Alignment**: Do evidence and promise address the same core policy objectives?
 2. **Department Overlap**: Are the responsible departments/ministries aligned?
 3. **Timeline Relevance**: Does the evidence timing make sense relative to the promise?
@@ -79,6 +85,7 @@ Provide your assessment as a JSON object with the following structure:
 ```
 
 **Field Specifications:**
+
 - `confidence_score`: Float 0.0-1.0 representing your overall confidence in the evidence-promise relationship
 - `reasoning`: Detailed explanation of the relationship assessment, focusing on specific connections and evidence quality
 - `category`: One of "Direct Implementation", "Supporting Action", "Related Policy", "Not Related"
@@ -90,18 +97,20 @@ Provide your assessment as a JSON object with the following structure:
 - `progress_indicator`: Assessment of what type of progress (if any) this evidence represents
 
 **Quality Standards:**
+
 - **Precision Focus**: Be conservative - better to rate genuine relationships lower than create false positives
 - **Contextual Understanding**: Consider Canadian federal government structure, departmental responsibilities, and policy implementation processes
 - **Evidence-Based**: Base assessments only on provided information, not external knowledge
 - **Consistent Scoring**: Apply confidence thresholds consistently across evaluations
 - **Specific Reasoning**: Provide concrete rationale for confidence scores and categories
 
-**Government Platform Context:** 
+**Government Platform Context:**
 This analysis covers Canadian federal government commitments and evidence from parliamentary session {parliament_session_id}. Focus on federal jurisdiction, policy implementation, and concrete government actions that advance specific promised outcomes for Canadians.
 
 ---
 
 **Evidence Item:**
+
 - Source Type: {evidence_source_type}
 - Date: {evidence_date}
 - Title/Summary: {evidence_title_or_summary}
@@ -111,6 +120,7 @@ This analysis covers Canadian federal government commitments and evidence from p
 - Parliamentary Session: {parliament_session_id}
 
 **Promise to Evaluate:**
+
 - Promise ID: {promise_id}
 - Promise Text: {promise_text}
 - Description: {promise_description}
@@ -119,4 +129,4 @@ This analysis covers Canadian federal government commitments and evidence from p
 - Responsible Department: {promise_responsible_department_lead}
 - Semantic Similarity Score: {semantic_similarity_score}
 
-Analyze this evidence-promise pair and return your evaluation as a JSON object. 
+Analyze this evidence-promise pair and return your evaluation as a JSON object.

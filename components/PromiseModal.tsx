@@ -35,8 +35,6 @@ interface PromiseModalProps {
   departmentSlug: string;
 }
 
-
-
 // Helper to format YYYY-MM-DD date string
 const formatSimpleDate = (dateString: string | undefined): string => {
   if (!dateString) return "Date unknown";
@@ -130,7 +128,8 @@ export default function PromiseModal({
   const [isCopying, setIsCopying] = useState(false);
   const { toast } = useToast();
 
-  const shareUrl = typeof window !== "undefined"
+  const shareUrl =
+    typeof window !== "undefined"
       ? `${window.location.origin}/tracker/${departmentSlug}/promises/${promise.id}`
       : "";
 

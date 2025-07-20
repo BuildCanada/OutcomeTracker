@@ -13,7 +13,11 @@ import {
   ChartOptions,
 } from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
@@ -38,7 +42,6 @@ interface CapitalFormationChartProps {
   targetValue?: number;
   showTrend?: boolean;
 }
-
 
 export default function CapitalFormationChart({
   title = "% of GDP in capital-focused public and private investment",

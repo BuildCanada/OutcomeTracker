@@ -80,9 +80,7 @@ export default function BalanceSheetsChart({
 
     // Only add comparison if there's data available
     if (filteredComparisonData.length > 0) {
-      const comparisonValues = filteredComparisonData.map(
-        (data) => data[1],
-      );
+      const comparisonValues = filteredComparisonData.map((data) => data[1]);
 
       datasets.push({
         label: comparisonCategory,

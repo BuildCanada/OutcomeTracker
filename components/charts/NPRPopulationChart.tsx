@@ -13,7 +13,11 @@ import {
 } from "chart.js/auto";
 import nprData from "@/metrics/statscan/non-permanent-residents.json";
 import populationData from "@/metrics/statscan/population.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
@@ -36,7 +40,6 @@ interface NPRPopulationChartProps {
   targetValue?: number;
   showTrend?: boolean;
 }
-
 
 export default function NPRPopulationChart({
   title = "Proportion of the Canadian population that is made up of non-permanent residents",

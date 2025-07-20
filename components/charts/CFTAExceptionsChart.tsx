@@ -14,7 +14,10 @@ import {
 } from "chart.js/auto";
 import { Line } from "react-chartjs-2";
 import cftaData from "@/metrics/cfib/cfta-expections.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+} from "@/components/charts/utils/styling";
 
 ChartJS.register(
   CategoryScale,

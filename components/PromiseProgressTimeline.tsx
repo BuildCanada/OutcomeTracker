@@ -22,7 +22,9 @@ export interface TimelineDisplayEvent {
   evidenceSourceType?: string; // Optional evidence source type
 }
 
-const formatDate = (dateInput: Timestamp | string | { seconds: number; nanoseconds: number }): string => {
+const formatDate = (
+  dateInput: Timestamp | string | { seconds: number; nanoseconds: number },
+): string => {
   if (!dateInput) return "Date not available";
   let dateObj: Date;
 

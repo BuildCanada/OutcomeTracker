@@ -15,16 +15,17 @@ The `FederalPhysicianSupplyChart` component displays federal physician supply da
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | `"Federal Physician Supply"` | Chart title |
-| `startYear` | `number` | `2019` | Starting year for data display |
-| `endYear` | `number` | `2023` | Ending year for data display |
-| `height` | `number` | `400` | Chart height in pixels |
+| Prop        | Type     | Default                      | Description                    |
+| ----------- | -------- | ---------------------------- | ------------------------------ |
+| `title`     | `string` | `"Federal Physician Supply"` | Chart title                    |
+| `startYear` | `number` | `2019`                       | Starting year for data display |
+| `endYear`   | `number` | `2023`                       | Ending year for data display   |
+| `height`    | `number` | `400`                        | Chart height in pixels         |
 
 ## Data Source
 
 The component uses data from the Canadian Institute for Health Information (CIHI) located at:
+
 ```
 /metrics/cihi/physician_supply.json
 ```
@@ -50,14 +51,14 @@ The component uses data from the Canadian Institute for Health Information (CIHI
 ### Basic Usage
 
 ```tsx
-import FederalPhysicianSupplyChart from '@/components/charts/FederalPhysicianSupplyChart'
+import FederalPhysicianSupplyChart from "@/components/charts/FederalPhysicianSupplyChart";
 
 function HealthDashboard() {
   return (
     <div className="w-full h-96">
       <FederalPhysicianSupplyChart />
     </div>
-  )
+  );
 }
 ```
 

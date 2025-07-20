@@ -29,7 +29,7 @@ export default function Layout({
     `/tracker/api/v1/departments/${slug}.json`,
     {
       revalidateIfStale: false,
-    }
+    },
   );
 
   if (!department) {
@@ -42,7 +42,10 @@ export default function Layout({
 
       <div className="space-y-4">
         {department.minister && (
-          <MinisterHeader minister={department.minister} promises={department.promises} />
+          <MinisterHeader
+            minister={department.minister}
+            promises={department.promises}
+          />
         )}
         <div className="space-y-4">
           <h3 className="text-2xl">Key Metrics</h3>
@@ -85,12 +88,16 @@ function DepartmentPillLinks({
             key={slug}
             href={`/${slug}`}
             className={`px-4 py-2 text-sm font-mono transition-colors
-              ${currentDepartmentSlug == slug
-                ? "bg-[#8b2332] text-white"
-                : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
+              ${
+                currentDepartmentSlug == slug
+                  ? "bg-[#8b2332] text-white"
+                  : "bg-white text-[#222222] border border-[#d3c7b9] hover:bg-gray-50"
               }`}
-            onMouseEnter={async () => { // Prefetch department data on hover
-              const data = await fetcher(`/tracker/api/v1/departments/${slug}.json`);
+            onMouseEnter={async () => {
+              // Prefetch department data on hover
+              const data = await fetcher(
+                `/tracker/api/v1/departments/${slug}.json`,
+              );
               mutate(`/tracker/api/v1/departments/${slug}.json`, data);
             }}
             scroll={false}

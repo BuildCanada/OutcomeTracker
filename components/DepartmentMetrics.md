@@ -5,6 +5,7 @@ A React component that displays guiding metrics for Canadian government departme
 ## Overview
 
 The `DepartmentMetrics` component takes a `DepartmentSlug` and renders a comprehensive metrics table showing:
+
 - Metric names and definitions
 - 2029 targets
 - Data sources (with links where available)
@@ -13,20 +14,18 @@ The `DepartmentMetrics` component takes a `DepartmentSlug` and renders a compreh
 ## Usage
 
 ```tsx
-import DepartmentMetrics from '@/components/DepartmentMetrics'
+import DepartmentMetrics from "@/components/DepartmentMetrics";
 
 function DepartmentPage() {
-  return (
-    <DepartmentMetrics departmentSlug="finance-canada" />
-  )
+  return <DepartmentMetrics departmentSlug="finance-canada" />;
 }
 ```
 
 ## Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `departmentSlug` | `DepartmentSlug` | Yes | The department identifier to display metrics for |
+| Prop             | Type             | Required | Description                                      |
+| ---------------- | ---------------- | -------- | ------------------------------------------------ |
+| `departmentSlug` | `DepartmentSlug` | Yes      | The department identifier to display metrics for |
 
 ## Supported Departments
 
@@ -34,33 +33,25 @@ The component currently supports metrics for the following departments:
 
 - **Prime Minister** (`privy-council-office`)
   - GDP per capita
-  
 - **Finance** (`finance-canada`)
   - % of GDP in capital-focused public and private investment
   - Operating Deficit
-  
 - **Housing** (`infrastructure-canada`)
   - Housing starts
-  
 - **Immigration** (`immigration-refugees-and-citizenship-canada`)
   - % of PR admissions
   - % NPR population
   - Relative median income of very recent immigrants
-  
 - **Defence** (`national-defence`)
   - % of GDP spent
   - % towards modernization
-  
 - **Energy** (`natural-resources-canada`)
   - Energy exports
   - Time to approval
-  
 - **Government Transformation** (`treasury-board-of-canada-secretariat`)
   - Public service productivity
-  
 - **Innovation** (`innovation-science-and-economic-development-canada`)
   - Labour Productivity Growth
-  
 - **Health** (`health-canada`)
   - Physicians per capita
 

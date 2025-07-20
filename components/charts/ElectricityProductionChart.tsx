@@ -58,20 +58,23 @@ export default function ElectricityProductionChart({
   const productionDataObj = electricityProductionData as {
     data: {
       [key: string]: {
-        [key: string]: (string | number)[][]
-      }
-    }
+        [key: string]: (string | number)[][];
+      };
+    };
   };
-  const allProductionData = productionDataObj.data["National Electricity Production"]?.["Total Production (TWh)"] || [];
+  const allProductionData =
+    productionDataObj.data["National Electricity Production"]?.[
+      "Total Production (TWh)"
+    ] || [];
 
   // Calculate annual totals
   const annualTotals: { [year: string]: number } = {};
-  
+
   allProductionData.forEach((dataPoint) => {
     const dateStr = dataPoint[0] as string;
     const year = dateStr.split("-")[0];
     const value = dataPoint[1] as number;
-    
+
     if (!annualTotals[year]) {
       annualTotals[year] = 0;
     }
@@ -81,7 +84,7 @@ export default function ElectricityProductionChart({
   // Filter by year range and create arrays for chart
   const years: string[] = [];
   const productionValues: number[] = [];
-  
+
   Object.keys(annualTotals)
     .sort()
     .forEach((year: string) => {

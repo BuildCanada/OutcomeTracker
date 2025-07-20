@@ -22,9 +22,10 @@ export default function PromisePage() {
     error,
     isLoading,
   } = useSWR<PromiseDetail>(
-    promise_id ? `/tracker/api/v1/promises/${promise_id}.json` : null, {
-    revalidateIfStale: false,
-  }
+    promise_id ? `/tracker/api/v1/promises/${promise_id}.json` : null,
+    {
+      revalidateIfStale: false,
+    },
   );
 
   // Handle close modal - navigate to parent department page
@@ -93,7 +94,8 @@ export default function PromisePage() {
             Promise Not Found
           </h2>
           <p className="text-gray-600 mb-4">
-            The promise you&apos;re looking for doesn&apos;t exist or has been removed.
+            The promise you&apos;re looking for doesn&apos;t exist or has been
+            removed.
           </p>
           <button
             onClick={handleClose}
@@ -107,5 +109,12 @@ export default function PromisePage() {
   }
 
   // Render the PromiseModal with the fetched data
-  return <PromiseModal promise={promise} isOpen={true} onClose={handleClose} departmentSlug={params.department} />;
+  return (
+    <PromiseModal
+      promise={promise}
+      isOpen={true}
+      onClose={handleClose}
+      departmentSlug={params.department}
+    />
+  );
 }

@@ -49,7 +49,8 @@ const DEPARTMENT_METRICS: Record<
         dataSourceUrl:
           "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=3610010401",
         targetSource: "Statcan",
-        targetSourceUrl: "https://www150.statcan.gc.ca/n1/pub/36-28-0001/2024004/article/00001-eng.htm",
+        targetSourceUrl:
+          "https://www150.statcan.gc.ca/n1/pub/36-28-0001/2024004/article/00001-eng.htm",
         brendanStatus: "Done, need to add to PM page",
       },
     ],
@@ -267,7 +268,8 @@ const DEPARTMENT_METRICS: Record<
         dataSource: "Canadian Federation of Independent Business",
         dataSourceUrl: "https://www.cfib-fcei.ca/",
         targetSource: "Liberal Party",
-        targetSourceUrl: "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
+        targetSourceUrl:
+          "https://liberal.ca/wp-content/uploads/sites/292/2025/04/Canada-Strong.pdf",
         brendanStatus: "Done, chart added",
       },
     ],
@@ -280,7 +282,8 @@ const DEPARTMENT_METRICS: Record<
         definition: "Total electricity generating capacity in Canada",
         target2029: "145.96 GW → 175.15 GW (20% increase)",
         dataSource: "Statistics Canada",
-        dataSourceUrl: "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510002201",
+        dataSourceUrl:
+          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510002201",
         targetSource: "Build Canada",
         targetSourceUrl: "",
         brendanStatus: "Done, chart added",
@@ -290,7 +293,8 @@ const DEPARTMENT_METRICS: Record<
         definition: "Total electricity generated in Canada (annualized)",
         target2029: "626 TWh/year → 751 TWh/year (20% above 2020-2024 avg)",
         dataSource: "Statistics Canada",
-        dataSourceUrl: "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510001501",
+        dataSourceUrl:
+          "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=2510001501",
         targetSource: "Build Canada",
         targetSourceUrl: "",
         brendanStatus: "Done, chart added",
@@ -298,7 +302,6 @@ const DEPARTMENT_METRICS: Record<
     ],
   },
 };
-
 
 const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
   const departmentData = DEPARTMENT_METRICS[departmentSlug];
@@ -314,7 +317,12 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
             targetSource={departmentData.metrics[0].targetSource}
             targetSourceUrl={departmentData.metrics[0].targetSourceUrl}
           >
-            <GDPPerCapitaChart title="Growth in GDP per capita" showTarget={true} targetValue={2.0} startYear={2021} />
+            <GDPPerCapitaChart
+              title="Growth in GDP per capita"
+              showTarget={true}
+              targetValue={2.0}
+              startYear={2021}
+            />
           </ChartWithSource>
         </div>
       );
@@ -379,7 +387,6 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
           </div>
 
           <div className="col-span-1">
-
             <ChartWithSource
               dataSource={departmentData.metrics[0].dataSource}
               dataSourceUrl={departmentData.metrics[0].dataSourceUrl}

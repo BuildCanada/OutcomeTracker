@@ -1,5 +1,3 @@
-
-
 /**
  * Chart color constants used for primary data series, target lines, and trend lines.
  */
