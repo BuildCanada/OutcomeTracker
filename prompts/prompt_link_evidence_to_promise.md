@@ -8,6 +8,7 @@ You MUST use ONLY the exact promise text provided in the Government Promises lis
 
 **Input Data Structure:**
 You will receive:
+
 1. **Evidence Item Information:**
    - `evidence_source_type`: Type of evidence (e.g., "Bill Event (LEGISinfo)", "Canada Gazette Part II", "OIC", "News")
    - `evidence_date`: When this action occurred (YYYY-MM-DD format)
@@ -25,6 +26,7 @@ You will receive:
 **Linking Analysis Guidelines:**
 
 **Strong Links (High Confidence):**
+
 - Evidence represents direct implementation of the promise
 - Clear policy area alignment with substantial content overlap
 - Evidence shows concrete legislative, regulatory, or programmatic action toward the promise
@@ -32,18 +34,21 @@ You will receive:
 - Chronological coherence (evidence follows promise timeline appropriately)
 
 **Medium Links (Medium Confidence):**
+
 - Evidence relates to the promise but may be partial or indirect implementation
 - Some policy area overlap with supporting content connections
 - Evidence represents preparatory work, consultation, or early-stage progress
 - Reasonable departmental/ministerial alignment
 
 **No Link Criteria:**
+
 - Evidence is unrelated to promise policy area
 - Evidence contradicts or works against the promise objective
 - No meaningful semantic connection despite potential keyword overlap
 - Evidence is too general or administrative to constitute promise progress
 
 **Evaluation Process:**
+
 1. **Semantic Analysis**: Understand the core meaning and intent of both evidence and each promise
 2. **Policy Alignment**: Assess whether evidence and promise address the same policy objectives
 3. **Implementation Level**: Determine if evidence represents meaningful progress toward promise fulfillment
@@ -54,6 +59,7 @@ You will receive:
 Provide your assessment as a JSON array. Each element should be an object representing a strong or medium confidence link found. If no meaningful links exist, return an empty array `[]`.
 
 For each identified link, include:
+
 ```json
 {{
   "promise_text": "EXACT_TEXT_FROM_PROVIDED_LIST",
@@ -66,6 +72,7 @@ For each identified link, include:
 ```
 
 **Field Specifications:**
+
 - `promise_text`: **MUST be an exact match from the provided promise list** - do not modify, abbreviate, or create new text
 - `llm_relevance_score`: Integer 1-10 where 10 = completely certain direct relationship, 1 = very weak connection
 - `llm_ranking_score`: "High" (strong, direct relationship) or "Medium" (reasonable but less certain relationship)
@@ -74,6 +81,7 @@ For each identified link, include:
 - `llm_status_impact_suggestion`: Assessment of how this evidence affects promise completion status
 
 **Key Requirements:**
+
 - **Promise Text Accuracy**: CRITICAL - Use only exact promise text from the input list
 - **Precision over Recall**: Only include links you are confident about - better to miss a weak connection than create false positives
 - **Semantic Focus**: Look beyond keyword matching to understand policy intent and implementation relationships
@@ -81,12 +89,13 @@ For each identified link, include:
 - **Concise Explanations**: Keep rationales focused and specific to the evidence-promise relationship
 - **Consistent Scoring**: Use the 1-10 relevance scale consistently across all evaluations
 
-**Government Platform Context:** 
+**Government Platform Context:**
 This analysis covers Canadian federal government commitments and evidence from parliamentary session {{parliament_session_id}}. Focus on federal jurisdiction, policy implementation, and concrete government actions that advance specific promised outcomes for Canadians.
 
 ---
 
 **Evidence Item to Analyze:**
+
 - Source Type: {{evidence_source_type}}
 - Date: {{evidence_date}}
 - Title/Summary: {{evidence_title_or_summary}}

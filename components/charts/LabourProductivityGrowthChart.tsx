@@ -12,7 +12,11 @@ import {
   Legend,
 } from "chart.js/auto";
 import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
 import { calculateLinearTrend } from "./utils/trendCalculator";
 
@@ -37,7 +41,6 @@ interface LabourProductivityGrowthChartProps {
   showProductivityIndex?: boolean;
   showTrend?: boolean;
 }
-
 
 export default function LabourProductivityGrowthChart({
   title = "Labour Productivity Growth",
@@ -101,7 +104,9 @@ export default function LabourProductivityGrowthChart({
   // Align labels and data arrays to start from first valid growth rate (index 4)
   labels = labels.slice(4);
   const alignedGrowthRates = growthRates.slice(4);
-  const alignedProductivityValues = showProductivityIndex ? productivityValues.slice(4) : [];
+  const alignedProductivityValues = showProductivityIndex
+    ? productivityValues.slice(4)
+    : [];
 
   const datasets: LineChartDataset[] = [
     {

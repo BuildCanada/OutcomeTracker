@@ -1,4 +1,5 @@
 # run: yt-dlp --flat-playlist --get-id "https://youtube.com/playlist?list=PLdgoQ6C3ckQuaoaJzKO95KQjmmwRhGiGj&si=Q0eAccBYHNheAB-M"
+
 Xkb4Fjd-Spo
 OJe2DM8KvG4
 EPYeLJemVB4
@@ -121,7 +122,7 @@ U_2SDDhZQlU
 MS57q6H1AUo
 Zb5JUv_m31Y
 md7_PcVm3qE
-_O3xJ-yqBIo
+\_O3xJ-yqBIo
 2kraoukaZPg
 V8pnuIxnuaE
 PKt01PY8v70
@@ -188,7 +189,7 @@ DMeMbccK_q8
 tPmYMBRwsao
 hp1OTnK4rmA
 ezhWwpKcJzg
-_VsrKtE5nhM
+\_VsrKtE5nhM
 Jw8TMVxWYS4
 BO8Zz0PCp_k
 2Vi4DvNq5Vg
@@ -246,7 +247,7 @@ OM8L8GHFOxU
 kSNTvTYc-s4
 r0BIeVqh2C0
 Xp0R3a5DOCE
-RVmkV-_lZL0
+RVmkV-\_lZL0
 IWqXuyxp5NA
 xk7kPmirgwM
 08uArz2CQ08
@@ -257,7 +258,7 @@ RqS2h7vHCiE
 7O0ED4NXDkc
 CjcE0kepUr0
 vivriFtUxbA
-nbsPZse__50
+nbsPZse\_\_50
 eo0r40zg3x4
 EOZiY_HoOrs
 n7NbDyFRcsA
@@ -305,7 +306,7 @@ U6fAlYl9r_A
 2bi_-C_8GdE
 Mkdk92Fs6wA
 UWD0XtUz32M
-_thhxFY0IjY
+\_thhxFY0IjY
 4cO6m5wgWNw
 mWDOi5SDqqM
 7rGnyIhQLdo
@@ -321,7 +322,7 @@ H8eAKwZfbIc
 8VNy5plCeQU
 UhBOggJStzo
 ZmEXdJD3z94
-_q4pwkwHaxw
+\_q4pwkwHaxw
 rqGPcuaOhyk
 e4ozd-UXc4Q
 r1s6t-uviko
@@ -353,7 +354,7 @@ xqJn9Ofs1bI
 OQ-YRjsvqcw
 MXXbj4x8R-E
 giw0N8i8wqA
-K5qRPn7__JA
+K5qRPn7\_\_JA
 iaVgtrM1S9g
 -jxmJo0y0kw
 dn0hTu09Fa4

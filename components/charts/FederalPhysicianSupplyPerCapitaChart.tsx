@@ -13,7 +13,11 @@ import {
 } from "chart.js/auto";
 import physicianData from "@/metrics/cihi/physician_supply.json";
 import populationData from "@/metrics/statscan/population.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
 import { calculateLinearTrend } from "./utils/trendCalculator";
 
@@ -48,35 +52,40 @@ export default function FederalPhysicianSupplyPerCapitaChart({
 }: FederalPhysicianSupplyPerCapitaChartProps) {
   // Get federal physician supply data
   const physicianDataObj = physicianData as any;
-  const federalPhysicianData = physicianDataObj.Canada["Physician Supply"] || [];
+  const federalPhysicianData =
+    physicianDataObj.Canada["Physician Supply"] || [];
 
   // Get federal population data
   const populationDataObj = populationData as any;
   const canadaPopulationData = populationDataObj.data.Canada || [];
 
   // Filter physician data by year range
-  const filteredPhysicianData = federalPhysicianData.filter(function (item: any) {
+  const filteredPhysicianData = federalPhysicianData.filter(function (
+    item: any,
+  ) {
     const year = parseInt(item[0]);
     return year >= startYear && year <= endYear;
   });
 
   // Calculate per capita values (physicians per 1000 people)
-  const perCapitaData = filteredPhysicianData.map(function (physicianItem: any) {
+  const perCapitaData = filteredPhysicianData.map(function (
+    physicianItem: any,
+  ) {
     const year = physicianItem[0];
     const physicianCount = physicianItem[1];
-    
+
     // Find population data for January 1st of the year
     const yearStr = `${year}-01`;
-    const populationItem = canadaPopulationData.find((popItem: any) => 
-      popItem[0] === yearStr
+    const populationItem = canadaPopulationData.find(
+      (popItem: any) => popItem[0] === yearStr,
     );
-    
+
     if (populationItem) {
       const population = populationItem[1];
       const perCapita = (physicianCount / population) * 1000; // per 1000 people
       return [year, perCapita];
     }
-    
+
     return [year, 0];
   });
 
@@ -166,7 +175,10 @@ export default function FederalPhysicianSupplyPerCapitaChart({
       y: {
         beginAtZero: false,
         min: Math.min(2.0, Math.min(...chartValues) - 0.1),
-        max: Math.max(targetValue ? targetValue + 0.3 : 4.0, Math.max(...chartValues) + 0.1),
+        max: Math.max(
+          targetValue ? targetValue + 0.3 : 4.0,
+          Math.max(...chartValues) + 0.1,
+        ),
         title: {
           display: true,
           text: "Physicians per 1,000 people",

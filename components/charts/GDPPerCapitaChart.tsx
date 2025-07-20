@@ -14,11 +14,23 @@ import {
 import gdpData from "@/metrics/statscan/gdp.json";
 import populationData from "@/metrics/statscan/population.json";
 import { calculatePerCapita } from "./utils/PerCapitaCalculator";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "./utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "./utils/styling";
 import { calculateLinearTrend } from "./utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 interface GDPPerCapitaChartProps {
   title?: string;
@@ -48,7 +60,11 @@ export default function GDPPerCapitaChart({
   const populationCanadaData = (populationData as any).data["Canada"] || [];
 
   // Calculate per capita values (in thousands of dollars)
-  const perCapitaValues = calculatePerCapita(gdpMetricData, populationCanadaData, 1000000);
+  const perCapitaValues = calculatePerCapita(
+    gdpMetricData,
+    populationCanadaData,
+    1000000,
+  );
 
   // Filter data by year range
   const filteredData = perCapitaValues.filter((dataPoint) => {
@@ -57,16 +73,23 @@ export default function GDPPerCapitaChart({
   });
 
   // Calculate year-over-year growth rates
-  const growthRates: (number | null)[] = filteredData.map((dataPoint, index) => {
-    if (index < 4) return null; // Need at least 4 quarters for YoY comparison
+  const growthRates: (number | null)[] = filteredData.map(
+    (dataPoint, index) => {
+      if (index < 4) return null; // Need at least 4 quarters for YoY comparison
 
-    const currentValue = dataPoint.value;
-    const previousYearValue = filteredData[index - 4].value;
+      const currentValue = dataPoint.value;
+      const previousYearValue = filteredData[index - 4].value;
 
-    if (previousYearValue === 0 || previousYearValue === null || currentValue === null) return null;
+      if (
+        previousYearValue === 0 ||
+        previousYearValue === null ||
+        currentValue === null
+      )
+        return null;
 
-    return ((currentValue - previousYearValue) / previousYearValue) * 100;
-  });
+      return ((currentValue - previousYearValue) / previousYearValue) * 100;
+    },
+  );
 
   // Format dates for display
   let labels = filteredData.map((dataPoint) => {
@@ -177,10 +200,16 @@ export default function GDPPerCapitaChart({
       tooltip: {
         callbacks: {
           label: function (context: any) {
-            if (context.dataset.label && context.dataset.label.includes("Target")) {
+            if (
+              context.dataset.label &&
+              context.dataset.label.includes("Target")
+            ) {
               return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
             }
-            if (context.dataset.label && context.dataset.label.includes("Growth Rate")) {
+            if (
+              context.dataset.label &&
+              context.dataset.label.includes("Growth Rate")
+            ) {
               if (context.parsed.y === null) return null;
               return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
             }

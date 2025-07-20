@@ -1,4 +1,11 @@
-import { PRIMARY_BORDER_COLOR, PRIMARY_BG_COLOR, TARGET_BORDER_COLOR, TARGET_BG_COLOR, TREND_BORDER_COLOR, TREND_BG_COLOR } from "./constants";
+import {
+  PRIMARY_BORDER_COLOR,
+  PRIMARY_BG_COLOR,
+  TARGET_BORDER_COLOR,
+  TARGET_BG_COLOR,
+  TREND_BORDER_COLOR,
+  TREND_BG_COLOR,
+} from "./constants";
 import type { LineChartDataset } from "../types";
 
 /**
@@ -6,7 +13,9 @@ import type { LineChartDataset } from "../types";
  * @param options - Optional properties to override defaults
  * @returns Style object for primary datasets
  */
-export const getPrimaryLineStyling = (options: Partial<LineChartDataset> = {}): Partial<LineChartDataset> => ({
+export const getPrimaryLineStyling = (
+  options: Partial<LineChartDataset> = {},
+): Partial<LineChartDataset> => ({
   borderColor: PRIMARY_BORDER_COLOR,
   backgroundColor: PRIMARY_BG_COLOR,
   tension: 0.3,
@@ -18,7 +27,9 @@ export const getPrimaryLineStyling = (options: Partial<LineChartDataset> = {}): 
  * @param options - Optional properties to override defaults
  * @returns Style object for target datasets
  */
-export const getTargetLineStyling = (options: Partial<LineChartDataset> = {}): Partial<LineChartDataset> => ({
+export const getTargetLineStyling = (
+  options: Partial<LineChartDataset> = {},
+): Partial<LineChartDataset> => ({
   borderColor: TARGET_BORDER_COLOR,
   backgroundColor: TARGET_BG_COLOR,
   borderWidth: 2,
@@ -33,7 +44,9 @@ export const getTargetLineStyling = (options: Partial<LineChartDataset> = {}): P
  * @param options - Optional properties to override defaults
  * @returns Style object for trend datasets
  */
-export const getTrendLineStyling = (options: Partial<LineChartDataset> = {}): Partial<LineChartDataset> => ({
+export const getTrendLineStyling = (
+  options: Partial<LineChartDataset> = {},
+): Partial<LineChartDataset> => ({
   borderColor: TREND_BORDER_COLOR,
   backgroundColor: TREND_BG_COLOR,
   tension: 0,

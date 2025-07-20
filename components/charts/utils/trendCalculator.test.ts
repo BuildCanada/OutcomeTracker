@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { calculateLinearTrend, calculateMovingAverage } from "./trendCalculator";
+import {
+  calculateLinearTrend,
+  calculateMovingAverage,
+} from "./trendCalculator";
 
 describe("calculateLinearTrend", () => {
   it("should calculate linear trend for perfect sequences", () => {
@@ -90,7 +93,7 @@ describe("calculateMovingAverage", () => {
   it("should handle invalid period (zero or negative)", () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const data = [1, 2, 3, 4, 5];
-    
+
     expect(calculateMovingAverage(data, 0)).toEqual([]);
     expect(calculateMovingAverage(data, -1)).toEqual([]);
     expect(consoleSpy).toHaveBeenCalledTimes(2);

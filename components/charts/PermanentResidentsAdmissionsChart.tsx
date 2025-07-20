@@ -13,7 +13,11 @@ import {
 } from "chart.js/auto";
 import permanentResidentsAdmissionsData from "@/metrics/statscan/components-population-growth.json";
 import populationData from "@/metrics/statscan/population.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
@@ -60,7 +64,7 @@ export default function PermanentResidentsAdmissionsChart({
   });
 
   // Calculate annualized immigrants (sum of last 4 quarters) and percentage
-  const annualizedData: Array<{ date: string, value: number }> = [];
+  const annualizedData: Array<{ date: string; value: number }> = [];
 
   // Group immigrants data by year-quarter for easier processing
   const immigrantsByQuarter: Record<string, number> = {};

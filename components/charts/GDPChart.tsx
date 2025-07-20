@@ -12,7 +12,10 @@ import {
   Legend,
 } from "chart.js/auto";
 import gdpData from "@/metrics/statscan/gdp.json";
-import { getPrimaryLineStyling, getTargetLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+} from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
 
 // Define TypeScript interfaces for our data structure

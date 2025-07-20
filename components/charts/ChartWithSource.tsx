@@ -17,9 +17,7 @@ export default function ChartWithSource({
 }: ChartWithSourceProps) {
   return (
     <div className="border mb-8">
-      <div className="pt-4 px-4">
-        {children}
-      </div>
+      <div className="pt-4 px-4">{children}</div>
       <div className="px-4 pb-4 text-xs text-gray-500">
         Source:{" "}
         {dataSourceUrl ? (
@@ -55,4 +53,4 @@ export default function ChartWithSource({
       </div>
     </div>
   );
-} 
+}
