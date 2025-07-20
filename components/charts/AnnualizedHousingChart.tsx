@@ -13,7 +13,11 @@ import {
   Legend,
 } from "chart.js/auto";
 import housingStartsData from "@/metrics/statscan/housing-starts.json";
-import { getPrimaryLineStyling, getTargetLineStyling, getTrendLineStyling } from "@/components/charts/utils/styling";
+import {
+  getPrimaryLineStyling,
+  getTargetLineStyling,
+  getTrendLineStyling,
+} from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
 
@@ -39,8 +43,6 @@ interface AnnualizedHousingChartProps {
   targetValue?: number;
   showTrend?: boolean;
 }
-
-
 
 export default function AnnualizedHousingChart({
   title = "Annualized Housing Starts",
