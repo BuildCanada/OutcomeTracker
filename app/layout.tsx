@@ -1,7 +1,6 @@
 import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/header";
 import { Toaster } from "@/components/ui/toaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 import SWRProvider from "@/components/SWRProvider";
@@ -62,11 +61,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className="bg-background">
       <body className={`text-neutral-800 bg-background`}>
         <div className="border-2 border-black m-5">
-          <Header />
           <main className="container mx-auto bg-background site-main-content">
             <SWRProvider>
               <div className="min-h-screen">
-                <div className="container px-4 py-12">
+                <div className="container px-4 py-6">
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <Sidebar pageTitle="Outcomes Tracker" />
                     <div className="col-span-3">{children}</div>
@@ -76,27 +74,15 @@ export default function RootLayout({
             </SWRProvider>
           </main>
 
-          {/* Footer styled to mimic buildcanada.com */}
           <footer
-            className="mt-16 py-12 text-neutral-300"
+            className="mt-16 px-4 py-8 text-neutral-300"
             style={{ backgroundColor: "#272727" }}
           >
             <div className="container mx-auto">
               <div className="mb-8">
-                <h1 className="text-3xl font-semibold text-white">
-                  Build Canada
-                </h1>
-              </div>
-              <div className="mb-8">
                 <p className="text-white">
-                  A non-partisan platform tracking progress of key commitments
-                  during the 45th Parliament of Canada.
+                  🏗️🇨🇦 A <a href="/" className="underline decoration-white">Build Canada</a> project.
                 </p>
-              </div>
-              <div className="footprint">
-                <div className="copyright text-white mb-6">
-                  <div className="text-sm">🏗️🇨🇦 &copy; Build Canada 2025</div>
-                </div>
               </div>
             </div>
           </footer>
