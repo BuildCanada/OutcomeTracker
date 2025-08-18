@@ -30,13 +30,6 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
               We wanted to better understand what is being done in key areas that matter to Canadians like us. We built this tracker to know what key commitments have been made, what their progress has been, and how they impact outcomes.
             </p>
           </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Where do commitments come from?</h3>
-            <p className="text-gray-700">
-              We have pulled commitments from the Liberal Party&apos;s platform. We show the original text and the source in each commitment&apos;s details. As new commitments are made, we will add these in.
-            </p>
-          </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">
@@ -45,7 +38,7 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
             <p className="text-gray-700">
               We have pulled commitments from the Liberal Party&apos;s platform.
               We show the original text and the source in each commitment&apos;s
-              details. As new commitments are made,we will add these in.
+              details. As new commitments are made, we will add these in.
             </p>
           </div>
 
