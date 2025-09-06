@@ -48,7 +48,7 @@ export default function ProductivityChart({
   title = "Public Service Productivity",
   sector = "Non-business sector and others",
   startYear = 2015,
-  endYear = 2024,
+  endYear = 2025,
   quarterlyData = true,
   showTarget = true,
   targetValue = 120,
