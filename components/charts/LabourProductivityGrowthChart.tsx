@@ -11,7 +11,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js/auto";
-import labourProductivityData from "@/metrics/statscan/labour-productivity.json";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -19,6 +18,7 @@ import {
 } from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
 import { calculateLinearTrend } from "./utils/trendCalculator";
+import useSWR from "swr";
 
 ChartJS.register(
   CategoryScale,
@@ -42,6 +42,8 @@ interface LabourProductivityGrowthChartProps {
   showTrend?: boolean;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function LabourProductivityGrowthChart({
   title = "Labour Productivity Growth",
   sector = "Total economy",
@@ -53,16 +55,38 @@ export default function LabourProductivityGrowthChart({
   showProductivityIndex = false,
   showTrend = true,
 }: LabourProductivityGrowthChartProps) {
-  // Get data for selected sector
-  const productivityDataObj = labourProductivityData as any;
-  const sectorData = productivityDataObj.data[sector] || [];
+  const {
+    data: productivityData,
+    error,
+    isLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/labour-productivity-quarterly",
+    fetcher,
+  );
 
-  // Filter data by year range
-  const filteredData = sectorData.filter((dataPoint: [string, number]) => {
-    const dateStr = dataPoint[0];
-    const year = parseInt(dateStr.split("-")[0]);
-    return year >= startYear && year <= endYear;
-  });
+  if (isLoading) {
+    return <div>Loading labour productivity data...</div>;
+  }
+
+  if (error || !productivityData) {
+    return <div>Error loading labour productivity data</div>;
+  }
+
+  // Transform the new API data format
+  const apiData = productivityData.current_data || [];
+
+  // Filter data by sector and year range
+  const filteredData = apiData
+    .filter((item: any) => {
+      const year = parseInt(item.REF_DATE.split("-")[0]);
+      return (
+        year >= startYear &&
+        year <= endYear &&
+        item["North American Industry Classification System (NAICS)"] === sector
+      );
+    })
+    .map((item: any) => [item.REF_DATE, item.VALUE])
+    .sort((a: any, b: any) => a[0].localeCompare(b[0]));
 
   // Calculate year-over-year growth rates
   const growthRates: (number | null)[] = filteredData.map(
