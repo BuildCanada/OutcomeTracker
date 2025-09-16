@@ -11,9 +11,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js/auto";
-import gdpData from "@/metrics/statscan/gdp.json";
-import populationData from "@/metrics/statscan/population.json";
 import { calculatePerCapita } from "./utils/PerCapitaCalculator";
+import useSWR from "swr";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -44,6 +43,8 @@ interface GDPPerCapitaChartProps {
   showTrend?: boolean;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function GDPPerCapitaChart({
   title = "GDP Per Capita",
   gdpMeasure = "Gross domestic product at market prices",
@@ -55,9 +56,48 @@ export default function GDPPerCapitaChart({
   targetValue = 50,
   showTrend = true,
 }: GDPPerCapitaChartProps) {
-  // Get data sources
-  const gdpMetricData = (gdpData as any).data[gdpMeasure] || [];
-  const populationCanadaData = (populationData as any).data["Canada"] || [];
+  const {
+    data: gdpData,
+    error: gdpError,
+    isLoading: gdpLoading,
+  } = useSWR("/tracker/api/v1/statcan_datasets/gdp-quarterly", fetcher);
+
+  const {
+    data: populationData,
+    error: populationError,
+    isLoading: populationLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/population-estimates-quarterly",
+    fetcher,
+  );
+
+  if (gdpLoading || populationLoading) {
+    return <div>Loading GDP per capita data...</div>;
+  }
+
+  if (gdpError || populationError || !gdpData || !populationData) {
+    return <div>Error loading GDP per capita data</div>;
+  }
+
+  // Transform the new API data format
+  const gdpApiData = gdpData.current_data || [];
+  const populationApiData = populationData.current_data || [];
+
+  // Filter GDP data by measure
+  const gdpMetricData = gdpApiData
+    .filter((item: any) => {
+      return item["Estimates"] === gdpMeasure;
+    })
+    .map((item: any) => [item.REF_DATE, item.VALUE])
+    .sort((a: any, b: any) => a[0].localeCompare(b[0]));
+
+  // Filter population data for Canada
+  const populationCanadaData = populationApiData
+    .filter((item: any) => {
+      return item["GEO"] === "Canada";
+    })
+    .map((item: any) => [item.REF_DATE, item.VALUE])
+    .sort((a: any, b: any) => a[0].localeCompare(b[0]));
 
   // Calculate per capita values (in thousands of dollars)
   const perCapitaValues = calculatePerCapita(
