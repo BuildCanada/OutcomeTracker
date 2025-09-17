@@ -11,8 +11,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js/auto";
-import permanentResidentsAdmissionsData from "@/metrics/statscan/components-population-growth.json";
-import populationData from "@/metrics/statscan/population.json";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -20,6 +18,7 @@ import {
 } from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
+import useSWR from "swr";
 
 ChartJS.register(
   CategoryScale,
@@ -41,6 +40,8 @@ interface PermanentResidentsAdmissionsChartProps {
   showTrend?: boolean;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function PermanentResidentsAdmissionsChart({
   title = "Permanent Residents Admissions (% of Population)",
   startYear = 2021,
@@ -50,28 +51,58 @@ export default function PermanentResidentsAdmissionsChart({
   targetValue = 1.0,
   showTrend = true,
 }: PermanentResidentsAdmissionsChartProps) {
-  // Get data sources
-  const prAdmissionsDataObj = permanentResidentsAdmissionsData as any;
-  const populationDataObj = populationData as any;
-  const immigrantsData = prAdmissionsDataObj.data["Immigrants"] || [];
-  const totalPopulation = populationDataObj.data["Canada"] || [];
+  const {
+    data: populationData,
+    error: popError,
+    isLoading: popLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/population-estimates-quarterly",
+    fetcher,
+  );
 
-  // Build a lookup for total population data
+  const {
+    data: componentsData,
+    error: componentsError,
+    isLoading: componentsLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/components-population-growth",
+    fetcher,
+  );
+
+  if (popLoading || componentsLoading) {
+    return <div>Loading population data...</div>;
+  }
+
+  if (popError || componentsError || !populationData || !componentsData) {
+    return <div>Error loading population data</div>;
+  }
+
+  // Get data sources from APIs
+  const popApiData = populationData.current_data || [];
+  const componentsApiData = componentsData.current_data || [];
+
+  // Build a lookup for total population data from API
   const populationLookup: Record<string, number> = {};
-  // @ts-ignore
-  totalPopulation.forEach(function (item: any) {
-    populationLookup[item[0]] = item[1];
-  });
+  popApiData
+    .filter((item: any) => item.GEO === "Canada")
+    .forEach((item: any) => {
+      populationLookup[item.REF_DATE] = parseInt(item.VALUE);
+    });
 
   // Calculate annualized immigrants (sum of last 4 quarters) and percentage
   const annualizedData: Array<{ date: string; value: number }> = [];
 
   // Group immigrants data by year-quarter for easier processing
   const immigrantsByQuarter: Record<string, number> = {};
-  // @ts-ignore
-  immigrantsData.forEach(function (item: any) {
-    immigrantsByQuarter[item[0]] = item[1];
-  });
+  componentsApiData
+    .filter(
+      (item: any) =>
+        item["Components of population growth"] === "Immigrants" &&
+        item.GEO === "Canada",
+    )
+    .forEach((item: any) => {
+      immigrantsByQuarter[item.REF_DATE] = parseInt(item.VALUE);
+    });
 
   // Calculate annualized values (sum of 4 quarters)
   const quarters = Object.keys(immigrantsByQuarter).sort();
