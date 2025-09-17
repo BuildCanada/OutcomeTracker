@@ -11,13 +11,13 @@ import {
   Tooltip,
   Legend,
 } from "chart.js/auto";
-import primaryEnergyData from "@/metrics/statscan/primary-energy.json";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
   getTrendLineStyling,
 } from "@/components/charts/utils/styling";
 import { LineChartDataset } from "@/components/charts/types";
+import useSWR from "swr";
 
 ChartJS.register(
   CategoryScale,
@@ -40,26 +40,51 @@ interface PrimaryEnergyChartProps {
   showTrend?: boolean;
 }
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function PrimaryEnergyChart({
   title = "Total Primary Energy Production",
-  category = "Primary energy",
+  category = "Total energy",
   startYear = 2015,
-  endYear = 2024,
+  endYear = 2025,
   monthlyData = true,
   showTarget = false,
   targetValue = 2500000,
   showTrend = true,
 }: PrimaryEnergyChartProps) {
-  // Get data for selected energy category
-  const energyDataObj = primaryEnergyData as any;
-  const productionData = energyDataObj.data[category]?.Production || [];
+  const {
+    data: energyData,
+    error,
+    isLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/consolidated-energy-statistics-monthly",
+    fetcher,
+  );
 
-  // Filter data by year range
-  const filteredData = productionData.filter((dataPoint: [string, number]) => {
-    const dateStr = dataPoint[0];
-    const year = parseInt(dateStr.split("-")[0]);
-    return year >= startYear && year <= endYear;
-  });
+  if (isLoading) {
+    return <div>Loading energy data...</div>;
+  }
+
+  if (error || !energyData) {
+    return <div>Error loading energy data</div>;
+  }
+
+  // Transform the new API data format
+  const apiData = energyData.current_data || [];
+
+  // Filter data by fuel type, production characteristic, and year range
+  const filteredData = apiData
+    .filter((item: any) => {
+      const year = parseInt(item.REF_DATE.split("-")[0]);
+      return (
+        year >= startYear &&
+        year <= endYear &&
+        item["Fuel type"] === category &&
+        item["Supply and demand characteristics"] === "Production"
+      );
+    })
+    .map((item: any) => [item.REF_DATE, item.VALUE])
+    .sort((a: any, b: any) => a[0].localeCompare(b[0]));
 
   // Format dates for display
   const labels = filteredData.map((dataPoint: [string, number]) => {

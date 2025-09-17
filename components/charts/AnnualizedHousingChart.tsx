@@ -5,14 +5,12 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
   PointElement,
   LineElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js/auto";
-import housingStartsData from "@/metrics/statscan/housing-starts.json";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -20,12 +18,12 @@ import {
 } from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
+import useSWR from "swr";
 
 // Register Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
   PointElement,
   LineElement,
   Title,
@@ -53,16 +51,51 @@ export default function AnnualizedHousingChart({
   targetValue = 300000,
   showTrend = true,
 }: AnnualizedHousingChartProps) {
-  // Get data for selected housing category
-  const housingData = housingStartsData as any;
-  const categoryData = housingData.data[category] || [];
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-  // Filter data by year range
-  const filteredData = categoryData.filter((dataPoint: [string, number]) => {
-    const dateStr = dataPoint[0];
-    const year = parseInt(dateStr.split("-")[0]);
-    return year >= startYear && year <= endYear;
-  });
+  const {
+    data: housingData,
+    error,
+    isLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/housing-starts-monthly",
+    fetcher,
+  );
+
+  if (isLoading) {
+    return <div>Loading annualized housing data...</div>;
+  }
+
+  if (error || !housingData) {
+    return <div>Error loading annualized housing data</div>;
+  }
+
+  // Transform the new API data format
+  const apiData = housingData.current_data || [];
+
+  // Filter data by housing type and year range
+  const filteredData = apiData
+    .filter((item: any) => {
+      const year = parseInt(item.REF_DATE.split("-")[0]);
+      return (
+        year >= startYear &&
+        year <= endYear &&
+        item["Type of unit"] === category &&
+        item.VALUE != null &&
+        !isNaN(Number(item.VALUE))
+      );
+    })
+    .map((item: any) => [item.REF_DATE, Number(item.VALUE)])
+    .sort((a: any, b: any) => a[0].localeCompare(b[0]));
+
+  // Early return if we don't have enough data
+  if (filteredData.length < 12) {
+    return (
+      <div>
+        Not enough data for annualized calculation (need at least 12 months)
+      </div>
+    );
+  }
 
   // Calculate trailing 12-month sums for each month
   const trailingData: { date: string; sum: number }[] = [];
@@ -76,7 +109,10 @@ export default function AnnualizedHousingChart({
 
         // Sum the current month and previous 11 months
         for (let i = 0; i < 12; i++) {
-          sum += array[index - i][1];
+          const value = array[index - i][1];
+          if (!isNaN(value) && value != null) {
+            sum += value;
+          }
         }
 
         trailingData.push({
