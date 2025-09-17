@@ -439,7 +439,7 @@ const renderChartsForDepartment = (departmentSlug: DepartmentSlug) => {
               title="Public Service Productivity"
               sector="Non-business sector and others"
               startYear={2015}
-              endYear={2024}
+              endYear={2029}
               showTarget={true}
               targetValue={120}
               showGrowthRate={false}
