@@ -12,7 +12,7 @@ import {
   Legend,
 } from "chart.js/auto";
 import physicianData from "@/metrics/cihi/physician_supply.json";
-import populationData from "@/metrics/statscan/population.json";
+import useSWR from "swr";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -50,14 +50,38 @@ export default function FederalPhysicianSupplyPerCapitaChart({
   targetValue = 3.5,
   showTrend = true,
 }: FederalPhysicianSupplyPerCapitaChartProps) {
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+  const {
+    data: populationData,
+    error: populationError,
+    isLoading: populationLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/population-estimates-quarterly",
+    fetcher,
+  );
+
+  if (populationLoading) {
+    return <div>Loading physician supply per capita data...</div>;
+  }
+
+  if (populationError || !populationData) {
+    return <div>Error loading physician supply per capita data</div>;
+  }
+
   // Get federal physician supply data
   const physicianDataObj = physicianData as any;
   const federalPhysicianData =
     physicianDataObj.Canada["Physician Supply"] || [];
 
-  // Get federal population data
-  const populationDataObj = populationData as any;
-  const canadaPopulationData = populationDataObj.data.Canada || [];
+  // Transform the new API data format for population
+  const populationApiData = populationData.current_data || [];
+
+  // Filter population data for Canada and convert to the expected format
+  const canadaPopulationData = populationApiData
+    .filter((item: any) => item["GEO"] === "Canada")
+    .map((item: any) => [item.REF_DATE, item.VALUE])
+    .sort((a: any, b: any) => a[0].localeCompare(b[0]));
 
   // Filter physician data by year range
   const filteredPhysicianData = federalPhysicianData.filter(function (
@@ -74,7 +98,7 @@ export default function FederalPhysicianSupplyPerCapitaChart({
     const year = physicianItem[0];
     const physicianCount = physicianItem[1];
 
-    // Find population data for January 1st of the year
+    // Find population data for January 1st of the year (Q1)
     const yearStr = `${year}-01`;
     const populationItem = canadaPopulationData.find(
       (popItem: any) => popItem[0] === yearStr,

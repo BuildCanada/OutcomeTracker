@@ -11,8 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js/auto";
-import nprData from "@/metrics/statscan/non-permanent-residents.json";
-import populationData from "@/metrics/statscan/population.json";
+
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -20,6 +19,7 @@ import {
 } from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
+import useSWR from "swr";
 
 ChartJS.register(
   CategoryScale,
@@ -50,25 +50,68 @@ export default function NPRPopulationChart({
   targetValue = 5.0,
   showTrend = true,
 }: NPRPopulationChartProps) {
-  // Get data sources
-  const nprDataObj = nprData as any;
-  const populationDataObj = populationData as any;
-  const totalNPR = nprDataObj.data["Total, non-permanent residents"] || [];
-  const totalPopulation = populationDataObj.data["Canada"] || [];
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-  // Build a lookup for total population data
+  const {
+    data: populationData,
+    error: populationError,
+    isLoading: populationLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/population-estimates-quarterly",
+    fetcher,
+  );
+
+  const {
+    data: nprData,
+    error: nprError,
+    isLoading: nprLoading,
+  } = useSWR(
+    "/tracker/api/v1/statcan_datasets/non-permanent-residents-estimates-quarterly",
+    fetcher,
+  );
+
+  if (populationLoading || nprLoading) {
+    return <div>Loading NPR population data...</div>;
+  }
+
+  if (populationError || nprError || !populationData || !nprData) {
+    return <div>Error loading NPR population data</div>;
+  }
+
+  // Transform the API data
+  const populationApiData = populationData.current_data || [];
+  const nprApiData = nprData.current_data || [];
+
+  // Build a lookup for total population data (Canada only)
   const populationLookup: Record<string, number> = {};
-  // @ts-ignore
-  totalPopulation.forEach(function (item: any) {
-    populationLookup[item[0]] = item[1];
+  populationApiData.forEach((item: any) => {
+    const dateStr = item.REF_DATE;
+    const value = Number(item.VALUE);
+
+    if (item.VALUE != null && !isNaN(value) && item.GEO === "Canada") {
+      populationLookup[dateStr] = value;
+    }
+  });
+
+  // Build NPR data lookup using the correct filter
+  const nprLookup: Record<string, number> = {};
+  nprApiData.forEach((item: any) => {
+    const dateStr = item.REF_DATE;
+    const value = Number(item.VALUE);
+
+    if (
+      item.VALUE != null &&
+      !isNaN(value) &&
+      item["Non-permanent resident types"] === "Total, non-permanent residents"
+    ) {
+      nprLookup[dateStr] = value;
+    }
   });
 
   // Calculate NPR percentage of total population
-  // @ts-ignore
-  const percentageData = totalNPR
-    .map(function (item: any) {
-      const dateStr = item[0];
-      const nprValue = item[1];
+  const percentageData = Object.keys(nprLookup)
+    .map((dateStr) => {
+      const nprValue = nprLookup[dateStr];
       const totalPopValue = populationLookup[dateStr];
 
       // Skip if we don't have matching population data
@@ -82,34 +125,30 @@ export default function NPRPopulationChart({
         value: percentage,
       };
     })
-    .filter(function (item: any) {
-      return item !== null;
-    });
+    .filter((item) => item !== null)
+    .sort((a, b) => a!.date.localeCompare(b!.date));
 
   // Filter data by year range
-  // @ts-ignore
   const filteredData = percentageData.filter(function (item) {
-    const year = parseInt(item.date.split("-")[0]);
+    const year = parseInt(item!.date.split("-")[0]);
     return year >= startYear && year <= endYear;
   });
 
   // Format dates for display
-  // @ts-ignore
   const labels = filteredData.map(function (item) {
     if (quarterlyData) {
-      const [year, month] = item.date.split("-");
+      const [year, month] = item!.date.split("-");
       // Convert month number to quarter (01->Q1, 04->Q2, 07->Q3, 10->Q4)
       const quarter = Math.floor(parseInt(month) / 3) + 1;
       return `${year} Q${quarter}`;
     } else {
-      return item.date.split("-")[0]; // Just show year
+      return item!.date.split("-")[0]; // Just show year
     }
   });
 
   // Extract values for chart
-  // @ts-ignore
   const chartValues = filteredData.map(function (item) {
-    return item.value;
+    return item!.value;
   });
 
   const datasets: LineChartDataset[] = [

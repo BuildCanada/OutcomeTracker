@@ -12,7 +12,6 @@ import {
   Legend,
   ChartOptions,
 } from "chart.js/auto";
-import gdpData from "@/metrics/statscan/gdp.json";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -20,8 +19,7 @@ import {
 } from "@/components/charts/utils/styling";
 import { calculateMovingAverage } from "@/components/charts/utils/trendCalculator";
 import { LineChartDataset } from "@/components/charts/types";
-
-type RawDataPoint = [string, number]; // [date, value]
+import useSWR from "swr";
 
 ChartJS.register(
   CategoryScale,
@@ -52,30 +50,49 @@ export default function CapitalFormationChart({
   targetValue = 17,
   showTrend = true,
 }: CapitalFormationChartProps) {
-  // Get required data series
-  const gdpDataObj = gdpData as any;
-  const totalGdp =
-    gdpDataObj.data["Gross domestic product at market prices"] || [];
-  const grossFixedCapital =
-    gdpDataObj.data["Gross fixed capital formation"] || [];
-  const residentialStructures = gdpDataObj.data["Residential structures"] || [];
+  const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-  // Build a lookup for easier data processing
+  const {
+    data: gdpData,
+    error,
+    isLoading,
+  } = useSWR("/tracker/api/v1/statcan_datasets/gdp-quarterly", fetcher);
+
+  if (isLoading) {
+    return <div>Loading capital formation data...</div>;
+  }
+
+  if (error || !gdpData) {
+    return <div>Error loading capital formation data</div>;
+  }
+
+  // Transform the new API data format
+  const apiData = gdpData.current_data || [];
+
+  // Build lookups for easier data processing
   const gdpLookup: Record<string, number> = {};
-  totalGdp.forEach((item: [string, number]) => {
-    gdpLookup[item[0]] = item[1];
-  });
-
+  const grossFixedCapitalLookup: Record<string, number> = {};
   const residentialLookup: Record<string, number> = {};
-  residentialStructures.forEach((item: [string, number]) => {
-    residentialLookup[item[0]] = item[1];
+
+  apiData.forEach((item: any) => {
+    const dateStr = item.REF_DATE;
+    const value = Number(item.VALUE);
+
+    if (item.VALUE != null && !isNaN(value)) {
+      if (item["Estimates"] === "Gross domestic product at market prices") {
+        gdpLookup[dateStr] = value;
+      } else if (item["Estimates"] === "Gross fixed capital formation") {
+        grossFixedCapitalLookup[dateStr] = value;
+      } else if (item["Estimates"] === "Residential structures") {
+        residentialLookup[dateStr] = value;
+      }
+    }
   });
 
   // Calculate capital formation excluding residential structures as % of GDP
-  const percentageData = grossFixedCapital
-    .map((item: RawDataPoint) => {
-      const dateStr = item[0];
-      const grossFixedValue = item[1];
+  const percentageData = Object.keys(grossFixedCapitalLookup)
+    .map((dateStr) => {
+      const grossFixedValue = grossFixedCapitalLookup[dateStr];
       const gdpValue = gdpLookup[dateStr];
       const residentialValue = residentialLookup[dateStr] || 0;
 
@@ -93,33 +110,30 @@ export default function CapitalFormationChart({
         value: percentage,
       };
     })
-    // @ts-ignore
-    .filter((item) => item !== null);
+    .filter((item) => item !== null)
+    .sort((a, b) => a!.date.localeCompare(b!.date));
 
   // Filter data by year range
-  // @ts-ignore
   const filteredData = percentageData.filter(function (item) {
-    const year = parseInt(item.date.split("-")[0]);
+    const year = parseInt(item!.date.split("-")[0]);
     return year >= startYear && year <= endYear;
   });
 
   // Format dates for display
-  // @ts-ignore
   const labels = filteredData.map(function (item) {
     if (quarterlyData) {
-      const [year, month] = item.date.split("-");
+      const [year, month] = item!.date.split("-");
       // Convert month number to quarter (01->Q1, 04->Q2, 07->Q3, 10->Q4)
       const quarter = Math.floor(parseInt(month) / 3) + 1;
       return `${year} Q${quarter}`;
     } else {
-      return item.date.split("-")[0]; // Just show year
+      return item!.date.split("-")[0]; // Just show year
     }
   });
 
   // Extract values for chart
-  // @ts-ignore
   const chartValues = filteredData.map(function (item) {
-    return item.value;
+    return item!.value;
   });
 
   const datasets: LineChartDataset[] = [

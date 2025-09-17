@@ -4,7 +4,8 @@
       "Bash(grep:*)",
       "Bash(rg:*)",
       "Bash(find:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebFetch(domain:outcomes-tracker-api.apps.canadasbuilding.com)"
     ],
     "deny": []
   }
