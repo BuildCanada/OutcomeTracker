@@ -357,6 +357,15 @@ export default function PromiseModal({
                 </div>
               )}
             </section>
+
+            {/*Report Issue section*/}
+            <section className="border-t border-[#d3c7b9] pt-6">
+              <div className="text-[#0056b3]">
+                <a href="mailto:hi@buildcanada.ca?subject=Outcome Tracker Bug">
+                  Report an Issue
+                </a>
+              </div>
+            </section>
           </div>
 
           {/* Modal Footer */}
