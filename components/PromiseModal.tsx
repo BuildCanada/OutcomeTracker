@@ -361,7 +361,10 @@ export default function PromiseModal({
             {/*Report Issue section*/}
             <section className="border-t border-[#d3c7b9] pt-6">
               <div className="text-[#0056b3]">
-                <a href="mailto:hi@buildcanada.ca?subject=Outcome Tracker Bug">
+                <a
+                  href={`mailto:hi@buildcanada.ca?subject=Outcome%20Tracker%20Bug&body=Hello,%0A%0AThere is an issue in ${encodeURIComponent(shareUrl)}.`}
+                  target="_blank"
+                >
                   Report an Issue
                 </a>
               </div>
