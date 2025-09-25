@@ -7,6 +7,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: ["@appsignal/nodejs"],
   async rewrites() {
     return [
       {

@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "private": false,
   "scripts": {
-    "dev": "next dev --port 4444",
+    "dev": "NODE_OPTIONS=--enable-source-maps next dev --port 4444",
+    "start": "NODE_OPTIONS=--enable-source-maps next start -p 4444",
     "turbo": "next dev --turbo --port 4444",
     "build": "next build",
-    "start": "next start -p 4444",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "lint": "next lint",
@@ -16,6 +16,7 @@
     "prepare": "node -e \"if (!process.env.CI) { require('child_process').execSync('npx simple-git-hooks', {stdio: 'inherit'}) }\""
   },
   "dependencies": {
+    "@appsignal/nodejs": "^3.7.1",
     "@radix-ui/react-avatar": "1.1.2",
     "@radix-ui/react-dialog": "1.1.4",
     "@radix-ui/react-popover": "1.1.4",
