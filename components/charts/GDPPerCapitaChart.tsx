@@ -206,9 +206,6 @@ const MilestonePlugin: Plugin = {
   id: "milestone-plugin",
 
   beforeInit(chart) {
-    // const opts = pluginOptions as { milestones?: Milestone[] };
-    // console.log("[milestone-plugin] beforeInit — plugin attached. Milestones:", opts?.milestones ?? []);
-    // Initialize hover state
     hoverStateMap.set(chart, { hoveredIdx: null });
   },
 
@@ -250,7 +247,7 @@ const MilestonePlugin: Plugin = {
     }
   },
 
-  afterDraw(chart, pluginOptions) {
+  afterDraw(chart, _args, pluginOptions) {
     const pluginOpts = pluginOptions as { milestones?: Milestone[] };
     const milestones = pluginOpts?.milestones ?? [];
     if (milestones.length === 0) return;
@@ -390,7 +387,7 @@ function createOrGetTooltipEl(chart: Chart): HTMLDivElement {
     el.style.zIndex = "1000";
     el.style.transform = "translate(-50%, -100%)"; // default: center above
     el.style.maxWidth = "280px";
-    el.style.display = "block";
+    el.style.display = "none";
     parent.appendChild(el);
   }
   return el;
@@ -400,35 +397,33 @@ function externalTooltipHandler(context: any) {
   const chart: Chart = context.chart;
   const state = hoverStateMap.get(chart);
   const el = createOrGetTooltipEl(chart);
-  // console.log("[externalTooltipHandler] context:", context);
 
   if (!state || state.hoveredIdx == null) {
-    el.style.display = "block";
+    el.style.display = "none";
     return;
   }
 
-  // Get milestone and its hitbox to position tooltip
+  // Get milestone data from chart options instead of context.tooltip
+  const chartOptions = chart.options as any;
   const milestones: Milestone[] =
-    (context.tooltip?.options?.milestones as Milestone[]) ||
-    (chart.options?.plugins as any)?.["milestone-plugin"]?.milestones ||
-    [];
+    chartOptions?.plugins?.["milestone-plugin"]?.milestones || [];
 
   const boxes: MilestoneBox[] = (chart as any).$milestoneBoxes || [];
   const hoveredIdx = state.hoveredIdx;
   const hoveredBox = boxes.find((b) => b.idx === hoveredIdx);
 
   if (!hoveredBox) {
-    el.style.display = "block";
+    el.style.display = "none"; // Changed from "block" to "none"
     return;
   }
 
   const m = milestones[hoveredIdx];
   if (!m) {
-    el.style.display = "block";
+    el.style.display = "none"; // Changed from "block" to "none"
     return;
   }
 
-  // Content
+  // Always show tooltip for milestones, even without explicit tooltip config
   const title = m.tooltip?.title ?? m.label;
   const lines = m.tooltip?.lines ?? [];
   const items = m.tooltip?.items ?? [];
@@ -488,7 +483,7 @@ function externalTooltipHandler(context: any) {
 
   el.style.left = `${left}px`;
   el.style.top = `${top}px`;
-  el.style.display = "block";
+  el.style.display = "block"; // Changed from "none" to "block"
 
   // Clamp within parent width
   const parentWidth = parentRect.width;
@@ -750,7 +745,6 @@ export default function GDPPerCapitaChart({
       tooltip: {
         callbacks: {
           label: function (context: any) {
-            // console.log("Tooltip context:", context);
             if (
               context.dataset.label &&
               context.dataset.label.includes("Target")
@@ -814,8 +808,6 @@ export default function GDPPerCapitaChart({
     },
     interaction: { mode: "index" as const, intersect: false },
   };
-
-  // console.log("[GDPPerCapitaChart] Rendering with labels.length =", labels.length);
 
   return (
     <div
