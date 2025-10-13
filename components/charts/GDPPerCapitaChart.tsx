@@ -1,5 +1,8 @@
+// GDPPerCapitaChart.tsx
+
 "use client";
 
+import React from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,9 +13,13 @@ import {
   Title,
   Tooltip,
   Legend,
+  Chart,
+  Scale,
 } from "chart.js/auto";
-import { calculatePerCapita } from "./utils/PerCapitaCalculator";
+import { getRelativePosition } from "chart.js/helpers";
+import type { Plugin } from "chart.js";
 import useSWR from "swr";
+import { calculatePerCapita } from "./utils/PerCapitaCalculator";
 import {
   getPrimaryLineStyling,
   getTargetLineStyling,
@@ -31,6 +38,45 @@ ChartJS.register(
   Legend,
 );
 
+// =========================
+// Milestone Types & Helpers
+// =========================
+
+// Rich tooltip content shape
+type MilestoneTooltip = {
+  title?: string;
+  lines?: string[]; // Simple lines of text
+  items?: Array<{ key: string; value: string | number }>; // Key/Value rows
+};
+
+// Types for milestone configuration
+type Milestone = {
+  // For category scales: label string or index number; for time/linear: value in domain
+  x: string | number | Date;
+
+  // Display label (shown under the icon by default if desired)
+  label: string;
+
+  // Accent color for icon border/fill and label
+  color?: string;
+
+  // Icon geometry
+  iconWidth?: number; // px width of the milestone icon rectangle
+  iconHeight?: number; // px height of the milestone icon rectangle
+  iconRadius?: number; // corner radius of the rectangle
+
+  // Vertical spacing from axis baseline
+  offsetPx?: number;
+
+  // Optional tooltip content
+  tooltip?: MilestoneTooltip;
+
+  // Optional custom background and border styling
+  fillColor?: string; // icon fill color (defaults to color with alpha)
+  borderColor?: string; // icon border color (defaults to color)
+  borderWidth?: number; // icon border width
+};
+
 interface GDPPerCapitaChartProps {
   title?: string;
   gdpMeasure?: string;
@@ -41,6 +87,426 @@ interface GDPPerCapitaChartProps {
   showTarget?: boolean;
   targetValue?: number;
   showTrend?: boolean;
+}
+
+// Helpers to robustly find scales
+function getXYScales(chart: Chart): {
+  xScale: Scale | undefined;
+  yScale: Scale | undefined;
+} {
+  const scales = chart.scales;
+  const xScale =
+    scales["x"] ??
+    (Object.values(scales).find((s) => s.isHorizontal()) as Scale | undefined);
+  const yScale =
+    scales["y"] ??
+    (Object.values(scales).find((s) => !s.isHorizontal()) as Scale | undefined);
+  return { xScale, yScale };
+}
+
+// Resolve X pixel robustly
+function resolveXPixel(chart: Chart, x: string | number | Date): number | null {
+  const { xScale } = getXYScales(chart);
+  if (!xScale) {
+    console.warn("[milestone-plugin] No x scale found.");
+    return null;
+  }
+
+  if (xScale.type === "category") {
+    const labels = chart.data.labels as string[] | undefined;
+    if (!labels || labels.length === 0) {
+      console.warn("[milestone-plugin] Category labels are empty.");
+      return null;
+    }
+
+    if (typeof x === "string") {
+      const idx = labels.indexOf(x);
+      if (idx === -1) {
+        console.warn(
+          `[milestone-plugin] Milestone label not found in labels: "${x}".`,
+        );
+        return null;
+      }
+      return xScale.getPixelForTick(idx);
+    } else if (typeof x === "number") {
+      const idx = Math.round(x);
+      if (idx < 0 || idx >= labels.length) {
+        console.warn(
+          `[milestone-plugin] Milestone index out of bounds: ${idx} (labels length ${labels.length}).`,
+        );
+        return null;
+      }
+      return xScale.getPixelForTick(idx);
+    } else {
+      console.warn(
+        "[milestone-plugin] Date provided for category scale; pass label string or index.",
+      );
+      return null;
+    }
+  }
+
+  // time/linear scales
+  const value =
+    xScale.type === "linear" && typeof x !== "number" ? Number(x) : x;
+  if (xScale.type === "linear" && !Number.isFinite(value as number)) {
+    console.warn(`[milestone-plugin] Non-finite linear value: ${String(x)}`);
+    return null;
+  }
+
+  const px = xScale.getPixelForValue(value as any);
+  if (!Number.isFinite(px)) {
+    console.warn(
+      `[milestone-plugin] getPixelForValue produced non-finite for ${String(x)} on ${xScale.type} scale.`,
+    );
+    return null;
+  }
+  return px;
+}
+
+// Utility to draw rounded rect
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
+  const radius = Math.max(0, Math.min(r, Math.min(w, h) / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
+}
+
+// ==================
+// Milestone Plugin
+// ==================
+
+// Internal structure to track draw bounds for hit-testing
+type MilestoneBox = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  idx: number; // milestone index
+};
+
+// We keep hover state on the chart instance via a WeakMap to avoid global leaks
+const hoverStateMap = new WeakMap<Chart, { hoveredIdx: number | null }>();
+
+const MilestonePlugin: Plugin = {
+  id: "milestone-plugin",
+
+  beforeInit(chart) {
+    // const opts = pluginOptions as { milestones?: Milestone[] };
+    // console.log("[milestone-plugin] beforeInit — plugin attached. Milestones:", opts?.milestones ?? []);
+    // Initialize hover state
+    hoverStateMap.set(chart, { hoveredIdx: null });
+  },
+
+  afterEvent(chart, args, pluginOptions) {
+    // Handle pointer movement for icon hover detection
+    const e = args.event;
+    if (!e) return;
+
+    const pluginOpts = pluginOptions as { milestones?: Milestone[] };
+    const milestones = pluginOpts?.milestones ?? [];
+    if (milestones.length === 0) return;
+
+    const state = hoverStateMap.get(chart);
+    if (!state) return;
+
+    const boxes: MilestoneBox[] =
+      ((chart as any).$milestoneBoxes as MilestoneBox[]) || [];
+    if (boxes.length === 0) {
+      state.hoveredIdx = null;
+      return;
+    }
+
+    const canvasPosition = getRelativePosition(e, chart);
+    const { x, y } = canvasPosition;
+
+    // Find top-most matching box
+    let hovered: number | null = null;
+    for (let i = 0; i < boxes.length; i++) {
+      const b = boxes[i];
+      if (x >= b.left && x <= b.right && y >= b.top && y <= b.bottom) {
+        hovered = b.idx;
+        break;
+      }
+    }
+
+    if (hovered !== state.hoveredIdx) {
+      state.hoveredIdx = hovered;
+      chart.update(); // trigger re-draw so external tooltip can react
+    }
+  },
+
+  afterDraw(chart, pluginOptions) {
+    const pluginOpts = pluginOptions as { milestones?: Milestone[] };
+    const milestones = pluginOpts?.milestones ?? [];
+    if (milestones.length === 0) return;
+
+    const { xScale, yScale } = getXYScales(chart);
+    if (!xScale || !yScale) {
+      console.warn("[milestone-plugin] Missing x/y scales.");
+      return;
+    }
+
+    const ctx = chart.ctx as CanvasRenderingContext2D;
+    const axisY = yScale.bottom;
+
+    // Track placed bounding boxes to avoid horizontal overlap and for hit-testing
+    const placedBoxes: Array<{ left: number; right: number }> = [];
+    const hitBoxes: MilestoneBox[] = [];
+
+    milestones.forEach((m, i) => {
+      const xPx = resolveXPixel(chart, m.x);
+      if (xPx === null) {
+        console.warn(
+          `[milestone-plugin] Skipping milestone #${i} "${m.label}" — unresolved x:`,
+          m.x,
+        );
+        return;
+      }
+
+      const color = m.color ?? "#2563eb";
+      const borderColor = m.borderColor ?? color;
+      const borderWidth = m.borderWidth ?? 1;
+      const offsetPx = m.offsetPx ?? 6;
+
+      // Icon geometry
+      const iconWidth = m.iconWidth ?? 16;
+      const iconHeight = m.iconHeight ?? 10;
+      const iconRadius = m.iconRadius ?? 3;
+
+      // Compute baseline placement under the axis
+      let iconY = axisY + offsetPx;
+      const iconX = xPx - iconWidth / 2;
+
+      // Collision avoidance: stack icons downward if overlapping horizontally
+      const maxStackLevels = 4;
+      let stackLevel = 0;
+      while (stackLevel < maxStackLevels) {
+        const iconLeft = iconX;
+        const iconRight = iconX + iconWidth;
+        const overlaps = placedBoxes.some(
+          (b) => !(iconRight < b.left || iconLeft > b.right),
+        );
+        if (!overlaps) {
+          placedBoxes.push({ left: iconLeft, right: iconRight });
+          break;
+        }
+        stackLevel += 1;
+        iconY += iconHeight + 4; // stack downward
+      }
+
+      // Clip to chart area + extra below so icons show
+      const chartArea = chart.chartArea;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(
+        chartArea.left,
+        chartArea.top,
+        chartArea.width,
+        chartArea.height + 200,
+      );
+      ctx.clip();
+
+      // Fill defaults: use transparent variant of color if no explicit fillColor
+      const fillColor = m.fillColor ?? `${color}33`; // ~20% alpha if hex-6, okay for simple tint
+
+      // Draw rounded rectangle icon
+      drawRoundedRect(ctx, iconX, iconY, iconWidth, iconHeight, iconRadius);
+      ctx.fillStyle = fillColor;
+      ctx.fill();
+      ctx.lineWidth = borderWidth;
+      ctx.strokeStyle = borderColor;
+      ctx.stroke();
+
+      // Hit-test box
+      hitBoxes.push({
+        left: iconX,
+        right: iconX + iconWidth,
+        top: iconY,
+        bottom: iconY + iconHeight,
+        idx: i,
+      });
+
+      ctx.restore();
+    });
+
+    // Store hit boxes on chart for afterEvent to use
+    // We attach to a reserved property namespace to avoid collisions
+    (chart as any).$milestoneBoxes = hitBoxes;
+  },
+};
+
+// Register plugin globally so hooks run
+ChartJS.register(MilestonePlugin as any);
+
+// ============================
+// Custom External Tooltip Impl
+// ============================
+
+/**
+ * External tooltip draws a DOM tooltip over the canvas.
+ * - Shows milestone tooltip when hovering a milestone icon
+ * - Hides when not hovering
+ * - Positions near the icon with smart clamping
+ *
+ * Security note: No user-provided HTML is injected; we only set textContent.
+ */
+function createOrGetTooltipEl(chart: Chart): HTMLDivElement {
+  const canvas = chart.canvas;
+  const parent = canvas?.parentNode as HTMLElement | null;
+  if (!parent)
+    throw new Error("Chart canvas has no parentNode for tooltip container.");
+
+  let el = parent.querySelector<HTMLDivElement>(".milestone-tooltip");
+  if (!el) {
+    el = document.createElement("div");
+    el.className = "milestone-tooltip";
+    el.style.position = "absolute";
+    el.style.pointerEvents = "none";
+    el.style.background = "#111827"; // gray-900
+    el.style.color = "#fff";
+    el.style.border = "1px solid #374151"; // gray-700
+    el.style.borderRadius = "8px";
+    el.style.padding = "8px 10px";
+    el.style.boxShadow = "0 8px 16px rgba(0,0,0,0.25)";
+    el.style.fontFamily =
+      "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif";
+    el.style.fontSize = "12px";
+    el.style.lineHeight = "1.4";
+    el.style.zIndex = "1000";
+    el.style.transform = "translate(-50%, -100%)"; // default: center above
+    el.style.maxWidth = "280px";
+    el.style.display = "block";
+    parent.appendChild(el);
+  }
+  return el;
+}
+
+function externalTooltipHandler(context: any) {
+  const chart: Chart = context.chart;
+  const state = hoverStateMap.get(chart);
+  const el = createOrGetTooltipEl(chart);
+  // console.log("[externalTooltipHandler] context:", context);
+
+  if (!state || state.hoveredIdx == null) {
+    el.style.display = "block";
+    return;
+  }
+
+  // Get milestone and its hitbox to position tooltip
+  const milestones: Milestone[] =
+    (context.tooltip?.options?.milestones as Milestone[]) ||
+    (chart.options?.plugins as any)?.["milestone-plugin"]?.milestones ||
+    [];
+
+  const boxes: MilestoneBox[] = (chart as any).$milestoneBoxes || [];
+  const hoveredIdx = state.hoveredIdx;
+  const hoveredBox = boxes.find((b) => b.idx === hoveredIdx);
+
+  if (!hoveredBox) {
+    el.style.display = "block";
+    return;
+  }
+
+  const m = milestones[hoveredIdx];
+  if (!m) {
+    el.style.display = "block";
+    return;
+  }
+
+  // Content
+  const title = m.tooltip?.title ?? m.label;
+  const lines = m.tooltip?.lines ?? [];
+  const items = m.tooltip?.items ?? [];
+
+  // Clear existing content safely
+  el.innerHTML = "";
+
+  // Build tooltip content
+  const titleEl = document.createElement("div");
+  titleEl.textContent = String(title);
+  titleEl.style.fontWeight = "600";
+  titleEl.style.marginBottom = "6px";
+  titleEl.style.color = m.color ?? "#fff";
+  el.appendChild(titleEl);
+
+  if (lines.length > 0) {
+    const linesContainer = document.createElement("div");
+    for (const line of lines) {
+      const p = document.createElement("div");
+      p.textContent = line;
+      linesContainer.appendChild(p);
+    }
+    el.appendChild(linesContainer);
+  }
+
+  if (items.length > 0) {
+    const list = document.createElement("div");
+    list.style.marginTop = lines.length ? "6px" : "0";
+    for (const { key, value } of items) {
+      const row = document.createElement("div");
+      const keyEl = document.createElement("span");
+      keyEl.textContent = `${key}: `;
+      keyEl.style.color = "#9CA3AF"; // gray-400
+      const valEl = document.createElement("span");
+      valEl.textContent = String(value);
+      row.appendChild(keyEl);
+      row.appendChild(valEl);
+      list.appendChild(row);
+    }
+    el.appendChild(list);
+  }
+
+  // Position near the icon (above center)
+  const canvasRect = chart.canvas.getBoundingClientRect();
+  const parentRect = chart.canvas.parentElement!.getBoundingClientRect();
+
+  // Compute center point of the icon in canvas coordinates
+  const centerX = (hoveredBox.left + hoveredBox.right) / 2;
+  const topY = hoveredBox.top;
+
+  // Convert canvas coordinates to parent positioning
+  const xInPage = canvasRect.left + centerX;
+  const yInPage = canvasRect.top + topY;
+
+  const left = xInPage - parentRect.left;
+  const top = yInPage - parentRect.top - 8; // small gap above icon
+
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
+  el.style.display = "block";
+
+  // Clamp within parent width
+  const parentWidth = parentRect.width;
+  const tooltipWidth = el.offsetWidth || 240;
+  const minLeft = 8;
+  const maxLeft = parentWidth - 8;
+  let finalLeft = left;
+  if (finalLeft - tooltipWidth / 2 < minLeft) {
+    el.style.transform = "translate(0, -100%)"; // left-align when near edge
+    finalLeft = Math.max(minLeft, finalLeft);
+    el.style.left = `${finalLeft}px`;
+  } else if (finalLeft + tooltipWidth / 2 > maxLeft) {
+    el.style.transform = "translate(-100%, -100%)"; // right-align when near edge
+    finalLeft = Math.min(maxLeft, finalLeft);
+    el.style.left = `${finalLeft}px`;
+  } else {
+    el.style.transform = "translate(-50%, -100%)"; // centered
+  }
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -206,10 +672,59 @@ export default function GDPPerCapitaChart({
     });
   }
 
-  const chartData = {
-    labels,
-    datasets,
-  };
+  const chartData = { labels, datasets };
+
+  // Define milestones that resolve against category labels
+  const milestones: Milestone[] = [
+    {
+      x: 0,
+      label: "Start",
+      color: "#2563eb",
+      iconWidth: 16,
+      iconHeight: 10,
+      iconRadius: 3,
+      tooltip: {
+        title: "Series Start",
+        lines: ["First visible data point"],
+        items: [
+          { key: "Index", value: 0 },
+          { key: "Label", value: labels[0] ?? "N/A" },
+        ],
+      },
+    },
+    {
+      x: labels.length - 1,
+      label: "Latest",
+      color: "#16a34a",
+      iconWidth: 16,
+      iconHeight: 10,
+      iconRadius: 3,
+      tooltip: {
+        title: "Latest Observation",
+        items: [
+          { key: "Index", value: labels.length - 1 },
+          { key: "Label", value: labels[labels.length - 1] ?? "N/A" },
+        ],
+      },
+    },
+    ...(labels.includes("2025 Q1")
+      ? [
+          {
+            x: "2025 Q1",
+            label: "Carney Elected",
+            color: "#e74c3c",
+            iconWidth: 16,
+            iconHeight: 10,
+            iconRadius: 3,
+            tooltip: {
+              title: "Carney Elected",
+              lines: ["Political event marker"],
+              items: [{ key: "Period", value: "2025 Q1" }],
+            },
+          },
+        ]
+      : []),
+  ];
 
   const options: any = {
     responsive: true,
@@ -218,12 +733,7 @@ export default function GDPPerCapitaChart({
       legend: {
         position: "top" as const,
         padding: 20,
-        labels: {
-          padding: 15,
-          font: {
-            size: 12,
-          },
-        },
+        labels: { padding: 15, font: { size: 12 } },
       },
       title: {
         display: true,
@@ -240,6 +750,7 @@ export default function GDPPerCapitaChart({
       tooltip: {
         callbacks: {
           label: function (context: any) {
+            // console.log("Tooltip context:", context);
             if (
               context.dataset.label &&
               context.dataset.label.includes("Target")
@@ -256,6 +767,13 @@ export default function GDPPerCapitaChart({
             return null;
           },
         },
+        // enabled: false, // disable default tooltip
+        external: externalTooltipHandler, // our custom DOM tooltip for milestones
+        // Note: dataset tooltips still work via external if you extend; here we only show milestone tooltip
+      },
+      // Pass plugin-specific options keyed by the plugin id.
+      "milestone-plugin": {
+        milestones,
       },
     },
     scales: {
@@ -264,17 +782,13 @@ export default function GDPPerCapitaChart({
         title: {
           display: true,
           text: "Growth Rate (%)",
-          font: {
-            size: 14,
-          },
-          padding: {
-            bottom: 10,
-          },
+          font: { size: 14 },
+          padding: { bottom: 10 },
         },
         ticks: {
           padding: 8,
           callback: function (value: any) {
-            return `${value.toFixed(1)}%`;
+            return `${Number(value).toFixed(1)}%`;
           },
         },
       },
@@ -282,12 +796,8 @@ export default function GDPPerCapitaChart({
         title: {
           display: true,
           text: quarterlyData ? "Year-Quarter" : "Year",
-          font: {
-            size: 14,
-          },
-          padding: {
-            top: 10,
-          },
+          font: { size: 14 },
+          padding: { top: 10 },
         },
         ticks: {
           maxRotation: 45,
@@ -299,25 +809,20 @@ export default function GDPPerCapitaChart({
       },
     },
     layout: {
-      padding: {
-        left: 15,
-        right: 15,
-        top: 20,
-        bottom: 20,
-      },
+      // Extra bottom padding so icons under axis are visible
+      padding: { left: 15, right: 15, top: 20, bottom: 50 },
     },
-    interaction: {
-      mode: "index" as const,
-      intersect: false,
-    },
+    interaction: { mode: "index" as const, intersect: false },
   };
+
+  // console.log("[GDPPerCapitaChart] Rendering with labels.length =", labels.length);
 
   return (
     <div
       style={{
         width: "100%",
         height: "100%",
-        minHeight: "400px",
+        minHeight: "440px",
         position: "relative",
       }}
     >
