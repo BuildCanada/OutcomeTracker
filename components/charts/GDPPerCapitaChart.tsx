@@ -221,10 +221,28 @@ const MilestonePlugin: Plugin = {
     const state = hoverStateMap.get(chart);
     if (!state) return;
 
+    // Handle mouse leave - clear hover state when mouse leaves chart area
+    if (e.type === "mouseout") {
+      if (state.hoveredIdx !== null) {
+        state.hoveredIdx = null;
+        // Trigger external tooltip to hide immediately
+        const el = createOrGetTooltipEl(chart);
+        el.style.display = "none";
+      }
+      return;
+    }
+
+    // Only process mousemove and mouseenter events
+    if (e.type !== "mousemove" && e.type !== "mouseenter") return;
+
     const boxes: MilestoneBox[] =
       ((chart as any).$milestoneBoxes as MilestoneBox[]) || [];
     if (boxes.length === 0) {
-      state.hoveredIdx = null;
+      if (state.hoveredIdx !== null) {
+        state.hoveredIdx = null;
+        const el = createOrGetTooltipEl(chart);
+        el.style.display = "none";
+      }
       return;
     }
 
@@ -243,7 +261,10 @@ const MilestonePlugin: Plugin = {
 
     if (hovered !== state.hoveredIdx) {
       state.hoveredIdx = hovered;
-      chart.update(); // trigger re-draw so external tooltip can react
+      // Don't trigger chart.update() - just update tooltip directly
+      requestAnimationFrame(() => {
+        externalTooltipHandler({ chart });
+      });
     }
   },
 
@@ -398,12 +419,13 @@ function externalTooltipHandler(context: any) {
   const state = hoverStateMap.get(chart);
   const el = createOrGetTooltipEl(chart);
 
-  if (!state || state.hoveredIdx == null) {
+  // Always check if we should hide first
+  if (!state || state.hoveredIdx === null) {
     el.style.display = "none";
     return;
   }
 
-  // Get milestone data from chart options instead of context.tooltip
+  // Get milestone data from chart options
   const chartOptions = chart.options as any;
   const milestones: Milestone[] =
     chartOptions?.plugins?.["milestone-plugin"]?.milestones || [];
@@ -412,26 +434,24 @@ function externalTooltipHandler(context: any) {
   const hoveredIdx = state.hoveredIdx;
   const hoveredBox = boxes.find((b) => b.idx === hoveredIdx);
 
-  if (!hoveredBox) {
-    el.style.display = "none"; // Changed from "block" to "none"
+  if (!hoveredBox || hoveredIdx >= milestones.length) {
+    el.style.display = "none";
     return;
   }
 
   const m = milestones[hoveredIdx];
   if (!m) {
-    el.style.display = "none"; // Changed from "block" to "none"
+    el.style.display = "none";
     return;
   }
 
-  // Always show tooltip for milestones, even without explicit tooltip config
+  // Build tooltip content
   const title = m.tooltip?.title ?? m.label;
   const lines = m.tooltip?.lines ?? [];
   const items = m.tooltip?.items ?? [];
 
-  // Clear existing content safely
   el.innerHTML = "";
 
-  // Build tooltip content
   const titleEl = document.createElement("div");
   titleEl.textContent = String(title);
   titleEl.style.fontWeight = "600";
@@ -456,7 +476,7 @@ function externalTooltipHandler(context: any) {
       const row = document.createElement("div");
       const keyEl = document.createElement("span");
       keyEl.textContent = `${key}: `;
-      keyEl.style.color = "#9CA3AF"; // gray-400
+      keyEl.style.color = "#9CA3AF";
       const valEl = document.createElement("span");
       valEl.textContent = String(value);
       row.appendChild(keyEl);
@@ -466,42 +486,46 @@ function externalTooltipHandler(context: any) {
     el.appendChild(list);
   }
 
-  // Position near the icon (above center)
-  const canvasRect = chart.canvas.getBoundingClientRect();
-  const parentRect = chart.canvas.parentElement!.getBoundingClientRect();
+  // Fix tooltip positioning - use chart's canvas position relative to its parent
+  const canvas = chart.canvas;
+  const parent = canvas.parentElement!;
 
-  // Compute center point of the icon in canvas coordinates
+  // Get the canvas position relative to its parent (not the page)
+  const canvasStyle = window.getComputedStyle(canvas);
+  const canvasLeft = parseFloat(canvasStyle.left) || 0;
+  const canvasTop = parseFloat(canvasStyle.top) || 0;
+
+  // Calculate center of the milestone icon in canvas coordinates
   const centerX = (hoveredBox.left + hoveredBox.right) / 2;
-  const topY = hoveredBox.top;
+  const iconTop = hoveredBox.top;
 
-  // Convert canvas coordinates to parent positioning
-  const xInPage = canvasRect.left + centerX;
-  const yInPage = canvasRect.top + topY;
-
-  const left = xInPage - parentRect.left;
-  const top = yInPage - parentRect.top - 8; // small gap above icon
+  // Position relative to parent container
+  const left = canvasLeft + centerX;
+  const top = canvasTop + iconTop - 8; // 8px gap above icon
 
   el.style.left = `${left}px`;
   el.style.top = `${top}px`;
-  el.style.display = "block"; // Changed from "none" to "block"
+  el.style.display = "block";
 
-  // Clamp within parent width
-  const parentWidth = parentRect.width;
-  const tooltipWidth = el.offsetWidth || 240;
-  const minLeft = 8;
-  const maxLeft = parentWidth - 8;
-  let finalLeft = left;
-  if (finalLeft - tooltipWidth / 2 < minLeft) {
-    el.style.transform = "translate(0, -100%)"; // left-align when near edge
-    finalLeft = Math.max(minLeft, finalLeft);
-    el.style.left = `${finalLeft}px`;
-  } else if (finalLeft + tooltipWidth / 2 > maxLeft) {
-    el.style.transform = "translate(-100%, -100%)"; // right-align when near edge
-    finalLeft = Math.min(maxLeft, finalLeft);
-    el.style.left = `${finalLeft}px`;
-  } else {
-    el.style.transform = "translate(-50%, -100%)"; // centered
-  }
+  // Handle edge clamping after the tooltip is visible
+  requestAnimationFrame(() => {
+    const parentWidth = parent.offsetWidth;
+    const tooltipWidth = el.offsetWidth || 240;
+    const padding = 8;
+
+    // Check if tooltip would overflow on the left
+    if (left - tooltipWidth / 2 < padding) {
+      el.style.transform = "translate(0, -100%)"; // Left-align
+    }
+    // Check if tooltip would overflow on the right
+    else if (left + tooltipWidth / 2 > parentWidth - padding) {
+      el.style.transform = "translate(-100%, -100%)"; // Right-align
+    }
+    // Default: center the tooltip
+    else {
+      el.style.transform = "translate(-50%, -100%)";
+    }
+  });
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -761,9 +785,8 @@ export default function GDPPerCapitaChart({
             return null;
           },
         },
-        // enabled: false, // disable default tooltip
-        external: externalTooltipHandler, // our custom DOM tooltip for milestones
-        // Note: dataset tooltips still work via external if you extend; here we only show milestone tooltip
+        // Keep default tooltips but add external handler for milestones
+        external: externalTooltipHandler,
       },
       // Pass plugin-specific options keyed by the plugin id.
       "milestone-plugin": {
