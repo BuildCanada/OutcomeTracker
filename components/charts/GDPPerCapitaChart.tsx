@@ -695,44 +695,13 @@ export default function GDPPerCapitaChart({
 
   // Define milestones that resolve against category labels
   const milestones: Milestone[] = [
-    {
-      x: 0,
-      label: "Start",
-      color: "#2563eb",
-      iconWidth: 16,
-      iconHeight: 10,
-      iconRadius: 3,
-      tooltip: {
-        title: "Series Start",
-        lines: ["First visible data point"],
-        items: [
-          { key: "Index", value: 0 },
-          { key: "Label", value: labels[0] ?? "N/A" },
-        ],
-      },
-    },
-    {
-      x: labels.length - 1,
-      label: "Latest",
-      color: "#16a34a",
-      iconWidth: 16,
-      iconHeight: 10,
-      iconRadius: 3,
-      tooltip: {
-        title: "Latest Observation",
-        items: [
-          { key: "Index", value: labels.length - 1 },
-          { key: "Label", value: labels[labels.length - 1] ?? "N/A" },
-        ],
-      },
-    },
     ...(labels.includes("2025 Q1")
       ? [
           {
             x: "2025 Q1",
             label: "Carney Elected",
             color: "#e74c3c",
-            iconWidth: 16,
+            iconWidth: 10,
             iconHeight: 10,
             iconRadius: 3,
             tooltip: {
