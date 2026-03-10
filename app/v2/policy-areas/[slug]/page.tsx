@@ -38,7 +38,6 @@ const STATUS_LABELS: Record<string, string> = {
   partially_implemented: "Partially Implemented",
   implemented: "Implemented",
   abandoned: "Abandoned",
-  superseded: "Superseded",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -47,7 +46,6 @@ const STATUS_COLORS: Record<string, string> = {
   partially_implemented: "bg-orange-100 text-orange-800",
   implemented: "bg-green-100 text-green-800",
   abandoned: "bg-red-100 text-red-800",
-  superseded: "bg-purple-100 text-purple-800",
 };
 
 export default function PolicyAreaPage() {

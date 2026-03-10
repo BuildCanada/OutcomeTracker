@@ -111,8 +111,6 @@ interface CommitmentDetail {
   policy_area: { id: number; name: string; slug: string } | null;
   government: { id: number; name: string; slug: string };
   parent: { id: number; title: string } | null;
-  superseded_by: { id: number; title: string } | null;
-  supersedes: { id: number; title: string; status: string }[];
   children: { id: number; title: string; status: string }[];
   sources: CommitmentSource[];
   criteria: Criterion[];
@@ -138,7 +136,6 @@ const STATUS_LABELS: Record<string, string> = {
   partially_implemented: "Partially Implemented",
   implemented: "Implemented",
   abandoned: "Abandoned",
-  superseded: "Superseded",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -147,7 +144,6 @@ const STATUS_COLORS: Record<string, string> = {
   partially_implemented: "bg-orange-100 text-orange-800",
   implemented: "bg-green-100 text-green-800",
   abandoned: "bg-red-100 text-red-800",
-  superseded: "bg-purple-100 text-purple-800",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -369,18 +365,6 @@ export default function CommitmentDetailPage() {
           </div>
         )}
 
-        {/* Superseded / Parent / Children */}
-        {c.superseded_by && (
-          <div className="mt-3 bg-purple-50 border border-purple-200 px-4 py-2 text-sm">
-            <span className="font-medium text-purple-700">Superseded by:</span>{" "}
-            <Link
-              href={`/v2/commitments/${c.superseded_by.id}`}
-              className="text-purple-700 underline"
-            >
-              {c.superseded_by.title}
-            </Link>
-          </div>
-        )}
         {children.length > 0 && (
           <div className="mt-3">
             <span className="text-sm font-medium text-gray-700">

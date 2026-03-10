@@ -36,7 +36,6 @@ const STATUS_COLOR: Record<string, string> = {
   partially_implemented: "bg-yellow-600",
   not_started: "bg-gray-300",
   abandoned: "bg-red-500",
-  superseded: "bg-purple-400",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -45,7 +44,6 @@ const STATUS_LABEL: Record<string, string> = {
   partially_implemented: "Partially Implemented",
   not_started: "Not Started",
   abandoned: "Abandoned",
-  superseded: "Superseded",
 };
 
 const LEGEND_STATUSES = [
@@ -54,7 +52,6 @@ const LEGEND_STATUSES = [
   "partially_implemented",
   "not_started",
   "abandoned",
-  "superseded",
 ];
 
 interface PolicyAreaGroup {
