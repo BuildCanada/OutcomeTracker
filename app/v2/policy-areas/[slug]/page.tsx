@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Chart as ChartJS,
-  CategoryScale,
+  TimeScale,
   LinearScale,
   PointElement,
   LineElement,
@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import "chartjs-adapter-date-fns";
 import { Line } from "react-chartjs-2";
 import type {
   CommitmentListing,
@@ -23,7 +24,7 @@ import type {
 import type { BurnUpResponse } from "../../page";
 
 ChartJS.register(
-  CategoryScale,
+  TimeScale,
   LinearScale,
   PointElement,
   LineElement,
@@ -148,57 +149,28 @@ function PolicyBurnUpChart({ data }: { data: BurnUpResponse }) {
     const mandateStart =
       data.mandate_start ?? data.series[0]?.date ?? "2025-04-28";
     const mandateEnd = data.mandate_end ?? "2029-10-15";
-    const start = new Date(mandateStart + "T00:00:00");
-    const end = new Date(mandateEnd + "T00:00:00");
-    const sampleDates: string[] = [];
-    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 7)) {
-      sampleDates.push(d.toISOString().slice(0, 10));
-    }
-    const lastSample = sampleDates[sampleDates.length - 1];
-    if (lastSample !== mandateEnd) {
-      sampleDates.push(mandateEnd);
-    }
 
     const sortedSeries = [...data.series].sort((a, b) =>
       a.date.localeCompare(b.date),
     );
-
-    function valueAt(date: string) {
-      let best = { scope: 0, started: 0, completed: 0 };
-      for (const pt of sortedSeries) {
-        if (pt.date <= date) best = pt;
-        else break;
-      }
-      return best;
-    }
-
     const today = new Date().toISOString().slice(0, 10);
-
-    const scopeLine: (number | null)[] = [];
-    const startedLine: (number | null)[] = [];
-    const completedLine: (number | null)[] = [];
     const latestScope = sortedSeries[sortedSeries.length - 1]?.scope ?? 0;
 
-    for (const date of sampleDates) {
-      if (date <= today) {
-        const v = valueAt(date);
-        scopeLine.push(v.scope);
-        startedLine.push(v.started);
-        completedLine.push(v.completed);
-      } else {
-        scopeLine.push(latestScope);
-        startedLine.push(null);
-        completedLine.push(null);
+    // Build {x, y} points from actual data + mandate end projection
+    const scopeLine: { x: string; y: number | null }[] = [];
+    const startedLine: { x: string; y: number | null }[] = [];
+    const completedLine: { x: string; y: number | null }[] = [];
+
+    for (const pt of sortedSeries) {
+      if (pt.date <= today) {
+        scopeLine.push({ x: pt.date, y: pt.scope });
+        startedLine.push({ x: pt.date, y: pt.started });
+        completedLine.push({ x: pt.date, y: pt.completed });
       }
     }
 
-    const labels = sampleDates.map((d) => {
-      const dt = new Date(d + "T00:00:00");
-      return dt.toLocaleDateString("en-CA", {
-        month: "short",
-        year: "2-digit",
-      });
-    });
+    // Extend scope line to mandate end
+    scopeLine.push({ x: mandateEnd, y: latestScope });
 
     const latest = sortedSeries[sortedSeries.length - 1] ?? {
       scope: 0,
@@ -207,7 +179,6 @@ function PolicyBurnUpChart({ data }: { data: BurnUpResponse }) {
     };
 
     return {
-      labels,
       scopeLine,
       startedLine,
       completedLine,
@@ -244,7 +215,6 @@ function PolicyBurnUpChart({ data }: { data: BurnUpResponse }) {
       <div className="h-72">
         <Line
           data={{
-            labels: chartData.labels,
             datasets: [
               {
                 label: "Scope",
@@ -296,6 +266,13 @@ function PolicyBurnUpChart({ data }: { data: BurnUpResponse }) {
             },
             scales: {
               x: {
+                type: "time",
+                time: {
+                  unit: "month",
+                  displayFormats: { month: "MMM yy" },
+                },
+                min: chartData.mandateStart,
+                max: chartData.mandateEnd,
                 grid: { display: false },
                 ticks: {
                   font: { size: 10 },
