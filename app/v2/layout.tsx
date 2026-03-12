@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/v2", label: "Overview" },
   { href: "/v2/commitments", label: "Explore" },
+  { href: "/v2/feed", label: "Feed" },
 ];
 
 export default function V2Layout({ children }: { children: React.ReactNode }) {

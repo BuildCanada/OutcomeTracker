@@ -20,3 +20,25 @@ export interface CommitmentsResponse {
     per_page: number;
   };
 }
+
+export interface FeedItem {
+  id: number;
+  event_type: string;
+  title: string;
+  summary: string | null;
+  occurred_at: string;
+  commitment: {
+    id: number;
+    title: string;
+  };
+  policy_area: { id: number; name: string } | null;
+}
+
+export interface FeedResponse {
+  feed_items: FeedItem[];
+  meta: {
+    total_count: number;
+    page: number;
+    per_page: number;
+  };
+}
