@@ -107,17 +107,6 @@ export default function V2HomePage() {
     return counts;
   }, [commitments]);
 
-  const waffleSquares = useMemo(() => {
-    const squares: { status: string }[] = [];
-    for (const status of LEGEND_STATUSES) {
-      const count = statusCounts[status] ?? 0;
-      for (let i = 0; i < count; i++) {
-        squares.push({ status });
-      }
-    }
-    return squares;
-  }, [statusCounts]);
-
   const policyAreas = useMemo(() => {
     const groups: Record<string, PolicyAreaGroup> = {};
     for (const c of commitments) {
@@ -196,39 +185,6 @@ export default function V2HomePage() {
 
       {/* Burn-up chart */}
       {burnUp && <BurnUpChart data={burnUp} />}
-
-      {/* Waffle grid */}
-      {!isLoading && waffleSquares.length > 0 && (
-        <div className="border border-[#d3c7b9] bg-white p-6">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-4">
-            All {totalCommitments} Commitments at a Glance
-          </h3>
-          <div className="flex flex-wrap gap-1">
-            {waffleSquares.map((sq, i) => (
-              <div
-                key={i}
-                className={`w-4 h-4 ${STATUS_COLOR[sq.status] ?? "bg-gray-200"}`}
-                title={STATUS_LABEL[sq.status] ?? sq.status}
-              />
-            ))}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-            {LEGEND_STATUSES.map((s) => {
-              const count = statusCounts[s] ?? 0;
-              if (count === 0) return null;
-              return (
-                <span
-                  key={s}
-                  className="inline-flex items-center gap-1.5 text-xs text-gray-600"
-                >
-                  <span className={`inline-block w-3 h-3 ${STATUS_COLOR[s]}`} />
-                  {STATUS_LABEL[s]} ({count})
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Policy Areas grid */}
       <div>
@@ -498,31 +454,34 @@ function PolicyAreaCard({ area }: { area: PolicyAreaGroup }) {
   const total = area.commitments.length;
   const counts = area.statusCounts;
 
+  const statusOrder = Object.fromEntries(LEGEND_STATUSES.map((s, i) => [s, i]));
+  const sorted = [...area.commitments].sort(
+    (a, b) => (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99),
+  );
+
   return (
-    <Link
-      href={`/v2/policy-areas/${area.slug}`}
-      className="block border border-[#cdc4bd] bg-white p-5 hover:border-gray-400 transition-colors"
-    >
+    <div className="border border-[#cdc4bd] bg-white p-5">
       <div className="flex items-start justify-between mb-3">
-        <h4 className="text-base font-semibold">{area.name}</h4>
+        <Link
+          href={`/v2/policy-areas/${area.slug}`}
+          className="text-base font-semibold hover:text-[#8b2332] transition-colors"
+        >
+          {area.name}
+        </Link>
         <span className="text-xs text-gray-500 font-mono">
           {total} commitment{total !== 1 ? "s" : ""}
         </span>
       </div>
 
-      <div className="flex h-3 overflow-hidden mb-3">
-        {LEGEND_STATUSES.map((s) => {
-          const count = counts[s] ?? 0;
-          if (count === 0 || total === 0) return null;
-          return (
-            <div
-              key={s}
-              className={STATUS_COLOR[s]}
-              style={{ width: `${(count / total) * 100}%` }}
-              title={`${STATUS_LABEL[s]}: ${count}`}
-            />
-          );
-        })}
+      <div className="flex flex-wrap gap-0.5 mb-3">
+        {sorted.map((c) => (
+          <Link
+            key={c.id}
+            href={`/v2/commitments/${c.id}`}
+            className={`block w-3 h-3 ${STATUS_COLOR[c.status] ?? "bg-gray-200"} hover:ring-2 hover:ring-[#8b2332] hover:ring-offset-1 transition-shadow`}
+            title={`${c.title} — ${STATUS_LABEL[c.status] ?? c.status}`}
+          />
+        ))}
       </div>
 
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500">
@@ -536,17 +495,6 @@ function PolicyAreaCard({ area }: { area: PolicyAreaGroup }) {
           );
         })}
       </div>
-
-      <div className="mt-3 space-y-1">
-        {area.commitments.slice(0, 3).map((c: CommitmentListing) => (
-          <span key={c.id} className="block text-sm text-gray-700 truncate">
-            {c.title}
-          </span>
-        ))}
-        {total > 3 && (
-          <p className="text-xs text-gray-400">+{total - 3} more</p>
-        )}
-      </div>
-    </Link>
+    </div>
   );
 }
