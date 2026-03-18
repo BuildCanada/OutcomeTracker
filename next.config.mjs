@@ -1,6 +1,21 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   basePath: "/tracker",
+  transpilePackages: ["chartjs-adapter-date-fns"],
+  webpack: (config) => {
+    // Force all chart.js imports to resolve to the same instance
+    // (pnpm creates separate copies for react-chartjs-2)
+    config.resolve.alias["chart.js"] = path.resolve(
+      __dirname,
+      "node_modules/chart.js",
+    );
+    return config;
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

@@ -9,7 +9,7 @@ export interface CommitmentListing {
   region_code: string | null;
   party_code: string | null;
   policy_area: { id: number; name: string; slug: string } | null;
-  lead_department: { id: number; display_name: string } | null;
+  lead_department: { id: number; display_name: string; slug: string } | null;
 }
 
 export interface CommitmentsResponse {
@@ -19,6 +19,33 @@ export interface CommitmentsResponse {
     page: number;
     per_page: number;
   };
+}
+
+export interface HillOffice {
+  type: string;
+  address: string | null;
+  telephone: string | null;
+  fax: string | null;
+}
+
+export interface MinisterInfo {
+  first_name: string;
+  last_name: string;
+  title: string;
+  avatar_url: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  constituency: string | null;
+  province: string | null;
+  hill_office: HillOffice | null;
+}
+
+export interface DepartmentWithMinister {
+  id: number;
+  display_name: string;
+  slug: string;
+  minister: MinisterInfo | null;
 }
 
 export interface FeedItem {
