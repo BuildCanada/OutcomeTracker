@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ChevronLeft,
+  ExternalLink,
   MessageSquare,
   Hammer,
   Clock,
@@ -85,6 +86,7 @@ interface StatusChange {
   new_status: string;
   changed_at: string;
   reason: string | null;
+  source: Source | null;
 }
 
 interface FeedItemData {
@@ -133,17 +135,15 @@ interface CommitmentDetail {
 const STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
-  partially_implemented: "Partially Implemented",
-  implemented: "Implemented",
+  completed: "Completed",
   abandoned: "Abandoned",
 };
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-700",
   in_progress: "bg-amber-100 text-amber-800",
-  partially_implemented: "bg-orange-100 text-orange-800",
-  implemented: "bg-green-100 text-green-800",
-  abandoned: "bg-red-100 text-red-800",
+  completed: "bg-[#faf0f1] text-[#8b2332]",
+  abandoned: "bg-gray-200 text-black",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -198,6 +198,7 @@ export default function CommitmentDetailPage() {
       title: string;
       detail?: string;
       url?: string;
+      source?: Source | null;
     }[] = [];
 
     for (const cs of sources) {
@@ -219,6 +220,7 @@ export default function CommitmentDetailPage() {
             : "event_announcement",
         title: ev.title,
         detail: ev.description ?? undefined,
+        source: ev.source,
       });
     }
 
@@ -230,6 +232,7 @@ export default function CommitmentDetailPage() {
         type: "status_change",
         title: `Status changed: ${prev} → ${next}`,
         detail: sh.reason ?? undefined,
+        source: sh.source,
       });
     }
 
@@ -242,6 +245,7 @@ export default function CommitmentDetailPage() {
           type: "criterion",
           title: `Criterion assessed: ${prev} → ${next}`,
           detail: cr.description,
+          source: a.source ?? null,
         });
       }
     }
@@ -252,6 +256,7 @@ export default function CommitmentDetailPage() {
         type: "revision",
         title: "Commitment text revised",
         detail: rev.change_summary ?? undefined,
+        source: rev.source ?? null,
       });
     }
 
@@ -424,15 +429,11 @@ export default function CommitmentDetailPage() {
                         {item.detail}
                       </p>
                     )}
-                    {item.url && (
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline mt-0.5 inline-block"
-                      >
-                        View source &rarr;
-                      </a>
+                    {(item.source || item.url) && (
+                      <SourceAttribution
+                        source={item.source}
+                        fallbackUrl={item.url}
+                      />
                     )}
                   </div>
                 </div>
@@ -461,15 +462,15 @@ export default function CommitmentDetailPage() {
                 announcement{talkCount !== 1 ? "s" : ""}
               </p>
             </div>
-            <div className="border border-green-200 bg-green-50 p-4">
+            <div className="border border-[#e8bfc4] bg-[#faf0f1] p-4">
               <div className="flex items-center gap-2 mb-1">
-                <Hammer className="w-4 h-4 text-green-600" />
-                <span className="text-xs font-semibold uppercase text-green-600">
+                <Hammer className="w-4 h-4 text-[#8b2332]" />
+                <span className="text-xs font-semibold uppercase text-[#8b2332]">
                   Changed
                 </span>
               </div>
-              <p className="text-3xl font-bold text-green-700">{actionCount}</p>
-              <p className="text-xs text-green-500">
+              <p className="text-3xl font-bold text-[#8b2332]">{actionCount}</p>
+              <p className="text-xs text-[#b5616e]">
                 concrete action{actionCount !== 1 ? "s" : ""}
               </p>
             </div>
@@ -486,7 +487,7 @@ export default function CommitmentDetailPage() {
                 title={`Talk: ${talkCount}`}
               />
               <div
-                className="bg-green-500"
+                className="bg-[#8b2332]"
                 style={{
                   width: `${(actionCount / (talkCount + actionCount)) * 100}%`,
                 }}
@@ -509,11 +510,7 @@ export default function CommitmentDetailPage() {
                     </span>
                     <div>
                       <p className="text-gray-700">{e.title}</p>
-                      {e.source && (
-                        <p className="text-xs text-gray-400">
-                          {e.source.title}
-                        </p>
-                      )}
+                      {e.source && <SourceAttribution source={e.source} />}
                     </div>
                   </div>
                 ))}
@@ -535,11 +532,7 @@ export default function CommitmentDetailPage() {
                     </span>
                     <div>
                       <p className="text-gray-700">{e.title}</p>
-                      {e.source && (
-                        <p className="text-xs text-gray-400">
-                          {e.source.title}
-                        </p>
-                      )}
+                      {e.source && <SourceAttribution source={e.source} />}
                     </div>
                   </div>
                 ))}
@@ -573,7 +566,7 @@ export default function CommitmentDetailPage() {
                   <div
                     className={`w-3 h-3 rounded-full border-2 border-white ring-2 z-10 ${
                       event.action_type === "concrete_action"
-                        ? "bg-green-500 ring-green-200"
+                        ? "bg-[#8b2332] ring-[#e8bfc4]"
                         : "bg-blue-500 ring-blue-200"
                     }`}
                   />
@@ -587,12 +580,12 @@ export default function CommitmentDetailPage() {
                       {event.description}
                     </p>
                   )}
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex flex-wrap gap-2 mt-1">
                     {event.action_type && (
                       <span
                         className={`text-xs px-2 py-0.5 ${
                           event.action_type === "concrete_action"
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-[#faf0f1] text-[#8b2332]"
                             : "bg-amber-100 text-amber-700"
                         }`}
                       >
@@ -602,9 +595,7 @@ export default function CommitmentDetailPage() {
                       </span>
                     )}
                     {event.source && (
-                      <span className="text-xs text-gray-400">
-                        {event.source.title}
-                      </span>
+                      <SourceAttribution source={event.source} />
                     )}
                   </div>
                 </div>
@@ -628,7 +619,13 @@ export default function CommitmentDetailPage() {
               />
             )}
             {completionCriteria.length > 0 && (
-              <div className={progressCriteria.length > 0 ? "border-t border-gray-100 pt-5" : ""}>
+              <div
+                className={
+                  progressCriteria.length > 0
+                    ? "border-t border-gray-100 pt-5"
+                    : ""
+                }
+              >
                 <CriteriaSection
                   title="Completion Criteria"
                   criteria={completionCriteria}
@@ -651,19 +648,30 @@ export default function CommitmentDetailPage() {
                 key={cs.id}
                 className="border-l-4 border-blue-300 bg-blue-50 px-4 py-3"
               >
-                <p className="text-sm font-semibold text-gray-900">
-                  {cs.source.title}
-                </p>
-                <div className="flex gap-2 text-xs text-gray-400 mt-1">
-                  <span>{cs.source.source_type}</span>
+                {cs.source.url ? (
+                  <a
+                    href={cs.source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-semibold text-gray-900 hover:text-[#8b2332] hover:underline"
+                  >
+                    {cs.source.title} &rarr;
+                  </a>
+                ) : (
+                  <p className="text-sm font-semibold text-gray-900">
+                    {cs.source.title}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2 text-xs text-gray-400 mt-1">
+                  <span>{cs.source.source_type.replace(/_/g, " ")}</span>
                   {cs.source.date && <span>{formatDate(cs.source.date)}</span>}
                   {cs.section && <span>{cs.section}</span>}
                   {cs.reference && <span>{cs.reference}</span>}
                 </div>
                 {cs.excerpt && (
-                  <p className="text-sm text-gray-600 mt-2 italic">
+                  <blockquote className="text-sm text-gray-600 mt-2 italic border-l-2 border-gray-300 pl-3">
                     &ldquo;{cs.excerpt}&rdquo;
-                  </p>
+                  </blockquote>
                 )}
               </div>
             ))}
@@ -689,11 +697,7 @@ export default function CommitmentDetailPage() {
                   <span className="text-xs font-medium text-orange-700">
                     {formatDate(rev.revision_date)}
                   </span>
-                  {rev.source && (
-                    <span className="text-xs text-gray-400">
-                      {rev.source.title}
-                    </span>
-                  )}
+                  {rev.source && <SourceAttribution source={rev.source} />}
                 </div>
                 {rev.change_summary && (
                   <p className="text-sm text-gray-700 font-medium mb-2">
@@ -731,26 +735,33 @@ export default function CommitmentDetailPage() {
             {statusHistory.map((sh: StatusChange) => (
               <div
                 key={sh.id}
-                className="flex items-center gap-3 text-sm py-2 border-b border-gray-50 last:border-0"
+                className="py-2 border-b border-gray-50 last:border-0"
               >
-                <span className="text-xs text-gray-400 w-32 flex-shrink-0">
-                  {formatDate(sh.changed_at)}
-                </span>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[sh.previous_status] ?? "bg-gray-100 text-gray-700"}`}
-                >
-                  {STATUS_LABELS[sh.previous_status] ?? sh.previous_status}
-                </span>
-                <span className="text-gray-400">&rarr;</span>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[sh.new_status] ?? "bg-gray-100 text-gray-700"}`}
-                >
-                  {STATUS_LABELS[sh.new_status] ?? sh.new_status}
-                </span>
-                {sh.reason && (
-                  <span className="text-xs text-gray-500 truncate">
-                    {sh.reason}
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-xs text-gray-400 w-32 flex-shrink-0">
+                    {formatDate(sh.changed_at)}
                   </span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[sh.previous_status] ?? "bg-gray-100 text-gray-700"}`}
+                  >
+                    {STATUS_LABELS[sh.previous_status] ?? sh.previous_status}
+                  </span>
+                  <span className="text-gray-400">&rarr;</span>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[sh.new_status] ?? "bg-gray-100 text-gray-700"}`}
+                  >
+                    {STATUS_LABELS[sh.new_status] ?? sh.new_status}
+                  </span>
+                </div>
+                {sh.reason && (
+                  <p className="text-xs text-gray-500 mt-1 ml-[140px]">
+                    {sh.reason}
+                  </p>
+                )}
+                {sh.source && (
+                  <div className="ml-[140px]">
+                    <SourceAttribution source={sh.source} />
+                  </div>
                 )}
               </div>
             ))}
@@ -797,7 +808,7 @@ const TIMELINE_ICON_STYLE: Record<string, { bg: string }> = {
   promised: { bg: "bg-blue-100" },
   source: { bg: "bg-blue-50" },
   event_announcement: { bg: "bg-amber-100" },
-  event_action: { bg: "bg-green-100" },
+  event_action: { bg: "bg-[#faf0f1]" },
   status_change: { bg: "bg-purple-100" },
   criterion: { bg: "bg-emerald-100" },
   revision: { bg: "bg-orange-100" },
@@ -828,6 +839,39 @@ function TimelineIcon({ type }: { type: string }) {
   }
 }
 
+// ── Source Attribution Component ────────────────────────────────────────────
+
+function SourceAttribution({
+  source,
+  fallbackUrl,
+}: {
+  source?: Source | null;
+  fallbackUrl?: string;
+}) {
+  const url = source?.url ?? fallbackUrl;
+  const title = source?.title;
+
+  if (!title && !url) return null;
+
+  return (
+    <div className="mt-1">
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-[#8b2332] hover:underline"
+        >
+          <ExternalLink className="w-3 h-3" />
+          {title ?? "View source"}
+        </a>
+      ) : (
+        <span className="text-xs text-gray-400">{title}</span>
+      )}
+    </div>
+  );
+}
+
 // ── Criteria Section Component ──────────────────────────────────────────────
 
 function CriteriaSection({
@@ -847,7 +891,7 @@ function CriteriaSection({
           <li key={cr.id} className="flex items-start gap-2.5">
             <div className="flex-shrink-0 mt-0.5">
               {cr.status === "met" ? (
-                <div className="w-5 h-5 bg-green-500 flex items-center justify-center">
+                <div className="w-5 h-5 bg-[#8b2332] flex items-center justify-center">
                   <svg
                     className="w-3.5 h-3.5 text-white"
                     fill="none"
@@ -863,7 +907,7 @@ function CriteriaSection({
                   </svg>
                 </div>
               ) : cr.status === "not_met" ? (
-                <div className="w-5 h-5 bg-red-400 flex items-center justify-center">
+                <div className="w-5 h-5 bg-black flex items-center justify-center">
                   <svg
                     className="w-3.5 h-3.5 text-white"
                     fill="none"

@@ -8,7 +8,6 @@ import FAQModal from "@/components/FAQModal";
 import type {
   DepartmentWithMinister,
   MinisterInfo,
-  HillOffice,
 } from "@/lib/commitment-types";
 
 function SidebarLogo() {
@@ -45,6 +44,13 @@ export const Sidebar = ({ pageTitle }: { pageTitle: string }) => {
 function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
   const [isFAQModalOpen, setIsFAQModalOpen] = useState(false);
 
+  const { data: departments } = useSWR<DepartmentWithMinister[]>(
+    `/tracker/api/v1/departments.json`,
+    { revalidateIfStale: false },
+  );
+
+  const pmDept = departments?.find((d) => d.slug === "prime-minister-office");
+
   return (
     <div className="col-span-1">
       <div className="mb-6">
@@ -57,18 +63,27 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
         </a>
       </div>
       <h1 className="text-4xl lg:text-5xl font-bold mb-8">{pageTitle}</h1>
-      <div className="mb-8">
-        <p className="text-gray-900 mb-6">
-          A non-partisan platform tracking progress of key commitments during
-          the 45th Parliament of Canada.
-        </p>
-        <button
-          onClick={() => setIsFAQModalOpen(true)}
-          className="font-mono text-sm text-[#8b2332] hover:text-[#721c28] transition-colors"
-        >
-          FAQ
-        </button>
-      </div>
+      {pmDept?.minister ? (
+        <div className="mb-8">
+          <MinisterCard
+            minister={pmDept.minister}
+            departmentName={pmDept.display_name}
+          />
+        </div>
+      ) : (
+        <div className="mb-8">
+          <p className="text-gray-900 mb-6">
+            A non-partisan platform tracking progress of key commitments during
+            the 45th Parliament of Canada.
+          </p>
+        </div>
+      )}
+      <button
+        onClick={() => setIsFAQModalOpen(true)}
+        className="font-mono text-sm text-[#8b2332] hover:text-[#721c28] transition-colors"
+      >
+        FAQ
+      </button>
       <FAQModal
         isOpen={isFAQModalOpen}
         onClose={() => setIsFAQModalOpen(false)}
@@ -126,6 +141,7 @@ function MinisterSidebarBySlug({ slug }: { slug: string }) {
 interface CommitmentBrief {
   id: number;
   lead_department: { id: number; display_name: string; slug: string } | null;
+  departments: { id: number; display_name: string; is_lead: boolean }[];
 }
 
 function MinisterSidebarByCommitment({
@@ -159,6 +175,11 @@ function MinisterSidebarByCommitment({
     );
   }
 
+  const supportingDepts = (commitment.departments ?? [])
+    .filter((d) => !d.is_lead)
+    .map((d) => departments?.find((dep) => dep.id === d.id))
+    .filter(Boolean) as DepartmentWithMinister[];
+
   if (dept?.minister) {
     return (
       <div className="col-span-1">
@@ -167,6 +188,9 @@ function MinisterSidebarByCommitment({
           minister={dept.minister}
           departmentName={dept.display_name}
         />
+        {supportingDepts.length > 0 && (
+          <SupportingDepartments departments={supportingDepts} />
+        )}
       </div>
     );
   }
@@ -181,6 +205,88 @@ function MinisterSidebarByCommitment({
       <p className="text-sm text-gray-500 mt-1">
         No minister currently assigned
       </p>
+      {supportingDepts.length > 0 && (
+        <SupportingDepartments departments={supportingDepts} />
+      )}
+    </div>
+  );
+}
+
+function SupportingDepartments({
+  departments,
+}: {
+  departments: DepartmentWithMinister[];
+}) {
+  return (
+    <div className="mt-6 pt-6 border-t border-gray-200">
+      <h3 className="text-xs font-mono text-gray-400 uppercase tracking-wider mb-4">
+        Supporting Departments
+      </h3>
+      <div className="space-y-5">
+        {departments.map((dept) => (
+          <div key={dept.id}>
+            <p className="text-sm font-bold mb-2">{dept.display_name}</p>
+            {dept.minister ? (
+              <SupportingMinisterCard minister={dept.minister} />
+            ) : (
+              <p className="text-xs text-gray-500">
+                No minister currently assigned
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SupportingMinisterCard({ minister }: { minister: MinisterInfo }) {
+  const fullName = `${minister.first_name} ${minister.last_name}`;
+  const phone = minister.phone ?? minister.hill_office?.telephone;
+
+  return (
+    <div>
+      <div className="flex items-start gap-3">
+        <div className="w-1/4 flex-shrink-0 aspect-square bg-gray-100 overflow-hidden">
+          {minister.avatar_url ? (
+            <img
+              src={minister.avatar_url}
+              alt={fullName}
+              className="w-full h-full object-cover object-[center_25%]"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm font-semibold">
+              {minister.first_name[0]}
+              {minister.last_name[0]}
+            </div>
+          )}
+        </div>
+        <div className="w-3/4">
+          <h4 className="text-sm font-bold leading-tight">{fullName}</h4>
+          <p className="text-xs text-gray-600 mt-0.5">{minister.title}</p>
+          {phone && (
+            <p className="text-xs text-gray-400 mt-1">
+              <a
+                href={`tel:${phone}`}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {phone}
+              </a>
+            </p>
+          )}
+          {minister.email && (
+            <p className="text-xs text-gray-400 truncate">
+              <a
+                href={`mailto:${minister.email}`}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                title={minister.email}
+              >
+                {minister.email}
+              </a>
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -194,110 +300,55 @@ function MinisterCard({
 }) {
   const fullName = `${minister.first_name} ${minister.last_name}`;
 
+  const phone = minister.phone ?? minister.hill_office?.telephone;
+
   return (
     <div>
-      {/* Photo */}
-      <div className="w-full aspect-square bg-gray-100 overflow-hidden mb-4">
-        {minister.avatar_url ? (
-          <img
-            src={minister.avatar_url}
-            alt={fullName}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl font-semibold">
-            {minister.first_name[0]}
-            {minister.last_name[0]}
-          </div>
-        )}
-      </div>
+      {/* Department name — largest text */}
+      <h2 className="text-2xl font-bold mb-3">{departmentName}</h2>
 
-      {/* Name and title */}
-      <h2 className="text-2xl font-bold">{fullName}</h2>
-      <p className="text-sm text-gray-600 mt-1">{minister.title}</p>
-      <p className="text-xs text-gray-400 mt-0.5">{departmentName}</p>
-
-      {/* Contact info */}
-      <div className="mt-4 space-y-2 text-sm">
-        {minister.constituency && (
-          <div>
-            <span className="text-xs font-mono text-gray-400 uppercase">
-              Riding
-            </span>
-            <p className="text-gray-700">
-              {minister.constituency}
-              {minister.province ? `, ${minister.province}` : ""}
+      {/* Photo beside name/title/contact — same layout as supporting ministers */}
+      <div className="flex items-start gap-3">
+        <div className="w-1/4 flex-shrink-0 aspect-square bg-gray-100 overflow-hidden">
+          {minister.avatar_url ? (
+            <img
+              src={minister.avatar_url}
+              alt={fullName}
+              className="w-full h-full object-cover object-[center_25%]"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg font-semibold">
+              {minister.first_name[0]}
+              {minister.last_name[0]}
+            </div>
+          )}
+        </div>
+        <div className="w-3/4">
+          <h3 className="text-lg font-bold leading-tight">{fullName}</h3>
+          <p className="text-sm text-gray-600 mt-0.5">{minister.title}</p>
+          {phone && (
+            <p className="text-xs text-gray-400 mt-1">
+              <a
+                href={`tel:${phone}`}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {phone}
+              </a>
             </p>
-          </div>
-        )}
-        {minister.email && (
-          <div>
-            <span className="text-xs font-mono text-gray-400 uppercase">
-              Email
-            </span>
-            <p>
+          )}
+          {minister.email && (
+            <p className="text-xs text-gray-400 truncate">
               <a
                 href={`mailto:${minister.email}`}
-                className="text-[#8b2332] hover:text-[#721c28] transition-colors break-all"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                title={minister.email}
               >
                 {minister.email}
               </a>
             </p>
-          </div>
-        )}
-        {minister.hill_office && (
-          <HillOfficeInfo office={minister.hill_office} />
-        )}
-        {minister.website && (
-          <div>
-            <span className="text-xs font-mono text-gray-400 uppercase">
-              Website
-            </span>
-            <p>
-              <a
-                href={minister.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#8b2332] hover:text-[#721c28] transition-colors break-all"
-              >
-                {minister.website.replace(/^https?:\/\//, "")}
-              </a>
-            </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
-  );
-}
-
-function HillOfficeInfo({ office }: { office: HillOffice }) {
-  return (
-    <>
-      {office.telephone && (
-        <div>
-          <span className="text-xs font-mono text-gray-400 uppercase">
-            Hill Office Phone
-          </span>
-          <p>
-            <a
-              href={`tel:${office.telephone}`}
-              className="text-[#8b2332] hover:text-[#721c28] transition-colors"
-            >
-              {office.telephone}
-            </a>
-          </p>
-        </div>
-      )}
-      {office.address && (
-        <div>
-          <span className="text-xs font-mono text-gray-400 uppercase">
-            Hill Office
-          </span>
-          <p className="text-gray-700 whitespace-pre-line text-xs leading-relaxed">
-            {office.address}
-          </p>
-        </div>
-      )}
-    </>
   );
 }

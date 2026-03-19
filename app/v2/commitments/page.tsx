@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { Search, ChevronUp, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -21,17 +22,15 @@ import Link from "next/link";
 const STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
-  partially_implemented: "Partially Implemented",
-  implemented: "Implemented",
+  completed: "Completed",
   abandoned: "Abandoned",
 };
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-700",
   in_progress: "bg-amber-100 text-amber-800",
-  partially_implemented: "bg-orange-100 text-orange-800",
-  implemented: "bg-green-100 text-green-800",
-  abandoned: "bg-red-100 text-red-800",
+  completed: "bg-[#faf0f1] text-[#8b2332]",
+  abandoned: "bg-gray-200 text-black",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -55,9 +54,13 @@ function buildQueryString(params: Record<string, string | number>) {
 }
 
 export default function CommitmentsPage() {
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams.get("status") ?? "all";
+  const sourceType = searchParams.get("source_type") ?? "";
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState(initialStatus);
   const [commitmentType, setCommitmentType] = useState("all");
   const [sort, setSort] = useState("");
   const [direction, setDirection] = useState("desc");
@@ -82,6 +85,7 @@ export default function CommitmentsPage() {
     direction,
     page,
     per_page: perPage,
+    source_type: sourceType,
   });
 
   const { data, isLoading } = useSWR<CommitmentsResponse>(

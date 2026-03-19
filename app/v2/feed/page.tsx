@@ -27,8 +27,8 @@ const EVENT_TYPE_STYLES: Record<string, { badge: string; dot: string }> = {
     dot: "bg-blue-500",
   },
   status_change: {
-    badge: "bg-green-50 text-green-700",
-    dot: "bg-green-500",
+    badge: "bg-[#faf0f1] text-[#8b2332]",
+    dot: "bg-[#8b2332]",
   },
   drift: {
     badge: "bg-orange-50 text-orange-700",
@@ -253,7 +253,7 @@ function FeedItemRow({ item: fi }: { item: FeedItem }) {
             fi.event_type === "event"
               ? "bg-blue-100"
               : fi.event_type === "status_change"
-                ? "bg-green-100"
+                ? "bg-[#faf0f1]"
                 : fi.event_type === "drift"
                   ? "bg-orange-100"
                   : "bg-gray-100"

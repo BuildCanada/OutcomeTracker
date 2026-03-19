@@ -69,3 +69,34 @@ export interface FeedResponse {
     per_page: number;
   };
 }
+
+export interface BurnUpSeries {
+  date: string;
+  scope: number;
+  started: number;
+  completed: number;
+  abandoned: number;
+}
+
+export interface BurnUpResponse {
+  government: { id: number; name: string };
+  mandate_start: string | null;
+  mandate_end: string | null;
+  total_commitments: number;
+  policy_area?: { id: number; name: string; slug: string } | null;
+  department?: { id: number; display_name: string; slug: string } | null;
+  series: BurnUpSeries[];
+}
+
+export interface DashboardResponse {
+  total_commitments: number;
+  status_counts: Record<string, number>;
+}
+
+export interface MinistryGroup {
+  name: string;
+  slug: string;
+  commitments: CommitmentListing[];
+  statusCounts: Record<string, number>;
+  minister?: MinisterInfo | null;
+}

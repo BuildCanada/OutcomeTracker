@@ -64,7 +64,7 @@ export default function RootLayout({
           <main className="container mx-auto bg-background site-main-content">
             <SWRProvider>
               <div className="min-h-screen">
-                <div className="container px-4 py-6">
+                <div className="px-4 py-6">
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <Sidebar pageTitle="Outcomes Tracker" />
                     <div className="col-span-3">{children}</div>
@@ -81,7 +81,11 @@ export default function RootLayout({
             <div className="container mx-auto">
               <div className="mb-8">
                 <p className="text-white">
-                  🏗️🇨🇦 A <a href="/" className="underline decoration-white">Build Canada</a> project.
+                  🏗️🇨🇦 A{" "}
+                  <a href="/" className="underline decoration-white">
+                    Build Canada
+                  </a>{" "}
+                  project.
                 </p>
               </div>
             </div>

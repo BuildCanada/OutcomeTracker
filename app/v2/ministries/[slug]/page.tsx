@@ -1,70 +1,42 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
-import useSWR from "swr";
 import Link from "next/link";
-import { Skeleton } from "@/components/ui/skeleton";
+import BurnUpChartWrapper from "@/components/BurnUpChartWrapper";
+import { fetchApi } from "@/lib/api";
 import type {
   CommitmentListing,
   CommitmentsResponse,
+  BurnUpResponse,
 } from "@/lib/commitment-types";
-
-const BurnUpChart = dynamic(() => import("@/components/ChartLine"), {
-  ssr: false,
-});
 
 const STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
-  partially_implemented: "Partially Implemented",
-  implemented: "Implemented",
+  completed: "Completed",
   abandoned: "Abandoned",
 };
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-700",
   in_progress: "bg-amber-100 text-amber-800",
-  partially_implemented: "bg-orange-100 text-orange-800",
-  implemented: "bg-green-100 text-green-800",
-  abandoned: "bg-red-100 text-red-800",
+  completed: "bg-[#faf0f1] text-[#8b2332]",
+  abandoned: "bg-gray-200 text-black",
 };
 
-interface BurnUpResponse {
-  government: { id: number; name: string };
-  mandate_start: string | null;
-  mandate_end: string | null;
-  total_commitments: number;
-  series: { date: string; scope: number; started: number; completed: number }[];
-}
+export default async function MinistryPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
-export default function MinistryPage() {
-  const params = useParams();
-  const slug = params.slug as string;
+  const [burnUp, commitmentsData] = await Promise.all([
+    fetchApi<BurnUpResponse>(`/api/burndown/1?department_slug=${slug}`),
+    fetchApi<CommitmentsResponse>(
+      `/api/v1/commitments.json?per_page=1000&lead_department=${slug}`,
+    ),
+  ]);
 
-  const { data: burnUp } = useSWR<BurnUpResponse>(
-    slug ? `/tracker/api/burndown/1?department_slug=${slug}` : null,
-    { revalidateIfStale: false },
-  );
-
-  const { data: page1, isLoading } = useSWR<CommitmentsResponse>(
-    slug
-      ? `/tracker/api/v1/commitments.json?per_page=100&lead_department=${slug}`
-      : null,
-    { revalidateIfStale: false },
-  );
-  const { data: page2 } = useSWR<CommitmentsResponse>(
-    slug
-      ? `/tracker/api/v1/commitments.json?per_page=100&page=2&lead_department=${slug}`
-      : null,
-    { revalidateIfStale: false },
-  );
-
-  const commitments = [
-    ...(page1?.commitments ?? []),
-    ...(page2?.commitments ?? []),
-  ];
-  const totalCount = page1?.meta?.total_count ?? commitments.length;
+  const commitments = commitmentsData.commitments;
+  const totalCount = commitmentsData.meta.total_count;
 
   const dept = commitments.find((c) => c.lead_department)?.lead_department;
   const ministryName =
@@ -86,25 +58,22 @@ export default function MinistryPage() {
           &larr; Overview
         </Link>
         <h2 className="mt-2 text-3xl font-bold tracking-tight">
-          {isLoading ? <Skeleton className="h-9 w-64" /> : ministryName}
+          {ministryName}
         </h2>
-        {!isLoading && (
-          <p className="mt-1 text-sm text-gray-500">
-            {totalCount} commitment{totalCount !== 1 ? "s" : ""} under this
-            ministry
-          </p>
-        )}
+        <p className="mt-1 text-sm text-gray-500">
+          {totalCount} commitment{totalCount !== 1 ? "s" : ""} under this
+          ministry
+        </p>
       </div>
 
       {/* Burn-up chart */}
-      {burnUp ? (
-        <BurnUpChart data={burnUp as never} />
-      ) : (
-        <Skeleton className="h-96" />
-      )}
+      <BurnUpChartWrapper
+        data={burnUp}
+        statusCounts={commitments.length > 0 ? statusCounts : undefined}
+      />
 
       {/* Status summary */}
-      {!isLoading && commitments.length > 0 && (
+      {commitments.length > 0 && (
         <div className="flex flex-wrap gap-3">
           {Object.entries(statusCounts)
             .sort(([a], [b]) => a.localeCompare(b))
@@ -122,13 +91,7 @@ export default function MinistryPage() {
       {/* Commitment list */}
       <div>
         <h3 className="text-xl font-semibold mb-4">Commitments</h3>
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-20" />
-            ))}
-          </div>
-        ) : commitments.length === 0 ? (
+        {commitments.length === 0 ? (
           <p className="text-gray-500 italic">
             No commitments found for this ministry.
           </p>

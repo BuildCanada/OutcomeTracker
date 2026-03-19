@@ -201,24 +201,17 @@ import { Chart } from "react-chartjs-2";
 
 /* ── Types ── */
 
-interface BurnUpSeries {
-  date: string;
-  scope: number;
-  started: number;
-  completed: number;
-}
-
-interface BurnUpResponse {
-  government: { id: number; name: string };
-  mandate_start: string | null;
-  mandate_end: string | null;
-  total_commitments: number;
-  series: BurnUpSeries[];
-}
+import type { BurnUpResponse, BurnUpSeries } from "@/lib/commitment-types";
 
 /* ── BurnUpChart component ── */
 
-export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
+export default function BurnUpChart({
+  data,
+  statusCounts,
+}: {
+  data: BurnUpResponse;
+  statusCounts?: Record<string, number>;
+}) {
   const chartData = useMemo(() => {
     const mandateStart =
       data.mandate_start ?? data.series[0]?.date ?? "2025-04-28";
@@ -230,17 +223,56 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
     const today = new Date().toISOString().slice(0, 10);
     const latestScope = sortedSeries[sortedSeries.length - 1]?.scope ?? 0;
 
-    const scopeLine: { x: string; y: number | null }[] = [];
-    const startedLine: { x: string; y: number | null }[] = [];
-    const completedLine: { x: string; y: number | null }[] = [];
+    // Build a weekly series that carries forward the last known values,
+    // so the chart shows flat lines between actual change events.
+    const weeklyPoints: BurnUpSeries[] = [];
+    const pastPoints = sortedSeries.filter((pt) => pt.date <= today);
 
-    for (const pt of sortedSeries) {
-      if (pt.date <= today) {
-        scopeLine.push({ x: pt.date, y: pt.scope });
-        startedLine.push({ x: pt.date, y: pt.started });
-        completedLine.push({ x: pt.date, y: pt.completed });
+    if (pastPoints.length > 0) {
+      let idx = 0;
+      const startDate = new Date(pastPoints[0].date + "T00:00:00");
+      const endDate = new Date(today + "T00:00:00");
+      let current: BurnUpSeries = { ...pastPoints[0] };
+
+      for (
+        let d = new Date(startDate);
+        d <= endDate;
+        d.setDate(d.getDate() + 7)
+      ) {
+        const iso = d.toISOString().slice(0, 10);
+
+        // Advance to consume all data points up to this date
+        while (idx < pastPoints.length && pastPoints[idx].date <= iso) {
+          current = pastPoints[idx];
+          idx++;
+        }
+
+        weeklyPoints.push({ ...current, date: iso });
+      }
+
+      // Ensure the last actual data point is included
+      const lastPt = pastPoints[pastPoints.length - 1];
+      if (
+        weeklyPoints.length === 0 ||
+        weeklyPoints[weeklyPoints.length - 1].date !== lastPt.date
+      ) {
+        weeklyPoints.push(lastPt);
       }
     }
+
+    const scopeLine = weeklyPoints.map((pt) => ({ x: pt.date, y: pt.scope }));
+    const startedLine = weeklyPoints.map((pt) => ({
+      x: pt.date,
+      y: pt.started,
+    }));
+    const completedLine = weeklyPoints.map((pt) => ({
+      x: pt.date,
+      y: pt.completed,
+    }));
+    const abandonedLine = weeklyPoints.map((pt) => ({
+      x: pt.date,
+      y: pt.abandoned ?? 0,
+    }));
 
     scopeLine.push({ x: mandateEnd, y: latestScope });
 
@@ -248,12 +280,14 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
       scope: 0,
       started: 0,
       completed: 0,
+      abandoned: 0,
     };
 
     return {
       scopeLine,
       startedLine,
       completedLine,
+      abandonedLine,
       latest,
       mandateStart,
       mandateEnd,
@@ -281,17 +315,40 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
         <div>
           <span className="inline-block w-2.5 h-2.5 bg-gray-400 mr-1.5" />
           <span className="text-xs text-gray-500">Scope</span>
-          <p className="text-lg font-bold">{chartData.latest.scope}</p>
+          <p className="text-lg font-bold">
+            {statusCounts
+              ? Object.values(statusCounts).reduce((a, b) => a + b, 0)
+              : chartData.latest.scope}
+          </p>
         </div>
         <div>
           <span className="inline-block w-2.5 h-2.5 bg-amber-400 mr-1.5" />
           <span className="text-xs text-gray-500">Started</span>
-          <p className="text-lg font-bold">{chartData.latest.started}</p>
+          <p className="text-lg font-bold">
+            {statusCounts
+              ? (statusCounts["in_progress"] ?? 0) +
+                (statusCounts["completed"] ?? 0) +
+                (statusCounts["abandoned"] ?? 0)
+              : chartData.latest.started}
+          </p>
         </div>
         <div>
           <span className="inline-block w-2.5 h-2.5 bg-[#8b2332] mr-1.5" />
           <span className="text-xs text-gray-500">Completed</span>
-          <p className="text-lg font-bold">{chartData.latest.completed}</p>
+          <p className="text-lg font-bold">
+            {statusCounts
+              ? (statusCounts["completed"] ?? 0)
+              : chartData.latest.completed}
+          </p>
+        </div>
+        <div>
+          <span className="inline-block w-2.5 h-2.5 bg-black mr-1.5" />
+          <span className="text-xs text-gray-500">Abandoned</span>
+          <p className="text-lg font-bold">
+            {statusCounts
+              ? (statusCounts["abandoned"] ?? 0)
+              : chartData.latest.abandoned}
+          </p>
         </div>
       </div>
 
@@ -307,7 +364,7 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
                 borderWidth: 1.5,
                 pointRadius: 0,
                 fill: false,
-                tension: 0.2,
+                stepped: "before",
                 spanGaps: false,
               },
               {
@@ -317,7 +374,7 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
                 borderWidth: 2,
                 pointRadius: 0,
                 fill: false,
-                tension: 0.2,
+                stepped: "before",
                 spanGaps: false,
               },
               {
@@ -328,8 +385,19 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
                 borderWidth: 2.5,
                 pointRadius: 0,
                 fill: true,
-                tension: 0.2,
+                stepped: "before",
                 spanGaps: false,
+              },
+              {
+                label: "Abandoned",
+                data: chartData.abandonedLine,
+                borderColor: "#000000",
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
+                stepped: "before",
+                spanGaps: false,
+                borderDash: [4, 3],
               },
             ],
           }}
@@ -343,6 +411,16 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
                 mode: "index",
                 intersect: false,
                 filter: (item) => item.raw !== null,
+                callbacks: {
+                  title: (items) => {
+                    if (!items.length) return "";
+                    const raw = items[0].raw as { x: string };
+                    return new Date(raw.x + "T00:00:00").toLocaleDateString(
+                      "en-CA",
+                      { month: "long", day: "numeric", year: "numeric" },
+                    );
+                  },
+                },
               },
             },
             scales: {
@@ -386,6 +464,10 @@ export default function BurnUpChart({ data }: { data: BurnUpResponse }) {
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block w-5 h-0.5 bg-[#8b2332]" />
           Completed
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block w-5 h-0.5 bg-black border-dashed" />
+          Abandoned
         </span>
       </div>
     </div>

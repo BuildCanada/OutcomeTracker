@@ -36,6 +36,10 @@ const nextConfig = {
         source: "/api/burndown/:path*",
         destination: `${process.env.NEXT_PUBLIC_API_URL}/api/burndown/:path*`,
       },
+      {
+        source: "/api/dashboard/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/:path*`,
+      },
     ];
   },
 };
