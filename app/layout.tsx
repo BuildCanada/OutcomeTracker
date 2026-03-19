@@ -1,7 +1,7 @@
 import type React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
+import { LazyToaster } from "@/components/LazyToaster";
 import { SimpleAnalytics } from "@/components/SimpleAnalytics";
 import SWRProvider from "@/components/SWRProvider";
 import { Sidebar } from "@/components/HomePageClient";
@@ -91,7 +91,7 @@ export default function RootLayout({
             </div>
           </footer>
         </div>
-        <Toaster />
+        <LazyToaster />
         <SimpleAnalytics />
         {/* <Script
           src="https://frenglish.ai/frenglish.bundle.js"
