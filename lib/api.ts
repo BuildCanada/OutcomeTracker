@@ -1,4 +1,8 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+// API_URL is for server-side fetches (runtime). NEXT_PUBLIC_API_URL is baked in at build time.
+const API_BASE =
+  process.env.API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000";
 
 export async function fetchApi<T>(path: string): Promise<T> {
   // Strip basePath prefix if present
