@@ -17,7 +17,7 @@ export async function fetchApi<T>(path: string): Promise<T> {
     url = `${API_BASE}${path}`;
   }
 
-  const res = await fetch(url, { next: { revalidate: 300 } });
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`API ${res.status}: ${url}`);
   return res.json();
 }
