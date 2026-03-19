@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { Search, ChevronUp, ChevronDown } from "lucide-react";
@@ -54,6 +54,14 @@ function buildQueryString(params: Record<string, string | number>) {
 }
 
 export default function CommitmentsPage() {
+  return (
+    <Suspense fallback={<Skeleton className="h-96" />}>
+      <CommitmentsPageInner />
+    </Suspense>
+  );
+}
+
+function CommitmentsPageInner() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") ?? "all";
   const sourceType = searchParams.get("source_type") ?? "";
