@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ChevronLeft,
+  ChevronRight,
   ExternalLink,
   MessageSquare,
   Hammer,
@@ -35,6 +35,8 @@ interface CommitmentSource {
   section: string | null;
   reference: string | null;
   excerpt: string | null;
+  relevance_note: string | null;
+  created_at: string | null;
   source: Source;
 }
 
@@ -95,6 +97,8 @@ interface FeedItemData {
   title: string;
   summary: string | null;
   occurred_at: string;
+  source?: Source;
+  evidence_notes?: string;
 }
 
 interface CommitmentDetail {
@@ -121,7 +125,7 @@ interface CommitmentDetail {
     display_name: string;
     is_lead: boolean;
   }[];
-  lead_department: { id: number; display_name: string } | null;
+  lead_department: { id: number; display_name: string; slug: string } | null;
   timeline: TimelineEvent[];
   announcements: TimelineEvent[];
   actions: TimelineEvent[];
@@ -199,6 +203,7 @@ export default function CommitmentDetailPage() {
       detail?: string;
       url?: string;
       source?: Source | null;
+      sourceType?: string;
     }[] = [];
 
     for (const cs of sources) {
@@ -206,8 +211,9 @@ export default function CommitmentDetailPage() {
         date: cs.source.date ?? c.date_promised ?? "",
         type: "source",
         title: cs.source.title,
-        detail: cs.excerpt ?? undefined,
+        detail: cs.relevance_note ?? cs.excerpt ?? undefined,
         url: cs.source.url,
+        sourceType: cs.source.source_type,
       });
     }
 
@@ -301,14 +307,25 @@ export default function CommitmentDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Back link */}
-      <Link
-        href="/commitments"
-        className="inline-flex items-center text-sm text-gray-500 hover:text-[#8b2332] transition-colors"
-      >
-        <ChevronLeft className="w-4 h-4 mr-1" />
-        Back to commitments
-      </Link>
+      {/* Breadcrumbs */}
+      <nav className="flex items-center text-sm text-gray-400 gap-1">
+        <Link href="/" className="hover:text-[#8b2332] transition-colors">
+          Overview
+        </Link>
+        {c.lead_department && (
+          <>
+            <ChevronRight className="w-3 h-3" />
+            <Link
+              href={`/ministries/${c.lead_department.slug}`}
+              className="hover:text-[#8b2332] transition-colors"
+            >
+              {c.lead_department.display_name}
+            </Link>
+          </>
+        )}
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-gray-600 truncate max-w-xs">{c.title}</span>
+      </nav>
 
       {/* Header */}
       <div className="border border-[#cdc4bd] bg-white p-6">
@@ -417,9 +434,16 @@ export default function CommitmentDetailPage() {
                   {/* Content */}
                   <div className="flex-1 min-w-0 pt-0.5">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium text-gray-900">
-                        {item.title}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900">
+                          {item.title}
+                        </p>
+                        {item.sourceType && (
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded flex-shrink-0">
+                            {item.sourceType.replace(/_/g, " ")}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs text-gray-400 flex-shrink-0 tabular-nums">
                         {formatDate(item.date)}
                       </span>
@@ -648,30 +672,64 @@ export default function CommitmentDetailPage() {
                 key={cs.id}
                 className="border-l-4 border-blue-300 bg-blue-50 px-4 py-3"
               >
-                {cs.source.url ? (
-                  <a
-                    href={cs.source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-semibold text-gray-900 hover:text-[#8b2332] hover:underline"
-                  >
-                    {cs.source.title} &rarr;
-                  </a>
-                ) : (
-                  <p className="text-sm font-semibold text-gray-900">
-                    {cs.source.title}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2 text-xs text-gray-400 mt-1">
-                  <span>{cs.source.source_type.replace(/_/g, " ")}</span>
-                  {cs.source.date && <span>{formatDate(cs.source.date)}</span>}
-                  {cs.section && <span>{cs.section}</span>}
-                  {cs.reference && <span>{cs.reference}</span>}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    {cs.source.url ? (
+                      <a
+                        href={cs.source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-semibold text-gray-900 hover:text-[#8b2332] hover:underline"
+                      >
+                        {cs.source.title} &rarr;
+                      </a>
+                    ) : (
+                      <p className="text-sm font-semibold text-gray-900">
+                        {cs.source.title}
+                      </p>
+                    )}
+                  </div>
+                  {cs.source.date && (
+                    <span className="text-xs text-gray-400 flex-shrink-0 tabular-nums">
+                      {formatDate(cs.source.date)}
+                    </span>
+                  )}
                 </div>
+
+                <div className="flex flex-wrap gap-2 text-xs text-gray-400 mt-1">
+                  <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                    {cs.source.source_type.replace(/_/g, " ")}
+                  </span>
+                  {cs.section && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
+                      {cs.section}
+                    </span>
+                  )}
+                  {cs.reference && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
+                      {cs.reference}
+                    </span>
+                  )}
+                  {cs.created_at && (
+                    <span className="text-gray-400">
+                      Added {formatDate(cs.created_at)}
+                    </span>
+                  )}
+                </div>
+
                 {cs.excerpt && (
                   <blockquote className="text-sm text-gray-600 mt-2 italic border-l-2 border-gray-300 pl-3">
                     &ldquo;{cs.excerpt}&rdquo;
                   </blockquote>
+                )}
+
+                {cs.relevance_note && (
+                  <div className="mt-2 text-xs text-gray-500 bg-white/60 px-2 py-1.5 rounded border border-blue-200">
+                    <span className="font-medium text-gray-600">
+                      Relevance:
+                    </span>{" "}
+                    {cs.relevance_note}
+                  </div>
                 )}
               </div>
             ))}
@@ -791,6 +849,13 @@ export default function CommitmentDetailPage() {
                   <span className="text-sm text-gray-700">{fi.title}</span>
                   {fi.summary && (
                     <p className="text-xs text-gray-500 mt-0.5">{fi.summary}</p>
+                  )}
+                  {fi.source && <SourceAttribution source={fi.source} />}
+                  {!fi.source && fi.evidence_notes && (
+                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
+                      <span className="font-medium">Evidence:</span>{" "}
+                      {fi.evidence_notes}
+                    </p>
                   )}
                 </div>
               </div>
