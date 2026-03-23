@@ -54,7 +54,8 @@ export default function PasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-neutral-800 text-white py-2 rounded hover:bg-neutral-700 disabled:opacity-50"
+            className="w-full py-2 rounded disabled:opacity-50"
+            style={{ backgroundColor: "#272727", color: "#ffffff" }}
           >
             {loading ? "Checking..." : "Enter"}
           </button>
