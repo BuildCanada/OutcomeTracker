@@ -23,11 +23,14 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div>
-            <h3 className="text-lg font-semibold mb-2">What is this?</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              Why did you build this?
+            </h3>
             <p className="text-gray-700">
-              We are tracking the implementation of every commitment that the
-              Carney government has made. We track bills through parliament,
-              official press releases and regulatory changes.
+              We wanted to better understand what is being done in key areas
+              that matter to Canadians. We built this tracker to know what key
+              commitments have been made, what their progress has been, and how
+              they impact outcomes.
             </p>
           </div>
 
@@ -36,35 +39,19 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
               Where do commitments come from?
             </h3>
             <p className="text-gray-700">
-              Commitments are pulled from the Liberal Party&apos;s 2025 election
-              platform and the Speech from the Throne. We show the original text
-              and source in each commitment&apos;s details. As new commitments
-              are made (e.g. in budgets or ministerial mandate letters), we add
-              them.
+              We have pulled commitments from the Liberal Party&apos;s platform.
+              We show the original text and the source in each commitment&apos;s
+              details. As new commitments are made, we will add these in.
             </p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">
-              How do you determine if a commitment is completed?
+              How are the progress, impact, and alignment scores calculated?
             </h3>
             <p className="text-gray-700">
-              Our standard for completion is generous. Our goal is to hold the
-              government accountable to what <em>they</em> said they were going
-              to do, not what we hoped for them to do. Many commitments will be
-              marked as completed once the budget implementation act receives
-              royal assent.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold mb-2">
-              How are status assessments made?
-            </h3>
-            <p className="text-gray-700">
-              We use an LLM to assess status based on evidence from official
-              government sources, parliamentary records, and regulatory changes.
-              Our project is open sourced on{" "}
+              We use an LLM to score each of these. Our project is open sourced
+              on{" "}
               <a href="https://github.com/BuildCanada" className="underline">
                 Github
               </a>

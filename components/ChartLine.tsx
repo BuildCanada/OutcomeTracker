@@ -297,7 +297,7 @@ export default function BurnUpChart({
   return (
     <div className="border border-[#d3c7b9] bg-white p-6">
       <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-1">
-        Mandate Progress
+        Progress to Date
       </h3>
       <p className="text-xs text-gray-400 mb-4">
         {new Date(chartData.mandateStart + "T00:00:00").toLocaleDateString(
