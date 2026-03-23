@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -177,6 +177,9 @@ export default function CommitmentDetailPage() {
     `/tracker/api/v1/commitments/${id}.json`,
   );
 
+  const TIMELINE_PAGE_SIZE = 10;
+  const [timelinePage, setTimelinePage] = useState(1);
+
   // Build unified activity timeline — must be called before any early return
   const activityTimeline = useMemo(() => {
     if (!commitment) return [];
@@ -267,7 +270,7 @@ export default function CommitmentDetailPage() {
     }
 
     items.sort((a, b) => b.date.localeCompare(a.date));
-    return items;
+    return items.filter((item) => item.type !== "criterion");
   }, [commitment]);
 
   if (isLoading || !commitment) {
@@ -296,14 +299,20 @@ export default function CommitmentDetailPage() {
   const announcements = c.announcements ?? [];
   const actions = c.actions ?? [];
   const timeline = c.timeline ?? [];
-  const sources = c.sources ?? [];
   const revisions = c.revisions ?? [];
   const statusHistory = c.status_history ?? [];
-  const recentFeed = c.recent_feed ?? [];
   const children = c.children ?? [];
 
   const talkCount = announcements.length;
   const actionCount = actions.length;
+
+  const timelinePageCount = Math.ceil(
+    activityTimeline.length / TIMELINE_PAGE_SIZE,
+  );
+  const pagedTimeline = activityTimeline.slice(
+    0,
+    timelinePage * TIMELINE_PAGE_SIZE,
+  );
 
   return (
     <div className="space-y-6">
@@ -409,18 +418,49 @@ export default function CommitmentDetailPage() {
         )}
       </div>
 
-      {/* Activity Timeline */}
+      {/* Criteria Assessment — second card, after header */}
+      {(progressCriteria.length > 0 || completionCriteria.length > 0) && (
+        <div className="border border-[#cdc4bd] bg-white p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-5">
+            Criteria Assessment
+          </h2>
+          <div className="space-y-6">
+            {progressCriteria.length > 0 && (
+              <CriteriaSection
+                title="Progress Criteria"
+                criteria={progressCriteria}
+              />
+            )}
+            {completionCriteria.length > 0 && (
+              <div
+                className={
+                  progressCriteria.length > 0
+                    ? "border-t border-gray-100 pt-5"
+                    : ""
+                }
+              >
+                <CriteriaSection
+                  title="Completion Criteria"
+                  criteria={completionCriteria}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Activity Timeline (paginated) */}
       {activityTimeline.length > 0 && (
         <div className="border border-[#cdc4bd] bg-white p-6">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-6">
-            Activity Timeline
+            Activity Timeline ({activityTimeline.length})
           </h2>
           <div className="relative">
             {/* Vertical line */}
             <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gray-200" />
 
             <div className="space-y-0">
-              {activityTimeline.map((item, idx) => (
+              {pagedTimeline.map((item, idx) => (
                 <div key={idx} className="relative flex gap-4 py-3">
                   {/* Icon */}
                   <div className="relative z-10 flex-shrink-0 w-[31px] flex justify-center">
@@ -464,6 +504,16 @@ export default function CommitmentDetailPage() {
               ))}
             </div>
           </div>
+
+          {timelinePage < timelinePageCount && (
+            <button
+              onClick={() => setTimelinePage((p) => p + 1)}
+              className="mt-4 w-full py-2 text-sm font-medium text-gray-500 hover:text-[#8b2332] border border-gray-200 hover:border-[#cdc4bd] transition-colors"
+            >
+              Show more ({activityTimeline.length - pagedTimeline.length}{" "}
+              remaining)
+            </button>
+          )}
         </div>
       )}
 
@@ -629,113 +679,7 @@ export default function CommitmentDetailPage() {
         </div>
       )}
 
-      {/* Criteria */}
-      {(progressCriteria.length > 0 || completionCriteria.length > 0) && (
-        <div className="border border-[#cdc4bd] bg-white p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-5">
-            Criteria Assessment
-          </h2>
-          <div className="space-y-6">
-            {progressCriteria.length > 0 && (
-              <CriteriaSection
-                title="Progress Criteria"
-                criteria={progressCriteria}
-              />
-            )}
-            {completionCriteria.length > 0 && (
-              <div
-                className={
-                  progressCriteria.length > 0
-                    ? "border-t border-gray-100 pt-5"
-                    : ""
-                }
-              >
-                <CriteriaSection
-                  title="Completion Criteria"
-                  criteria={completionCriteria}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Sources */}
-      {sources.length > 0 && (
-        <div className="border border-[#cdc4bd] bg-white p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-4">
-            Sources ({sources.length})
-          </h2>
-          <div className="space-y-4">
-            {sources.map((cs: CommitmentSource) => (
-              <div
-                key={cs.id}
-                className="border-l-4 border-blue-300 bg-blue-50 px-4 py-3"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    {cs.source.url ? (
-                      <a
-                        href={cs.source.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-semibold text-gray-900 hover:text-[#8b2332] hover:underline"
-                      >
-                        {cs.source.title} &rarr;
-                      </a>
-                    ) : (
-                      <p className="text-sm font-semibold text-gray-900">
-                        {cs.source.title}
-                      </p>
-                    )}
-                  </div>
-                  {cs.source.date && (
-                    <span className="text-xs text-gray-400 flex-shrink-0 tabular-nums">
-                      {formatDate(cs.source.date)}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-2 text-xs text-gray-400 mt-1">
-                  <span className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
-                    {cs.source.source_type.replace(/_/g, " ")}
-                  </span>
-                  {cs.section && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
-                      {cs.section}
-                    </span>
-                  )}
-                  {cs.reference && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
-                      {cs.reference}
-                    </span>
-                  )}
-                  {cs.created_at && (
-                    <span className="text-gray-400">
-                      Added {formatDate(cs.created_at)}
-                    </span>
-                  )}
-                </div>
-
-                {cs.excerpt && (
-                  <blockquote className="text-sm text-gray-600 mt-2 italic border-l-2 border-gray-300 pl-3">
-                    &ldquo;{cs.excerpt}&rdquo;
-                  </blockquote>
-                )}
-
-                {cs.relevance_note && (
-                  <div className="mt-2 text-xs text-gray-500 bg-white/60 px-2 py-1.5 rounded border border-blue-200">
-                    <span className="font-medium text-gray-600">
-                      Relevance:
-                    </span>{" "}
-                    {cs.relevance_note}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Criteria section moved above header */}
 
       {/* Drift / Revisions */}
       {revisions.length > 0 && (
@@ -827,42 +771,7 @@ export default function CommitmentDetailPage() {
         </div>
       )}
 
-      {/* Recent Feed */}
-      {recentFeed.length > 0 && (
-        <div className="border border-[#cdc4bd] bg-white p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-4">
-            Recent Activity
-          </h2>
-          <div className="space-y-3">
-            {recentFeed.map((fi: FeedItemData) => (
-              <div
-                key={fi.id}
-                className="flex gap-3 py-2 border-b border-gray-50 last:border-0"
-              >
-                <span className="text-xs text-gray-400 w-28 flex-shrink-0">
-                  {formatDate(fi.occurred_at)}
-                </span>
-                <div>
-                  <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600 mr-2">
-                    {fi.event_type}
-                  </span>
-                  <span className="text-sm text-gray-700">{fi.title}</span>
-                  {fi.summary && (
-                    <p className="text-xs text-gray-500 mt-0.5">{fi.summary}</p>
-                  )}
-                  {fi.source && <SourceAttribution source={fi.source} />}
-                  {!fi.source && fi.evidence_notes && (
-                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">
-                      <span className="font-medium">Evidence:</span>{" "}
-                      {fi.evidence_notes}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Recent Feed — hidden */}
     </div>
   );
 }
