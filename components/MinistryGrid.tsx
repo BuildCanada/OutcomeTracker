@@ -78,8 +78,11 @@ function MinistryCard({ ministry }: { ministry: MinistryGroup }) {
               {minister.first_name} {minister.last_name}
             </p>
           )}
+          <span className="lg:hidden text-xs text-gray-500 font-mono mt-0.5 block">
+            {total} commitment{total !== 1 ? "s" : ""}
+          </span>
         </div>
-        <span className="flex-shrink-0 text-xs text-gray-500 font-mono self-start">
+        <span className="hidden lg:block flex-shrink-0 text-xs text-gray-500 font-mono self-start">
           {total} commitment{total !== 1 ? "s" : ""}
         </span>
       </div>

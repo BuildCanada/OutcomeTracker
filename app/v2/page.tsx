@@ -19,9 +19,6 @@ export default async function V2HomePage() {
   ]);
 
   const commitments = commitmentsData.commitments;
-  const totalCommitments =
-    dashboard.total_commitments ?? commitmentsData.meta.total_count;
-
   // Build ministry groups
   const deptBySlug: Record<string, DepartmentWithMinister> = {};
   for (const d of departments) {
@@ -59,41 +56,28 @@ export default async function V2HomePage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          Accountability Overview
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Tracking progress on {totalCommitments} government commitments
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="hidden lg:grid grid-cols-4 gap-4">
         <MetricCard
           label="Not Started"
           value={notStarted}
-          subtitle="no action taken"
           color="gray"
           href="/v2/commitments?status=not_started"
         />
         <MetricCard
           label="In Progress"
           value={inProgress}
-          subtitle="actively being worked on"
           color="amber"
           href="/v2/commitments?status=in_progress"
         />
         <MetricCard
           label="Completed"
           value={completed}
-          subtitle={`of ${totalCommitments} commitments`}
           color="red"
           href="/v2/commitments?status=completed"
         />
         <MetricCard
           label="Abandoned"
           value={abandoned}
-          subtitle="no longer pursued"
           color="black"
           href="/v2/commitments?status=abandoned"
         />
@@ -128,40 +112,42 @@ export default async function V2HomePage() {
 function MetricCard({
   label,
   value,
-  subtitle,
   color,
   href,
 }: {
   label: string;
   value: number;
-  subtitle: string;
   color: "gray" | "amber" | "red" | "black";
   href: string;
 }) {
   const colorMap = {
     gray: {
-      bg: "bg-gray-50 border-gray-200",
-      text: "text-gray-800",
-      sub: "text-gray-400",
-      label: "text-gray-500",
+      outer: "white",
+      inner: "black",
+      text: "text-black",
+      sub: "text-gray-700",
+      label: "text-black",
     },
     amber: {
-      bg: "bg-amber-50 border-amber-200",
-      text: "text-amber-600",
-      sub: "text-amber-400",
-      label: "text-amber-500",
+      outer: "#fbbf24",
+      inner: "black",
+      text: "text-black",
+      sub: "text-black/70",
+      label: "text-black",
     },
     red: {
-      bg: "bg-[#faf0f1] border-[#e8bfc4]",
-      text: "text-[#8b2332]",
-      sub: "text-[#b5616e]",
-      label: "text-[#a34450]",
+      outer: "#8b2332",
+      inner: "white",
+      text: "text-white",
+      sub: "text-white/70",
+      label: "text-white",
     },
     black: {
-      bg: "bg-gray-100 border-gray-300",
-      text: "text-black",
-      sub: "text-gray-500",
-      label: "text-gray-600",
+      outer: "black",
+      inner: "white",
+      text: "text-white",
+      sub: "text-white/70",
+      label: "text-white",
     },
   };
   const c = colorMap[color];
@@ -169,15 +155,29 @@ function MetricCard({
   return (
     <Link
       href={href}
-      className={`border p-6 ${c.bg} hover:opacity-80 transition-opacity`}
+      className="hover:opacity-80 transition-opacity aspect-square"
+      style={{
+        backgroundColor: c.outer,
+        padding: "6px",
+      }}
     >
-      <p
-        className={`text-xs font-semibold uppercase tracking-wider ${c.label}`}
+      <div
+        className="h-full flex flex-col justify-between"
+        style={{
+          border: `4px solid ${c.inner}`,
+        }}
       >
-        {label}
-      </p>
-      <p className={`mt-2 text-4xl font-extrabold ${c.text}`}>{value}</p>
-      <p className={`mt-1 text-sm ${c.sub}`}>{subtitle}</p>
+        <p
+          className={`text-sm font-bold uppercase tracking-wider ${c.label} m-4`}
+        >
+          {label}
+        </p>
+        <p
+          className={`text-7xl font-extrabold ${c.text} text-right mr-2 max-[400px]:text-5xl`}
+        >
+          {value}
+        </p>
+      </div>
     </Link>
   );
 }

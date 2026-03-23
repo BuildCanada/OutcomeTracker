@@ -23,11 +23,11 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div>
-            <h3 className="text-lg font-semibold mb-2">
-              Why did you build this?
-            </h3>
+            <h3 className="text-lg font-semibold mb-2">What is this?</h3>
             <p className="text-gray-700">
-              We wanted to better understand what is being done in key areas that matter to Canadians like us. We built this tracker to know what key commitments have been made, what their progress has been, and how they impact outcomes.
+              We are tracking the implementation of every commitment that the
+              Carney government has made. We track bills through parliament,
+              official press releases and regulatory changes.
             </p>
           </div>
 
@@ -36,30 +36,39 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
               Where do commitments come from?
             </h3>
             <p className="text-gray-700">
-              We have pulled commitments from the Liberal Party&apos;s platform.
-              We show the original text and the source in each commitment&apos;s
-              details. As new commitments are made, we will add these in.
+              Commitments are pulled from the Liberal Party&apos;s 2025 election
+              platform and the Speech from the Throne. We show the original text
+              and source in each commitment&apos;s details. As new commitments
+              are made (e.g. in budgets or ministerial mandate letters), we add
+              them.
             </p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">
-              Where do metrics and targets come from?
+              How do you determine if a commitment is completed?
             </h3>
             <p className="text-gray-700">
-              In cases where the Liberal Party has provided a metric and/or
-              target, we use that. In other cases, we set a metric based on the
-              policy&apos;s intention. In each graph, we show where the target
-              source comes from.
+              Our standard for completion is generous. Our goal is to hold the
+              government accountable to what <em>they</em> said they were going
+              to do, not what we hoped for them to do. Many commitments will be
+              marked as completed once the budget implementation act receives
+              royal assent.
             </p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">
-              How are the progress, impact, and alignment scores calculated?
+              How are status assessments made?
             </h3>
             <p className="text-gray-700">
-              We use an LLM to score each of these. Our project is open sourced on <a href="https://github.com/BuildCanada" className="underline">Github</a>.
+              We use an LLM to assess status based on evidence from official
+              government sources, parliamentary records, and regulatory changes.
+              Our project is open sourced on{" "}
+              <a href="https://github.com/BuildCanada" className="underline">
+                Github
+              </a>
+              .
             </p>
           </div>
 
@@ -68,7 +77,12 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
               How can I contribute?
             </h3>
             <p className="text-gray-700">
-              This is a work in progress and we would love help from others. Join us on <a href="https://discord.gg/VmbBSXKMve" className="underline">Discord</a>.
+              This is a work in progress and we would love help from others.
+              Join us on{" "}
+              <a href="https://discord.gg/VmbBSXKMve" className="underline">
+                Discord
+              </a>
+              .
             </p>
           </div>
 
@@ -77,7 +91,10 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
               How can I get in touch?
             </h3>
             <p className="text-gray-700">
-              You can reach out to us at <a href="mailto:hi@buildcanada.com" className="underline">hi@buildcanada.com</a>
+              You can reach out to us at{" "}
+              <a href="mailto:hi@buildcanada.com" className="underline">
+                hi@buildcanada.com
+              </a>
             </p>
           </div>
         </div>
