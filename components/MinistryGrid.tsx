@@ -68,7 +68,7 @@ function MinistryCard({ ministry }: { ministry: MinistryGroup }) {
         )}
         <div className="flex-1 min-w-0">
           <Link
-            href={`/v2/ministries/${ministry.slug}`}
+            href={`/ministries/${ministry.slug}`}
             className="text-base font-semibold hover:text-[#8b2332] transition-colors leading-tight block"
           >
             {ministry.name}
@@ -135,7 +135,7 @@ function CommitmentSquare({
       onMouseLeave={handleLeave}
     >
       <Link
-        href={`/v2/commitments/${c.id}`}
+        href={`/commitments/${c.id}`}
         className={`block w-3 h-3 ${STATUS_COLOR[c.status] ?? "bg-gray-200"} hover:ring-2 hover:ring-[#8b2332] hover:ring-offset-1 transition-shadow relative z-10`}
       />
       {show && (

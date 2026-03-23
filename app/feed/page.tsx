@@ -293,7 +293,7 @@ function FeedItemRow({ item: fi }: { item: FeedItem }) {
 
         <div className="mt-2">
           <Link
-            href={`/v2/commitments/${fi.commitment.id}`}
+            href={`/commitments/${fi.commitment.id}`}
             className="text-xs text-[#8b2332] hover:underline"
           >
             {fi.commitment.title}

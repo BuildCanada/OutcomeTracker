@@ -303,7 +303,7 @@ export default function CommitmentDetailPage() {
     <div className="space-y-6">
       {/* Back link */}
       <Link
-        href="/v2/commitments"
+        href="/commitments"
         className="inline-flex items-center text-sm text-gray-500 hover:text-[#8b2332] transition-colors"
       >
         <ChevronLeft className="w-4 h-4 mr-1" />
@@ -377,7 +377,7 @@ export default function CommitmentDetailPage() {
                 (child: { id: number; title: string; status: string }) => (
                   <Link
                     key={child.id}
-                    href={`/v2/commitments/${child.id}`}
+                    href={`/commitments/${child.id}`}
                     className="block text-sm text-gray-600 hover:text-[#8b2332]"
                   >
                     {child.title}{" "}

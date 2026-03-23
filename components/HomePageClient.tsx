@@ -18,7 +18,7 @@ function SidebarLogo() {
           className="h-[4.5rem] w-[4.5rem]"
         />
       </a>
-      <Link href="/v2">
+      <Link href="/">
         <h1 className="text-4xl font-bold leading-none">
           Outcomes
           <br />
@@ -32,8 +32,8 @@ function SidebarLogo() {
 export const Sidebar = ({ pageTitle }: { pageTitle: string }) => {
   const pathname = usePathname();
 
-  const ministryMatch = pathname?.match(/\/v2\/ministries\/([^/]+)/);
-  const commitmentMatch = pathname?.match(/\/v2\/commitments\/(\d+)/);
+  const ministryMatch = pathname?.match(/\/ministries\/([^/]+)/);
+  const commitmentMatch = pathname?.match(/\/commitments\/(\d+)/);
 
   if (ministryMatch) {
     return <MinisterSidebarBySlug slug={ministryMatch[1]} />;
@@ -86,7 +86,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
       <p className="text-gray-900 mb-6">
         Tracking Mark Carney&apos;s agenda from commitment to completion.{" "}
         <Link
-          href="/v2/faq"
+          href="/faq"
           className="text-[#8b2332] hover:text-[#721c28] transition-colors"
         >
           FAQ
@@ -143,7 +143,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             border="black"
             textColor="text-black"
             labelColor="text-black"
-            href="/v2/commitments?status=not_started"
+            href="/commitments?status=not_started"
           />
           <BigCard
             label="In Progress"
@@ -152,7 +152,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             border="black"
             textColor="text-black"
             labelColor="text-black"
-            href="/v2/commitments?status=in_progress"
+            href="/commitments?status=in_progress"
           />
           <BigCard
             label="Completed"
@@ -161,7 +161,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             border="white"
             textColor="text-white"
             labelColor="text-white"
-            href="/v2/commitments?status=completed"
+            href="/commitments?status=completed"
           />
           <BigCard
             label="Abandoned"
@@ -170,7 +170,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             border="white"
             textColor="text-white"
             labelColor="text-white"
-            href="/v2/commitments?status=abandoned"
+            href="/commitments?status=abandoned"
           />
         </div>
       )}
@@ -182,7 +182,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             color="white"
             border="black"
             textColor="text-black"
-            href="/v2/commitments?status=not_started"
+            href="/commitments?status=not_started"
           />
           <CompactCard
             label="In Progress"
@@ -190,7 +190,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             color="#fbbf24"
             border="black"
             textColor="text-black"
-            href="/v2/commitments?status=in_progress"
+            href="/commitments?status=in_progress"
           />
           <CompactCard
             label="Completed"
@@ -198,7 +198,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             color="#8b2332"
             border="white"
             textColor="text-white"
-            href="/v2/commitments?status=completed"
+            href="/commitments?status=completed"
           />
           <CompactCard
             label="Abandoned"
@@ -206,7 +206,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             color="black"
             border="white"
             textColor="text-white"
-            href="/v2/commitments?status=abandoned"
+            href="/commitments?status=abandoned"
           />
         </div>
       )}

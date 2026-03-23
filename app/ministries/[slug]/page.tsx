@@ -52,7 +52,7 @@ export default async function MinistryPage({
     <div className="space-y-8">
       <div>
         <Link
-          href="/v2"
+          href="/"
           className="text-xs text-gray-400 hover:text-[#8b2332] transition-colors"
         >
           &larr; Overview
@@ -100,7 +100,7 @@ export default async function MinistryPage({
             {commitments.map((c: CommitmentListing) => (
               <Link
                 key={c.id}
-                href={`/v2/commitments/${c.id}`}
+                href={`/commitments/${c.id}`}
                 className="block bg-white border border-[#cdc4bd] hover:border-gray-400 transition-colors p-4"
               >
                 <div className="flex items-start gap-3">

@@ -265,7 +265,7 @@ function CommitmentRow({ commitment: c }: { commitment: CommitmentListing }) {
 
   return (
     <Link
-      href={`/v2/commitments/${c.id}`}
+      href={`/commitments/${c.id}`}
       className="block bg-white border border-[#cdc4bd] hover:border-gray-400 transition-colors"
     >
       <div className="p-5">

@@ -151,28 +151,28 @@ export default function PlatformPage() {
             value={notStarted}
             subtitle="no action taken"
             color="gray"
-            href={`/v2/commitments?status=not_started&${SOURCE_TYPE_PARAM}`}
+            href={`/commitments?status=not_started&${SOURCE_TYPE_PARAM}`}
           />
           <MetricCard
             label="In Progress"
             value={inProgress}
             subtitle="actively being worked on"
             color="amber"
-            href={`/v2/commitments?status=in_progress&${SOURCE_TYPE_PARAM}`}
+            href={`/commitments?status=in_progress&${SOURCE_TYPE_PARAM}`}
           />
           <MetricCard
             label="Completed"
             value={completed}
             subtitle={`of ${totalCommitments} commitments`}
             color="red"
-            href={`/v2/commitments?status=completed&${SOURCE_TYPE_PARAM}`}
+            href={`/commitments?status=completed&${SOURCE_TYPE_PARAM}`}
           />
           <MetricCard
             label="Abandoned"
             value={abandoned}
             subtitle="no longer pursued"
             color="black"
-            href={`/v2/commitments?status=abandoned&${SOURCE_TYPE_PARAM}`}
+            href={`/commitments?status=abandoned&${SOURCE_TYPE_PARAM}`}
           />
         </div>
       )}
@@ -205,7 +205,7 @@ export default function PlatformPage() {
 
       <div className="flex flex-wrap gap-3 text-sm">
         <Link
-          href={`/v2/commitments?${SOURCE_TYPE_PARAM}`}
+          href={`/commitments?${SOURCE_TYPE_PARAM}`}
           className="border border-[#d3c7b9] px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-[#8b2332] transition-colors"
         >
           Explore Platform Commitments
@@ -309,7 +309,7 @@ function MinistryCard({ ministry }: { ministry: MinistryGroup }) {
         )}
         <div className="flex-1 min-w-0">
           <Link
-            href={`/v2/ministries/${ministry.slug}`}
+            href={`/ministries/${ministry.slug}`}
             className="text-base font-semibold hover:text-[#8b2332] transition-colors leading-tight block"
           >
             {ministry.name}
@@ -375,7 +375,7 @@ function CommitmentSquare({
       onMouseLeave={handleLeave}
     >
       <Link
-        href={`/v2/commitments/${c.id}`}
+        href={`/commitments/${c.id}`}
         className={`block w-3 h-3 ${STATUS_COLOR[c.status] ?? "bg-gray-200"} hover:ring-2 hover:ring-[#8b2332] hover:ring-offset-1 transition-shadow relative z-10`}
       />
       {show && (
