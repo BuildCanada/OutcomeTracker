@@ -36,7 +36,6 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description,
-    images: ["/tracker/outcomes-tracker-seo-image.png"],
   },
 };
 
