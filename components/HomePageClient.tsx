@@ -65,7 +65,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
   const notStarted = dashCounts["not_started"] ?? 0;
   const inProgress = dashCounts["in_progress"] ?? 0;
   const completed = dashCounts["completed"] ?? 0;
-  const abandoned = dashCounts["abandoned"] ?? 0;
+  const broken = dashCounts["broken"] ?? 0;
 
   return (
     <div className="col-span-1">
@@ -164,13 +164,13 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             href="/commitments?status=completed"
           />
           <BigCard
-            label="Abandoned"
-            value={abandoned}
+            label="Broken"
+            value={broken}
             color="black"
             border="white"
             textColor="text-white"
             labelColor="text-white"
-            href="/commitments?status=abandoned"
+            href="/commitments?status=broken"
           />
         </div>
       )}
@@ -201,12 +201,12 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
             href="/commitments?status=completed"
           />
           <CompactCard
-            label="Abandoned"
-            value={abandoned}
+            label="Broken"
+            value={broken}
             color="black"
             border="white"
             textColor="text-white"
-            href="/commitments?status=abandoned"
+            href="/commitments?status=broken"
           />
         </div>
       )}

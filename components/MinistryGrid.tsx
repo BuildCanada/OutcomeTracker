@@ -8,23 +8,18 @@ const STATUS_COLOR: Record<string, string> = {
   not_started: "bg-gray-300",
   in_progress: "bg-amber-400",
   completed: "bg-[#8b2332]",
-  abandoned: "bg-black",
+  broken: "bg-black",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
   completed: "Completed",
-  abandoned: "Abandoned",
+  broken: "Broken",
 };
 
-const LEGEND_STATUSES = [
-  "not_started",
-  "in_progress",
-  "completed",
-  "abandoned",
-];
-const WAFFLE_ORDER = ["completed", "in_progress", "not_started", "abandoned"];
+const LEGEND_STATUSES = ["not_started", "in_progress", "completed", "broken"];
+const WAFFLE_ORDER = ["completed", "in_progress", "not_started", "broken"];
 
 export function MinistryGrid({ ministries }: { ministries: MinistryGroup[] }) {
   return (

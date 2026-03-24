@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(request: NextRequest) {
+  // Auto-authenticate in development
+  if (process.env.NODE_ENV === "development") {
+    const response = NextResponse.next();
+    if (!request.cookies.get("tracker_auth")) {
+      response.cookies.set("tracker_auth", "authenticated", {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/tracker",
+      });
+    }
+    return response;
+  }
+
   const { pathname } = request.nextUrl;
 
   // Don't protect the password page, auth API, or static assets

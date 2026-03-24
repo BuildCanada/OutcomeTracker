@@ -269,9 +269,9 @@ export default function BurnUpChart({
       x: pt.date,
       y: pt.completed,
     }));
-    const abandonedLine = weeklyPoints.map((pt) => ({
+    const brokenLine = weeklyPoints.map((pt) => ({
       x: pt.date,
-      y: pt.abandoned ?? 0,
+      y: pt.broken ?? 0,
     }));
 
     scopeLine.push({ x: mandateEnd, y: latestScope });
@@ -280,14 +280,14 @@ export default function BurnUpChart({
       scope: 0,
       started: 0,
       completed: 0,
-      abandoned: 0,
+      broken: 0,
     };
 
     return {
       scopeLine,
       startedLine,
       completedLine,
-      abandonedLine,
+      brokenLine,
       latest,
       mandateStart,
       mandateEnd,
@@ -328,7 +328,7 @@ export default function BurnUpChart({
             {statusCounts
               ? (statusCounts["in_progress"] ?? 0) +
                 (statusCounts["completed"] ?? 0) +
-                (statusCounts["abandoned"] ?? 0)
+                (statusCounts["broken"] ?? 0)
               : chartData.latest.started}
           </p>
         </div>
@@ -343,11 +343,11 @@ export default function BurnUpChart({
         </div>
         <div>
           <span className="inline-block w-2.5 h-2.5 bg-black mr-1.5" />
-          <span className="text-xs text-gray-500">Abandoned</span>
+          <span className="text-xs text-gray-500">Broken</span>
           <p className="text-lg font-bold">
             {statusCounts
-              ? (statusCounts["abandoned"] ?? 0)
-              : chartData.latest.abandoned}
+              ? (statusCounts["broken"] ?? 0)
+              : chartData.latest.broken}
           </p>
         </div>
       </div>
@@ -389,8 +389,8 @@ export default function BurnUpChart({
                 spanGaps: false,
               },
               {
-                label: "Abandoned",
-                data: chartData.abandonedLine,
+                label: "Broken",
+                data: chartData.brokenLine,
                 borderColor: "#000000",
                 borderWidth: 2,
                 pointRadius: 0,
@@ -467,7 +467,7 @@ export default function BurnUpChart({
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="inline-block w-5 h-0.5 bg-black border-dashed" />
-          Abandoned
+          Broken
         </span>
       </div>
     </div>

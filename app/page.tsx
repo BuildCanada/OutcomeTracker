@@ -52,7 +52,7 @@ export default async function HomePage() {
   const notStarted = dashCounts["not_started"] ?? 0;
   const inProgress = dashCounts["in_progress"] ?? 0;
   const completed = dashCounts["completed"] ?? 0;
-  const abandoned = dashCounts["abandoned"] ?? 0;
+  const broken = dashCounts["broken"] ?? 0;
 
   return (
     <div className="space-y-8">
@@ -76,10 +76,10 @@ export default async function HomePage() {
           href="/commitments?status=completed"
         />
         <MetricCard
-          label="Abandoned"
-          value={abandoned}
+          label="Broken"
+          value={broken}
           color="black"
-          href="/commitments?status=abandoned"
+          href="/commitments?status=broken"
         />
       </div>
 

@@ -140,14 +140,14 @@ const STATUS_LABELS: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
   completed: "Completed",
-  abandoned: "Abandoned",
+  broken: "Broken",
 };
 
 const STATUS_COLORS: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-700",
   in_progress: "bg-amber-100 text-amber-800",
   completed: "bg-[#faf0f1] text-[#8b2332]",
-  abandoned: "bg-gray-200 text-black",
+  broken: "bg-gray-200 text-black",
 };
 
 const TYPE_LABELS: Record<string, string> = {

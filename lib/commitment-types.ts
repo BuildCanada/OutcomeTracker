@@ -75,7 +75,7 @@ export interface BurnUpSeries {
   scope: number;
   started: number;
   completed: number;
-  abandoned: number;
+  broken: number;
 }
 
 export interface BurnUpResponse {

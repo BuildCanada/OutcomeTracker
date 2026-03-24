@@ -22,22 +22,17 @@ const STATUS_COLOR: Record<string, string> = {
   not_started: "bg-gray-300",
   in_progress: "bg-amber-400",
   completed: "bg-[#8b2332]",
-  abandoned: "bg-black",
+  broken: "bg-black",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   not_started: "Not Started",
   in_progress: "In Progress",
   completed: "Completed",
-  abandoned: "Abandoned",
+  broken: "Broken",
 };
 
-const LEGEND_STATUSES = [
-  "not_started",
-  "in_progress",
-  "completed",
-  "abandoned",
-];
+const LEGEND_STATUSES = ["not_started", "in_progress", "completed", "broken"];
 
 interface MinistryGroup {
   name: string;
@@ -126,7 +121,7 @@ export default function PlatformPage() {
   const inProgress =
     dashCounts["in_progress"] ?? statusCounts["in_progress"] ?? 0;
   const completed = dashCounts["completed"] ?? statusCounts["completed"] ?? 0;
-  const abandoned = dashCounts["abandoned"] ?? statusCounts["abandoned"] ?? 0;
+  const broken = dashCounts["broken"] ?? statusCounts["broken"] ?? 0;
 
   return (
     <div className="space-y-8">
@@ -168,11 +163,11 @@ export default function PlatformPage() {
             href={`/commitments?status=completed&${SOURCE_TYPE_PARAM}`}
           />
           <MetricCard
-            label="Abandoned"
-            value={abandoned}
+            label="Broken"
+            value={broken}
             subtitle="no longer pursued"
             color="black"
-            href={`/commitments?status=abandoned&${SOURCE_TYPE_PARAM}`}
+            href={`/commitments?status=broken&${SOURCE_TYPE_PARAM}`}
           />
         </div>
       )}
@@ -281,7 +276,7 @@ function MinistryCard({ ministry }: { ministry: MinistryGroup }) {
   const counts = ministry.statusCounts;
   const minister = ministry.minister;
 
-  const WAFFLE_ORDER = ["completed", "in_progress", "not_started", "abandoned"];
+  const WAFFLE_ORDER = ["completed", "in_progress", "not_started", "broken"];
   const waffleRank = Object.fromEntries(WAFFLE_ORDER.map((s, i) => [s, i]));
   const sorted = [...ministry.commitments].sort(
     (a, b) => (waffleRank[a.status] ?? 99) - (waffleRank[b.status] ?? 99),
