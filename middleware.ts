@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Don't protect the password page, auth API, or static assets
+  // Don't protect the password page, auth API, static assets, or OG images
   if (
     pathname === "/password" ||
     pathname === "/tracker/password" ||
@@ -24,6 +24,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/tracker/api/auth") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/tracker/_next") ||
+    pathname.includes("opengraph-image") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
