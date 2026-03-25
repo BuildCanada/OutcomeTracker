@@ -2,7 +2,6 @@ import { ImageResponse } from "next/og";
 import { fetchApi } from "@/lib/api";
 import type {
   CommitmentsResponse,
-  DashboardResponse,
   DepartmentWithMinister,
 } from "@/lib/commitment-types";
 import {
@@ -20,6 +19,7 @@ import {
 export const alt = "Outcomes Tracker - Build Canada";
 export const size = OG_SIZE;
 export const contentType = "image/png";
+export const revalidate = 14400; // regenerate every 4 hours
 
 export default async function Image() {
   const [fonts, logoSrc] = await Promise.all([
@@ -27,10 +27,7 @@ export default async function Image() {
     Promise.resolve(loadLogoBase64()),
   ]);
 
-  const [dashboard, departments, commitmentsData] = await Promise.all([
-    fetchApi<DashboardResponse>("/api/dashboard/1/at_a_glance").catch(
-      () => null,
-    ),
+  const [departments, commitmentsData] = await Promise.all([
     fetchApi<DepartmentWithMinister[]>("/api/v1/departments.json").catch(
       () => [] as DepartmentWithMinister[],
     ),
@@ -50,7 +47,10 @@ export default async function Image() {
   const pm = pmDept?.minister ?? null;
   const pmPhoto = pm?.avatar_url ? await fetchImageBase64(pm.avatar_url) : null;
 
-  const counts = dashboard?.status_counts ?? {};
+  const counts: Record<string, number> = {};
+  for (const c of commitments) {
+    counts[c.status] = (counts[c.status] ?? 0) + 1;
+  }
 
   return new ImageResponse(
     <div

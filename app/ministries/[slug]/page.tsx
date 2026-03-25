@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import BurnUpChartWrapper from "@/components/BurnUpChartWrapper";
 import { fetchApi } from "@/lib/api";
@@ -20,6 +21,21 @@ const STATUS_COLORS: Record<string, string> = {
   completed: "bg-[#faf0f1] text-[#8b2332]",
   broken: "bg-gray-200 text-black",
 };
+
+// Cache-bust the OG image URL every 4 hours so social crawlers re-fetch
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const slot = Math.floor(Date.now() / (4 * 60 * 60 * 1000));
+  return {
+    openGraph: {
+      images: [`/tracker/ministries/${slug}/opengraph-image?v=${slot}`],
+    },
+  };
+}
 
 export default async function MinistryPage({
   params,

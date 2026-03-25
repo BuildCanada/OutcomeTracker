@@ -19,6 +19,7 @@ import {
 export const alt = "Ministry - Outcomes Tracker";
 export const size = OG_SIZE;
 export const contentType = "image/png";
+export const revalidate = 14400; // regenerate every 4 hours
 
 export default async function Image({
   params,

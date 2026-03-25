@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import BurnUpChartWrapper from "@/components/BurnUpChartWrapper";
 import { MinistryGrid } from "@/components/MinistryGrid";
@@ -9,6 +10,16 @@ import type {
   DashboardResponse,
   MinistryGroup,
 } from "@/lib/commitment-types";
+
+// Cache-bust the OG image URL every 4 hours so social crawlers re-fetch
+export async function generateMetadata(): Promise<Metadata> {
+  const slot = Math.floor(Date.now() / (4 * 60 * 60 * 1000));
+  return {
+    openGraph: {
+      images: [`/tracker/opengraph-image?v=${slot}`],
+    },
+  };
+}
 
 export default async function HomePage() {
   const [dashboard, burnUp, departments, commitmentsData] = await Promise.all([
