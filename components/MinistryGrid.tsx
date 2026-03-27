@@ -18,7 +18,7 @@ const STATUS_LABEL: Record<string, string> = {
   broken: "Broken",
 };
 
-const LEGEND_STATUSES = ["not_started", "in_progress", "completed", "broken"];
+const LEGEND_STATUSES = ["completed", "in_progress", "not_started", "broken"];
 const WAFFLE_ORDER = ["completed", "in_progress", "not_started", "broken"];
 
 export function MinistryGrid({ ministries }: { ministries: MinistryGroup[] }) {
