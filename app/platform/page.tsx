@@ -21,8 +21,8 @@ const SOURCE_TYPE_PARAM = "source_type=platform_document";
 const STATUS_COLOR: Record<string, string> = {
   not_started: "bg-gray-300",
   in_progress: "bg-amber-400",
-  completed: "bg-[#8b2332]",
-  broken: "bg-black",
+  completed: "bg-pine-600",
+  broken: "bg-[#8b2332]",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -159,14 +159,14 @@ export default function PlatformPage() {
             label="Completed"
             value={completed}
             subtitle={`of ${totalCommitments} commitments`}
-            color="red"
+            color="green"
             href={`/commitments?status=completed&${SOURCE_TYPE_PARAM}`}
           />
           <MetricCard
             label="Broken"
             value={broken}
             subtitle="no longer pursued"
-            color="black"
+            color="red"
             href={`/commitments?status=broken&${SOURCE_TYPE_PARAM}`}
           />
         </div>
@@ -222,7 +222,7 @@ function MetricCard({
   label: string;
   value: number;
   subtitle: string;
-  color: "gray" | "amber" | "red" | "black";
+  color: "gray" | "amber" | "green" | "red";
   href: string;
 }) {
   const colorMap = {
@@ -238,17 +238,17 @@ function MetricCard({
       sub: "text-amber-400",
       label: "text-amber-500",
     },
+    green: {
+      bg: "bg-pine-50 border-pine-200",
+      text: "text-pine-700",
+      sub: "text-pine-500",
+      label: "text-pine-600",
+    },
     red: {
       bg: "bg-[#faf0f1] border-[#e8bfc4]",
       text: "text-[#8b2332]",
       sub: "text-[#b5616e]",
       label: "text-[#a34450]",
-    },
-    black: {
-      bg: "bg-gray-100 border-gray-300",
-      text: "text-black",
-      sub: "text-gray-500",
-      label: "text-gray-600",
     },
   };
   const c = colorMap[color];
@@ -371,7 +371,7 @@ function CommitmentSquare({
     >
       <Link
         href={`/commitments/${c.id}`}
-        className={`block w-3 h-3 ${STATUS_COLOR[c.status] ?? "bg-gray-200"} hover:ring-2 hover:ring-[#8b2332] hover:ring-offset-1 transition-shadow relative z-10`}
+        className={`block w-3 h-3 ${STATUS_COLOR[c.status] ?? "bg-[#faf0f1]"} hover:ring-2 hover:ring-pine-600 hover:ring-offset-1 transition-shadow relative z-10`}
       />
       {show && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-white border border-gray-200 shadow-lg rounded-md p-3 text-xs pointer-events-none z-30">

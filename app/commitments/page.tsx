@@ -29,8 +29,8 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-700",
   in_progress: "bg-amber-100 text-amber-800",
-  completed: "bg-[#faf0f1] text-[#8b2332]",
-  broken: "bg-gray-200 text-black",
+  completed: "bg-pine-50 text-pine-700",
+  broken: "bg-[#faf0f1] text-[#8b2332]",
 };
 
 const TYPE_LABELS: Record<string, string> = {

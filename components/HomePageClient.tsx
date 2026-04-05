@@ -157,7 +157,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
           <BigCard
             label="Completed"
             value={completed}
-            color="#8b2332"
+            color="#356643"
             border="white"
             textColor="text-white"
             labelColor="text-white"
@@ -166,7 +166,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
           <BigCard
             label="Broken"
             value={broken}
-            color="black"
+            color="#8b2332"
             border="white"
             textColor="text-white"
             labelColor="text-white"
@@ -195,7 +195,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
           <CompactCard
             label="Completed"
             value={completed}
-            color="#8b2332"
+            color="#356643"
             border="white"
             textColor="text-white"
             href="/commitments?status=completed"
@@ -203,7 +203,7 @@ function DefaultSidebar({ pageTitle }: { pageTitle: string }) {
           <CompactCard
             label="Broken"
             value={broken}
-            color="black"
+            color="#8b2332"
             border="white"
             textColor="text-white"
             href="/commitments?status=broken"

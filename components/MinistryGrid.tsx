@@ -7,8 +7,8 @@ import type { CommitmentListing, MinistryGroup } from "@/lib/commitment-types";
 const STATUS_COLOR: Record<string, string> = {
   not_started: "bg-gray-300",
   in_progress: "bg-amber-400",
-  completed: "bg-[#8b2332]",
-  broken: "bg-black",
+  completed: "bg-pine-600",
+  broken: "bg-[#8b2332]",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -18,7 +18,7 @@ const STATUS_LABEL: Record<string, string> = {
   broken: "Broken",
 };
 
-const LEGEND_STATUSES = ["completed", "in_progress", "not_started", "broken"];
+const LEGEND_STATUSES = ["not_started", "in_progress", "completed", "broken"];
 const WAFFLE_ORDER = ["completed", "in_progress", "not_started", "broken"];
 
 export function MinistryGrid({ ministries }: { ministries: MinistryGroup[] }) {
@@ -131,7 +131,7 @@ function CommitmentSquare({
     >
       <Link
         href={`/commitments/${c.id}`}
-        className={`block w-3 h-3 ${STATUS_COLOR[c.status] ?? "bg-gray-200"} hover:ring-2 hover:ring-[#8b2332] hover:ring-offset-1 transition-shadow relative z-10`}
+        className={`block w-3 h-3 ${STATUS_COLOR[c.status] ?? "bg-[#faf0f1]"} hover:ring-2 hover:ring-pine-600 hover:ring-offset-1 transition-shadow relative z-10`}
       />
       {show && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-white border border-gray-200 shadow-lg rounded-md p-3 text-xs pointer-events-none z-30">
