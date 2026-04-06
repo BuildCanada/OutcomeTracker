@@ -146,8 +146,8 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   not_started: "bg-gray-100 text-gray-700",
   in_progress: "bg-amber-100 text-amber-800",
-  completed: "bg-[#faf0f1] text-[#8b2332]",
-  broken: "bg-gray-200 text-black",
+  completed: "bg-pine-50 text-pine-700",
+  broken: "bg-[#faf0f1] text-[#8b2332]",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -659,7 +659,7 @@ export default function CommitmentDetailPage() {
                       <span
                         className={`text-xs px-2 py-0.5 ${
                           event.action_type === "concrete_action"
-                            ? "bg-[#faf0f1] text-[#8b2332]"
+                            ? "bg-gray-100 text-gray-700"
                             : "bg-amber-100 text-amber-700"
                         }`}
                       >
@@ -865,7 +865,7 @@ function CriteriaSection({
           <li key={cr.id} className="flex items-start gap-2.5">
             <div className="flex-shrink-0 mt-0.5">
               {cr.status === "met" ? (
-                <div className="w-5 h-5 bg-[#8b2332] flex items-center justify-center">
+                <div className="w-5 h-5 bg-pine-600 flex items-center justify-center">
                   <svg
                     className="w-3.5 h-3.5 text-white"
                     fill="none"
@@ -881,7 +881,7 @@ function CriteriaSection({
                   </svg>
                 </div>
               ) : cr.status === "not_met" ? (
-                <div className="w-5 h-5 bg-black flex items-center justify-center">
+                <div className="w-5 h-5 bg-[#8b2332] flex items-center justify-center">
                   <svg
                     className="w-3.5 h-3.5 text-white"
                     fill="none"

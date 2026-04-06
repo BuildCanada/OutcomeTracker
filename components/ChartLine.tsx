@@ -333,7 +333,7 @@ export default function BurnUpChart({
           </p>
         </div>
         <div>
-          <span className="inline-block w-2.5 h-2.5 bg-[#8b2332] mr-1.5" />
+          <span className="inline-block w-2.5 h-2.5 bg-pine-600 mr-1.5" />
           <span className="text-xs text-gray-500">Completed</span>
           <p className="text-lg font-bold">
             {statusCounts
@@ -342,7 +342,7 @@ export default function BurnUpChart({
           </p>
         </div>
         <div>
-          <span className="inline-block w-2.5 h-2.5 bg-black mr-1.5" />
+          <span className="inline-block w-2.5 h-2.5 bg-[#8b2332] mr-1.5" />
           <span className="text-xs text-gray-500">Broken</span>
           <p className="text-lg font-bold">
             {statusCounts
@@ -380,8 +380,8 @@ export default function BurnUpChart({
               {
                 label: "Completed",
                 data: chartData.completedLine,
-                borderColor: "#8b2332",
-                backgroundColor: "rgba(139, 35, 50, 0.10)",
+                borderColor: "#356643",
+                backgroundColor: "rgba(53, 102, 67, 0.10)",
                 borderWidth: 2.5,
                 pointRadius: 0,
                 fill: true,
@@ -391,7 +391,7 @@ export default function BurnUpChart({
               {
                 label: "Broken",
                 data: chartData.brokenLine,
-                borderColor: "#000000",
+                borderColor: "#8b2332",
                 borderWidth: 2,
                 pointRadius: 0,
                 fill: false,
@@ -462,11 +462,11 @@ export default function BurnUpChart({
           Started
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block w-5 h-0.5 bg-[#8b2332]" />
+          <span className="inline-block w-5 h-0.5 bg-pine-600" />
           Completed
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block w-5 h-0.5 bg-black border-dashed" />
+          <span className="inline-block w-5 h-0.5 bg-[#8b2332] border-dashed" />
           Broken
         </span>
       </div>

@@ -83,13 +83,13 @@ export default async function HomePage() {
         <MetricCard
           label="Completed"
           value={completed}
-          color="red"
+          color="green"
           href="/commitments?status=completed"
         />
         <MetricCard
           label="Broken"
           value={broken}
-          color="black"
+          color="red"
           href="/commitments?status=broken"
         />
       </div>
@@ -128,7 +128,7 @@ function MetricCard({
 }: {
   label: string;
   value: number;
-  color: "gray" | "amber" | "red" | "black";
+  color: "gray" | "amber" | "green" | "red";
   href: string;
 }) {
   const colorMap = {
@@ -146,15 +146,15 @@ function MetricCard({
       sub: "text-black/70",
       label: "text-black",
     },
-    red: {
-      outer: "#8b2332",
+    green: {
+      outer: "#356643",
       inner: "white",
       text: "text-white",
       sub: "text-white/70",
       label: "text-white",
     },
-    black: {
-      outer: "black",
+    red: {
+      outer: "#8b2332",
       inner: "white",
       text: "text-white",
       sub: "text-white/70",

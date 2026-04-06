@@ -16,8 +16,8 @@ export const OG_RED = "#8b2332";
 export const OG_COLORS: Record<string, string> = {
   not_started: "#d1d5db",
   in_progress: "#fbbf24",
-  completed: "#8b2332",
-  broken: "#000000",
+  completed: "#356643",
+  broken: "#8b2332",
 };
 
 const WAFFLE_ORDER = ["completed", "in_progress", "not_started", "broken"];
@@ -134,10 +134,10 @@ export function WaffleChart({
 // Shared status legend row
 export function StatusLegend({ counts }: { counts: Record<string, number> }) {
   const entries = [
-    { key: "completed", label: "Completed", color: OG_RED },
+    { key: "completed", label: "Completed", color: "#356643" },
     { key: "in_progress", label: "In Progress", color: "#fbbf24" },
     { key: "not_started", label: "Not Started", color: "#9ca3af" },
-    { key: "broken", label: "Broken", color: "#000" },
+    { key: "broken", label: "Broken", color: "#8b2332" },
   ];
   return (
     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
