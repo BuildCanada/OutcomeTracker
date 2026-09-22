@@ -49,6 +49,10 @@ const nextConfig = {
         source: "/api/dashboard/:path*",
         destination: `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/:path*`,
       },
+      {
+        source: "/mcp",
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/mcp`,
+      },
     ];
   },
 };

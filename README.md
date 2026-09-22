@@ -49,6 +49,12 @@ If linting fails, the commit will be blocked until issues are resolved.
 
 Metrics are scraped using github actions which automatically updates the repo with up to date data.
 
+## MCP server
+
+The tracker API exposes a read-only Model Context Protocol endpoint at
+`https://www.buildcanada.com/tracker/mcp`. The frontend proxies this endpoint to
+the Rails API alongside the JSON API routes.
+
 ## Contributing
 
 We would love to have your help! Please fill in our volunteer [intake form](https://5nneq7.share-na3.hsforms.com/2l9iIH2gFSomphjDe-ci5OQ).
